@@ -7,8 +7,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/navigation/app_router.dart';
 import '../repositories/auth_repository.dart';
+import '../repositories/work_repository.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
+import '../bloc/work_bloc.dart';
 
 class AttendanceProApp extends StatelessWidget {
   final AttendanceRepository repository;
@@ -22,6 +24,7 @@ class AttendanceProApp extends StatelessWidget {
       providers: [
         RepositoryProvider<AttendanceRepository>.value(value: repository),
         RepositoryProvider<AuthRepository>(create: (_) => AuthRepository()),
+        RepositoryProvider<WorkRepository>(create: (_) => WorkRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -35,6 +38,11 @@ class AttendanceProApp extends StatelessWidget {
             ),
           ),
           BlocProvider<LocaleCubit>(create: (_) => LocaleCubit()),
+          BlocProvider<WorkBloc>(
+            create: (context) => WorkBloc(
+              repository: context.read<WorkRepository>(),
+            )..add(const WorkStarted()),
+          ),
         ],
         child: Builder(
           builder: (context) {

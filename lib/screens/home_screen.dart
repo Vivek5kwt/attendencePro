@@ -1,16 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../apis/auth_api.dart' show ApiException;
-import '../apis/work_api.dart';
 import '../bloc/app_cubit.dart';
 import '../core/constants/app_assets.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
-import '../utils/session_manager.dart';
+import '../bloc/work_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,119 +22,19 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _workNameController = TextEditingController();
   final TextEditingController _hourlySalaryController = TextEditingController();
-  final WorkApi _workApi = WorkApi();
   static const String _shareLink = 'https://attendancepro.app';
-  final SessionManager _sessionManager = const SessionManager();
-
-  String? _userName;
-  String? _userEmail;
-  bool _isSavingWork = false;
-  List<Work> _works = const <Work>[];
-  bool _isLoadingWorks = false;
-  String? _worksError;
-  String? _deletingWorkId;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserDetails();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _fetchWorks();
-    });
-  }
-
-  Future<void> _loadUserDetails() async {
-    final details = await _sessionManager.getUserDetails();
-
-    if (!mounted) return;
-
-    String? _normalize(String? value) {
-      if (value == null) return null;
-      final trimmed = value.trim();
-      return trimmed.isEmpty ? null : trimmed;
-    }
-
-    setState(() {
-      _userName = _normalize(details['name']);
-      final email = _normalize(details['email']);
-      final username = _normalize(details['username']);
-      _userEmail = email ?? username;
-    });
-  }
-
-  Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
-    final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-
-    setState(() {
-      _isLoadingWorks = true;
-      _worksError = null;
-    });
-
-    final token = await _sessionManager.getToken();
-    if (!mounted) {
-      return;
-    }
-
-    if (token == null || token.isEmpty) {
-      final message = l.authenticationRequiredMessage;
-      setState(() {
-        _isLoadingWorks = false;
-        _worksError = message;
-        _works = const <Work>[];
-      });
-      if (showSnackBarOnError) {
-        messenger.showSnackBar(SnackBar(content: Text(message)));
-      }
-      return;
-    }
-
-    try {
-      final works = await _workApi.fetchWorks(token: token);
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _works = works;
-        _worksError = null;
-      });
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      final message = e.message.isNotEmpty ? e.message : l.worksLoadFailedMessage;
-      setState(() {
-        _worksError = message;
-      });
-      if (showSnackBarOnError) {
-        messenger.showSnackBar(SnackBar(content: Text(message)));
-      }
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      final message = l.worksLoadFailedMessage;
-      setState(() {
-        _worksError = message;
-      });
-      if (showSnackBarOnError) {
-        messenger.showSnackBar(SnackBar(content: Text(message)));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingWorks = false;
-        });
-      }
-    }
-  }
 
   Future<void> _handleAddWorkFromDrawer() async {
     Navigator.of(context).pop();
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     _showAddWorkDialog();
+  }
+
+  Future<void> _refreshWorks() {
+    final completer = Completer<void>();
+    context.read<WorkBloc>().add(WorkRefreshed(completer: completer));
+    return completer.future;
   }
 
   void _showChangeWorkMenu() {
@@ -323,21 +223,33 @@ class _HomeScreenState extends State<HomeScreen> {
       barrierDismissible: false,
       barrierColor: Colors.black.withOpacity(0.35),
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        return BlocConsumer<WorkBloc, WorkState>(
+          listenWhen: (previous, current) =>
+              previous.addStatus != current.addStatus,
+          listener: (context, state) {
+            if (state.addStatus == WorkActionStatus.success) {
+              _clearAddWorkForm();
+              Navigator.of(dialogContext).pop();
+              context.read<WorkBloc>().add(const WorkAddStatusCleared());
+            }
+          },
+          builder: (context, state) {
+            final isSaving = state.addStatus == WorkActionStatus.inProgress;
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(width: 40),
+                      Row(
+                        children: [
+                          const SizedBox(width: 40),
                       Expanded(
                         child: Text(
                           l.addNewWorkLabel,
@@ -351,6 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       IconButton(
                         onPressed: () {
                           _clearAddWorkForm();
+                          context
+                              .read<WorkBloc>()
+                              .add(const WorkAddStatusCleared());
                           Navigator.of(dialogContext).pop();
                         },
                         icon: const Icon(Icons.close),
@@ -547,6 +462,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: OutlinedButton(
                           onPressed: () {
                             _clearAddWorkForm();
+                            context
+                                .read<WorkBloc>()
+                                .add(const WorkAddStatusCleared());
                             Navigator.of(dialogContext).pop();
                           },
                           style: OutlinedButton.styleFrom(
@@ -564,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: _isSavingWork
+                          onPressed: isSaving
                               ? null
                               : () => _handleSaveWork(dialogContext, l),
                           style: ElevatedButton.styleFrom(
@@ -575,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: _isSavingWork
+                          child: isSaving
                               ? const SizedBox(
                             height: 20,
                             width: 20,
@@ -598,6 +516,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+        );
+          },
         );
       },
     );
@@ -628,51 +548,10 @@ class _HomeScreenState extends State<HomeScreen> {
       hourlyRate = parsedRate;
     }
 
-    final token = await _sessionManager.getToken();
-    if (token == null || token.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.authenticationRequiredMessage)),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSavingWork = true;
-    });
-
-    try {
-      Map<String, dynamic> response = const <String, dynamic>{};
-      response = await _workApi.createWork(
-        name: workName,
-        hourlyRate: hourlyRate,
-        isContract: true,
-        token: token,
-      );
-      if (!mounted) return;
-      final message = _extractWorkMessage(response) ?? l.workAddedMessage;
-      messenger.showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      _clearAddWorkForm();
-      Navigator.of(dialogContext).pop();
-      await _fetchWorks();
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.workSaveFailedMessage)),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSavingWork = false;
-        });
-      }
-    }
+    FocusScope.of(dialogContext).unfocus();
+    context.read<WorkBloc>().add(
+          WorkAdded(name: workName, hourlyRate: hourlyRate, isContract: true),
+        );
   }
 
   void _clearAddWorkForm() {
@@ -680,21 +559,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _hourlySalaryController.clear();
   }
 
-
-
-  String? _extractWorkMessage(Map<String, dynamic> response) {
-    const possibleKeys = ['message', 'status', 'detail'];
-    for (final key in possibleKeys) {
-      final value = response[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
-      }
-    }
-    return null;
-  }
-
   Future<bool?> _handleWorkDismiss(Work work, AppLocalizations l) async {
-    if (_deletingWorkId != null) {
+    final bloc = context.read<WorkBloc>();
+    if (bloc.state.deletingWorkId != null) {
       return false;
     }
 
@@ -703,71 +570,10 @@ class _HomeScreenState extends State<HomeScreen> {
       return false;
     }
 
-    return _deleteWork(work, l);
-  }
+    final completer = Completer<bool>();
+    bloc.add(WorkDeleted(work: work, completer: completer));
 
-  Future<bool> _deleteWork(Work work, AppLocalizations l) async {
-    final token = await _sessionManager.getToken();
-    if (!mounted) {
-      return false;
-    }
-
-    final messenger = ScaffoldMessenger.of(context);
-
-    if (token == null || token.isEmpty) {
-      messenger
-          .showSnackBar(SnackBar(content: Text(l.authenticationRequiredMessage)));
-      return false;
-    }
-
-    setState(() {
-      _deletingWorkId = work.id;
-    });
-
-    try {
-      final response = await _workApi.deleteWork(id: work.id, token: token);
-      if (!mounted) {
-        return true;
-      }
-
-      final message =
-          response != null ? _extractWorkMessage(response) : null;
-
-      setState(() {
-        _works = _works.where((w) => w.id != work.id).toList();
-      });
-
-      messenger.showSnackBar(
-        SnackBar(content: Text(message ?? l.workDeleteSuccessMessage)),
-      );
-
-      return true;
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return false;
-      }
-
-      final message =
-          e.message.isNotEmpty ? e.message : l.workDeleteFailedMessage;
-      messenger.showSnackBar(SnackBar(content: Text(message)));
-      return false;
-    } catch (_) {
-      if (!mounted) {
-        return false;
-      }
-
-      messenger
-          .showSnackBar(SnackBar(content: Text(l.workDeleteFailedMessage)));
-      return false;
-    } finally {
-      if (mounted) {
-        setState(() {
-          if (_deletingWorkId == work.id) {
-            _deletingWorkId = null;
-          }
-        });
-      }
-    }
+    return completer.future;
   }
 
   Future<bool> _showWorkDeleteConfirmationDialog(AppLocalizations l) async {
@@ -812,10 +618,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().logout();
     if (!mounted) return;
-    setState(() {
-      _userName = null;
-      _userEmail = null;
-    });
     final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
@@ -846,196 +648,240 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final languageOptions = {
-      'en': l.languageEnglish,
-      'hi': l.languageHindi,
-      'pa': l.languagePunjabi,
-      'it': l.languageItalian,
-    };
+    return BlocListener<WorkBloc, WorkState>(
+      listenWhen: (previous, current) =>
+          previous.lastErrorMessage != current.lastErrorMessage ||
+          previous.lastSuccessMessage != current.lastSuccessMessage ||
+          previous.requiresAuthentication != current.requiresAuthentication ||
+          previous.feedbackKind != current.feedbackKind,
+      listener: (context, state) {
+        final l = AppLocalizations.of(context);
+        final messenger = ScaffoldMessenger.of(context);
+        String? message;
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        // Use a Builder here so the IconButton has a context that is a descendant of the Scaffold.
-        // Calling Scaffold.of(context).openDrawer() with the AppBar's own context won't find the Scaffold.
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu, color: Colors.grey),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
-        ),
-        title: Text(
-          l.appTitle,
-          style: const TextStyle(color: Colors.black),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.language, color: Colors.grey),
-            onPressed: () {
-              _showLanguageDialog(context, languageOptions, l);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.share, color: Colors.grey),
-            onPressed: _showShareOptions,
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    height: 160,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF0A84FF),
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(40),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 30,
-                    left: 20,
-                    child: Row(
+        if (state.requiresAuthentication) {
+          message = l.authenticationRequiredMessage;
+        } else if (state.lastErrorMessage != null &&
+            state.lastErrorMessage!.isNotEmpty) {
+          message = state.lastErrorMessage;
+        } else if (state.lastSuccessMessage != null) {
+          if (state.lastSuccessMessage!.isNotEmpty) {
+            message = state.lastSuccessMessage;
+          } else {
+            message = _successFallback(state.feedbackKind, l);
+          }
+        }
+
+        if (message != null && message.isNotEmpty) {
+          messenger.showSnackBar(SnackBar(content: Text(message)));
+        }
+      },
+      child: BlocBuilder<WorkBloc, WorkState>(
+        builder: (context, state) {
+          final l = AppLocalizations.of(context);
+          final languageOptions = {
+            'en': l.languageEnglish,
+            'hi': l.languageHindi,
+            'pa': l.languagePunjabi,
+            'it': l.languageItalian,
+          };
+          final userName = state.userName ?? l.drawerUserName;
+          final userEmail = state.userEmail ?? l.drawerUserPhone;
+
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: Builder(
+                builder: (context) {
+                  return IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.grey),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  );
+                },
+              ),
+              title: Text(
+                l.appTitle,
+                style: const TextStyle(color: Colors.black),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.language, color: Colors.grey),
+                  onPressed: () {
+                    _showLanguageDialog(context, languageOptions, l);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.share, color: Colors.grey),
+                  onPressed: _showShareOptions,
+                ),
+              ],
+            ),
+            drawer: Drawer(
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Stack(
                       children: [
-                        const CircleAvatar(
-                          radius: 32,
-                          backgroundImage: AssetImage(AppAssets.profilePlaceholder),
+                        Container(
+                          height: 160,
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF0A84FF),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(40),
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _userName ?? l.drawerUserName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                        Positioned(
+                          top: 30,
+                          left: 20,
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 32,
+                                backgroundImage:
+                                    AssetImage(AppAssets.profilePlaceholder),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _userEmail ?? l.drawerUserPhone,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
+                              const SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userName,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    userEmail,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    _drawerItem(
-                      icon: Icons.home_outlined,
-                      label: l.dashboardLabel,
-                      bgColor: const Color(0xFFE5F6FE),
-                      iconColor: const Color(0xFF48A9FF),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.dashboardTappedMessage),
+                    const SizedBox(height: 24),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          _drawerItem(
+                            icon: Icons.home_outlined,
+                            label: l.dashboardLabel,
+                            bgColor: const Color(0xFFE5F6FE),
+                            iconColor: const Color(0xFF48A9FF),
+                            onTap: () =>
+                                _onDrawerOptionSelected(l.dashboardTappedMessage),
+                          ),
+                          _drawerItem(
+                            icon: Icons.work_outline,
+                            label: l.addNewWorkLabel,
+                            bgColor: const Color(0xFFE8F8F0),
+                            iconColor: const Color(0xFF34C759),
+                            onTap: _handleAddWorkFromDrawer,
+                          ),
+                          _drawerItem(
+                            icon: Icons.access_time,
+                            label: l.attendanceHistoryLabel,
+                            bgColor: const Color(0xFFFFF2F2),
+                            iconColor: const Color(0xFFFF3B30),
+                            onTap: () => _onDrawerOptionSelected(
+                                l.attendanceHistoryTappedMessage),
+                          ),
+                          _drawerItem(
+                            icon: Icons.assignment_outlined,
+                            label: l.contractWorkLabel,
+                            bgColor: const Color(0xFFEDEBFF),
+                            iconColor: const Color(0xFF5856D6),
+                            onTap: () =>
+                                _onDrawerOptionSelected(l.contractWorkTappedMessage),
+                          ),
+                          _drawerItem(
+                            icon: Icons.language,
+                            label: l.changeLanguageLabel,
+                            bgColor: const Color(0xFFF8E8FA),
+                            iconColor: const Color(0xFFAF52DE),
+                            onTap: () async {
+                              Navigator.of(context).pop();
+                              await _showLanguageDialog(
+                                  context, languageOptions, l);
+                            },
+                          ),
+                          _drawerItem(
+                            icon: Icons.support_agent_outlined,
+                            label: l.helpSupportLabel,
+                            bgColor: const Color(0xFFE5F6FE),
+                            iconColor: const Color(0xFF007AFF),
+                            onTap: () =>
+                                _onDrawerOptionSelected(l.helpSupportTappedMessage),
+                          ),
+                          _drawerItem(
+                            icon: Icons.logout,
+                            label: l.logoutLabel,
+                            bgColor: const Color(0xFFE5F6FE),
+                            iconColor: const Color(0xFF007AFF),
+                            onTap: () => _handleLogoutTap(l),
+                          ),
+                        ],
+                      ),
                     ),
-                    _drawerItem(
-                      icon: Icons.work_outline,
-                      label: l.addNewWorkLabel,
-                      bgColor: const Color(0xFFE8F8F0),
-                      iconColor: const Color(0xFF34C759),
-                      onTap: _handleAddWorkFromDrawer,
-                    ),
-                    _drawerItem(
-                      icon: Icons.access_time,
-                      label: l.attendanceHistoryLabel,
-                      bgColor: const Color(0xFFFFF2F2),
-                      iconColor: const Color(0xFFFF3B30),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.attendanceHistoryTappedMessage),
-                    ),
-                    _drawerItem(
-                      icon: Icons.assignment_outlined,
-                      label: l.contractWorkLabel,
-                      bgColor: const Color(0xFFEDEBFF),
-                      iconColor: const Color(0xFF5856D6),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.contractWorkTappedMessage),
-                    ),
-                    _drawerItem(
-                      icon: Icons.language,
-                      label: l.changeLanguageLabel,
-                      bgColor: const Color(0xFFF8E8FA),
-                      iconColor: const Color(0xFFAF52DE),
-                      onTap: () async {
-                        Navigator.of(context).pop();
-                        await _showLanguageDialog(context, languageOptions, l);
-                      },
-                    ),
-                    _drawerItem(
-                      icon: Icons.support_agent_outlined,
-                      label: l.helpSupportLabel,
-                      bgColor: const Color(0xFFE5F6FE),
-                      iconColor: const Color(0xFF007AFF),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.helpSupportTappedMessage),
-                    ),
-                    _drawerItem(
-                      icon: Icons.logout,
-                      label: l.logoutLabel,
-                      bgColor: const Color(0xFFE5F6FE),
-                      iconColor: const Color(0xFF007AFF),
-                      onTap: () => _handleLogoutTap(l),
-                    ),
-
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          Image.asset(AppAssets.homeBanner, width: 330),
-
-          Expanded(child: _buildWorksContent(l)),
-        ],
+            ),
+            body: Column(
+              children: [
+                Image.asset(AppAssets.homeBanner, width: 330),
+                Expanded(child: _buildWorksContent(l, state)),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildWorksContent(AppLocalizations l) {
-    if (_isLoadingWorks) {
+  Widget _buildWorksContent(AppLocalizations l, WorkState state) {
+    final works = state.works;
+    if (state.isLoading && works.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_worksError != null && _works.isEmpty) {
-      return _buildWorksErrorState(l, _worksError!);
+    if (state.loadStatus == WorkLoadStatus.failure && works.isEmpty) {
+      final message = state.requiresAuthentication
+          ? l.authenticationRequiredMessage
+          : (state.lastErrorMessage != null &&
+                  state.lastErrorMessage!.isNotEmpty
+              ? state.lastErrorMessage!
+              : l.worksLoadFailedMessage);
+      return _buildWorksErrorState(l, message);
     }
 
-    if (_works.isEmpty) {
+    if (works.isEmpty) {
       return _buildWorksEmptyState(l);
     }
 
     return RefreshIndicator(
-      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+      onRefresh: _refreshWorks,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: _works.length,
-        itemBuilder: (context, index) => _buildWorkCard(_works[index], l),
+        itemCount: works.length,
+        itemBuilder: (context, index) => _buildWorkCard(
+          works[index],
+          l,
+          isDeleting: state.deletingWorkId == works[index].id,
+        ),
         separatorBuilder: (_, __) => const SizedBox(height: 12),
       ),
     );
@@ -1098,7 +944,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWorksErrorState(AppLocalizations l, String message) {
     return RefreshIndicator(
-      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+      onRefresh: _refreshWorks,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -1124,7 +970,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(
                   width: 160,
                   child: OutlinedButton(
-                    onPressed: () => _fetchWorks(showSnackBarOnError: true),
+                    onPressed: () {
+                      _refreshWorks();
+                    },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -1145,8 +993,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWorkCard(Work work, AppLocalizations l) {
-    final isDeleting = _deletingWorkId == work.id;
+  Widget _buildWorkCard(Work work, AppLocalizations l,
+      {required bool isDeleting}) {
     final card = Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1296,6 +1144,17 @@ class _HomeScreenState extends State<HomeScreen> {
         : doubleValue.toStringAsFixed(2);
 
     return '${l.hourlySalaryLabel}: $formatted';
+  }
+
+  String? _successFallback(WorkFeedbackKind? kind, AppLocalizations l) {
+    switch (kind) {
+      case WorkFeedbackKind.add:
+        return l.workAddedMessage;
+      case WorkFeedbackKind.delete:
+        return l.workDeleteSuccessMessage;
+      default:
+        return null;
+    }
   }
 
   Widget _drawerItem({
