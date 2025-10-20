@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
+import '../core/localization/app_localizations.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String phone;
@@ -70,6 +71,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final l = AppLocalizations.of(context);
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -89,25 +91,26 @@ class _VerifyScreenState extends State<VerifyScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Verify Your Number',
-                  style: TextStyle(
+                Text(
+                  l.verifyNumberTitle,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "We’ve sent a 4-digit code to your email.",
+                  l.verifyCodeDescription,
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 30),
-                const Text(
-                  "Enter Code",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                Text(
+                  l.enterCodeLabel,
+                  style:
+                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -154,9 +157,10 @@ class _VerifyScreenState extends State<VerifyScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: const Text(
-                      'Verify OTP',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    child: Text(
+                      l.verifyOtpButton,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -166,8 +170,8 @@ class _VerifyScreenState extends State<VerifyScreen> {
                     onPressed: _resend,
                     child: Text(
                       _start > 0
-                          ? "Didn’t receive code? Resend in 00:${_start.toString().padLeft(2, '0')}"
-                          : "Resend Code",
+                          ? l.resendCountdown(_start)
+                          : l.resendCode,
                       style: const TextStyle(
                         fontSize: 15,
                         color: Colors.black87,

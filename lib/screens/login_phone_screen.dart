@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/auth_cubit.dart';
+import '../bloc/locale_cubit.dart';
+import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 
 class LoginPhoneScreen extends StatefulWidget {
@@ -17,19 +19,20 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   bool _obscurePassword = true;
 
   void _submitLogin(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final emailToUse = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (emailToUse.isEmpty) {
-      _showSnack('Please enter your email.');
+      _showSnack(l.snackEnterEmail);
       return;
     }
     if (!_isValidEmail(emailToUse)) {
-      _showSnack('Please enter a valid email address.');
+      _showSnack(l.snackEnterValidEmail);
       return;
     }
     if (password.isEmpty) {
-      _showSnack('Please enter your password.');
+      _showSnack(l.snackEnterPassword);
       return;
     }
 
@@ -66,6 +69,13 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final languageOptions = {
+      'en': l.languageEnglish,
+      'hi': l.languageHindi,
+      'pa': l.languagePunjabi,
+      'it': l.languageItalian,
+    };
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthError) {
@@ -79,7 +89,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
         }
 
         if (state is AuthAuthenticated) {
-          String message = 'Logged in successfully';
+          String message = l.snackLoginSuccess;
           final data = state.data;
 
           if (data != null) {
@@ -119,10 +129,10 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    const Center(
+                    Center(
                       child: Text(
-                        "Login",
-                        style: TextStyle(
+                        l.loginTitle,
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
@@ -130,9 +140,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    const Text(
-                      "Email",
-                      style: TextStyle(
+                    Text(
+                      l.emailLabel,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
@@ -143,7 +153,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        hintText: "you@example.com",
+                        hintText: l.emailHint,
                         hintStyle: const TextStyle(color: Colors.black38),
                         filled: true,
                         fillColor: Colors.white,
@@ -156,9 +166,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      "Password",
-                      style: TextStyle(
+                    Text(
+                      l.passwordLabel,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
@@ -171,7 +181,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
-                        hintText: "********",
+                        hintText: l.passwordHint,
                         hintStyle: const TextStyle(color: Colors.black26),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 14),
@@ -210,9 +220,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                             onPressed: isProcessing
                                 ? null
                                 : () => _submitLogin(context),
-                            child: const Text(
-                              "Login",
-                              style: TextStyle(
+                            child: Text(
+                              l.loginButton,
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -229,19 +239,19 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                           final emailToUse = _emailController.text.trim();
                           final authCubit = context.read<AuthCubit>();
                           if (emailToUse.isEmpty) {
-                            _showSnack('Please enter your email to reset.');
+                            _showSnack(l.snackResetEmail);
                             return;
                           }
                           if (emailToUse.contains('@') &&
                               !_isValidEmail(emailToUse)) {
-                            _showSnack('Please enter a valid email address.');
+                            _showSnack(l.snackForgotInvalidEmail);
                             return;
                           }
                           authCubit.forgotPassword(emailToUse);
                         },
-                        child: const Text(
-                          "Forgot Your Password?",
-                          style: TextStyle(
+                        child: Text(
+                          l.forgotPassword,
+                          style: const TextStyle(
                             color: Colors.black87,
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -258,17 +268,17 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                           context.go(Routes.auth);
                         },
                         child: RichText(
-                          text: const TextSpan(
-                            text: "Don’t Have an Account? ",
-                            style: TextStyle(
+                          text: TextSpan(
+                            text: l.signupPromptPrefix,
+                            style: const TextStyle(
                               color: Colors.black87,
                               fontSize: 15,
                               height: 1.5,
                             ),
                             children: [
                               TextSpan(
-                                text: "Sign Up",
-                                style: TextStyle(
+                                text: l.signupPromptAction,
+                                style: const TextStyle(
                                   color: Color(0xFF007BFF),
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -286,29 +296,46 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                           showDialog<String>(
                             context: context,
                             builder: (ctx) => SimpleDialog(
-                              title: const Text('Select Language'),
-                              children: [
-                                SimpleDialogOption(
-                                  onPressed: () => Navigator.pop(ctx, 'en'),
-                                  child: const Text('English'),
-                                ),
-                              ],
+                              title: Text(l.selectLanguageTitle),
+                              children: languageOptions.entries
+                                  .map(
+                                    (entry) => SimpleDialogOption(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, entry.key),
+                                      child: Text(entry.value),
+                                    ),
+                                  )
+                                  .toList(),
                             ),
                           ).then((selected) {
-                            if (selected != null) {
+                            if (selected != null &&
+                                languageOptions.containsKey(selected)) {
+                              context
+                                  .read<LocaleCubit>()
+                                  .setLocale(Locale(selected));
+                              final updatedLocalization =
+                                  AppLocalizations(Locale(selected));
+                              final updatedNames = {
+                                'en': updatedLocalization.languageEnglish,
+                                'hi': updatedLocalization.languageHindi,
+                                'pa': updatedLocalization.languagePunjabi,
+                                'it': updatedLocalization.languageItalian,
+                              };
                               final label =
-                              selected == 'en' ? 'English' : 'Other';
+                                  updatedNames[selected] ?? languageOptions[selected]!;
+                              _showSnack(
+                                  updatedLocalization.languageSelection(label));
                             }
                           });
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.language, color: Color(0xFF007BFF)),
-                            SizedBox(width: 8),
+                          children: [
+                            const Icon(Icons.language, color: Color(0xFF007BFF)),
+                            const SizedBox(width: 8),
                             Text(
-                              "Change Language",
-                              style: TextStyle(
+                              l.changeLanguage,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.black87,
                                 fontWeight: FontWeight.w500,
