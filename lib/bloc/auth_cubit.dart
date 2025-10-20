@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../apis/auth_api.dart';
 import '../repositories/auth_repository.dart';
+import '../utils/session_manager.dart';
 
 abstract class AuthState {}
 
@@ -36,9 +37,11 @@ class AuthError extends AuthState {
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _repository;
+  final SessionManager _sessionManager;
 
-  AuthCubit({AuthRepository? repository})
+  AuthCubit({AuthRepository? repository, SessionManager? sessionManager})
       : _repository = repository ?? AuthRepository(),
+        _sessionManager = sessionManager ?? const SessionManager(),
         super(AuthPhoneInput(isSignup: false));
 
   String? _pendingPhone; // used by phone flows
@@ -116,6 +119,7 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
         confirm: confirm,
       );
+      await _persistSessionFromResponse(response);
       emit(AuthAuthenticated(data: response));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -138,6 +142,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final response = await _repository.login(login, password);
+      await _persistSessionFromResponse(response);
       emit(AuthAuthenticated(data: response));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -230,4 +235,43 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void logout() => emit(AuthPhoneInput());
+
+  Future<void> _persistSessionFromResponse(Map<String, dynamic> response) async {
+    try {
+      final data = response['data'];
+      if (data is! Map<String, dynamic>) return;
+
+      final token = data['token'];
+      if (token is! String || token.isEmpty) return;
+
+      String? name;
+      String? email;
+      String? username;
+
+      final user = data['user'];
+      if (user is Map<String, dynamic>) {
+        final potentialName = user['name'];
+        if (potentialName is String && potentialName.isNotEmpty) {
+          name = potentialName;
+        }
+        final potentialEmail = user['email'];
+        if (potentialEmail is String && potentialEmail.isNotEmpty) {
+          email = potentialEmail;
+        }
+        final potentialUsername = user['username'];
+        if (potentialUsername is String && potentialUsername.isNotEmpty) {
+          username = potentialUsername;
+        }
+      }
+
+      await _sessionManager.saveSession(
+        token: token,
+        name: name,
+        email: email,
+        username: username,
+      );
+    } catch (_) {
+      // Ignore storage errors to avoid impacting the login flow.
+    }
+  }
 }

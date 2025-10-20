@@ -1,5 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../repositories/auth_repository.dart';
+import '../utils/session_manager.dart';
+
 /// Base abstract class representing app-level navigation states.
 abstract class AppState {}
 
@@ -17,7 +20,13 @@ class AppHome extends AppState {}
 
 /// The main Cubit that manages which screen (state) the app should show.
 class AppCubit extends Cubit<AppState> {
-  AppCubit() : super(AppSplash()) {
+  final SessionManager _sessionManager;
+  final AuthRepository _authRepository;
+
+  AppCubit({SessionManager? sessionManager, AuthRepository? authRepository})
+      : _sessionManager = sessionManager ?? const SessionManager(),
+        _authRepository = authRepository ?? AuthRepository(),
+        super(AppSplash()) {
     _startSplash();
   }
 
@@ -26,9 +35,12 @@ class AppCubit extends Cubit<AppState> {
     // Keep splash visible for 2 seconds
     await Future.delayed(const Duration(seconds: 2));
 
-    // Normally, check persistent storage (e.g., SharedPreferences) here
-    // For now, just go to Walkthrough for demonstration
-    emit(AppWalkthrough());
+    final storedToken = await _sessionManager.getToken();
+    if (storedToken != null) {
+      emit(AppHome());
+    } else {
+      emit(AppWalkthrough());
+    }
   }
 
   /// Show the Walkthrough (intro/tutorial)
@@ -41,8 +53,16 @@ class AppCubit extends Cubit<AppState> {
   void showHome() => emit(AppHome());
 
   /// Perform logout and return to Auth screen
-  void logout() {
-    // In a real app, clear user tokens, prefs, etc. here
+  Future<void> logout() async {
+    final token = await _sessionManager.getToken();
+    if (token != null) {
+      try {
+        await _authRepository.logout(token);
+      } catch (_) {
+        // Ignore logout API errors to avoid blocking the user.
+      }
+    }
+    await _sessionManager.clearSession();
     emit(AppAuth());
   }
 }
