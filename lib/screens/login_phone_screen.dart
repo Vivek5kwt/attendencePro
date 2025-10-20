@@ -15,24 +15,27 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isDialogShowing = false;
 
-  void _showLoadingDialog(BuildContext context) {
-    if (_isDialogShowing) return;
-    _isDialogShowing = true;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-  }
+  void _submitLogin(BuildContext context) {
+    final emailToUse = _emailController.text.trim();
+    final password = _passwordController.text;
 
-  void _hideLoadingDialog(BuildContext context) {
-    if (!_isDialogShowing) return;
-    _isDialogShowing = false;
-    try {
-      Navigator.of(context, rootNavigator: true).pop();
-    } catch (_) {}
+    if (emailToUse.isEmpty) {
+      _showSnack('Please enter your email.');
+      return;
+    }
+    if (!_isValidEmail(emailToUse)) {
+      _showSnack('Please enter a valid email address.');
+      return;
+    }
+    if (password.isEmpty) {
+      _showSnack('Please enter your password.');
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    final authCubit = context.read<AuthCubit>();
+    authCubit.login(emailToUse, password.trim());
   }
 
   void _showSnack(String message) {
@@ -65,12 +68,6 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        if (state is AuthLoading) {
-          _showLoadingDialog(context);
-        } else {
-          _hideLoadingDialog(context);
-        }
-
         if (state is AuthError) {
           _showSnack(state.message);
           return;
@@ -195,45 +192,35 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF007BFF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(32),
+                    BlocBuilder<AuthCubit, AuthState>(
+                      buildWhen: (previous, current) =>
+                          previous is AuthLoading || current is AuthLoading,
+                      builder: (context, state) {
+                        final isProcessing = state is AuthLoading;
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF007BFF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                            ),
+                            onPressed: isProcessing
+                                ? null
+                                : () => _submitLogin(context),
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
-                        onPressed: () {
-                          final emailToUse = _emailController.text.trim();
-                          final password = _passwordController.text;
-
-                          if (emailToUse.isEmpty) {
-                            _showSnack('Please enter your email.');
-                            return;
-                          }
-                          if (!_isValidEmail(emailToUse)) {
-                            _showSnack('Please enter a valid email address.');
-                            return;
-                          }
-                          if (password.isEmpty) {
-                            _showSnack('Please enter your password.');
-                            return;
-                          }
-
-                          final authCubit = context.read<AuthCubit>();
-                          authCubit.login(emailToUse, password.trim());
-                        },
-                        child: const Text(
-                          "Login",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                     Center(
