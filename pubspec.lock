@@ -67,8 +67,7 @@ packages:
     version: "1.0.8"
   flutter_localizations:
     dependency: "direct main"
-    description:
-      sdk: flutter
+    description: flutter
     source: sdk
     version: "0.0.0"
   fake_async:
