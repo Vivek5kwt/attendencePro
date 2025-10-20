@@ -82,6 +82,8 @@ class AppLocalizations {
       'saveWorkButton': 'Save Work',
       'workNameRequiredMessage': 'Please enter a work name.',
       'workAddedMessage': 'Work added successfully.',
+      'invalidHourlyRateMessage': 'Please enter a valid hourly rate.',
+      'workSaveFailedMessage': 'Failed to save work. Please try again.',
       'walkthroughTitleOne': 'Track Your Work Hours Easily',
       'walkthroughDescOne':
           'Start and end your day with just one tap. Keep your hours accurate and organized.',
@@ -203,6 +205,8 @@ class AppLocalizations {
       'saveWorkButton': 'कार्य सहेजें',
       'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
+      'invalidHourlyRateMessage': 'कृपया मान्य प्रति घंटा दर दर्ज करें।',
+      'workSaveFailedMessage': 'कार्य सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
       'walkthroughTitleOne': 'अपने कार्य घंटों को आसानी से ट्रैक करें',
       'walkthroughDescOne':
           'सिर्फ एक टैप में अपना दिन शुरू और खत्म करें। अपने घंटे सटीक और व्यवस्थित रखें।',
@@ -324,6 +328,8 @@ class AppLocalizations {
       'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
       'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
+      'invalidHourlyRateMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਠੀਕ ਘੰਟਾਵਾਰੀ ਦਰ ਦਰਜ ਕਰੋ।',
+      'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'walkthroughTitleOne':
           'ਆਪਣੇ ਕੰਮ ਦੇ ਘੰਟੇ ਆਸਾਨੀ ਨਾਲ ਟ੍ਰੈਕ ਕਰੋ',
       'walkthroughDescOne':
@@ -449,6 +455,8 @@ class AppLocalizations {
       'saveWorkButton': 'Salva Lavoro',
       'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
       'workAddedMessage': 'Lavoro aggiunto con successo.',
+      'invalidHourlyRateMessage': 'Inserisci una tariffa oraria valida.',
+      'workSaveFailedMessage': 'Impossibile salvare il lavoro. Riprova.',
       'walkthroughTitleOne': 'Traccia facilmente le ore di lavoro',
       'walkthroughDescOne':
           'Avvia e termina la giornata con un tocco. Tieni le ore precise e ordinate.',
@@ -592,6 +600,8 @@ class AppLocalizations {
   String get saveWorkButton => _value('saveWorkButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
+  String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
+  String get workSaveFailedMessage => _value('workSaveFailedMessage');
   String get walkthroughTitleOne => _value('walkthroughTitleOne');
   String get walkthroughDescOne => _value('walkthroughDescOne');
   String get walkthroughTitleTwo => _value('walkthroughTitleTwo');
