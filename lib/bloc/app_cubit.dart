@@ -35,6 +35,8 @@ class AppCubit extends Cubit<AppState> {
     // Keep splash visible for 2 seconds
     await Future.delayed(const Duration(seconds: 2));
 
+    if (isClosed) return;
+
     final storedToken = await _sessionManager.getToken();
     if (storedToken != null) {
       emit(AppHome());
