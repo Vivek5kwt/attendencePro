@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart' as http;
-import '../services/auth_api.dart';
+
+import '../apis/auth_api.dart';
+import '../repositories/auth_repository.dart';
 
 abstract class AuthState {}
 
@@ -35,9 +35,11 @@ class AuthError extends AuthState {
 }
 
 class AuthCubit extends Cubit<AuthState> {
-  final String _baseUrl = 'https://attendancepro.shauryacoder.com';
+  final AuthRepository _repository;
 
-  AuthCubit() : super(AuthPhoneInput(isSignup: false));
+  AuthCubit({AuthRepository? repository})
+      : _repository = repository ?? AuthRepository(),
+        super(AuthPhoneInput(isSignup: false));
 
   String? _pendingPhone; // used by phone flows
   bool _isSignup = false;
@@ -106,59 +108,17 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     emit(AuthLoading());
-    final uri = Uri.parse('$_baseUrl/api/auth/register');
-
     try {
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'username': username,
-          'password': password,
-          'password_confirmation': confirm,
-        }),
+      final response = await _repository.register(
+        name: name,
+        email: email,
+        username: username,
+        password: password,
+        confirm: confirm,
       );
-
-      Map<String, dynamic>? body;
-      try {
-        final decoded = jsonDecode(response.body);
-        if (decoded is Map<String, dynamic>) body = decoded;
-      } catch (_) {
-        body = null;
-      }
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        // API sample returns: { "status":"success", "message":"User registered successfully", "data": {...} }
-        if (body != null) {
-          emit(AuthAuthenticated(data: body));
-        } else {
-          emit(AuthAuthenticated(data: {'raw': response.body}));
-        }
-      } else {
-        // try to extract message
-        String message = 'Registration failed with status: ${response.statusCode}';
-        if (body != null) {
-          if (body['message'] != null) {
-            message = body['message'].toString();
-          } else if (body['errors'] != null) {
-            // errors may be a map of lists
-            final errors = body['errors'];
-            if (errors is Map) {
-              final firstKey = errors.keys.isNotEmpty ? errors.keys.first : null;
-              if (firstKey != null) {
-                final val = errors[firstKey];
-                if (val is List && val.isNotEmpty) message = val.first.toString();
-                else message = val.toString();
-              }
-            } else {
-              message = errors.toString();
-            }
-          }
-        }
-        emit(AuthError(message));
-      }
+      emit(AuthAuthenticated(data: response));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
       emit(AuthError('Network error: $e'));
     }
@@ -176,30 +136,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     emit(AuthLoading());
-    final uri = Uri.parse('$_baseUrl/api/auth/login');
-
     try {
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: jsonEncode({'login': login, 'password': password}),
-      );
-
-      Map<String, dynamic>? body;
-      try {
-        body = jsonDecode(response.body);
-      } catch (_) {
-        body = null;
-      }
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        emit(AuthAuthenticated(data: body ?? {'raw': response.body}));
-      } else {
-        final String message = (body != null && body['message'] != null)
-            ? body['message'].toString()
-            : 'Request failed with status: ${response.statusCode}';
-        emit(AuthError(message));
-      }
+      final response = await _repository.login(login, password);
+      emit(AuthAuthenticated(data: response));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
     } catch (e) {
       emit(AuthError('Network error: $e'));
     }
