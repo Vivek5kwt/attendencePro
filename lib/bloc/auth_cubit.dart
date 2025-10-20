@@ -9,7 +9,8 @@ abstract class AuthState {}
 class AuthPhoneInput extends AuthState {
   final bool isSignup;
   final String? name;
-  AuthPhoneInput({this.isSignup = false, this.name});
+  final String? infoMessage;
+  AuthPhoneInput({this.isSignup = false, this.name, this.infoMessage});
 }
 
 class AuthVerifyNumber extends AuthState {
@@ -288,6 +289,50 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     emit(AuthLoading());
+    if (_isReset) {
+      final email = _pendingPhone!;
+      final token = _verifyToken;
+      if (token == null || token.isEmpty) {
+        emit(AuthCreatePassword(
+          email,
+          infoMessage: 'Missing verification token. Please request a new code.',
+        ));
+        return;
+      }
+
+      try {
+        final response = await _repository.resetPassword(
+          email: email,
+          verifyToken: token,
+          password: password,
+          confirm: confirm,
+        );
+
+        final message =
+            _extractReadableMessage(response) ?? 'Password reset successfully.';
+
+        _isReset = false;
+        _isSignup = false;
+        _pendingPhone = null;
+        _pendingPassword = null;
+        _pendingConfirm = null;
+        _verifyToken = null;
+
+        emit(AuthPhoneInput(infoMessage: message));
+      } on ApiException catch (e) {
+        emit(AuthCreatePassword(
+          email,
+          infoMessage: e.message,
+        ));
+      } catch (e) {
+        emit(AuthCreatePassword(
+          email,
+          infoMessage: 'Network error: $e',
+        ));
+      }
+      return;
+    }
+
     await Future.delayed(const Duration(milliseconds: 400));
     emit(AuthAuthenticated(data: {'phone': _pendingPhone}));
     _isReset = false;

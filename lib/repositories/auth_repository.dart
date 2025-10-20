@@ -39,4 +39,18 @@ class AuthRepository {
   }) {
     return _api.verifyOtp(email: email, otp: otp);
   }
+
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String verifyToken,
+    required String password,
+    required String confirm,
+  }) {
+    return _api.resetPassword(
+      email: email,
+      verifyToken: verifyToken,
+      password: password,
+      confirm: confirm,
+    );
+  }
 }

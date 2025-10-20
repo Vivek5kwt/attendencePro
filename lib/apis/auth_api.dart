@@ -111,6 +111,28 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
+  /// Reset the user's password after verifying OTP: POST /api/auth/reset-password
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String verifyToken,
+    required String password,
+    required String confirm,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/auth/reset-password');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final body = jsonEncode({
+      'email': email,
+      'verify_token': verifyToken,
+      'password': password,
+      'password_confirmation': confirm,
+    });
+
+    return _sendPost(uri, headers: headers, body: body);
+  }
+
   Future<Map<String, dynamic>> _sendPost(
     Uri uri, {
     required Map<String, String> headers,

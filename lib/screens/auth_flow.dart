@@ -41,6 +41,17 @@ class _AuthFlowState extends State<AuthFlow> {
               ),
             );
           }
+        } else if (state is AuthPhoneInput) {
+          final message = state.infoMessage;
+          if (message != null && message.trim().isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message.trim()),
+                backgroundColor: Colors.black87,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         } else if (state is AuthCreatePassword) {
           final message = state.infoMessage;
           if (message != null && message.trim().isNotEmpty) {
