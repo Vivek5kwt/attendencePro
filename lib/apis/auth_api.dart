@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import 'logging_client.dart';
+
 /// Exception thrown when an API request fails.
 class ApiException implements Exception {
   final String message;
@@ -24,7 +26,7 @@ class AuthApi {
   AuthApi({
     this.baseUrl = 'https://attendancepro.shauryacoder.com',
     http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+  }) : _httpClient = LoggingClient(httpClient);
 
   /// Login using the API: POST /api/auth/login
   /// Expects a JSON body: {"login": "string", "password": "string"}
