@@ -19,11 +19,13 @@ class WorkApi {
     required String name,
     required num hourlyRate,
     required bool isContract,
+    required String token,
   }) async {
     final uri = Uri.parse('$baseUrl/api/works');
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
     };
     final body = jsonEncode({
       'name': name,

@@ -18,7 +18,7 @@ class AppLocalizations {
   ];
 
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  <LocalizationsDelegate<dynamic>>[
     AppLocalizationsDelegate(),
     GlobalMaterialLocalizations.delegate,
     GlobalWidgetsLocalizations.delegate,
@@ -68,7 +68,7 @@ class AppLocalizations {
       'languageSelection': 'Language: {language}',
       'noWorkAddedYet': 'No Work Added Yet',
       'startTrackingAttendance':
-          'Start tracking your attendance \nby adding your first work',
+      'Start tracking your attendance \nby adding your first work',
       'addYourFirstWork': 'Add Your First Work',
       'hourlyWorkLabel': 'Hourly Work',
       'workNameLabel': 'Work Name',
@@ -84,15 +84,16 @@ class AppLocalizations {
       'workAddedMessage': 'Work added successfully.',
       'invalidHourlyRateMessage': 'Please enter a valid hourly rate.',
       'workSaveFailedMessage': 'Failed to save work. Please try again.',
+      'authenticationRequiredMessage': 'Your session has expired. Please log in again.',
       'walkthroughTitleOne': 'Track Your Work Hours Easily',
       'walkthroughDescOne':
-          'Start and end your day with just one tap. Keep your hours accurate and organized.',
+      'Start and end your day with just one tap. Keep your hours accurate and organized.',
       'walkthroughTitleTwo': 'Add Multiple Jobs, One App',
       'walkthroughDescTwo':
-          'Switch easily between multiple works and see your earnings instantly. One place for all your shifts.',
+      'Switch easily between multiple works and see your earnings instantly. One place for all your shifts.',
       'walkthroughTitleThree': 'Your Language. Your Way.',
       'walkthroughDescThree':
-          'Available in English, Hindi, Punjabi, and Italian so you can manage attendance in your own comfort.',
+      'Available in English, Hindi, Punjabi, and Italian so you can manage attendance in your own comfort.',
       'skip': 'Skip',
       'splashTitle': 'AttendancePro',
       'loginTitle': 'Login',
@@ -125,7 +126,7 @@ class AppLocalizations {
       'termsAgreement': 'Please agree to the terms to continue.',
       'userAgreementTitle': 'User Agreement & Privacy Policy',
       'userAgreementContent':
-          'This is a placeholder for the User Agreement and Privacy Policy. In a real app you would show the full text or open a webview.',
+      'This is a placeholder for the User Agreement and Privacy Policy. In a real app you would show the full text or open a webview.',
       'close': 'Close',
       'agreeTextPrefix': 'I Have Read and Agree to ',
       'userAgreement': 'User Agreement',
@@ -191,7 +192,7 @@ class AppLocalizations {
       'languageSelection': 'भाषा: {language}',
       'noWorkAddedYet': 'अभी तक कोई कार्य नहीं जोड़ा गया',
       'startTrackingAttendance':
-          'अपनी पहली नौकरी जोड़कर\nअपनी उपस्थिति ट्रैक करना शुरू करें',
+      'अपनी पहली नौकरी जोड़कर\nअपनी उपस्थिति ट्रैक करना शुरू करें',
       'addYourFirstWork': 'अपना पहला कार्य जोड़ें',
       'hourlyWorkLabel': 'घंटे का कार्य',
       'workNameLabel': 'कार्य का नाम',
@@ -207,15 +208,16 @@ class AppLocalizations {
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
       'invalidHourlyRateMessage': 'कृपया मान्य प्रति घंटा दर दर्ज करें।',
       'workSaveFailedMessage': 'कार्य सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
+      'authenticationRequiredMessage': 'आपका सत्र समाप्त हो गया है। कृपया पुनः लॉग इन करें।',
       'walkthroughTitleOne': 'अपने कार्य घंटों को आसानी से ट्रैक करें',
       'walkthroughDescOne':
-          'सिर्फ एक टैप में अपना दिन शुरू और खत्म करें। अपने घंटे सटीक और व्यवस्थित रखें।',
+      'सिर्फ एक टैप में अपना दिन शुरू और खत्म करें। अपने घंटे सटीक और व्यवस्थित रखें।',
       'walkthroughTitleTwo': 'कई नौकरियाँ, एक ऐप',
       'walkthroughDescTwo':
-          'आसानी से कई कामों के बीच स्विच करें और अपनी कमाई तुरंत देखें।',
+      'आसानी से कई कामों के बीच स्विच करें और अपनी कमाई तुरंत देखें।',
       'walkthroughTitleThree': 'आपकी भाषा, आपका तरीका',
       'walkthroughDescThree':
-          'अंग्रेज़ी, हिंदी, पंजाबी और इतालवी में उपलब्ध ताकि आप अपनी सुविधा से उपस्थिति प्रबंधित कर सकें।',
+      'अंग्रेज़ी, हिंदी, पंजाबी और इतालवी में उपलब्ध ताकि आप अपनी सुविधा से उपस्थिति प्रबंधित कर सकें।',
       'skip': 'स्किप करें',
       'splashTitle': 'अटेंडेंस प्रो',
       'loginTitle': 'लॉगिन',
@@ -248,7 +250,7 @@ class AppLocalizations {
       'termsAgreement': 'जारी रखने के लिए कृपया शर्तों से सहमत हों।',
       'userAgreementTitle': 'उपयोगकर्ता समझौता और गोपनीयता नीति',
       'userAgreementContent':
-          'यह उपयोगकर्ता समझौता और गोपनीयता नीति के लिए प्लेसहोल्डर है। वास्तविक ऐप में आप पूरा पाठ दिखाएंगे या वेबव्यू खोलेंगे।',
+      'यह उपयोगकर्ता समझौता और गोपनीयता नीति के लिए प्लेसहोल्डर है। वास्तविक ऐप में आप पूरा पाठ दिखाएंगे या वेबव्यू खोलेंगे।',
       'close': 'बंद करें',
       'agreeTextPrefix': 'मैंने पढ़ा है और सहमत हूँ ',
       'userAgreement': 'उपयोगकर्ता समझौता',
@@ -314,7 +316,7 @@ class AppLocalizations {
       'languageSelection': 'ਭਾਸ਼ਾ: {language}',
       'noWorkAddedYet': 'ਹੁਣ ਤੱਕ ਕੋਈ ਕੰਮ ਨਹੀਂ ਜੋੜਿਆ ਗਿਆ',
       'startTrackingAttendance':
-          'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜ ਕੇ\nਹਾਜ਼ਰੀ ਟ੍ਰੈਕ ਕਰਨੀ ਸ਼ੁਰੂ ਕਰੋ',
+      'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜ ਕੇ\nਹਾਜ਼ਰੀ ਟ੍ਰੈਕ ਕਰਨੀ ਸ਼ੁਰੂ ਕਰੋ',
       'addYourFirstWork': 'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜੋ',
       'hourlyWorkLabel': 'ਘੰਟਾਵਾਰੀ ਕੰਮ',
       'workNameLabel': 'ਕੰਮ ਦਾ ਨਾਮ',
@@ -330,16 +332,17 @@ class AppLocalizations {
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
       'invalidHourlyRateMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਠੀਕ ਘੰਟਾਵਾਰੀ ਦਰ ਦਰਜ ਕਰੋ।',
       'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'authenticationRequiredMessage': 'ਤੁਹਾਡਾ ਸੈਸ਼ਨ ਸਮਾਪਤ ਹੋ ਗਿਆ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਲੌਗਇਨ ਕਰੋ।',
       'walkthroughTitleOne':
-          'ਆਪਣੇ ਕੰਮ ਦੇ ਘੰਟੇ ਆਸਾਨੀ ਨਾਲ ਟ੍ਰੈਕ ਕਰੋ',
+      'ਆਪਣੇ ਕੰਮ ਦੇ ਘੰਟੇ ਆਸਾਨੀ ਨਾਲ ਟ੍ਰੈਕ ਕਰੋ',
       'walkthroughDescOne':
-          'ਕੇਵਲ ਇੱਕ ਟੈਪ ਨਾਲ ਆਪਣਾ ਦਿਨ ਸ਼ੁਰੂ ਅਤੇ ਖਤਮ ਕਰੋ। ਆਪਣੇ ਘੰਟਿਆਂ ਨੂੰ ਸਹੀ ਅਤੇ ਵਿਵਸਥਿਤ ਰੱਖੋ।',
+      'ਕੇਵਲ ਇੱਕ ਟੈਪ ਨਾਲ ਆਪਣਾ ਦਿਨ ਸ਼ੁਰੂ ਅਤੇ ਖਤਮ ਕਰੋ। ਆਪਣੇ ਘੰਟਿਆਂ ਨੂੰ ਸਹੀ ਅਤੇ ਵਿਵਸਥਿਤ ਰੱਖੋ।',
       'walkthroughTitleTwo': 'ਇੱਕ ਐਪ ਵਿੱਚ ਕਈ ਨੌਕਰੀਆਂ',
       'walkthroughDescTwo':
-          'ਅਸਾਨੀ ਨਾਲ ਕਈ ਕੰਮਾਂ ਵਿੱਚ ਬਦਲੋ ਅਤੇ ਆਪਣੀ ਕਮਾਈ ਤੁਰੰਤ ਵੇਖੋ।',
+      'ਅਸਾਨੀ ਨਾਲ ਕਈ ਕੰਮਾਂ ਵਿੱਚ ਬਦਲੋ ਅਤੇ ਆਪਣੀ ਕਮਾਈ ਤੁਰੰਤ ਵੇਖੋ।',
       'walkthroughTitleThree': 'ਤੁਹਾਡੀ ਭਾਸ਼ਾ, ਤੁਹਾਡਾ ਢੰਗ',
       'walkthroughDescThree':
-          'ਅੰਗਰੇਜ਼ੀ, ਹਿੰਦੀ, ਪੰਜਾਬੀ ਅਤੇ ਇਤਾਲਵੀ ਵਿੱਚ ਉਪਲਬਧ ਤਾਂ ਜੋ ਤੁਸੀਂ ਹਾਜ਼ਰੀ ਆਪਣੇ ਸੁਖ ਨਾਲ ਸੰਭਾਲ ਸਕੋ।',
+      'ਅੰਗਰੇਜ਼ੀ, ਹਿੰਦੀ, ਪੰਜਾਬੀ ਅਤੇ ਇਤਾਲਵੀ ਵਿੱਚ ਉਪਲਬਧ ਤਾਂ ਜੋ ਤੁਸੀਂ ਹਾਜ਼ਰੀ ਆਪਣੇ ਸੁਖ ਨਾਲ ਸੰਭਾਲ ਸਕੋ।',
       'skip': 'ਛੱਡੋ',
       'splashTitle': 'ਅਟੈਂਡੈਂਸ ਪ੍ਰੋ',
       'loginTitle': 'ਲਾਗਇਨ',
@@ -370,10 +373,10 @@ class AppLocalizations {
       'confirmPasswordRequired': 'ਕਿਰਪਾ ਕਰਕੇ ਪਾਸਵਰਡ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'confirmPasswordMismatch': 'ਪਾਸਵਰਡ ਮੇਲ ਨਹੀਂ ਖਾਂਦੇ',
       'termsAgreement':
-          'ਕਿਰਪਾ ਕਰਕੇ ਜਾਰੀ ਰੱਖਣ ਲਈ ਸ਼ਰਤਾਂ ਨਾਲ ਸਹਿਮਤ ਹੋਵੋ।',
+      'ਕਿਰਪਾ ਕਰਕੇ ਜਾਰੀ ਰੱਖਣ ਲਈ ਸ਼ਰਤਾਂ ਨਾਲ ਸਹਿਮਤ ਹੋਵੋ।',
       'userAgreementTitle': 'ਉਪਭੋਗਤਾ ਸਮਝੌਤਾ ਅਤੇ ਗੋਪਨੀਯਤਾ ਨੀਤੀ',
       'userAgreementContent':
-          'ਇਹ ਉਪਭੋਗਤਾ ਸਮਝੌਤਾ ਅਤੇ ਗੋਪਨੀਯਤਾ ਨੀਤੀ ਲਈ ਪਲੇਸਹੋਲਡਰ ਹੈ। ਅਸਲੀ ਐਪ ਵਿੱਚ ਤੁਸੀਂ ਪੂਰਾ ਪਾਠ ਦਿਖਾਓਗੇ ਜਾਂ ਵੈੱਬਵਿਊ ਖੋਲ੍ਹੋਗੇ।',
+      'ਇਹ ਉਪਭੋਗਤਾ ਸਮਝੌਤਾ ਅਤੇ ਗੋਪਨੀਯਤਾ ਨੀਤੀ ਲਈ ਪਲੇਸਹੋਲਡਰ ਹੈ। ਅਸਲੀ ਐਪ ਵਿੱਚ ਤੁਸੀਂ ਪੂਰਾ ਪਾਠ ਦਿਖਾਓਗੇ ਜਾਂ ਵੈੱਬਵਿਊ ਖੋਲ੍ਹੋਗੇ।',
       'close': 'ਬੰਦ ਕਰੋ',
       'agreeTextPrefix': 'ਮੈਂ ਪੜ੍ਹਿਆ ਹੈ ਅਤੇ ਸਹਿਮਤ ਹਾਂ ',
       'userAgreement': 'ਉਪਭੋਗਤਾ ਸਮਝੌਤਾ',
@@ -387,12 +390,12 @@ class AppLocalizations {
       'newPasswordHint': 'ਨਵਾਂ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ',
       'confirmPasswordHint': 'ਪਾਸਵਰਡ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'passwordMinEight':
-          'ਪਾਸਵਰਡ ਘੱਟੋ-ਘੱਟ 8 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
+      'ਪਾਸਵਰਡ ਘੱਟੋ-ਘੱਟ 8 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
       'passwordsDoNotMatch': 'ਪਾਸਵਰਡ ਮੇਲ ਨਹੀਂ ਖਾਂਦੇ।',
       'resetPasswordButton': 'ਪਾਸਵਰਡ ਰੀਸੈਟ ਕਰੋ',
       'verifyNumberTitle': 'ਆਪਣਾ ਨੰਬਰ ਤਸਦੀਕ ਕਰੋ',
       'verifyCodeDescription':
-          'ਅਸੀਂ ਤੁਹਾਡੇ ਈਮੇਲ ਉੱਤੇ 4 ਅੰਕਾਂ ਦਾ ਕੋਡ ਭੇਜਿਆ ਹੈ।',
+      'ਅਸੀਂ ਤੁਹਾਡੇ ਈਮੇਲ ਉੱਤੇ 4 ਅੰਕਾਂ ਦਾ ਕੋਡ ਭੇਜਿਆ ਹੈ।',
       'enterCodeLabel': 'ਕੋਡ ਦਰਜ ਕਰੋ',
       'verifyOtpButton': 'ਓਟੀਪੀ ਦੀ ਤਸਦੀਕ ਕਰੋ',
       'resendCountdown': 'ਕੋਡ ਨਹੀਂ ਮਿਲਿਆ? 00:{seconds} ਵਿੱਚ ਮੁੜ ਭੇਜੋ',
@@ -441,7 +444,7 @@ class AppLocalizations {
       'languageSelection': 'Lingua: {language}',
       'noWorkAddedYet': 'Nessun lavoro aggiunto',
       'startTrackingAttendance':
-          'Inizia a registrare le presenze\naggiungendo il tuo primo lavoro',
+      'Inizia a registrare le presenze\naggiungendo il tuo primo lavoro',
       'addYourFirstWork': 'Aggiungi il tuo primo lavoro',
       'hourlyWorkLabel': 'Lavoro Orario',
       'workNameLabel': 'Nome del Lavoro',
@@ -457,15 +460,16 @@ class AppLocalizations {
       'workAddedMessage': 'Lavoro aggiunto con successo.',
       'invalidHourlyRateMessage': 'Inserisci una tariffa oraria valida.',
       'workSaveFailedMessage': 'Impossibile salvare il lavoro. Riprova.',
+      'authenticationRequiredMessage': 'La tua sessione è scaduta. Accedi di nuovo.',
       'walkthroughTitleOne': 'Traccia facilmente le ore di lavoro',
       'walkthroughDescOne':
-          'Avvia e termina la giornata con un tocco. Tieni le ore precise e ordinate.',
+      'Avvia e termina la giornata con un tocco. Tieni le ore precise e ordinate.',
       'walkthroughTitleTwo': "Più lavori, un'unica app",
       'walkthroughDescTwo':
-          'Passa facilmente tra i lavori e vedi subito i tuoi guadagni.',
+      'Passa facilmente tra i lavori e vedi subito i tuoi guadagni.',
       'walkthroughTitleThree': 'La tua lingua, a modo tuo',
       'walkthroughDescThree':
-          'Disponibile in inglese, hindi, punjabi e italiano così gestisci le presenze come preferisci.',
+      'Disponibile in inglese, hindi, punjabi e italiano così gestisci le presenze come preferisci.',
       'skip': 'Salta',
       'splashTitle': 'PresenzePro',
       'loginTitle': 'Accesso',
@@ -498,7 +502,7 @@ class AppLocalizations {
       'termsAgreement': 'Accetta i termini per continuare.',
       'userAgreementTitle': 'Accordo utente e informativa privacy',
       'userAgreementContent':
-          "Questo è un testo fittizio per l'accordo utente e l'informativa privacy. Nell'app reale mostreresti il testo completo o apriresti una webview.",
+      "Questo è un testo fittizio per l'accordo utente e l'informativa privacy. Nell'app reale mostreresti il testo completo o apriresti una webview.",
       'close': 'Chiudi',
       'agreeTextPrefix': 'Ho letto e accetto ',
       'userAgreement': "l'Accordo utente",
@@ -512,16 +516,16 @@ class AppLocalizations {
       'newPasswordHint': 'Inserisci nuova password',
       'confirmPasswordHint': 'Conferma password',
       'passwordMinEight':
-          'La password deve contenere almeno 8 caratteri.',
+      'La password deve contenere almeno 8 caratteri.',
       'passwordsDoNotMatch': 'Le password non coincidono.',
       'resetPasswordButton': 'Reimposta password',
       'verifyNumberTitle': 'Verifica il tuo numero',
       'verifyCodeDescription':
-          'Abbiamo inviato un codice di 4 cifre alla tua email.',
+      'Abbiamo inviato un codice di 4 cifre alla tua email.',
       'enterCodeLabel': 'Inserisci il codice',
       'verifyOtpButton': 'Verifica codice',
       'resendCountdown':
-          'Non hai ricevuto il codice? Invia di nuovo tra 00:{seconds}',
+      'Non hai ricevuto il codice? Invia di nuovo tra 00:{seconds}',
       'resendCode': 'Invia di nuovo',
       'operationSuccessful': 'Operazione riuscita',
     },
@@ -602,6 +606,8 @@ class AppLocalizations {
   String get workAddedMessage => _value('workAddedMessage');
   String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
   String get workSaveFailedMessage => _value('workSaveFailedMessage');
+  String get authenticationRequiredMessage =>
+      _value('authenticationRequiredMessage');
   String get walkthroughTitleOne => _value('walkthroughTitleOne');
   String get walkthroughDescOne => _value('walkthroughDescOne');
   String get walkthroughTitleTwo => _value('walkthroughTitleTwo');

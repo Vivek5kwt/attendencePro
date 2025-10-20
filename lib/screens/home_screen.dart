@@ -552,6 +552,13 @@ class _HomeScreenState extends State<HomeScreen> {
       hourlyRate = parsedRate;
     }
 
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.authenticationRequiredMessage)),
+      );
+      return;
+    }
 
     setState(() {
       _isSavingWork = true;
@@ -563,6 +570,7 @@ class _HomeScreenState extends State<HomeScreen> {
         name: workName,
         hourlyRate: hourlyRate,
         isContract: true,
+        token: token,
       );
       if (!mounted) return;
       final message =  l.workAddedMessage;
