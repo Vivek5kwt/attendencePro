@@ -76,6 +76,46 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(option)));
   }
 
+  Future<void> _handleLogoutTap(AppLocalizations l) async {
+    Navigator.of(context).pop();
+
+    // Give the drawer a moment to close before showing the dialog.
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+
+    final shouldLogout = await _showLogoutConfirmationDialog(l);
+    if (!shouldLogout || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final success = await context.read<AppCubit>().logout();
+    final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<bool> _showLogoutConfirmationDialog(AppLocalizations l) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l.logoutConfirmationTitle),
+          content: Text(l.logoutConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l.logoutCancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l.logoutConfirmButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -228,14 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: l.logoutLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF007AFF),
-                      onTap: () {
-                        Navigator.of(context).pop();
-
-                        // Wait until the drawer animation finishes, then update AppCubit state
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          context.read<AppCubit>().logout(); // ✅ This emits AppAuth
-                        });
-                      },
+                      onTap: () => _handleLogoutTap(l),
                     ),
 
                   ],

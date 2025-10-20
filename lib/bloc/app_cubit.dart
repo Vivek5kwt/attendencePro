@@ -54,17 +54,27 @@ class AppCubit extends Cubit<AppState> {
   /// Show the Home screen (main app)
   void showHome() => emit(AppHome());
 
-  /// Perform logout and return to Auth screen
-  Future<void> logout() async {
+  /// Perform logout and return to Auth screen.
+  ///
+  /// Returns `true` when the logout API call succeeds (or when there is no
+  /// token stored, meaning the user is already logged out). When the network
+  /// request fails the method still clears the local session and navigates back
+  /// to the authentication flow, but it returns `false` so the UI can surface a
+  /// message to the user.
+  Future<bool> logout() async {
     final token = await _sessionManager.getToken();
+    var wasSuccessful = token == null;
     if (token != null) {
       try {
         await _authRepository.logout(token);
+        wasSuccessful = true;
       } catch (_) {
         // Ignore logout API errors to avoid blocking the user.
+        wasSuccessful = false;
       }
     }
     await _sessionManager.clearSession();
     emit(AppAuth());
+    return wasSuccessful;
   }
 }

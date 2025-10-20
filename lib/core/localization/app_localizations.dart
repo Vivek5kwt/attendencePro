@@ -37,6 +37,12 @@ class AppLocalizations {
       'changeLanguageLabel': 'Change Language',
       'helpSupportLabel': 'Help & Support',
       'logoutLabel': 'Logout',
+      'logoutConfirmationTitle': 'Confirm Logout',
+      'logoutConfirmationMessage': 'Are you sure you want to logout?',
+      'logoutConfirmButton': 'Logout',
+      'logoutCancelButton': 'Cancel',
+      'logoutSuccessMessage': 'User logged out successfully.',
+      'logoutFailedMessage': 'Unable to log out. Please try again.',
       'dashboardTappedMessage': 'Dashboard tapped',
       'addNewWorkTappedMessage': 'Add New Work tapped',
       'attendanceHistoryTappedMessage': 'Attendance History tapped',
@@ -132,6 +138,12 @@ class AppLocalizations {
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
       'logoutLabel': 'लॉग आउट',
+      'logoutConfirmationTitle': 'लॉग आउट की पुष्टि करें',
+      'logoutConfirmationMessage': 'क्या आप वाकई लॉग आउट करना चाहते हैं?',
+      'logoutConfirmButton': 'लॉग आउट',
+      'logoutCancelButton': 'रद्द करें',
+      'logoutSuccessMessage': 'उपयोगकर्ता सफलतापूर्वक लॉग आउट हुआ।',
+      'logoutFailedMessage': 'लॉग आउट नहीं हो सका। कृपया पुनः प्रयास करें।',
       'dashboardTappedMessage': 'डैशबोर्ड चुना गया',
       'addNewWorkTappedMessage': 'नया कार्य चुना गया',
       'attendanceHistoryTappedMessage': 'उपस्थिति इतिहास चुना गया',
@@ -227,6 +239,12 @@ class AppLocalizations {
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
       'logoutLabel': 'ਲੌਗ ਆਉਟ',
+      'logoutConfirmationTitle': 'ਲਾਗਆਉਟ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
+      'logoutConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਲਾਗਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
+      'logoutConfirmButton': 'ਲਾਗਆਉਟ',
+      'logoutCancelButton': 'ਰੱਦ ਕਰੋ',
+      'logoutSuccessMessage': 'ਉਪਭੋਗਤਾ ਸਫਲਤਾਪੂਰਵਕ ਲਾਗਆਉਟ ਹੋ ਗਿਆ।',
+      'logoutFailedMessage': 'ਲਾਗਆਉਟ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'dashboardTappedMessage': 'ਡੈਸ਼ਬੋਰਡ ਚੁਣਿਆ ਗਿਆ',
       'addNewWorkTappedMessage': 'ਨਵਾਂ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'attendanceHistoryTappedMessage': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਚੁਣਿਆ ਗਿਆ',
@@ -326,6 +344,12 @@ class AppLocalizations {
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
       'logoutLabel': 'Esci',
+      'logoutConfirmationTitle': 'Conferma logout',
+      'logoutConfirmationMessage': 'Sei sicuro di voler uscire?',
+      'logoutConfirmButton': 'Esci',
+      'logoutCancelButton': 'Annulla',
+      'logoutSuccessMessage': 'Disconnessione avvenuta con successo.',
+      'logoutFailedMessage': 'Impossibile disconnettersi. Riprova.',
       'dashboardTappedMessage': 'Dashboard selezionata',
       'addNewWorkTappedMessage': 'Nuovo lavoro selezionato',
       'attendanceHistoryTappedMessage': 'Storico presenze selezionato',
@@ -432,6 +456,13 @@ class AppLocalizations {
   String get changeLanguageLabel => _value('changeLanguageLabel');
   String get helpSupportLabel => _value('helpSupportLabel');
   String get logoutLabel => _value('logoutLabel');
+  String get logoutConfirmationTitle => _value('logoutConfirmationTitle');
+  String get logoutConfirmationMessage =>
+      _value('logoutConfirmationMessage');
+  String get logoutConfirmButton => _value('logoutConfirmButton');
+  String get logoutCancelButton => _value('logoutCancelButton');
+  String get logoutSuccessMessage => _value('logoutSuccessMessage');
+  String get logoutFailedMessage => _value('logoutFailedMessage');
   String get dashboardTappedMessage => _value('dashboardTappedMessage');
   String get addNewWorkTappedMessage => _value('addNewWorkTappedMessage');
   String get attendanceHistoryTappedMessage =>
