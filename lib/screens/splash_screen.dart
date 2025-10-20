@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           // ✅ Background image
           Image.asset(
-            'assets/images/Splash (2).png', // <-- Use your blue+white curve background image
+            AppAssets.splashBackground, // <-- Use your blue+white curve background image
             fit: BoxFit.cover,
           ),
 
@@ -27,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  'assets/images/logo_splash.png', // <-- Use your calendar/clock logo
+                  AppAssets.splashLogo, // <-- Use your calendar/clock logo
                   width: 140,
                   height: 140,
                   fit: BoxFit.contain,
@@ -41,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'AttendancePro',
+                  AppStrings.splashTitle,
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
