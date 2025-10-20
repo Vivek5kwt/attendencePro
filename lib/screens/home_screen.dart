@@ -119,8 +119,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         l.shareAppTitle,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -267,9 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           l.addNewWorkLabel,
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 20,
-                              ),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -311,8 +311,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               l.hourlyWorkLabel,
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ],
                         ),
@@ -320,8 +320,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           l.workNameLabel,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
@@ -353,8 +353,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           l.hourlySalaryLabel,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
@@ -415,8 +415,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Text(
                                 l.contractWorkHeader,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
@@ -458,8 +458,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           l.contractWorkDescription,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFF784600),
-                              ),
+                            color: const Color(0xFF784600),
+                          ),
                         ),
                       ],
                     ),
@@ -501,19 +501,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: _isSavingWork
                               ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
                               : Text(
-                                  l.saveWorkButton,
-                                  style:
-                                      const TextStyle(fontWeight: FontWeight.w700),
-                                ),
+                            l.saveWorkButton,
+                            style:
+                            const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ),
                     ],
@@ -552,18 +552,20 @@ class _HomeScreenState extends State<HomeScreen> {
       hourlyRate = parsedRate;
     }
 
+
     setState(() {
       _isSavingWork = true;
     });
 
     try {
-      final response = await _workApi.createWork(
+      Map<String, dynamic> response = const <String, dynamic>{};
+      response = await _workApi.createWork(
         name: workName,
         hourlyRate: hourlyRate,
         isContract: true,
       );
       if (!mounted) return;
-      final message = _extractWorkMessage(response) ?? l.workAddedMessage;
+      final message =  l.workAddedMessage;
       context.read<AttendanceBloc>().add(AddStudent(workName));
       messenger.showSnackBar(
         SnackBar(content: Text(message)),
@@ -593,6 +595,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _workNameController.clear();
     _hourlySalaryController.clear();
   }
+
+
 
   String? _extractWorkMessage(Map<String, dynamic> response) {
     const possibleKeys = ['message', 'status', 'detail'];
@@ -829,7 +833,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return const Center(child: CircularProgressIndicator());
                 } else if (state is AttendanceLoaded) {
                   // Fix: show placeholder when the list is empty; show the list when not empty.
-                  if (state.students.isEmpty) {
+                  if (!state.students.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Center(
@@ -950,10 +954,10 @@ class _HomeScreenState extends State<HomeScreen> {
           children: options.entries
               .map(
                 (entry) => SimpleDialogOption(
-                  onPressed: () => Navigator.pop(ctx, entry.key),
-                  child: Text(entry.value),
-                ),
-              )
+              onPressed: () => Navigator.pop(ctx, entry.key),
+              child: Text(entry.value),
+            ),
+          )
               .toList(),
         );
       },
