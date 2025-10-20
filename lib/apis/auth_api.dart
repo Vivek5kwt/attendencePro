@@ -67,6 +67,18 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
+  /// Logout the currently authenticated user: POST /api/auth/logout
+  Future<Map<String, dynamic>> logout(String token) async {
+    final uri = Uri.parse('$baseUrl/api/auth/logout');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    return _sendPost(uri, headers: headers, body: jsonEncode({}));
+  }
+
   Future<Map<String, dynamic>> _sendPost(
     Uri uri, {
     required Map<String, String> headers,

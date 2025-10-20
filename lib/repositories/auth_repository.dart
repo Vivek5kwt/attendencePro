@@ -24,4 +24,8 @@ class AuthRepository {
       confirm: confirm,
     );
   }
+
+  Future<Map<String, dynamic>> logout(String token) {
+    return _api.logout(token);
+  }
 }
