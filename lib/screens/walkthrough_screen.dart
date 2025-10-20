@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../bloc/app_cubit.dart';
+import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
 
 class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({Key? key}) : super(key: key);
@@ -15,24 +18,21 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
 
   final List<_WalkPageData> _pages = [
     _WalkPageData(
-      title: "Track Your Work Hours Easily",
-      description:
-      "Start and end your day with just one tap. Keep your hours accurate and organized.",
-      imagePath: "assets/images/img_walkthrough1.png",
+      title: AppStrings.walkthroughTitleOne,
+      description: AppStrings.walkthroughDescOne,
+      imagePath: AppAssets.walkthroughImageOne,
       backgroundColor: const Color(0xFFF7F8FA),
     ),
     _WalkPageData(
-      title: "Add Multiple Jobs, One App",
-      description:
-      "Switch easily between multiple works and see your earnings instantly. One place for all your shifts.",
-      imagePath: "assets/images/img_walkthrough2.png",
+      title: AppStrings.walkthroughTitleTwo,
+      description: AppStrings.walkthroughDescTwo,
+      imagePath: AppAssets.walkthroughImageTwo,
       backgroundColor: const Color(0xFFF7F8FA),
     ),
     _WalkPageData(
-      title: "Your Language. Your Way.",
-      description:
-      "Available in English, Hindi, Punjabi, and Italian so you can manage attendance in your own comfort.",
-      imagePath: "assets/images/img_walkthrough3.png",
+      title: AppStrings.walkthroughTitleThree,
+      description: AppStrings.walkthroughDescThree,
+      imagePath: AppAssets.walkthroughImageThree,
       backgroundColor: const Color(0xFFF7F8FA),
     ),
   ];
@@ -79,7 +79,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               child: TextButton(
                 onPressed: _onSkip,
                 child: const Text(
-                  "Skip",
+                  AppStrings.skip,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.black87,

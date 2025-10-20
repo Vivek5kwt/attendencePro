@@ -6,6 +6,8 @@ import '../bloc/app_cubit.dart';
 import '../bloc/attendance_bloc.dart';
 import '../bloc/attendance_event.dart';
 import '../bloc/attendance_state.dart';
+import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
 import '../models/student.dart';
 import '../widgets/student_tile.dart';
 
@@ -42,20 +44,22 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.work_outline),
-                title: const Text('Work A'),
+                title: const Text(AppStrings.workA),
                 onTap: () {
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(const SnackBar(content: Text('Switched to Work A')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text(AppStrings.switchedToWorkA)),
+                  );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.work),
-                title: const Text('Work B'),
+                title: const Text(AppStrings.workB),
                 onTap: () {
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(const SnackBar(content: Text('Switched to Work B')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text(AppStrings.switchedToWorkB)),
+                  );
                 },
               ),
             ],
@@ -87,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         title: const Text(
-          'AttendancePro',
+          AppStrings.appTitle,
           style: TextStyle(color: Colors.black),
         ),
         actions: [
@@ -128,14 +132,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const CircleAvatar(
                           radius: 32,
-                          backgroundImage: AssetImage('assets/profile_placeholder.png'),
+                          backgroundImage: AssetImage(AppAssets.profilePlaceholder),
                         ),
                         const SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
                             Text(
-                              'John Snow',
+                              AppStrings.drawerUserName,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -144,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              '+39-319-055-5550',
+                              AppStrings.drawerUserPhone,
                               style: TextStyle(color: Colors.white, fontSize: 14),
                             ),
                           ],
@@ -161,35 +165,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     _drawerItem(
                       icon: Icons.home_outlined,
-                      label: 'Dashboard',
+                      label: AppStrings.dashboardLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF48A9FF),
-                      onTap: () => _onDrawerOptionSelected('Dashboard tapped'),
+                      onTap: () =>
+                          _onDrawerOptionSelected(AppStrings.dashboardTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.work_outline,
-                      label: 'Add New Work',
+                      label: AppStrings.addNewWorkLabel,
                       bgColor: const Color(0xFFE8F8F0),
                       iconColor: const Color(0xFF34C759),
-                      onTap: () => _onDrawerOptionSelected('Add New Work tapped'),
+                      onTap: () =>
+                          _onDrawerOptionSelected(AppStrings.addNewWorkTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.access_time,
-                      label: 'Attendance History',
+                      label: AppStrings.attendanceHistoryLabel,
                       bgColor: const Color(0xFFFFF2F2),
                       iconColor: const Color(0xFFFF3B30),
-                      onTap: () => _onDrawerOptionSelected('Attendance History tapped'),
+                      onTap: () => _onDrawerOptionSelected(
+                          AppStrings.attendanceHistoryTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.assignment_outlined,
-                      label: 'Contract Work',
+                      label: AppStrings.contractWorkLabel,
                       bgColor: const Color(0xFFEDEBFF),
                       iconColor: const Color(0xFF5856D6),
-                      onTap: () => _onDrawerOptionSelected('Contract Work tapped'),
+                      onTap: () =>
+                          _onDrawerOptionSelected(AppStrings.contractWorkTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.language,
-                      label: 'Change Language',
+                      label: AppStrings.changeLanguageLabel,
                       bgColor: const Color(0xFFF8E8FA),
                       iconColor: const Color(0xFFAF52DE),
                       onTap: () async {
@@ -198,19 +206,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           context: context,
                           builder: (context) {
                             return SimpleDialog(
-                              title: const Text('Select Language'),
+                              title: const Text(AppStrings.selectLanguageTitle),
                               children: [
                                 SimpleDialogOption(
-                                  child: const Text('English'),
-                                  onPressed: () => Navigator.pop(context, 'English'),
+                                  child: const Text(AppStrings.english),
+                                  onPressed: () =>
+                                      Navigator.pop(context, AppStrings.english),
                                 ),
                                 SimpleDialogOption(
-                                  child: const Text('Spanish'),
-                                  onPressed: () => Navigator.pop(context, 'Spanish'),
+                                  child: const Text(AppStrings.spanish),
+                                  onPressed: () =>
+                                      Navigator.pop(context, AppStrings.spanish),
                                 ),
                                 SimpleDialogOption(
-                                  child: const Text('French'),
-                                  onPressed: () => Navigator.pop(context, 'French'),
+                                  child: const Text(AppStrings.french),
+                                  onPressed: () =>
+                                      Navigator.pop(context, AppStrings.french),
                                 ),
                               ],
                             );
@@ -218,21 +229,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                         if (selected != null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Language: $selected')),
+                            SnackBar(
+                              content: Text(AppStrings.languageSelection(selected)),
+                            ),
                           );
                         }
                       },
                     ),
                     _drawerItem(
                       icon: Icons.support_agent_outlined,
-                      label: 'Help & Support',
+                      label: AppStrings.helpSupportLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF007AFF),
-                      onTap: () => _onDrawerOptionSelected('Help & Support tapped'),
+                      onTap: () =>
+                          _onDrawerOptionSelected(AppStrings.helpSupportTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.logout,
-                      label: 'Logout',
+                      label: AppStrings.logoutLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF007AFF),
                       onTap: () {
@@ -254,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          Image.asset('assets/images/home_banner.png', width: 330),
+          Image.asset(AppAssets.homeBanner, width: 330),
 
           Expanded(
             child: BlocBuilder<AttendanceBloc, AttendanceState>(
@@ -270,17 +284,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset('assets/images/ic_work_placeholder.png', width: 100),
+                            Image.asset(AppAssets.workPlaceholder, width: 100),
                             const SizedBox(height: 12),
                             const Text(
-                              'No Work Added Yet',
+                              AppStrings.noWorkAddedYet,
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
                             Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: const Text(
-                                'Start tracking your attendance \nby adding your first work',
+                                AppStrings.startTrackingAttendance,
                                 textAlign:TextAlign.center,
                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
                               ),
@@ -300,10 +314,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                     elevation: 0,
                                   ),
                                   onPressed: () {
-                                    context.read<AttendanceBloc>().add(AddStudent('Work A'));
+                                    context
+                                        .read<AttendanceBloc>()
+                                        .add(AddStudent(AppStrings.workA));
                                   },
                                   child: const Text(
-                                    "Add Your First Work",
+                                    AppStrings.addYourFirstWork,
                                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                   ),
                                 ),
