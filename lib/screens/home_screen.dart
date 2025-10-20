@@ -1231,6 +1231,7 @@ class _HomeScreenState extends State<HomeScreen> {
       key: ValueKey(work.id),
       direction: DismissDirection.endToStart,
       confirmDismiss: (_) => _handleWorkDismiss(work, l),
+      background: const SizedBox.shrink(),
       secondaryBackground: _buildDeleteBackground(l),
       child: Stack(
         children: [
