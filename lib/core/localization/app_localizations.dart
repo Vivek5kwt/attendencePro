@@ -84,6 +84,11 @@ class AppLocalizations {
       'workAddedMessage': 'Work added successfully.',
       'invalidHourlyRateMessage': 'Please enter a valid hourly rate.',
       'workSaveFailedMessage': 'Failed to save work. Please try again.',
+      'worksLoadFailedTitle': 'Unable to load works',
+      'worksLoadFailedMessage':
+          'We couldn\'t fetch your works. Pull to refresh or try again.',
+      'retryButtonLabel': 'Retry',
+      'notAvailableLabel': 'Not available',
       'authenticationRequiredMessage': 'Your session has expired. Please log in again.',
       'walkthroughTitleOne': 'Track Your Work Hours Easily',
       'walkthroughDescOne':
@@ -208,6 +213,11 @@ class AppLocalizations {
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
       'invalidHourlyRateMessage': 'कृपया मान्य प्रति घंटा दर दर्ज करें।',
       'workSaveFailedMessage': 'कार्य सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
+      'worksLoadFailedTitle': 'कार्य लोड नहीं हो सका',
+      'worksLoadFailedMessage':
+          'हम आपके कार्य लोड नहीं कर पाए। कृपया नीचे खींचकर रिफ्रेश करें या पुनः प्रयास करें।',
+      'retryButtonLabel': 'पुनः प्रयास करें',
+      'notAvailableLabel': 'उपलब्ध नहीं',
       'authenticationRequiredMessage': 'आपका सत्र समाप्त हो गया है। कृपया पुनः लॉग इन करें।',
       'walkthroughTitleOne': 'अपने कार्य घंटों को आसानी से ट्रैक करें',
       'walkthroughDescOne':
@@ -332,6 +342,11 @@ class AppLocalizations {
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
       'invalidHourlyRateMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਠੀਕ ਘੰਟਾਵਾਰੀ ਦਰ ਦਰਜ ਕਰੋ।',
       'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'worksLoadFailedTitle': 'ਕੰਮ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ',
+      'worksLoadFailedMessage':
+          'ਅਸੀਂ ਤੁਹਾਡੇ ਕੰਮ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕੇ। ਕਿਰਪਾ ਕਰਕੇ ਹੇਠਾਂ ਖਿੱਚ ਕੇ ਰਿਫ਼ਰੈਸ਼ ਕਰੋ ਜਾਂ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'retryButtonLabel': 'ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ',
+      'notAvailableLabel': 'ਉਪਲਬਧ ਨਹੀਂ',
       'authenticationRequiredMessage': 'ਤੁਹਾਡਾ ਸੈਸ਼ਨ ਸਮਾਪਤ ਹੋ ਗਿਆ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਲੌਗਇਨ ਕਰੋ।',
       'walkthroughTitleOne':
       'ਆਪਣੇ ਕੰਮ ਦੇ ਘੰਟੇ ਆਸਾਨੀ ਨਾਲ ਟ੍ਰੈਕ ਕਰੋ',
@@ -460,6 +475,11 @@ class AppLocalizations {
       'workAddedMessage': 'Lavoro aggiunto con successo.',
       'invalidHourlyRateMessage': 'Inserisci una tariffa oraria valida.',
       'workSaveFailedMessage': 'Impossibile salvare il lavoro. Riprova.',
+      'worksLoadFailedTitle': 'Impossibile caricare i lavori',
+      'worksLoadFailedMessage':
+          'Non siamo riusciti a recuperare i tuoi lavori. Trascina verso il basso per aggiornare o riprova.',
+      'retryButtonLabel': 'Riprova',
+      'notAvailableLabel': 'Non disponibile',
       'authenticationRequiredMessage': 'La tua sessione è scaduta. Accedi di nuovo.',
       'walkthroughTitleOne': 'Traccia facilmente le ore di lavoro',
       'walkthroughDescOne':
@@ -606,6 +626,10 @@ class AppLocalizations {
   String get workAddedMessage => _value('workAddedMessage');
   String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
   String get workSaveFailedMessage => _value('workSaveFailedMessage');
+  String get worksLoadFailedTitle => _value('worksLoadFailedTitle');
+  String get worksLoadFailedMessage => _value('worksLoadFailedMessage');
+  String get retryButtonLabel => _value('retryButtonLabel');
+  String get notAvailableLabel => _value('notAvailableLabel');
   String get authenticationRequiredMessage =>
       _value('authenticationRequiredMessage');
   String get walkthroughTitleOne => _value('walkthroughTitleOne');

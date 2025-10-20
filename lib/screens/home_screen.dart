@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../apis/auth_api.dart' show ApiException;
 import '../apis/work_api.dart';
 import '../bloc/app_cubit.dart';
-import '../bloc/attendance_bloc.dart';
-import '../bloc/attendance_event.dart';
-import '../bloc/attendance_state.dart';
 import '../core/constants/app_assets.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
-import '../models/student.dart';
-import '../widgets/student_tile.dart';
+import '../models/work.dart';
 import '../utils/session_manager.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,12 +29,18 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _userName;
   String? _userEmail;
   bool _isSavingWork = false;
+  List<Work> _works = const <Work>[];
+  bool _isLoadingWorks = false;
+  String? _worksError;
 
   @override
   void initState() {
     super.initState();
-    context.read<AttendanceBloc>().add(LoadStudents());
     _loadUserDetails();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _fetchWorks();
+    });
   }
 
   Future<void> _loadUserDetails() async {
@@ -59,6 +60,80 @@ class _HomeScreenState extends State<HomeScreen> {
       final username = _normalize(details['username']);
       _userEmail = email ?? username;
     });
+  }
+
+  Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    setState(() {
+      _isLoadingWorks = true;
+      _worksError = null;
+    });
+
+    final token = await _sessionManager.getToken();
+    if (!mounted) {
+      return;
+    }
+
+    if (token == null || token.isEmpty) {
+      final message = l.authenticationRequiredMessage;
+      setState(() {
+        _isLoadingWorks = false;
+        _worksError = message;
+        _works = const <Work>[];
+      });
+      if (showSnackBarOnError) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+      return;
+    }
+
+    try {
+      final works = await _workApi.fetchWorks(token: token);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _works = works;
+        _worksError = null;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final message = e.message.isNotEmpty ? e.message : l.worksLoadFailedMessage;
+      setState(() {
+        _worksError = message;
+      });
+      if (showSnackBarOnError) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      final message = l.worksLoadFailedMessage;
+      setState(() {
+        _worksError = message;
+      });
+      if (showSnackBarOnError) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingWorks = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleAddWorkFromDrawer() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    _showAddWorkDialog();
   }
 
   void _showChangeWorkMenu() {
@@ -573,13 +648,13 @@ class _HomeScreenState extends State<HomeScreen> {
         token: token,
       );
       if (!mounted) return;
-      final message =  l.workAddedMessage;
-      context.read<AttendanceBloc>().add(AddStudent(workName));
+      final message = _extractWorkMessage(response) ?? l.workAddedMessage;
       messenger.showSnackBar(
         SnackBar(content: Text(message)),
       );
       _clearAddWorkForm();
       Navigator.of(dialogContext).pop();
+      await _fetchWorks();
     } on ApiException catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -679,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor:  Colors.transparent,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         // Use a Builder here so the IconButton has a context that is a descendant of the Scaffold.
         // Calling Scaffold.of(context).openDrawer() with the AppBar's own context won't find the Scaffold.
@@ -778,8 +853,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: l.addNewWorkLabel,
                       bgColor: const Color(0xFFE8F8F0),
                       iconColor: const Color(0xFF34C759),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.addNewWorkTappedMessage),
+                      onTap: _handleAddWorkFromDrawer,
                     ),
                     _drawerItem(
                       icon: Icons.access_time,
@@ -834,88 +908,236 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Image.asset(AppAssets.homeBanner, width: 330),
 
-          Expanded(
-            child: BlocBuilder<AttendanceBloc, AttendanceState>(
-              builder: (context, state) {
-                if (state is AttendanceLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is AttendanceLoaded) {
-                  // Fix: show placeholder when the list is empty; show the list when not empty.
-                  if (!state.students.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(AppAssets.workPlaceholder, width: 100),
-                            const SizedBox(height: 12),
-                            Text(
-                              l.noWorkAddedYet,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 6),
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Text(
-                                l.startTrackingAttendance,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: SizedBox(
-                                width: double.infinity,
-                                height: 52,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF007BFF),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  onPressed: () {
-                                    _showAddWorkDialog();
-                                  },
-                                  child: Text(
-                                    l.addYourFirstWork,
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 60),
-                          ],
-                        ),
+          Expanded(child: _buildWorksContent(l)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorksContent(AppLocalizations l) {
+    if (_isLoadingWorks) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_worksError != null && _works.isEmpty) {
+      return _buildWorksErrorState(l, _worksError!);
+    }
+
+    if (_works.isEmpty) {
+      return _buildWorksEmptyState(l);
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        itemCount: _works.length,
+        itemBuilder: (context, index) => _buildWorkCard(_works[index], l),
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+      ),
+    );
+  }
+
+  Widget _buildWorksEmptyState(AppLocalizations l) {
+    return RefreshIndicator(
+      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(AppAssets.workPlaceholder, width: 100),
+                const SizedBox(height: 12),
+                Text(
+                  l.noWorkAddedYet,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    l.startTrackingAttendance,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007BFF),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
                       ),
-                    );
-                  } else {
-                    return ListView.builder(
-                      itemCount: state.students.length,
-                      itemBuilder: (context, index) {
-                        final Student s = state.students[index];
-                        return StudentTile(
-                          student: s,
-                          onToggle: () =>
-                              context.read<AttendanceBloc>().add(ToggleAttendance(s.id)),
-                        );
-                      },
-                    );
-                  }
-                } else if (state is AttendanceError) {
-                  return Center(child: Text(state.message));
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
+                      elevation: 0,
+                    ),
+                    onPressed: _showAddWorkDialog,
+                    child: Text(
+                      l.addYourFirstWork,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 60),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildWorksErrorState(AppLocalizations l, String message) {
+    return RefreshIndicator(
+      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Color(0xFFD32F2F), size: 64),
+                const SizedBox(height: 16),
+                Text(
+                  l.worksLoadFailedTitle,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: const TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: 160,
+                  child: OutlinedButton(
+                    onPressed: () => _fetchWorks(showSnackBarOnError: true),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      l.retryButtonLabel,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkCard(Work work, AppLocalizations l) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            height: 54,
+            width: 54,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5F1FF),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.work_outline,
+              color: Color(0xFF007BFF),
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  work.name,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ) ??
+                      const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatHourlyRate(work, l),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF4F5B67),
+                      ) ??
+                      const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF4F5B67),
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: work.isContract
+                  ? const Color(0xFFFFF5EC)
+                  : const Color(0xFFE5F6FE),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              work.isContract ? l.contractWorkLabel : l.hourlyWorkLabel,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0A0A0A),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatHourlyRate(Work work, AppLocalizations l) {
+    final rate = work.hourlyRate;
+    if (rate == null) {
+      return '${l.hourlySalaryLabel}: ${l.notAvailableLabel}';
+    }
+
+    final double doubleValue = rate.toDouble();
+    final bool isWhole = doubleValue.roundToDouble() == doubleValue;
+    final formatted = isWhole
+        ? doubleValue.toStringAsFixed(0)
+        : doubleValue.toStringAsFixed(2);
+
+    return '${l.hourlySalaryLabel}: $formatted';
   }
 
   Widget _drawerItem({
