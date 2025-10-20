@@ -25,7 +25,8 @@ class AuthVerifyNumber extends AuthState {
 
 class AuthCreatePassword extends AuthState {
   final String phone;
-  AuthCreatePassword(this.phone);
+  final String? infoMessage;
+  AuthCreatePassword(this.phone, {this.infoMessage});
 }
 
 class AuthAuthenticated extends AuthState {
@@ -55,6 +56,9 @@ class AuthCubit extends Cubit<AuthState> {
   String? _pendingName;
   String? _pendingPassword;
   String? _pendingConfirm;
+  String? _verifyToken;
+
+  String? get verifyToken => _verifyToken;
 
   void showPhone({bool isSignup = false, String? name}) {
     _isSignup = isSignup;
@@ -80,6 +84,7 @@ class AuthCubit extends Cubit<AuthState> {
     _pendingName = name;
     _pendingPassword = password;
     _pendingConfirm = confirm;
+    _verifyToken = null;
     emit(AuthVerifyNumber(phone, isSignup: isSignup));
   }
 
@@ -177,6 +182,7 @@ class AuthCubit extends Cubit<AuthState> {
       _pendingPhone = trimmedEmail;
       _isReset = true;
       _isSignup = false;
+      _verifyToken = null;
       emit(AuthVerifyNumber(trimmedEmail, infoMessage: message));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -190,38 +196,77 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthPhoneInput(isSignup: _isSignup, name: _pendingName));
       return;
     }
-    if (code.trim().isEmpty) {
+    final trimmedCode = code.trim();
+    if (trimmedCode.isEmpty) {
       emit(AuthError('Please enter the verification code.'));
       emit(AuthVerifyNumber(_pendingPhone!, isSignup: _isSignup));
       return;
     }
 
     emit(AuthLoading());
-    await Future.delayed(const Duration(milliseconds: 400));
+    try {
+      if (_isReset) {
+        final otpValue = int.tryParse(trimmedCode);
+        if (otpValue == null) {
+          emit(AuthVerifyNumber(
+            _pendingPhone!,
+            isSignup: _isSignup,
+            infoMessage: 'Invalid verification code format.',
+          ));
+          return;
+        }
 
-    if (_isSignup) {
-      if (_pendingPassword != null && _pendingConfirm != null) {
-        final password = _pendingPassword!;
-        final confirm = _pendingConfirm!;
-        if (password.isEmpty || confirm.isEmpty) {
-          emit(AuthError('Please enter and confirm your password.'));
-          emit(AuthCreatePassword(_pendingPhone!));
-          return;
+        final response = await _repository.verifyOtp(
+          email: _pendingPhone!,
+          otp: otpValue,
+        );
+
+        final message =
+            _extractReadableMessage(response) ?? 'OTP verified successfully.';
+        final token = _extractVerifyToken(response);
+        if (token != null) {
+          _verifyToken = token;
         }
-        if (password != confirm) {
-          emit(AuthError('Passwords do not match.'));
-          emit(AuthCreatePassword(_pendingPhone!));
-          return;
-        }
-        await Future.delayed(const Duration(milliseconds: 400));
-        emit(AuthAuthenticated(data: {'phone': _pendingPhone}));
-      } else {
-        emit(AuthCreatePassword(_pendingPhone!));
+        emit(AuthCreatePassword(
+          _pendingPhone!,
+          infoMessage: message,
+        ));
+        return;
       }
-    } else if (_isReset) {
-      emit(AuthCreatePassword(_pendingPhone!));
-    } else {
-      emit(AuthAuthenticated(data: {'phone': _pendingPhone}));
+
+      if (_isSignup) {
+        if (_pendingPassword != null && _pendingConfirm != null) {
+          final password = _pendingPassword!;
+          final confirm = _pendingConfirm!;
+          if (password.isEmpty || confirm.isEmpty) {
+            emit(AuthError('Please enter and confirm your password.'));
+            emit(AuthCreatePassword(_pendingPhone!));
+            return;
+          }
+          if (password != confirm) {
+            emit(AuthError('Passwords do not match.'));
+            emit(AuthCreatePassword(_pendingPhone!));
+            return;
+          }
+          emit(AuthAuthenticated(data: {'phone': _pendingPhone}));
+        } else {
+          emit(AuthCreatePassword(_pendingPhone!));
+        }
+      } else {
+        emit(AuthAuthenticated(data: {'phone': _pendingPhone}));
+      }
+    } on ApiException catch (e) {
+      emit(AuthVerifyNumber(
+        _pendingPhone!,
+        isSignup: _isSignup,
+        infoMessage: e.message,
+      ));
+    } catch (e) {
+      emit(AuthVerifyNumber(
+        _pendingPhone!,
+        isSignup: _isSignup,
+        infoMessage: 'Network error: $e',
+      ));
     }
   }
 
@@ -247,6 +292,17 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthAuthenticated(data: {'phone': _pendingPhone}));
     _isReset = false;
     _isSignup = false;
+  }
+
+  String? _extractVerifyToken(Map<String, dynamic> response) {
+    final data = response['data'];
+    if (data is Map<String, dynamic>) {
+      final potentialToken = data['verify_token'];
+      if (potentialToken is String && potentialToken.isNotEmpty) {
+        return potentialToken;
+      }
+    }
+    return null;
   }
 
   void backToPhone() {

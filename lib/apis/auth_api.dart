@@ -93,6 +93,24 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
+  /// Verify the OTP sent to the user's email: POST /api/auth/verify-otp
+  Future<Map<String, dynamic>> verifyOtp({
+    required String email,
+    required int otp,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/auth/verify-otp');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final body = jsonEncode({
+      'email': email,
+      'otp': otp,
+    });
+
+    return _sendPost(uri, headers: headers, body: body);
+  }
+
   Future<Map<String, dynamic>> _sendPost(
     Uri uri, {
     required Map<String, String> headers,

@@ -30,6 +30,28 @@ class _AuthFlowState extends State<AuthFlow> {
       listener: (context, state) {
         if (state is AuthAuthenticated) {
           context.read<AppCubit>().showHome();
+        } else if (state is AuthVerifyNumber) {
+          final message = state.infoMessage;
+          if (message != null && message.trim().isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message.trim()),
+                backgroundColor: Colors.black87,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        } else if (state is AuthCreatePassword) {
+          final message = state.infoMessage;
+          if (message != null && message.trim().isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message.trim()),
+                backgroundColor: Colors.black87,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

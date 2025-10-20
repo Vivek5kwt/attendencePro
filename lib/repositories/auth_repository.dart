@@ -32,4 +32,11 @@ class AuthRepository {
   Future<Map<String, dynamic>> forgotPassword(String email) {
     return _api.forgotPassword(email);
   }
+
+  Future<Map<String, dynamic>> verifyOtp({
+    required String email,
+    required int otp,
+  }) {
+    return _api.verifyOtp(email: email, otp: otp);
+  }
 }
