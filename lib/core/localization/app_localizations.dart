@@ -83,6 +83,13 @@ class AppLocalizations {
       'workNameRequiredMessage': 'Please enter a work name.',
       'workAddedMessage': 'Work added successfully.',
       'invalidHourlyRateMessage': 'Please enter a valid hourly rate.',
+      'workDeleteConfirmationTitle': 'Delete Work',
+      'workDeleteConfirmationMessage':
+          'Are you sure you want to delete this work?',
+      'workDeleteConfirmButton': 'Delete',
+      'workDeleteCancelButton': 'Cancel',
+      'workDeleteSuccessMessage': 'Work deleted successfully.',
+      'workDeleteFailedMessage': 'Failed to delete work. Please try again.',
       'workSaveFailedMessage': 'Failed to save work. Please try again.',
       'worksLoadFailedTitle': 'Unable to load works',
       'worksLoadFailedMessage':
@@ -212,6 +219,13 @@ class AppLocalizations {
       'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
       'invalidHourlyRateMessage': 'कृपया मान्य प्रति घंटा दर दर्ज करें।',
+      'workDeleteConfirmationTitle': 'काम हटाएं',
+      'workDeleteConfirmationMessage':
+          'क्या आप वाकई इस काम को हटाना चाहते हैं?',
+      'workDeleteConfirmButton': 'हटाएं',
+      'workDeleteCancelButton': 'रद्द करें',
+      'workDeleteSuccessMessage': 'काम सफलतापूर्वक हटाया गया।',
+      'workDeleteFailedMessage': 'काम हटाने में विफल। कृपया पुनः प्रयास करें।',
       'workSaveFailedMessage': 'कार्य सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
       'worksLoadFailedTitle': 'कार्य लोड नहीं हो सका',
       'worksLoadFailedMessage':
@@ -341,6 +355,12 @@ class AppLocalizations {
       'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
       'invalidHourlyRateMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਠੀਕ ਘੰਟਾਵਾਰੀ ਦਰ ਦਰਜ ਕਰੋ।',
+      'workDeleteConfirmationTitle': 'ਕੰਮ ਮਿਟਾਓ',
+      'workDeleteConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਇਹ ਕੰਮ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?',
+      'workDeleteConfirmButton': 'ਮਿਟਾਓ',
+      'workDeleteCancelButton': 'ਰੱਦ ਕਰੋ',
+      'workDeleteSuccessMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਮਿਟਾਇਆ ਗਿਆ।',
+      'workDeleteFailedMessage': 'ਕੰਮ ਮਿਟਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'worksLoadFailedTitle': 'ਕੰਮ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ',
       'worksLoadFailedMessage':
@@ -474,6 +494,14 @@ class AppLocalizations {
       'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
       'workAddedMessage': 'Lavoro aggiunto con successo.',
       'invalidHourlyRateMessage': 'Inserisci una tariffa oraria valida.',
+      'workDeleteConfirmationTitle': 'Elimina lavoro',
+      'workDeleteConfirmationMessage':
+          'Sei sicuro di voler eliminare questo lavoro?',
+      'workDeleteConfirmButton': 'Elimina',
+      'workDeleteCancelButton': 'Annulla',
+      'workDeleteSuccessMessage': 'Lavoro eliminato con successo.',
+      'workDeleteFailedMessage':
+          'Impossibile eliminare il lavoro. Riprova.',
       'workSaveFailedMessage': 'Impossibile salvare il lavoro. Riprova.',
       'worksLoadFailedTitle': 'Impossibile caricare i lavori',
       'worksLoadFailedMessage':
@@ -625,6 +653,14 @@ class AppLocalizations {
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
   String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
+  String get workDeleteConfirmationTitle =>
+      _value('workDeleteConfirmationTitle');
+  String get workDeleteConfirmationMessage =>
+      _value('workDeleteConfirmationMessage');
+  String get workDeleteConfirmButton => _value('workDeleteConfirmButton');
+  String get workDeleteCancelButton => _value('workDeleteCancelButton');
+  String get workDeleteSuccessMessage => _value('workDeleteSuccessMessage');
+  String get workDeleteFailedMessage => _value('workDeleteFailedMessage');
   String get workSaveFailedMessage => _value('workSaveFailedMessage');
   String get worksLoadFailedTitle => _value('worksLoadFailedTitle');
   String get worksLoadFailedMessage => _value('worksLoadFailedMessage');

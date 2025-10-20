@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Work> _works = const <Work>[];
   bool _isLoadingWorks = false;
   String? _worksError;
+  String? _deletingWorkId;
 
   @override
   void initState() {
@@ -692,6 +693,107 @@ class _HomeScreenState extends State<HomeScreen> {
     return null;
   }
 
+  Future<bool?> _handleWorkDismiss(Work work, AppLocalizations l) async {
+    if (_deletingWorkId != null) {
+      return false;
+    }
+
+    final shouldDelete = await _showWorkDeleteConfirmationDialog(l);
+    if (!shouldDelete) {
+      return false;
+    }
+
+    return _deleteWork(work, l);
+  }
+
+  Future<bool> _deleteWork(Work work, AppLocalizations l) async {
+    final token = await _sessionManager.getToken();
+    if (!mounted) {
+      return false;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (token == null || token.isEmpty) {
+      messenger
+          .showSnackBar(SnackBar(content: Text(l.authenticationRequiredMessage)));
+      return false;
+    }
+
+    setState(() {
+      _deletingWorkId = work.id;
+    });
+
+    try {
+      final response = await _workApi.deleteWork(id: work.id, token: token);
+      if (!mounted) {
+        return true;
+      }
+
+      final message =
+          response != null ? _extractWorkMessage(response) : null;
+
+      setState(() {
+        _works = _works.where((w) => w.id != work.id).toList();
+      });
+
+      messenger.showSnackBar(
+        SnackBar(content: Text(message ?? l.workDeleteSuccessMessage)),
+      );
+
+      return true;
+    } on ApiException catch (e) {
+      if (!mounted) {
+        return false;
+      }
+
+      final message =
+          e.message.isNotEmpty ? e.message : l.workDeleteFailedMessage;
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+      return false;
+    } catch (_) {
+      if (!mounted) {
+        return false;
+      }
+
+      messenger
+          .showSnackBar(SnackBar(content: Text(l.workDeleteFailedMessage)));
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() {
+          if (_deletingWorkId == work.id) {
+            _deletingWorkId = null;
+          }
+        });
+      }
+    }
+  }
+
+  Future<bool> _showWorkDeleteConfirmationDialog(AppLocalizations l) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l.workDeleteConfirmationTitle),
+          content: Text(l.workDeleteConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l.workDeleteCancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l.workDeleteConfirmButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
   void _onDrawerOptionSelected(String option) {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(option)));
@@ -1044,7 +1146,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWorkCard(Work work, AppLocalizations l) {
-    return Container(
+    final isDeleting = _deletingWorkId == work.id;
+    final card = Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -1121,6 +1224,60 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+
+    return Dismissible(
+      key: ValueKey(work.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) => _handleWorkDismiss(work, l),
+      secondaryBackground: _buildDeleteBackground(l),
+      child: Stack(
+        children: [
+          card,
+          if (isDeleting)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.75),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    height: 32,
+                    width: 32,
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteBackground(AppLocalizations l) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        color: const Color(0xFFFF3B30),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            const Icon(Icons.delete, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              l.workDeleteConfirmButton,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
