@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/navigation/app_router.dart';
+import '../repositories/auth_repository.dart';
 
 class AttendanceProApp extends StatelessWidget {
   final AttendanceRepository repository;
@@ -15,15 +16,22 @@ class AttendanceProApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<AttendanceRepository>.value(
-      value: repository,
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<AttendanceRepository>.value(value: repository),
+        RepositoryProvider<AuthRepository>(create: (_) => AuthRepository()),
+      ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider<AttendanceBloc>(
             create: (context) => AttendanceBloc(repository: repository),
           ),
           BlocProvider<AppCubit>(create: (context) => AppCubit()),
-          BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
+          BlocProvider<AuthCubit>(
+            create: (context) => AuthCubit(
+              repository: context.read<AuthRepository>(),
+            ),
+          ),
         ],
         child: Builder(
           builder: (context) {

@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import '../bloc/auth_cubit.dart';
 import '../core/navigation/routes.dart';
 
@@ -65,57 +63,55 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (context) => AuthCubit(),
-      child: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is AuthLoading) {
-            _showLoadingDialog(context);
-          } else {
-            _hideLoadingDialog(context);
-          }
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoading) {
+          _showLoadingDialog(context);
+        } else {
+          _hideLoadingDialog(context);
+        }
 
-          if (state is AuthError) {
-            _showSnack(state.message);
-            return;
-          }
+        if (state is AuthError) {
+          _showSnack(state.message);
+          return;
+        }
 
-          if (state is AuthVerifyNumber || state is AuthCreatePassword) {
-            if (mounted) context.go(Routes.auth);
-            return;
-          }
+        if (state is AuthVerifyNumber || state is AuthCreatePassword) {
+          if (mounted) context.go(Routes.auth);
+          return;
+        }
 
-          if (state is AuthAuthenticated) {
-            String message = 'Logged in successfully';
-            final data = state.data;
+        if (state is AuthAuthenticated) {
+          String message = 'Logged in successfully';
+          final data = state.data;
 
-            if (data != null) {
-              dynamic apiMessage;
-              if (data['message'] is String) {
-                apiMessage = data['message'];
-              } else if (data['msg'] is String) {
-                apiMessage = data['msg'];
-              } else if (data['status'] is String &&
-                  data['status'].toString().toLowerCase() != 'success') {
-                apiMessage = data['status'];
-              } else if (data['data'] is Map &&
-                  data['data']['message'] is String) {
-                apiMessage = data['data']['message'];
-              }
-
-              if (apiMessage is String && apiMessage.trim().isNotEmpty) {
-                message = apiMessage.trim();
-              }
+          if (data != null) {
+            dynamic apiMessage;
+            if (data['message'] is String) {
+              apiMessage = data['message'];
+            } else if (data['msg'] is String) {
+              apiMessage = data['msg'];
+            } else if (data['status'] is String &&
+                data['status'].toString().toLowerCase() != 'success') {
+              apiMessage = data['status'];
+            } else if (data['data'] is Map &&
+                data['data']['message'] is String) {
+              apiMessage = data['data']['message'];
             }
 
-            _showSnack(message);
-
-            Future.delayed(const Duration(milliseconds: 600), () {
-              if (mounted) context.go(Routes.home);
-            });
+            if (apiMessage is String && apiMessage.trim().isNotEmpty) {
+              message = apiMessage.trim();
+            }
           }
-        },
-        child: Scaffold(
+
+          _showSnack(message);
+
+          Future.delayed(const Duration(milliseconds: 600), () {
+            if (mounted) context.go(Routes.home);
+          });
+        }
+      },
+      child: Scaffold(
           backgroundColor: const Color(0xFFF8F9FB),
           body: SafeArea(
             child: SingleChildScrollView( // ✅ Fix overflow
