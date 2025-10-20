@@ -552,18 +552,25 @@ class _HomeScreenState extends State<HomeScreen> {
       hourlyRate = parsedRate;
     }
 
+    final isFirstWork = _isFirstWorkBeingCreated();
+
     setState(() {
       _isSavingWork = true;
     });
 
     try {
-      final response = await _workApi.createWork(
-        name: workName,
-        hourlyRate: hourlyRate,
-        isContract: true,
-      );
+      Map<String, dynamic> response = const <String, dynamic>{};
+      if (isFirstWork) {
+        response = await _workApi.createWork(
+          name: workName,
+          hourlyRate: hourlyRate,
+          isContract: true,
+        );
+      }
       if (!mounted) return;
-      final message = _extractWorkMessage(response) ?? l.workAddedMessage;
+      final message = isFirstWork
+          ? _extractWorkMessage(response) ?? l.workAddedMessage
+          : l.workAddedMessage;
       context.read<AttendanceBloc>().add(AddStudent(workName));
       messenger.showSnackBar(
         SnackBar(content: Text(message)),
@@ -592,6 +599,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _clearAddWorkForm() {
     _workNameController.clear();
     _hourlySalaryController.clear();
+  }
+
+  bool _isFirstWorkBeingCreated() {
+    final attendanceState = context.read<AttendanceBloc>().state;
+    if (attendanceState is AttendanceLoaded) {
+      return attendanceState.students.isEmpty;
+    }
+    return true;
   }
 
   String? _extractWorkMessage(Map<String, dynamic> response) {
