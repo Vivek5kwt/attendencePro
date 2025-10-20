@@ -81,6 +81,18 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: jsonEncode({}));
   }
 
+  /// Trigger forgot password OTP email: POST /api/auth/forgot-password
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    final uri = Uri.parse('$baseUrl/api/auth/forgot-password');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final body = jsonEncode({'email': email});
+
+    return _sendPost(uri, headers: headers, body: body);
+  }
+
   Future<Map<String, dynamic>> _sendPost(
     Uri uri, {
     required Map<String, String> headers,

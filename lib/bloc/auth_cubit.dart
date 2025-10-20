@@ -15,7 +15,12 @@ class AuthPhoneInput extends AuthState {
 class AuthVerifyNumber extends AuthState {
   final String phone;
   final bool isSignup;
-  AuthVerifyNumber(this.phone, {this.isSignup = false});
+  final String? infoMessage;
+  AuthVerifyNumber(
+    this.phone, {
+    this.isSignup = false,
+    this.infoMessage,
+  });
 }
 
 class AuthCreatePassword extends AuthState {
@@ -152,17 +157,32 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   /// FORGOT PASSWORD FLOW
-  Future<void> forgotPassword(String emailOrPhone) async {
-    if (emailOrPhone.isEmpty) {
-      emit(AuthError('Please enter your email or phone.'));
-      emit(AuthPhoneInput());
+  Future<void> forgotPassword(String email) async {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty) {
+      emit(AuthError('Please enter your email.'));
       return;
     }
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(trimmedEmail)) {
+      emit(AuthError('Please enter a valid email address.'));
+      return;
+    }
+
     emit(AuthLoading());
-    await Future.delayed(const Duration(milliseconds: 500));
-    _pendingPhone = emailOrPhone;
-    _isReset = true;
-    emit(AuthVerifyNumber(emailOrPhone));
+    try {
+      final response = await _repository.forgotPassword(trimmedEmail);
+      final message =
+          _extractReadableMessage(response) ?? 'OTP sent successfully to your email.';
+
+      _pendingPhone = trimmedEmail;
+      _isReset = true;
+      _isSignup = false;
+      emit(AuthVerifyNumber(trimmedEmail, infoMessage: message));
+    } on ApiException catch (e) {
+      emit(AuthError(e.message));
+    } catch (e) {
+      emit(AuthError('Network error: $e'));
+    }
   }
   Future<void> verifyCode(String code) async {
     if (_pendingPhone == null) {
@@ -235,6 +255,27 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void logout() => emit(AuthPhoneInput());
+
+  String? _extractReadableMessage(Map<String, dynamic> response) {
+    final candidates = <dynamic>[
+      response['message'],
+      response['msg'],
+      response['status'],
+      if (response['data'] is Map<String, dynamic>)
+        (response['data'] as Map<String, dynamic>)['message'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is String) {
+        final trimmed = candidate.trim();
+        if (trimmed.isEmpty) continue;
+        if (trimmed.toLowerCase() == 'success') continue;
+        return trimmed;
+      }
+    }
+
+    return null;
+  }
 
   Future<void> _persistSessionFromResponse(Map<String, dynamic> response) async {
     try {

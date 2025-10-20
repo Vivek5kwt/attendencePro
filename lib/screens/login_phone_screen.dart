@@ -83,7 +83,16 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           return;
         }
 
-        if (state is AuthVerifyNumber || state is AuthCreatePassword) {
+        if (state is AuthVerifyNumber) {
+          final message = state.infoMessage;
+          if (message != null && message.trim().isNotEmpty) {
+            _showSnack(message.trim());
+          }
+          if (mounted) context.go(Routes.auth);
+          return;
+        }
+
+        if (state is AuthCreatePassword) {
           if (mounted) context.go(Routes.auth);
           return;
         }
