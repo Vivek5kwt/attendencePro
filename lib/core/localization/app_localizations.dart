@@ -43,6 +43,14 @@ class AppLocalizations {
       'logoutCancelButton': 'Cancel',
       'logoutSuccessMessage': 'User logged out successfully.',
       'logoutFailedMessage': 'Unable to log out. Please try again.',
+      'shareAppTitle': 'Share App',
+      'shareViaWhatsApp': 'Share Via WhatsApp',
+      'copyLink': 'Copy Link',
+      'shareCancelButton': 'Cancel',
+      'shareLinkCopied': 'Link copied to clipboard.',
+      'shareWhatsappUnavailable': 'WhatsApp is not installed on this device.',
+      'shareWhatsappFailed': 'Unable to open WhatsApp.',
+      'shareMessage': 'Check out AttendancePro: {link}',
       'dashboardTappedMessage': 'Dashboard tapped',
       'addNewWorkTappedMessage': 'Add New Work tapped',
       'attendanceHistoryTappedMessage': 'Attendance History tapped',
@@ -144,6 +152,14 @@ class AppLocalizations {
       'logoutCancelButton': 'रद्द करें',
       'logoutSuccessMessage': 'उपयोगकर्ता सफलतापूर्वक लॉग आउट हुआ।',
       'logoutFailedMessage': 'लॉग आउट नहीं हो सका। कृपया पुनः प्रयास करें।',
+      'shareAppTitle': 'ऐप साझा करें',
+      'shareViaWhatsApp': 'व्हाट्सऐप से साझा करें',
+      'copyLink': 'लिंक कॉपी करें',
+      'shareCancelButton': 'रद्द करें',
+      'shareLinkCopied': 'लिंक कॉपी हो गया है।',
+      'shareWhatsappUnavailable': 'इस डिवाइस पर WhatsApp इंस्टॉल नहीं है।',
+      'shareWhatsappFailed': 'WhatsApp नहीं खोल सके।',
+      'shareMessage': 'AttendancePro देखें: {link}',
       'dashboardTappedMessage': 'डैशबोर्ड चुना गया',
       'addNewWorkTappedMessage': 'नया कार्य चुना गया',
       'attendanceHistoryTappedMessage': 'उपस्थिति इतिहास चुना गया',
@@ -245,6 +261,14 @@ class AppLocalizations {
       'logoutCancelButton': 'ਰੱਦ ਕਰੋ',
       'logoutSuccessMessage': 'ਉਪਭੋਗਤਾ ਸਫਲਤਾਪੂਰਵਕ ਲਾਗਆਉਟ ਹੋ ਗਿਆ।',
       'logoutFailedMessage': 'ਲਾਗਆਉਟ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'shareAppTitle': 'ਐਪ ਸਾਂਝਾ ਕਰੋ',
+      'shareViaWhatsApp': 'WhatsApp ਰਾਹੀਂ ਸਾਂਝਾ ਕਰੋ',
+      'copyLink': 'ਲਿੰਕ ਕਾਪੀ ਕਰੋ',
+      'shareCancelButton': 'ਰੱਦ ਕਰੋ',
+      'shareLinkCopied': 'ਲਿੰਕ ਕਲਿੱਪਬੋਰਡ ਵਿੱਚ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ।',
+      'shareWhatsappUnavailable': 'ਇਸ ਡਿਵਾਈਸ ਤੇ WhatsApp ਇੰਸਟਾਲ ਨਹੀਂ ਹੈ।',
+      'shareWhatsappFailed': 'WhatsApp ਨਹੀਂ ਖੋਲ੍ਹ ਸਕੇ।',
+      'shareMessage': 'AttendancePro ਨੂੰ ਵੇਖੋ: {link}',
       'dashboardTappedMessage': 'ਡੈਸ਼ਬੋਰਡ ਚੁਣਿਆ ਗਿਆ',
       'addNewWorkTappedMessage': 'ਨਵਾਂ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'attendanceHistoryTappedMessage': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਚੁਣਿਆ ਗਿਆ',
@@ -350,6 +374,14 @@ class AppLocalizations {
       'logoutCancelButton': 'Annulla',
       'logoutSuccessMessage': 'Disconnessione avvenuta con successo.',
       'logoutFailedMessage': 'Impossibile disconnettersi. Riprova.',
+      'shareAppTitle': 'Condividi app',
+      'shareViaWhatsApp': 'Condividi via WhatsApp',
+      'copyLink': 'Copia link',
+      'shareCancelButton': 'Annulla',
+      'shareLinkCopied': 'Link copiato negli appunti.',
+      'shareWhatsappUnavailable': 'WhatsApp non è installato su questo dispositivo.',
+      'shareWhatsappFailed': 'Impossibile aprire WhatsApp.',
+      'shareMessage': 'Scopri AttendancePro: {link}',
       'dashboardTappedMessage': 'Dashboard selezionata',
       'addNewWorkTappedMessage': 'Nuovo lavoro selezionato',
       'attendanceHistoryTappedMessage': 'Storico presenze selezionato',
@@ -446,6 +478,14 @@ class AppLocalizations {
         key;
   }
 
+  String _valueWithArgs(String key, Map<String, String> args) {
+    var value = _value(key);
+    args.forEach((placeholder, replacement) {
+      value = value.replaceAll('{$placeholder}', replacement);
+    });
+    return value;
+  }
+
   String get appTitle => _value('appTitle');
   String get drawerUserName => _value('drawerUserName');
   String get drawerUserPhone => _value('drawerUserPhone');
@@ -463,6 +503,15 @@ class AppLocalizations {
   String get logoutCancelButton => _value('logoutCancelButton');
   String get logoutSuccessMessage => _value('logoutSuccessMessage');
   String get logoutFailedMessage => _value('logoutFailedMessage');
+  String get shareAppTitle => _value('shareAppTitle');
+  String get shareViaWhatsApp => _value('shareViaWhatsApp');
+  String get copyLink => _value('copyLink');
+  String get shareCancelButton => _value('shareCancelButton');
+  String get shareLinkCopied => _value('shareLinkCopied');
+  String get shareWhatsappUnavailable => _value('shareWhatsappUnavailable');
+  String get shareWhatsappFailed => _value('shareWhatsappFailed');
+  String shareMessage(String link) =>
+      _valueWithArgs('shareMessage', {'link': link});
   String get dashboardTappedMessage => _value('dashboardTappedMessage');
   String get addNewWorkTappedMessage => _value('addNewWorkTappedMessage');
   String get attendanceHistoryTappedMessage =>

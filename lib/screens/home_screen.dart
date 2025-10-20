@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../bloc/app_cubit.dart';
 import '../bloc/attendance_bloc.dart';
@@ -21,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _nameController = TextEditingController();
+  static const String _shareLink = 'https://attendancepro.app';
 
   @override
   void initState() {
@@ -68,6 +71,149 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showShareOptions() {
+    final l = AppLocalizations.of(context);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l.shareAppTitle,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                      splashRadius: 20,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _buildShareButton(
+                  backgroundColor: const Color(0xFF25D366),
+                  icon: Icons.whatsapp,
+                  label: l.shareViaWhatsApp,
+                  onTap: () {
+                    Navigator.of(dialogContext).pop();
+                    _shareViaWhatsApp();
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildShareButton(
+                  backgroundColor: const Color(0xFF007AFF),
+                  icon: Icons.copy,
+                  label: l.copyLink,
+                  onTap: () {
+                    Navigator.of(dialogContext).pop();
+                    _copyShareLink();
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildShareButton(
+                  backgroundColor: Colors.black,
+                  label: l.shareCancelButton,
+                  onTap: () => Navigator.of(dialogContext).pop(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareButton({
+    required Color backgroundColor,
+    required String label,
+    required VoidCallback onTap,
+    IconData? icon,
+    Color textColor = Colors.white,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: textColor),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _shareViaWhatsApp() async {
+    final l = AppLocalizations.of(context);
+    final Uri whatsappUri = Uri.parse(
+      'whatsapp://send?text=${Uri.encodeComponent(l.shareMessage(_shareLink))}',
+    );
+
+    if (!await canLaunchUrl(whatsappUri)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.shareWhatsappUnavailable)),
+      );
+      return;
+    }
+
+    final launched = await launchUrl(
+      whatsappUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.shareWhatsappFailed)),
+      );
+    }
+  }
+
+  Future<void> _copyShareLink() async {
+    await Clipboard.setData(const ClipboardData(text: _shareLink));
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l.shareLinkCopied)),
     );
   }
 
@@ -153,9 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.share, color: Colors.grey),
-            onPressed: () {
-              // Share action
-            },
+            onPressed: _showShareOptions,
           ),
         ],
       ),
