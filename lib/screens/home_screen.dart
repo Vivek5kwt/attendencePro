@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../apis/auth_api.dart' show ApiException;
+import '../apis/work_api.dart';
 import '../bloc/app_cubit.dart';
 import '../bloc/attendance_bloc.dart';
 import '../bloc/attendance_event.dart';
@@ -25,11 +27,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _workNameController = TextEditingController();
   final TextEditingController _hourlySalaryController = TextEditingController();
+  final WorkApi _workApi = WorkApi();
   static const String _shareLink = 'https://attendancepro.app';
   final SessionManager _sessionManager = const SessionManager();
 
   String? _userName;
   String? _userEmail;
+  bool _isSavingWork = false;
 
   @override
   void initState() {
@@ -484,7 +488,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _handleSaveWork(dialogContext, l),
+                          onPressed: _isSavingWork
+                              ? null
+                              : () => _handleSaveWork(dialogContext, l),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF007BFF),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -493,10 +499,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             elevation: 0,
                           ),
-                          child: Text(
-                            l.saveWorkButton,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
+                          child: _isSavingWork
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor:
+                                        AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  l.saveWorkButton,
+                                  style:
+                                      const TextStyle(fontWeight: FontWeight.w700),
+                                ),
                         ),
                       ),
                     ],
@@ -510,9 +527,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleSaveWork(BuildContext dialogContext, AppLocalizations l) {
+  Future<void> _handleSaveWork(
+      BuildContext dialogContext, AppLocalizations l) async {
     final messenger = ScaffoldMessenger.of(context);
     final workName = _workNameController.text.trim();
+    final hourlyRateText = _hourlySalaryController.text.trim();
 
     if (workName.isEmpty) {
       messenger.showSnackBar(
@@ -521,17 +540,69 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    context.read<AttendanceBloc>().add(AddStudent(workName));
-    messenger.showSnackBar(
-      SnackBar(content: Text(l.workAddedMessage)),
-    );
-    _clearAddWorkForm();
-    Navigator.of(dialogContext).pop();
+    num hourlyRate = 0;
+    if (hourlyRateText.isNotEmpty) {
+      final parsedRate = double.tryParse(hourlyRateText.replaceAll(',', ''));
+      if (parsedRate == null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l.invalidHourlyRateMessage)),
+        );
+        return;
+      }
+      hourlyRate = parsedRate;
+    }
+
+    setState(() {
+      _isSavingWork = true;
+    });
+
+    try {
+      final response = await _workApi.createWork(
+        name: workName,
+        hourlyRate: hourlyRate,
+        isContract: true,
+      );
+      if (!mounted) return;
+      final message = _extractWorkMessage(response) ?? l.workAddedMessage;
+      context.read<AttendanceBloc>().add(AddStudent(workName));
+      messenger.showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      _clearAddWorkForm();
+      Navigator.of(dialogContext).pop();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.workSaveFailedMessage)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingWork = false;
+        });
+      }
+    }
   }
 
   void _clearAddWorkForm() {
     _workNameController.clear();
     _hourlySalaryController.clear();
+  }
+
+  String? _extractWorkMessage(Map<String, dynamic> response) {
+    const possibleKeys = ['message', 'status', 'detail'];
+    for (final key in possibleKeys) {
+      final value = response[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
   }
 
   void _onDrawerOptionSelected(String option) {
