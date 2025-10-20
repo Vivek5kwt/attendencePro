@@ -8,18 +8,29 @@ import '../bloc/app_cubit.dart';
 import 'create_password_screen.dart';
 import 'login_phone_screen.dart';
 
-class AuthFlow extends StatelessWidget {
+class AuthFlow extends StatefulWidget {
   const AuthFlow({Key? key}) : super(key: key);
 
   @override
+  State<AuthFlow> createState() => _AuthFlowState();
+}
+
+class _AuthFlowState extends State<AuthFlow> {
+  AuthState? _lastNonLoadingState;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastNonLoadingState = context.read<AuthCubit>().state;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthCubit, AuthState>(
+    return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          // When authenticated, move app to home
           context.read<AppCubit>().showHome();
         } else if (state is AuthError) {
-          // Show error message in SnackBar instead of a full screen
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -28,32 +39,50 @@ class AuthFlow extends StatelessWidget {
             ),
           );
 
-          // After showing error, return to phone input screen
           context.read<AuthCubit>().showPhone();
         }
       },
-      child: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          } else if (state is AuthPhoneInput) {
-            if (state.isSignup) {
-              return SignupScreen(initialName: state.name);
-            } else {
-              return const LoginPhoneScreen();
-            }
-          } else if (state is AuthVerifyNumber) {
-            return VerifyScreen(phone: state.phone, isSignup: state.isSignup);
-          } else if (state is AuthCreatePassword) {
-            return CreatePasswordScreen(phone: state.phone);
-          } else {
-            // Default to login screen
-            return const LoginPhoneScreen();
-          }
-        },
-      ),
+      builder: (context, state) {
+        final bool isLoading = state is AuthLoading;
+        if (!isLoading) {
+          _lastNonLoadingState = state;
+        }
+
+        final AuthState effectiveState =
+            _lastNonLoadingState ?? context.read<AuthCubit>().state;
+
+        Widget child;
+        if (effectiveState is AuthPhoneInput) {
+          child = effectiveState.isSignup
+              ? SignupScreen(initialName: effectiveState.name)
+              : const LoginPhoneScreen();
+        } else if (effectiveState is AuthVerifyNumber) {
+          child =
+              VerifyScreen(phone: effectiveState.phone, isSignup: effectiveState.isSignup);
+        } else if (effectiveState is AuthCreatePassword) {
+          child = CreatePasswordScreen(phone: effectiveState.phone);
+        } else {
+          child = const LoginPhoneScreen();
+        }
+
+        return Stack(
+          children: [
+            child,
+            IgnorePointer(
+              ignoring: !isLoading,
+              child: AnimatedOpacity(
+                opacity: isLoading ? 1 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  color: Colors.black45,
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

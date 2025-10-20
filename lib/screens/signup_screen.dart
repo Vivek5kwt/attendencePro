@@ -20,7 +20,6 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _passwordVisible = false;
   bool _confirmVisible = false;
   bool _agreed = false;
-  bool _isShowingLoading = false;
 
   @override
   void initState() {
@@ -91,32 +90,10 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  void _showLoading() {
-    if (_isShowingLoading) return;
-    _isShowingLoading = true;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-  }
-
-  void _hideLoading() {
-    if (!_isShowingLoading) return;
-    _isShowingLoading = false;
-    if (mounted) Navigator.of(context, rootNavigator: true).pop();
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) async {
-        if (state is AuthLoading) {
-          _showLoading();
-        } else {
-          _hideLoading();
-        }
-
         if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
@@ -287,24 +264,31 @@ class _SignupScreenState extends State<SignupScreen> {
                     ],
                   ),
                   const SizedBox(height: 25),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007BFF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                  BlocBuilder<AuthCubit, AuthState>(
+                    buildWhen: (previous, current) =>
+                        previous is AuthLoading || current is AuthLoading,
+                    builder: (context, state) {
+                      final isProcessing = state is AuthLoading;
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF007BFF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: isProcessing ? null : _submitSignup,
+                          child: const Text(
+                            "Sign Up",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
                         ),
-                        elevation: 0,
-                      ),
-                      onPressed: _submitSignup,
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 25),
                   Row(
