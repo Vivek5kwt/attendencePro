@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 _buildShareButton(
                   backgroundColor: const Color(0xFF25D366),
-                  icon: Icons.whatsapp,
+                  icon: Icons.ac_unit_outlined,
                   label: l.shareViaWhatsApp,
                   onTap: () {
                     Navigator.of(dialogContext).pop();
