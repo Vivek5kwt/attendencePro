@@ -70,6 +70,18 @@ class AppLocalizations {
       'startTrackingAttendance':
           'Start tracking your attendance \nby adding your first work',
       'addYourFirstWork': 'Add Your First Work',
+      'hourlyWorkLabel': 'Hourly Work',
+      'workNameLabel': 'Work Name',
+      'workNameHint': 'Ex Restaurant, Warehouse',
+      'hourlySalaryLabel': 'Hourly Salary',
+      'hourlySalaryHint': '\$ 0.00',
+      'contractWorkHeader': 'Contract Work (if have)',
+      'addContractWorkButton': 'Add Contract Work',
+      'contractWorkDescription': 'Piece-rate work: Watermelon, Carrot, Ravanello, Orange, etc.',
+      'cancelButton': 'Cancel',
+      'saveWorkButton': 'Save Work',
+      'workNameRequiredMessage': 'Please enter a work name.',
+      'workAddedMessage': 'Work added successfully.',
       'walkthroughTitleOne': 'Track Your Work Hours Easily',
       'walkthroughDescOne':
           'Start and end your day with just one tap. Keep your hours accurate and organized.',
@@ -179,6 +191,18 @@ class AppLocalizations {
       'startTrackingAttendance':
           'अपनी पहली नौकरी जोड़कर\nअपनी उपस्थिति ट्रैक करना शुरू करें',
       'addYourFirstWork': 'अपना पहला कार्य जोड़ें',
+      'hourlyWorkLabel': 'घंटे का कार्य',
+      'workNameLabel': 'कार्य का नाम',
+      'workNameHint': 'उदाहरण: रेस्टोरेंट, गोदाम',
+      'hourlySalaryLabel': 'घंटे की मजदूरी',
+      'hourlySalaryHint': '₹ 0.00',
+      'contractWorkHeader': 'ठेका कार्य (यदि हो)',
+      'addContractWorkButton': 'ठेका कार्य जोड़ें',
+      'contractWorkDescription': 'पीस-रेट कार्य: तरबूज, गाजर, रावनेलो, संतरा आदि।',
+      'cancelButton': 'रद्द करें',
+      'saveWorkButton': 'कार्य सहेजें',
+      'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
+      'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
       'walkthroughTitleOne': 'अपने कार्य घंटों को आसानी से ट्रैक करें',
       'walkthroughDescOne':
           'सिर्फ एक टैप में अपना दिन शुरू और खत्म करें। अपने घंटे सटीक और व्यवस्थित रखें।',
@@ -288,6 +312,18 @@ class AppLocalizations {
       'startTrackingAttendance':
           'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜ ਕੇ\nਹਾਜ਼ਰੀ ਟ੍ਰੈਕ ਕਰਨੀ ਸ਼ੁਰੂ ਕਰੋ',
       'addYourFirstWork': 'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜੋ',
+      'hourlyWorkLabel': 'ਘੰਟਾਵਾਰੀ ਕੰਮ',
+      'workNameLabel': 'ਕੰਮ ਦਾ ਨਾਮ',
+      'workNameHint': 'ਉਦਾਹਰਣ: ਰੈਸਟੋਰੈਂਟ, ਗੋਦਾਮ',
+      'hourlySalaryLabel': 'ਘੰਟਾਵਾਰੀ ਮਜ਼ਦੂਰੀ',
+      'hourlySalaryHint': '₹ 0.00',
+      'contractWorkHeader': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ (ਜੇ ਹੋਵੇ)',
+      'addContractWorkButton': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ',
+      'contractWorkDescription': 'ਪੀਸ-ਰੇਟ ਕੰਮ: ਤਰਬੂਜ, ਗਾਜਰ, ਰਾਵੇਨੇਲੋ, ਸੰਤਰਾ ਆਦਿ।',
+      'cancelButton': 'ਰੱਦ ਕਰੋ',
+      'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
+      'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
+      'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
       'walkthroughTitleOne':
           'ਆਪਣੇ ਕੰਮ ਦੇ ਘੰਟੇ ਆਸਾਨੀ ਨਾਲ ਟ੍ਰੈਕ ਕਰੋ',
       'walkthroughDescOne':
@@ -401,6 +437,18 @@ class AppLocalizations {
       'startTrackingAttendance':
           'Inizia a registrare le presenze\naggiungendo il tuo primo lavoro',
       'addYourFirstWork': 'Aggiungi il tuo primo lavoro',
+      'hourlyWorkLabel': 'Lavoro Orario',
+      'workNameLabel': 'Nome del Lavoro',
+      'workNameHint': 'Es. Ristorante, Magazzino',
+      'hourlySalaryLabel': 'Paga Oraria',
+      'hourlySalaryHint': '€ 0,00',
+      'contractWorkHeader': 'Lavoro a Contratto (se disponibile)',
+      'addContractWorkButton': 'Aggiungi Lavoro a Contratto',
+      'contractWorkDescription': 'Lavoro a cottimo: Anguria, Carota, Ravanello, Arancia, ecc.',
+      'cancelButton': 'Annulla',
+      'saveWorkButton': 'Salva Lavoro',
+      'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
+      'workAddedMessage': 'Lavoro aggiunto con successo.',
       'walkthroughTitleOne': 'Traccia facilmente le ore di lavoro',
       'walkthroughDescOne':
           'Avvia e termina la giornata con un tocco. Tieni le ore precise e ordinate.',
@@ -532,6 +580,18 @@ class AppLocalizations {
   String get noWorkAddedYet => _value('noWorkAddedYet');
   String get startTrackingAttendance => _value('startTrackingAttendance');
   String get addYourFirstWork => _value('addYourFirstWork');
+  String get hourlyWorkLabel => _value('hourlyWorkLabel');
+  String get workNameLabel => _value('workNameLabel');
+  String get workNameHint => _value('workNameHint');
+  String get hourlySalaryLabel => _value('hourlySalaryLabel');
+  String get hourlySalaryHint => _value('hourlySalaryHint');
+  String get contractWorkHeader => _value('contractWorkHeader');
+  String get addContractWorkButton => _value('addContractWorkButton');
+  String get contractWorkDescription => _value('contractWorkDescription');
+  String get cancelButton => _value('cancelButton');
+  String get saveWorkButton => _value('saveWorkButton');
+  String get workNameRequiredMessage => _value('workNameRequiredMessage');
+  String get workAddedMessage => _value('workAddedMessage');
   String get walkthroughTitleOne => _value('walkthroughTitleOne');
   String get walkthroughDescOne => _value('walkthroughDescOne');
   String get walkthroughTitleTwo => _value('walkthroughTitleTwo');
