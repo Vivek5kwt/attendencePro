@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/app_cubit.dart';
 import '../bloc/auth_cubit.dart';
+import '../core/localization/app_localizations.dart';
 
 /// The CreatePasswordScreen allows the user to create/reset a password.
 /// The back button behavior has been updated so that if there is no
@@ -65,6 +66,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       body: SafeArea(
@@ -80,17 +82,18 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   onPressed: _back,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Create a New Password',
-                  style: TextStyle(
+                Text(
+                  l.createPasswordTitle,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 30),
-                const Text(
-                  'New Password',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                Text(
+                  l.newPasswordLabel,
+                  style:
+                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -99,7 +102,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    hintText: 'Enter new password',
+                    hintText: l.newPasswordHint,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePass ? Icons.visibility_off : Icons.visibility,
@@ -121,7 +124,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   validator: (value) {
                     if (value == null || value.length < 8) {
                       setState(() {
-                        _errorText = 'Password must be at least 8 characters.';
+                        _errorText = l.passwordMinEight;
                       });
                       return '';
                     }
@@ -129,9 +132,10 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Confirm Password',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                Text(
+                  l.confirmPasswordLabel,
+                  style:
+                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -140,7 +144,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    hintText: 'Confirm password',
+                    hintText: l.confirmPasswordHint,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirm ? Icons.visibility_off : Icons.visibility,
@@ -162,7 +166,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                   validator: (value) {
                     if (value != _passController.text) {
                       setState(() {
-                        _errorText = 'Passwords do not match.';
+                        _errorText = l.passwordsDoNotMatch;
                       });
                       return '';
                     }
@@ -190,9 +194,9 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: const Text(
-                      'Reset Password',
-                      style: TextStyle(
+                    child: Text(
+                      l.resetPasswordButton,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),

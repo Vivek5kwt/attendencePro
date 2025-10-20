@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
+import '../core/localization/app_localizations.dart';
 
 class SignupScreen extends StatefulWidget {
   final String? initialName;
@@ -39,10 +40,12 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _submitSignup() {
+    final l = AppLocalizations.of(context);
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (!_agreed) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please agree to the terms to continue.')));
+        SnackBar(content: Text(l.termsAgreement)),
+      );
       return;
     }
 
@@ -70,20 +73,18 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _showUserAgreement() {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('User Agreement & Privacy Policy'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'This is a placeholder for the User Agreement and Privacy Policy. '
-                'In a real app you would show the full text or open a webview.',
-          ),
+        title: Text(l.userAgreementTitle),
+        content: SingleChildScrollView(
+          child: Text(l.userAgreementContent),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l.close),
           ),
         ],
       ),
@@ -92,6 +93,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) async {
         if (state is AuthError) {
@@ -102,7 +104,7 @@ class _SignupScreenState extends State<SignupScreen> {
           // ✅ Always show message from API (for both register & login)
           final msg = state.data?['message'] ??
               state.data?['status'] ??
-              'Operation successful';
+              AppLocalizations.of(context).operationSuccessful;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(msg)),
           );
@@ -121,9 +123,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 10),
-                  const Text(
-                    "Sign Up",
-                    style: TextStyle(
+                  Text(
+                    l.signupTitle,
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -132,53 +134,53 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 40),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
-                      "Full Name",
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    child: Text(
+                      l.fullNameLabel,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _nameController,
-                    decoration: _inputDecoration("Full Name"),
+                    decoration: _inputDecoration(l.fullNameLabel),
                     validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Name required'
+                        ? l.nameRequired
                         : null,
                   ),
                   const SizedBox(height: 20),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
-                      "Email Address",
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    child: Text(
+                      l.emailAddressLabel,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: _inputDecoration("Email Address"),
+                    decoration: _inputDecoration(l.emailAddressLabel),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Email required';
+                      if (v == null || v.trim().isEmpty) return l.emailRequired;
                       final email = v.trim();
                       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email))
-                        return 'Invalid email';
+                        return l.emailInvalid;
                       return null;
                     },
                   ),
                   const SizedBox(height: 20),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
-                      "Password",
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    child: Text(
+                      l.passwordLabel,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_passwordVisible,
-                    decoration: _inputDecoration("Password").copyWith(
+                    decoration: _inputDecoration(l.passwordLabel).copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
                           _passwordVisible
@@ -191,24 +193,24 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Password required';
-                      if (v.length < 6) return 'Min 6 characters';
+                      if (v == null || v.isEmpty) return l.passwordRequired;
+                      if (v.length < 6) return l.passwordMinLength;
                       return null;
                     },
                   ),
                   const SizedBox(height: 20),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: const Text(
-                      "Confirm Password",
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    child: Text(
+                      l.confirmPasswordLabel,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _confirmController,
                     obscureText: !_confirmVisible,
-                    decoration: _inputDecoration("Confirm Password").copyWith(
+                    decoration: _inputDecoration(l.confirmPasswordLabel).copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
                           _confirmVisible
@@ -222,9 +224,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     validator: (v) {
                       if (v == null || v.isEmpty)
-                        return 'Please confirm password';
+                        return l.confirmPasswordRequired;
                       if (v != _passwordController.text)
-                        return 'Passwords do not match';
+                        return l.confirmPasswordMismatch;
                       return null;
                     },
                   ),
@@ -240,25 +242,22 @@ class _SignupScreenState extends State<SignupScreen> {
                             setState(() => _agreed = v ?? false),
                       ),
                       Expanded(
-                        child: Wrap(
-                          children: [
-                            const Text("I Have Read and Agree to "),
-                            GestureDetector(
-                              onTap: () {},
-                              child: const Text(
-                                "User Agreement",
-                                style: TextStyle(color: Color(0xFF007BFF)),
+                        child: Text.rich(
+                          TextSpan(
+                            text: l.agreeTextPrefix,
+                            style: const TextStyle(color: Colors.black87),
+                            children: [
+                              TextSpan(
+                                text: l.userAgreement,
+                                style: const TextStyle(color: Color(0xFF007BFF)),
                               ),
-                            ),
-                            const Text(" and "),
-                            GestureDetector(
-                              onTap: () {},
-                              child: const Text(
-                                "Privacy Policy",
-                                style: TextStyle(color: Color(0xFF007BFF)),
+                              TextSpan(text: l.and),
+                              TextSpan(
+                                text: l.privacyPolicy,
+                                style: const TextStyle(color: Color(0xFF007BFF)),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -281,9 +280,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             elevation: 0,
                           ),
                           onPressed: isProcessing ? null : _submitSignup,
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
+                          child: Text(
+                            l.signupButton,
+                            style: const TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -294,13 +293,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Already Have an Account? "),
+                      Text(l.alreadyAccountPrompt),
                       GestureDetector(
                         onTap: () =>
                             context.read<AuthCubit>().showPhone(isSignup: false),
-                        child: const Text(
-                          "Login",
-                          style: TextStyle(
+                        child: Text(
+                          l.loginAction,
+                          style: const TextStyle(
                             color: Color(0xFF007BFF),
                             fontWeight: FontWeight.w500,
                           ),

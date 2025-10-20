@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/app_cubit.dart';
 import '../core/constants/app_assets.dart';
-import '../core/constants/app_strings.dart';
+import '../core/localization/app_localizations.dart';
 
 class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({Key? key}) : super(key: key);
@@ -16,29 +16,30 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_WalkPageData> _pages = [
-    _WalkPageData(
-      title: AppStrings.walkthroughTitleOne,
-      description: AppStrings.walkthroughDescOne,
-      imagePath: AppAssets.walkthroughImageOne,
-      backgroundColor: const Color(0xFFF7F8FA),
-    ),
-    _WalkPageData(
-      title: AppStrings.walkthroughTitleTwo,
-      description: AppStrings.walkthroughDescTwo,
-      imagePath: AppAssets.walkthroughImageTwo,
-      backgroundColor: const Color(0xFFF7F8FA),
-    ),
-    _WalkPageData(
-      title: AppStrings.walkthroughTitleThree,
-      description: AppStrings.walkthroughDescThree,
-      imagePath: AppAssets.walkthroughImageThree,
-      backgroundColor: const Color(0xFFF7F8FA),
-    ),
-  ];
+  List<_WalkPageData> _buildPages(AppLocalizations l) => [
+        _WalkPageData(
+          title: l.walkthroughTitleOne,
+          description: l.walkthroughDescOne,
+          imagePath: AppAssets.walkthroughImageOne,
+          backgroundColor: const Color(0xFFF7F8FA),
+        ),
+        _WalkPageData(
+          title: l.walkthroughTitleTwo,
+          description: l.walkthroughDescTwo,
+          imagePath: AppAssets.walkthroughImageTwo,
+          backgroundColor: const Color(0xFFF7F8FA),
+        ),
+        _WalkPageData(
+          title: l.walkthroughTitleThree,
+          description: l.walkthroughDescThree,
+          imagePath: AppAssets.walkthroughImageThree,
+          backgroundColor: const Color(0xFFF7F8FA),
+        ),
+      ];
 
   void _onNext() {
-    if (_currentPage < _pages.length - 1) {
+    final pages = _buildPages(AppLocalizations.of(context));
+    if (_currentPage < pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -54,20 +55,24 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final pages = _buildPages(l);
+    final currentIndex = _currentPage.clamp(0, pages.length - 1);
+    final currentPage = pages[currentIndex];
     return Scaffold(
-      backgroundColor: _pages[_currentPage].backgroundColor,
+      backgroundColor: currentPage.backgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
             // PageView (scrollable pages)
             PageView.builder(
               controller: _pageController,
-              itemCount: _pages.length,
+              itemCount: pages.length,
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
               },
               itemBuilder: (context, index) {
-                final page = _pages[index];
+                final page = pages[index];
                 return _buildPage(page);
               },
             ),
@@ -78,9 +83,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               right: 20,
               child: TextButton(
                 onPressed: _onSkip,
-                child: const Text(
-                  AppStrings.skip,
-                  style: TextStyle(
+                child: Text(
+                  l.skip,
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.black87,
                     fontWeight: FontWeight.w500,
@@ -96,7 +101,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  _pages.length,
+                  pages.length,
                       (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     height: 10,

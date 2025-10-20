@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/navigation/app_router.dart';
 import '../repositories/auth_repository.dart';
+import '../bloc/locale_cubit.dart';
+import '../core/localization/app_localizations.dart';
 
 class AttendanceProApp extends StatelessWidget {
   final AttendanceRepository repository;
@@ -32,20 +34,30 @@ class AttendanceProApp extends StatelessWidget {
               repository: context.read<AuthRepository>(),
             ),
           ),
+          BlocProvider<LocaleCubit>(create: (_) => LocaleCubit()),
         ],
         child: Builder(
           builder: (context) {
             final appCubit = context.read<AppCubit>();
             final appRouter = AppRouter(appCubit: appCubit);
 
-            return MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              title: 'Attendance Pro',
-              theme: ThemeData(
-                primarySwatch: Colors.indigo,
-                useMaterial3: false,
-              ),
-              routerConfig: appRouter.router,
+            return BlocBuilder<LocaleCubit, Locale>(
+              builder: (context, locale) {
+                final localizations = AppLocalizations(locale);
+                return MaterialApp.router(
+                  debugShowCheckedModeBanner: false,
+                  title: localizations.appTitle,
+                  theme: ThemeData(
+                    primarySwatch: Colors.indigo,
+                    useMaterial3: false,
+                  ),
+                  locale: locale,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  routerConfig: appRouter.router,
+                );
+              },
             );
           },
         ),

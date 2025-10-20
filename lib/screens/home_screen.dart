@@ -7,7 +7,8 @@ import '../bloc/attendance_bloc.dart';
 import '../bloc/attendance_event.dart';
 import '../bloc/attendance_state.dart';
 import '../core/constants/app_assets.dart';
-import '../core/constants/app_strings.dart';
+import '../bloc/locale_cubit.dart';
+import '../core/localization/app_localizations.dart';
 import '../models/student.dart';
 import '../widgets/student_tile.dart';
 
@@ -39,26 +40,27 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) {
+        final l = AppLocalizations.of(context);
         return SafeArea(
           child: Wrap(
             children: [
               ListTile(
                 leading: const Icon(Icons.work_outline),
-                title: const Text(AppStrings.workA),
+                title: Text(l.workA),
                 onTap: () {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(AppStrings.switchedToWorkA)),
+                    SnackBar(content: Text(l.switchedToWorkA)),
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.work),
-                title: const Text(AppStrings.workB),
+                title: Text(l.workB),
                 onTap: () {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text(AppStrings.switchedToWorkB)),
+                    SnackBar(content: Text(l.switchedToWorkB)),
                   );
                 },
               ),
@@ -76,6 +78,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final languageOptions = {
+      'en': l.languageEnglish,
+      'hi': l.languageHindi,
+      'pa': l.languagePunjabi,
+      'it': l.languageItalian,
+    };
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor:  Colors.transparent,
@@ -90,15 +100,15 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
-        title: const Text(
-          AppStrings.appTitle,
-          style: TextStyle(color: Colors.black),
+        title: Text(
+          l.appTitle,
+          style: const TextStyle(color: Colors.black),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.language, color: Colors.grey),
             onPressed: () {
-              // Language change
+              _showLanguageDialog(context, languageOptions, l);
             },
           ),
           IconButton(
@@ -137,19 +147,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
-                              AppStrings.drawerUserName,
-                              style: TextStyle(
+                              l.drawerUserName,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
-                              AppStrings.drawerUserPhone,
-                              style: TextStyle(color: Colors.white, fontSize: 14),
+                              l.drawerUserPhone,
+                              style: const TextStyle(color: Colors.white, fontSize: 14),
                             ),
                           ],
                         ),
@@ -165,88 +175,57 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     _drawerItem(
                       icon: Icons.home_outlined,
-                      label: AppStrings.dashboardLabel,
+                      label: l.dashboardLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF48A9FF),
                       onTap: () =>
-                          _onDrawerOptionSelected(AppStrings.dashboardTappedMessage),
+                          _onDrawerOptionSelected(l.dashboardTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.work_outline,
-                      label: AppStrings.addNewWorkLabel,
+                      label: l.addNewWorkLabel,
                       bgColor: const Color(0xFFE8F8F0),
                       iconColor: const Color(0xFF34C759),
                       onTap: () =>
-                          _onDrawerOptionSelected(AppStrings.addNewWorkTappedMessage),
+                          _onDrawerOptionSelected(l.addNewWorkTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.access_time,
-                      label: AppStrings.attendanceHistoryLabel,
+                      label: l.attendanceHistoryLabel,
                       bgColor: const Color(0xFFFFF2F2),
                       iconColor: const Color(0xFFFF3B30),
-                      onTap: () => _onDrawerOptionSelected(
-                          AppStrings.attendanceHistoryTappedMessage),
+                      onTap: () =>
+                          _onDrawerOptionSelected(l.attendanceHistoryTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.assignment_outlined,
-                      label: AppStrings.contractWorkLabel,
+                      label: l.contractWorkLabel,
                       bgColor: const Color(0xFFEDEBFF),
                       iconColor: const Color(0xFF5856D6),
                       onTap: () =>
-                          _onDrawerOptionSelected(AppStrings.contractWorkTappedMessage),
+                          _onDrawerOptionSelected(l.contractWorkTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.language,
-                      label: AppStrings.changeLanguageLabel,
+                      label: l.changeLanguageLabel,
                       bgColor: const Color(0xFFF8E8FA),
                       iconColor: const Color(0xFFAF52DE),
                       onTap: () async {
                         Navigator.of(context).pop();
-                        final selected = await showDialog<String>(
-                          context: context,
-                          builder: (context) {
-                            return SimpleDialog(
-                              title: const Text(AppStrings.selectLanguageTitle),
-                              children: [
-                                SimpleDialogOption(
-                                  child: const Text(AppStrings.english),
-                                  onPressed: () =>
-                                      Navigator.pop(context, AppStrings.english),
-                                ),
-                                SimpleDialogOption(
-                                  child: const Text(AppStrings.spanish),
-                                  onPressed: () =>
-                                      Navigator.pop(context, AppStrings.spanish),
-                                ),
-                                SimpleDialogOption(
-                                  child: const Text(AppStrings.french),
-                                  onPressed: () =>
-                                      Navigator.pop(context, AppStrings.french),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        if (selected != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(AppStrings.languageSelection(selected)),
-                            ),
-                          );
-                        }
+                        await _showLanguageDialog(context, languageOptions, l);
                       },
                     ),
                     _drawerItem(
                       icon: Icons.support_agent_outlined,
-                      label: AppStrings.helpSupportLabel,
+                      label: l.helpSupportLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF007AFF),
                       onTap: () =>
-                          _onDrawerOptionSelected(AppStrings.helpSupportTappedMessage),
+                          _onDrawerOptionSelected(l.helpSupportTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.logout,
-                      label: AppStrings.logoutLabel,
+                      label: l.logoutLabel,
                       bgColor: const Color(0xFFE5F6FE),
                       iconColor: const Color(0xFF007AFF),
                       onTap: () {
@@ -286,17 +265,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Image.asset(AppAssets.workPlaceholder, width: 100),
                             const SizedBox(height: 12),
-                            const Text(
-                              AppStrings.noWorkAddedYet,
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            Text(
+                              l.noWorkAddedYet,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
                             Padding(
                               padding: const EdgeInsets.all(10.0),
-                              child: const Text(
-                                AppStrings.startTrackingAttendance,
-                                textAlign:TextAlign.center,
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                              child: Text(
+                                l.startTrackingAttendance,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -316,11 +295,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onPressed: () {
                                     context
                                         .read<AttendanceBloc>()
-                                        .add(AddStudent(AppStrings.workA));
+                                        .add(AddStudent(l.workA));
                                   },
-                                  child: const Text(
-                                    AppStrings.addYourFirstWork,
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  child: Text(
+                                    l.addYourFirstWork,
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
@@ -388,5 +367,40 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _showLanguageDialog(BuildContext context,
+      Map<String, String> options, AppLocalizations l) async {
+    final selectedCode = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return SimpleDialog(
+          title: Text(l.selectLanguageTitle),
+          children: options.entries
+              .map(
+                (entry) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, entry.key),
+                  child: Text(entry.value),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+
+    if (selectedCode != null && options.containsKey(selectedCode)) {
+      context.read<LocaleCubit>().setLocale(Locale(selectedCode));
+      final updatedLocalization = AppLocalizations(Locale(selectedCode));
+      final updatedNames = {
+        'en': updatedLocalization.languageEnglish,
+        'hi': updatedLocalization.languageHindi,
+        'pa': updatedLocalization.languagePunjabi,
+        'it': updatedLocalization.languageItalian,
+      };
+      final label = updatedNames[selectedCode] ?? options[selectedCode] ?? selectedCode;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(updatedLocalization.languageSelection(label))),
+      );
+    }
   }
 }
