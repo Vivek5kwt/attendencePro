@@ -28,4 +28,8 @@ class AuthRepository {
   Future<Map<String, dynamic>> logout(String token) {
     return _api.logout(token);
   }
+
+  Future<Map<String, dynamic>> forgotPassword(String email) {
+    return _api.forgotPassword(email);
+  }
 }
