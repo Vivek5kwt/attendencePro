@@ -205,12 +205,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onPressed: () => Navigator.pop(context, 'English'),
                                 ),
                                 SimpleDialogOption(
-                                  child: const Text('Spanish'),
-                                  onPressed: () => Navigator.pop(context, 'Spanish'),
+                                  child: const Text('Hindi'),
+                                  onPressed: () => Navigator.pop(context, 'Hindi'),
                                 ),
                                 SimpleDialogOption(
-                                  child: const Text('French'),
-                                  onPressed: () => Navigator.pop(context, 'French'),
+                                  child: const Text('Punjabi'),
+                                  onPressed: () => Navigator.pop(context, 'Punjabi'),
+                                ),
+                                SimpleDialogOption(
+                                  child: const Text('Italian'),
+                                  onPressed: () => Navigator.pop(context, 'Italian'),
                                 ),
                               ],
                             );

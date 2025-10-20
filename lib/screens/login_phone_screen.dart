@@ -292,12 +292,32 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                                   onPressed: () => Navigator.pop(ctx, 'en'),
                                   child: const Text('English'),
                                 ),
+                                SimpleDialogOption(
+                                  onPressed: () => Navigator.pop(ctx, 'hi'),
+                                  child: const Text('Hindi'),
+                                ),
+                                SimpleDialogOption(
+                                  onPressed: () => Navigator.pop(ctx, 'pa'),
+                                  child: const Text('Punjabi'),
+                                ),
+                                SimpleDialogOption(
+                                  onPressed: () => Navigator.pop(ctx, 'it'),
+                                  child: const Text('Italian'),
+                                ),
                               ],
                             ),
                           ).then((selected) {
                             if (selected != null) {
-                              final label =
-                              selected == 'en' ? 'English' : 'Other';
+                              const languageNames = {
+                                'en': 'English',
+                                'hi': 'Hindi',
+                                'pa': 'Punjabi',
+                                'it': 'Italian',
+                              };
+                              final languageName = languageNames[selected] ?? selected;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Language: $languageName')),
+                              );
                             }
                           });
                         },
