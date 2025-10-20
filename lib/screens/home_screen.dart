@@ -13,6 +13,7 @@ import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/student.dart';
 import '../widgets/student_tile.dart';
+import '../utils/session_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -24,11 +25,35 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _nameController = TextEditingController();
   static const String _shareLink = 'https://attendancepro.app';
+  final SessionManager _sessionManager = const SessionManager();
+
+  String? _userName;
+  String? _userEmail;
 
   @override
   void initState() {
     super.initState();
     context.read<AttendanceBloc>().add(LoadStudents());
+    _loadUserDetails();
+  }
+
+  Future<void> _loadUserDetails() async {
+    final details = await _sessionManager.getUserDetails();
+
+    if (!mounted) return;
+
+    String? _normalize(String? value) {
+      if (value == null) return null;
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+
+    setState(() {
+      _userName = _normalize(details['name']);
+      final email = _normalize(details['email']);
+      final username = _normalize(details['username']);
+      _userEmail = email ?? username;
+    });
   }
 
   void _add() {
@@ -234,6 +259,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().logout();
+    if (!mounted) return;
+    setState(() {
+      _userName = null;
+      _userEmail = null;
+    });
     final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
@@ -333,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l.drawerUserName,
+                              _userName ?? l.drawerUserName,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -342,8 +372,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              l.drawerUserPhone,
-                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                              _userEmail ?? l.drawerUserPhone,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
