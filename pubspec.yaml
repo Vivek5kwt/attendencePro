@@ -42,6 +42,7 @@ dependencies:
   go_router: ^16.2.4
   flutter_intl_phone_field: ^0.0.7
   shared_preferences: ^2.2.3
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
