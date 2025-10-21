@@ -6,12 +6,13 @@ enum WorkLoadStatus { initial, loading, success, failure }
 
 enum WorkActionStatus { idle, inProgress, success, failure }
 
-enum WorkFeedbackKind { load, refresh, add, delete }
+enum WorkFeedbackKind { load, refresh, add, update, delete }
 
 class WorkState extends Equatable {
   const WorkState({
     this.loadStatus = WorkLoadStatus.initial,
     this.addStatus = WorkActionStatus.idle,
+    this.updateStatus = WorkActionStatus.idle,
     this.works = const <Work>[],
     this.isRefreshing = false,
     this.lastErrorMessage,
@@ -25,6 +26,7 @@ class WorkState extends Equatable {
 
   final WorkLoadStatus loadStatus;
   final WorkActionStatus addStatus;
+  final WorkActionStatus updateStatus;
   final List<Work> works;
   final bool isRefreshing;
   final String? lastErrorMessage;
@@ -42,6 +44,7 @@ class WorkState extends Equatable {
   WorkState copyWith({
     WorkLoadStatus? loadStatus,
     WorkActionStatus? addStatus,
+    WorkActionStatus? updateStatus,
     List<Work>? works,
     bool? isRefreshing,
     Object? lastErrorMessage = _sentinel,
@@ -55,6 +58,7 @@ class WorkState extends Equatable {
     return WorkState(
       loadStatus: loadStatus ?? this.loadStatus,
       addStatus: addStatus ?? this.addStatus,
+      updateStatus: updateStatus ?? this.updateStatus,
       works: works ?? this.works,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       lastErrorMessage: identical(lastErrorMessage, _sentinel)
@@ -89,6 +93,7 @@ class WorkState extends Equatable {
   List<Object?> get props => [
         loadStatus,
         addStatus,
+        updateStatus,
         works,
         isRefreshing,
         lastErrorMessage,

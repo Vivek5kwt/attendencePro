@@ -38,10 +38,26 @@ class WorkDeleted extends WorkEvent {
   final Completer<bool>? completer;
 }
 
+class WorkUpdated extends WorkEvent {
+  const WorkUpdated({
+    required this.work,
+    required this.name,
+    required this.hourlyRate,
+  });
+
+  final Work work;
+  final String name;
+  final num hourlyRate;
+}
+
 class WorkMessageCleared extends WorkEvent {
   const WorkMessageCleared();
 }
 
 class WorkAddStatusCleared extends WorkEvent {
   const WorkAddStatusCleared();
+}
+
+class WorkUpdateStatusCleared extends WorkEvent {
+  const WorkUpdateStatusCleared();
 }
