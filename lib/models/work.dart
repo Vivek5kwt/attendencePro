@@ -4,6 +4,7 @@ class Work {
     required this.name,
     this.hourlyRate,
     this.isContract = false,
+    this.isActive = false,
     this.additionalData = const <String, dynamic>{},
   });
 
@@ -11,6 +12,7 @@ class Work {
   final String name;
   final num? hourlyRate;
   final bool isContract;
+  final bool isActive;
   final Map<String, dynamic> additionalData;
 
   factory Work.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Work {
       name: _parseName(normalized) ?? 'Unnamed Work',
       hourlyRate: _parseHourlyRate(normalized),
       isContract: _parseIsContract(normalized),
+      isActive: _parseIsActive(normalized),
       additionalData: Map<String, dynamic>.from(normalized),
     );
   }
@@ -29,6 +32,7 @@ class Work {
     String? name,
     num? hourlyRate,
     bool? isContract,
+    bool? isActive,
     Map<String, dynamic>? additionalData,
   }) {
     return Work(
@@ -36,6 +40,7 @@ class Work {
       name: name ?? this.name,
       hourlyRate: hourlyRate ?? this.hourlyRate,
       isContract: isContract ?? this.isContract,
+      isActive: isActive ?? this.isActive,
       additionalData: additionalData ?? this.additionalData,
     );
   }
@@ -117,6 +122,48 @@ class Work {
         }
       }
     }
+    return false;
+  }
+
+  static bool _parseIsActive(Map<String, dynamic> json) {
+    const possibleKeys = [
+      'is_active',
+      'isActive',
+      'active',
+      'is_current',
+      'isCurrent',
+      'currently_active',
+    ];
+
+    bool? _resolve(dynamic value) {
+      if (value is bool) {
+        return value;
+      }
+      if (value is num) {
+        return value != 0;
+      }
+      if (value is String) {
+        final normalized = value.toLowerCase().trim();
+        if (normalized.isEmpty) return null;
+        if (['true', '1', 'yes', 'active', 'current'].contains(normalized)) {
+          return true;
+        }
+        if (['false', '0', 'no', 'inactive'].contains(normalized)) {
+          return false;
+        }
+      }
+      return null;
+    }
+
+    for (final key in possibleKeys) {
+      final value = json[key];
+      if (value == null) continue;
+      final resolved = _resolve(value);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
     return false;
   }
 }

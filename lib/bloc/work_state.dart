@@ -6,19 +6,21 @@ enum WorkLoadStatus { initial, loading, success, failure }
 
 enum WorkActionStatus { idle, inProgress, success, failure }
 
-enum WorkFeedbackKind { load, refresh, add, update, delete }
+enum WorkFeedbackKind { load, refresh, add, update, delete, activate }
 
 class WorkState extends Equatable {
   const WorkState({
     this.loadStatus = WorkLoadStatus.initial,
     this.addStatus = WorkActionStatus.idle,
     this.updateStatus = WorkActionStatus.idle,
+    this.activateStatus = WorkActionStatus.idle,
     this.works = const <Work>[],
     this.isRefreshing = false,
     this.lastErrorMessage,
     this.lastSuccessMessage,
     this.requiresAuthentication = false,
     this.deletingWorkId,
+    this.activatingWorkId,
     this.userName,
     this.userEmail,
     this.feedbackKind,
@@ -27,12 +29,14 @@ class WorkState extends Equatable {
   final WorkLoadStatus loadStatus;
   final WorkActionStatus addStatus;
   final WorkActionStatus updateStatus;
+  final WorkActionStatus activateStatus;
   final List<Work> works;
   final bool isRefreshing;
   final String? lastErrorMessage;
   final String? lastSuccessMessage;
   final bool requiresAuthentication;
   final String? deletingWorkId;
+  final String? activatingWorkId;
   final String? userName;
   final String? userEmail;
   final WorkFeedbackKind? feedbackKind;
@@ -45,12 +49,14 @@ class WorkState extends Equatable {
     WorkLoadStatus? loadStatus,
     WorkActionStatus? addStatus,
     WorkActionStatus? updateStatus,
+    WorkActionStatus? activateStatus,
     List<Work>? works,
     bool? isRefreshing,
     Object? lastErrorMessage = _sentinel,
     Object? lastSuccessMessage = _sentinel,
     bool? requiresAuthentication,
     Object? deletingWorkId = _sentinel,
+    Object? activatingWorkId = _sentinel,
     Object? feedbackKind = _sentinel,
     String? userName,
     String? userEmail,
@@ -59,6 +65,7 @@ class WorkState extends Equatable {
       loadStatus: loadStatus ?? this.loadStatus,
       addStatus: addStatus ?? this.addStatus,
       updateStatus: updateStatus ?? this.updateStatus,
+      activateStatus: activateStatus ?? this.activateStatus,
       works: works ?? this.works,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       lastErrorMessage: identical(lastErrorMessage, _sentinel)
@@ -72,6 +79,9 @@ class WorkState extends Equatable {
       deletingWorkId: identical(deletingWorkId, _sentinel)
           ? this.deletingWorkId
           : deletingWorkId as String?,
+      activatingWorkId: identical(activatingWorkId, _sentinel)
+          ? this.activatingWorkId
+          : activatingWorkId as String?,
       feedbackKind: identical(feedbackKind, _sentinel)
           ? this.feedbackKind
           : feedbackKind as WorkFeedbackKind?,
@@ -94,12 +104,14 @@ class WorkState extends Equatable {
         loadStatus,
         addStatus,
         updateStatus,
+        activateStatus,
         works,
         isRefreshing,
         lastErrorMessage,
         lastSuccessMessage,
         requiresAuthentication,
         deletingWorkId,
+        activatingWorkId,
         userName,
         userEmail,
         feedbackKind,

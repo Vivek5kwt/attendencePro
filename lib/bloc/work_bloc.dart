@@ -16,6 +16,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     on<WorkAdded>(_onAdded);
     on<WorkDeleted>(_onDeleted);
     on<WorkUpdated>(_onUpdated);
+    on<WorkActivated>(_onActivated);
     on<WorkMessageCleared>(_onMessageCleared);
     on<WorkAddStatusCleared>(_onAddStatusCleared);
     on<WorkUpdateStatusCleared>(_onUpdateStatusCleared);
@@ -333,6 +334,70 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
   ) {
     if (state.updateStatus != WorkActionStatus.idle) {
       emit(state.copyWith(updateStatus: WorkActionStatus.idle));
+    }
+  }
+
+  Future<void> _onActivated(
+    WorkActivated event,
+    Emitter<WorkState> emit,
+  ) async {
+    if (state.activateStatus == WorkActionStatus.inProgress &&
+        state.activatingWorkId != event.work.id) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        activateStatus: WorkActionStatus.inProgress,
+        activatingWorkId: event.work.id,
+        lastErrorMessage: null,
+        lastSuccessMessage: null,
+        requiresAuthentication: false,
+        feedbackKind: null,
+      ),
+    );
+
+    try {
+      final result = await _repository.activateWork(event.work);
+      final successMessage = (result.message ?? '').trim();
+      final works = await _repository.fetchWorks();
+      emit(
+        state.copyWith(
+          activateStatus: WorkActionStatus.success,
+          activatingWorkId: null,
+          works: works,
+          loadStatus: WorkLoadStatus.success,
+          lastSuccessMessage: successMessage,
+          feedbackKind: WorkFeedbackKind.activate,
+        ),
+      );
+    } on WorkAuthException {
+      emit(
+        state.copyWith(
+          activateStatus: WorkActionStatus.failure,
+          activatingWorkId: null,
+          requiresAuthentication: true,
+          feedbackKind: WorkFeedbackKind.activate,
+        ),
+      );
+    } on WorkRepositoryException catch (e) {
+      emit(
+        state.copyWith(
+          activateStatus: WorkActionStatus.failure,
+          activatingWorkId: null,
+          lastErrorMessage: e.message,
+          feedbackKind: WorkFeedbackKind.activate,
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          activateStatus: WorkActionStatus.failure,
+          activatingWorkId: null,
+          lastErrorMessage: 'Unable to set active work. Please try again.',
+          feedbackKind: WorkFeedbackKind.activate,
+        ),
+      );
     }
   }
 }

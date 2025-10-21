@@ -971,6 +971,10 @@ class _HomeScreenState extends State<HomeScreen> {
         );
   }
 
+  void _handleSetActiveWork(Work work) {
+    context.read<WorkBloc>().add(WorkActivated(work: work));
+  }
+
   void _clearAddWorkForm() {
     _workNameController.clear();
     _hourlySalaryController.clear();
@@ -1270,6 +1274,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWorksContent(AppLocalizations l, WorkState state) {
     final works = state.works;
+    final isActivationInProgress =
+        state.activateStatus == WorkActionStatus.inProgress;
+    final activatingWorkId = state.activatingWorkId;
     if (state.isLoading && works.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1298,6 +1305,9 @@ class _HomeScreenState extends State<HomeScreen> {
           works[index],
           l,
           isDeleting: state.deletingWorkId == works[index].id,
+          isActivating:
+              activatingWorkId == works[index].id && isActivationInProgress,
+          activationInProgress: isActivationInProgress,
         ),
         separatorBuilder: (_, __) => const SizedBox(height: 12),
       ),
@@ -1410,19 +1420,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWorkCard(Work work, AppLocalizations l,
-      {required bool isDeleting}) {
+  Widget _buildWorkCard(
+    Work work,
+    AppLocalizations l, {
+    required bool isDeleting,
+    required bool isActivating,
+    required bool activationInProgress,
+  }) {
+    final isActive = _isWorkActive(work);
+    final disableActivateButton =
+        isDeleting || (activationInProgress && !isActivating) || isActive;
+
     final card = Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(24),
       elevation: 0,
       child: InkWell(
-        onTap: isDeleting ? null : () => _showEditWorkDialog(work),
+        onTap:
+            (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color:
+                  isActive ? const Color(0xFF34D399) : Colors.transparent,
+              width: isActive ? 1.4 : 1,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -1439,12 +1464,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 54,
                 width: 54,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE5F1FF),
+                  color: isActive
+                      ? const Color(0xFFECFDF3)
+                      : const Color(0xFFE5F1FF),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.work_outline,
-                  color: Color(0xFF007BFF),
+                child: Icon(
+                  isActive ? Icons.workspace_premium_outlined : Icons.work_outline,
+                  color:
+                      isActive ? const Color(0xFF16A34A) : const Color(0xFF007BFF),
                   size: 28,
                 ),
               ),
@@ -1503,9 +1531,102 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1,
+                        child: child,
+                      ),
+                    ),
+                    child: isActive
+                        ? Container(
+                            key: const ValueKey('active-label'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF3),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  color: Color(0xFF22C55E),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l.activeWorkLabel,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF15803D),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : SizedBox(
+                            key: const ValueKey('activate-button'),
+                            height: 36,
+                            child: FilledButton.tonal(
+                              style: FilledButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 14),
+                                backgroundColor: const Color(0xFFEFF5FF),
+                                foregroundColor: const Color(0xFF0052CC),
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              onPressed: disableActivateButton
+                                  ? null
+                                  : () => _handleSetActiveWork(work),
+                              child: isActivating
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Color(0xFF0052CC),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(l.settingActiveWorkLabel),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.bolt_rounded, size: 18),
+                                        const SizedBox(width: 6),
+                                        Text(l.setActiveWorkButton),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 8),
                   IconButton(
-                    onPressed:
-                        isDeleting ? null : () => _showEditWorkDialog(work),
+                    onPressed: (isDeleting || isActivating)
+                        ? null
+                        : () => _showEditWorkDialog(work),
                     icon: const Icon(Icons.edit, color: Color(0xFF007BFF)),
                     splashRadius: 20,
                     tooltip: l.editWorkTooltip,
@@ -1521,7 +1642,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Dismissible(
       key: ValueKey(work.id),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (_) => _handleWorkDismiss(work, l),
+      confirmDismiss: (_) {
+        if (isActivating) {
+          return Future<bool>.value(false);
+        }
+        return _handleWorkDismiss(work, l);
+      },
       background: const SizedBox.shrink(),
       secondaryBackground: _buildDeleteBackground(l),
       child: Stack(
@@ -1574,6 +1700,53 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  bool _isWorkActive(Work work) {
+    if (work.isActive) {
+      return true;
+    }
+
+    final data = work.additionalData;
+    const possibleKeys = {
+      'is_active',
+      'isActive',
+      'active',
+      'is_current',
+      'isCurrent',
+      'currently_active',
+    };
+
+    bool? _resolve(dynamic value) {
+      if (value is bool) {
+        return value;
+      }
+      if (value is num) {
+        return value != 0;
+      }
+      if (value is String) {
+        final normalized = value.toLowerCase().trim();
+        if (normalized.isEmpty) return null;
+        if (['true', '1', 'yes', 'active', 'current'].contains(normalized)) {
+          return true;
+        }
+        if (['false', '0', 'no', 'inactive'].contains(normalized)) {
+          return false;
+        }
+      }
+      return null;
+    }
+
+    for (final key in possibleKeys) {
+      final value = data[key];
+      if (value == null) continue;
+      final resolved = _resolve(value);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    return false;
+  }
+
   String _formatHourlyRate(Work work, AppLocalizations l) {
     final rate = work.hourlyRate;
     if (rate == null) {
@@ -1597,6 +1770,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return l.workUpdatedMessage;
       case WorkFeedbackKind.delete:
         return l.workDeleteSuccessMessage;
+      case WorkFeedbackKind.activate:
+        return l.workActivatedMessage;
       default:
         return null;
     }
