@@ -71,6 +71,17 @@ class AppLocalizations {
       'Start tracking your attendance \nby adding your first work',
       'addYourFirstWork': 'Add Your First Work',
       'hourlyWorkLabel': 'Hourly Work',
+      'changeWorkButton': 'Change Work',
+      'todaysAttendanceTitle': "Today's Attendance",
+      'startTimeLabel': 'Start Time',
+      'endTimeLabel': 'End Time',
+      'breakLabel': 'Break',
+      'submitButton': 'Submit',
+      'markAsWorkOffButton': 'Mark as Work Off',
+      'contractWorkSummaryTitle': 'Contract Work Summary',
+      'summaryLabel': 'Summary',
+      'totalHoursLabel': 'Total Hours',
+      'totalSalaryLabel': 'Total Salary',
       'activeWorkLabel': 'Active',
       'setActiveWorkButton': 'Set Active',
       'settingActiveWorkLabel': 'Activating...',
@@ -216,6 +227,17 @@ class AppLocalizations {
       'अपनी पहली नौकरी जोड़कर\nअपनी उपस्थिति ट्रैक करना शुरू करें',
       'addYourFirstWork': 'अपना पहला कार्य जोड़ें',
       'hourlyWorkLabel': 'घंटे का कार्य',
+      'changeWorkButton': 'कार्य बदलें',
+      'todaysAttendanceTitle': 'आज की उपस्थिति',
+      'startTimeLabel': 'आरंभ समय',
+      'endTimeLabel': 'समाप्ति समय',
+      'breakLabel': 'विराम',
+      'submitButton': 'जमा करें',
+      'markAsWorkOffButton': 'कार्य अवकाश चिह्नित करें',
+      'contractWorkSummaryTitle': 'ठेका कार्य सारांश',
+      'summaryLabel': 'सारांश',
+      'totalHoursLabel': 'कुल घंटे',
+      'totalSalaryLabel': 'कुल वेतन',
       'activeWorkLabel': 'सक्रिय',
       'setActiveWorkButton': 'सक्रिय करें',
       'settingActiveWorkLabel': 'सक्रिय किया जा रहा है...',
@@ -361,6 +383,17 @@ class AppLocalizations {
       'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜ ਕੇ\nਹਾਜ਼ਰੀ ਟ੍ਰੈਕ ਕਰਨੀ ਸ਼ੁਰੂ ਕਰੋ',
       'addYourFirstWork': 'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜੋ',
       'hourlyWorkLabel': 'ਘੰਟਾਵਾਰੀ ਕੰਮ',
+      'changeWorkButton': 'ਕੰਮ ਬਦਲੋ',
+      'todaysAttendanceTitle': 'ਅੱਜ ਦੀ ਹਾਜ਼ਰੀ',
+      'startTimeLabel': 'ਸ਼ੁਰੂਆਤੀ ਸਮਾਂ',
+      'endTimeLabel': 'ਖਤਮ ਸਮਾਂ',
+      'breakLabel': 'ਵਿਰਾਮ',
+      'submitButton': 'ਜਮ੍ਹਾਂ ਕਰੋ',
+      'markAsWorkOffButton': 'ਕੰਮ ਛੁੱਟੀ ਨਿਸ਼ਾਨ ਲਗਾਓ',
+      'contractWorkSummaryTitle': 'ਕਾਨਟ੍ਰੈਕਟ ਕੰਮ ਸੰਖੇਪ',
+      'summaryLabel': 'ਸੰਖੇਪ',
+      'totalHoursLabel': 'ਕੁੱਲ ਘੰਟੇ',
+      'totalSalaryLabel': 'ਕੁੱਲ ਤਨਖ਼ਾਹ',
       'activeWorkLabel': 'ਸਰਗਰਮ',
       'setActiveWorkButton': 'ਸਰਗਰਮ ਕਰੋ',
       'settingActiveWorkLabel': 'ਸਰਗਰਮ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...',
@@ -509,6 +542,17 @@ class AppLocalizations {
       'Inizia a registrare le presenze\naggiungendo il tuo primo lavoro',
       'addYourFirstWork': 'Aggiungi il tuo primo lavoro',
       'hourlyWorkLabel': 'Lavoro Orario',
+      'changeWorkButton': 'Cambia lavoro',
+      'todaysAttendanceTitle': 'Presenze di oggi',
+      'startTimeLabel': 'Ora di inizio',
+      'endTimeLabel': 'Ora di fine',
+      'breakLabel': 'Pausa',
+      'submitButton': 'Invia',
+      'markAsWorkOffButton': 'Segna come riposo',
+      'contractWorkSummaryTitle': 'Riepilogo lavoro a contratto',
+      'summaryLabel': 'Riepilogo',
+      'totalHoursLabel': 'Ore totali',
+      'totalSalaryLabel': 'Salario totale',
       'activeWorkLabel': 'Attivo',
       'setActiveWorkButton': 'Imposta come attivo',
       'settingActiveWorkLabel': 'Attivazione...',
@@ -677,6 +721,17 @@ class AppLocalizations {
   String get startTrackingAttendance => _value('startTrackingAttendance');
   String get addYourFirstWork => _value('addYourFirstWork');
   String get hourlyWorkLabel => _value('hourlyWorkLabel');
+  String get changeWorkButton => _value('changeWorkButton');
+  String get todaysAttendanceTitle => _value('todaysAttendanceTitle');
+  String get startTimeLabel => _value('startTimeLabel');
+  String get endTimeLabel => _value('endTimeLabel');
+  String get breakLabel => _value('breakLabel');
+  String get submitButton => _value('submitButton');
+  String get markAsWorkOffButton => _value('markAsWorkOffButton');
+  String get contractWorkSummaryTitle => _value('contractWorkSummaryTitle');
+  String get summaryLabel => _value('summaryLabel');
+  String get totalHoursLabel => _value('totalHoursLabel');
+  String get totalSalaryLabel => _value('totalSalaryLabel');
   String get activeWorkLabel => _value('activeWorkLabel');
   String get setActiveWorkButton => _value('setActiveWorkButton');
   String get settingActiveWorkLabel => _value('settingActiveWorkLabel');
