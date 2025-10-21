@@ -341,35 +341,51 @@ class _AttendanceSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _AttendanceTimeCard(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const spacing = 12.0;
+              final maxWidth = constraints.maxWidth;
+              final crossAxisCount = maxWidth < 420
+                  ? 1
+                  : maxWidth < 720
+                      ? 2
+                      : 3;
+              final itemWidth = crossAxisCount == 1
+                  ? maxWidth
+                  : (maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
+
+              final cards = <Widget>[
+                _AttendanceTimeCard(
                   label: l.startTimeLabel,
                   value: startTime,
                   icon: Icons.play_arrow_rounded,
                   color: const Color(0xFF22C55E),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _AttendanceTimeCard(
+                _AttendanceTimeCard(
                   label: l.endTimeLabel,
                   value: endTime,
                   icon: Icons.stop_rounded,
                   color: const Color(0xFFEF4444),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _AttendanceTimeCard(
+                _AttendanceTimeCard(
                   label: l.breakLabel,
                   value: breakTime,
                   icon: Icons.local_cafe_rounded,
                   color: const Color(0xFFF59E0B),
                 ),
-              ),
-            ],
+              ]
+                  .map((card) => SizedBox(
+                        width: itemWidth.clamp(0.0, maxWidth),
+                        child: card,
+                      ))
+                  .toList();
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: cards,
+              );
+            },
           ),
           const SizedBox(height: 20),
           Row(
@@ -574,18 +590,24 @@ class _MonthlySummarySection extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 20),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 2.4,
-            children: stats
-                .map(
-                  (stat) => _SummaryStatCard(stat: stat),
-                )
-                .toList(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth;
+              final isCompact = maxWidth < 420;
+              final crossAxisCount = isCompact ? 1 : 2;
+              final childAspectRatio = isCompact ? 3.2 : 2.4;
+
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: childAspectRatio,
+                children:
+                    stats.map((stat) => _SummaryStatCard(stat: stat)).toList(),
+              );
+            },
           ),
         ],
       ),
@@ -647,12 +669,15 @@ class _AttendanceTimeCard extends StatelessWidget {
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF6B7280),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280),
+                  ),
+                  softWrap: true,
                 ),
               ),
             ],
