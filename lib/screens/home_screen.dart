@@ -16,6 +16,7 @@ import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/session_manager.dart';
+import 'work_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -113,6 +114,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final completer = Completer<void>();
     context.read<WorkBloc>().add(WorkRefreshed(completer: completer));
     return completer.future;
+  }
+
+  void _openWorkDetail(Work work) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => WorkDetailScreen(work: work),
+      ),
+    );
   }
 
   Future<void> _showEditWorkDialog(Work work) async {
@@ -1437,6 +1446,8 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 0,
       child: InkWell(
         onTap:
+            (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
+        onLongPress:
             (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
         borderRadius: BorderRadius.circular(24),
         child: Container(
