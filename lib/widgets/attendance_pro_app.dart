@@ -5,6 +5,7 @@ import 'package:attendancepro/repositories/attendance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/work_event.dart';
 import '../core/navigation/app_router.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/work_repository.dart';

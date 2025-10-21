@@ -5,12 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../apis/auth_api.dart';
+import '../apis/work_api.dart';
 import '../bloc/app_cubit.dart';
+import '../bloc/work_event.dart';
+import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 import '../bloc/work_bloc.dart';
+import '../utils/session_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -23,6 +28,77 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _workNameController = TextEditingController();
   final TextEditingController _hourlySalaryController = TextEditingController();
   static const String _shareLink = 'https://attendancepro.app';
+  final WorkApi _workApi = WorkApi();
+  final SessionManager _sessionManager = const SessionManager();
+  List<Work> _works = const <Work>[];
+  bool _isLoadingWorks = false;
+  String? _worksError;
+  Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    setState(() {
+      _isLoadingWorks = true;
+      _worksError = null;
+    });
+
+    final token = await _sessionManager.getToken();
+    if (!mounted) {
+      return;
+    }
+
+    if (token == null || token.isEmpty) {
+      final message = l.authenticationRequiredMessage;
+      setState(() {
+        _isLoadingWorks = false;
+        _worksError = message;
+        _works = const <Work>[];
+      });
+      if (showSnackBarOnError) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+      return;
+    }
+
+    try {
+      final works = await _workApi.fetchWorks(token: token);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _works = works;
+        _worksError = null;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final message = e.message.isNotEmpty ? e.message : l.worksLoadFailedMessage;
+      setState(() {
+        _worksError = message;
+      });
+      if (showSnackBarOnError) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      final message = l.worksLoadFailedMessage;
+      setState(() {
+        _worksError = message;
+      });
+      if (showSnackBarOnError) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingWorks = false;
+        });
+      }
+    }
+  }
 
   Future<void> _handleAddWorkFromDrawer() async {
     Navigator.of(context).pop();
