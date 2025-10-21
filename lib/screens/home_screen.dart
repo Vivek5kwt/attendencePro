@@ -27,6 +27,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _workNameController = TextEditingController();
   final TextEditingController _hourlySalaryController = TextEditingController();
+  final TextEditingController _editWorkNameController = TextEditingController();
+  final TextEditingController _editHourlySalaryController = TextEditingController();
   static const String _shareLink = 'https://attendancepro.app';
   final WorkApi _workApi = WorkApi();
   final SessionManager _sessionManager = const SessionManager();
@@ -115,10 +117,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showEditWorkDialog(Work work) async {
     final l = AppLocalizations.of(context);
-    final nameController = TextEditingController(text: work.name);
-    final hourlyController = TextEditingController(
-      text: work.hourlyRate != null ? work.hourlyRate!.toString() : '',
-    );
+    final nameController = _editWorkNameController;
+    final hourlyController = _editHourlySalaryController;
+
+    nameController
+      ..text = work.name
+      ..selection = TextSelection.collapsed(offset: work.name.length);
+    final hourlyRateText =
+        work.hourlyRate != null ? work.hourlyRate!.toString() : '';
+    hourlyController
+      ..text = hourlyRateText
+      ..selection = TextSelection.collapsed(offset: hourlyRateText.length);
 
     await showDialog<void>(
       context: context,
@@ -400,8 +409,8 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
 
-    nameController.dispose();
-    hourlyController.dispose();
+    nameController.clear();
+    hourlyController.clear();
   }
 
 
@@ -1666,6 +1675,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _workNameController.dispose();
     _hourlySalaryController.dispose();
+    _editWorkNameController.dispose();
+    _editHourlySalaryController.dispose();
     super.dispose();
   }
 }
