@@ -50,6 +50,12 @@ class WorkUpdated extends WorkEvent {
   final num hourlyRate;
 }
 
+class WorkActivated extends WorkEvent {
+  const WorkActivated({required this.work});
+
+  final Work work;
+}
+
 class WorkMessageCleared extends WorkEvent {
   const WorkMessageCleared();
 }

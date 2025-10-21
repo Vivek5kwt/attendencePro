@@ -89,6 +89,20 @@ class WorkRepository {
       throw WorkRepositoryException(e.message);
     }
   }
+
+  Future<WorkActionResult> activateWork(Work work) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const WorkAuthException();
+    }
+
+    try {
+      final response = await _api.setActiveWork(id: work.id, token: token);
+      return WorkActionResult.from(response);
+    } on ApiException catch (e) {
+      throw WorkRepositoryException(e.message);
+    }
+  }
 }
 
 class WorkUserProfile {

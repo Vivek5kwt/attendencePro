@@ -71,6 +71,10 @@ class AppLocalizations {
       'Start tracking your attendance \nby adding your first work',
       'addYourFirstWork': 'Add Your First Work',
       'hourlyWorkLabel': 'Hourly Work',
+      'activeWorkLabel': 'Active',
+      'setActiveWorkButton': 'Set Active',
+      'settingActiveWorkLabel': 'Activating...',
+      'workActivatedMessage': 'Work set as active successfully.',
       'workNameLabel': 'Work Name',
       'workNameHint': 'Ex Restaurant, Warehouse',
       'hourlySalaryLabel': 'Hourly Salary',
@@ -212,6 +216,10 @@ class AppLocalizations {
       'अपनी पहली नौकरी जोड़कर\nअपनी उपस्थिति ट्रैक करना शुरू करें',
       'addYourFirstWork': 'अपना पहला कार्य जोड़ें',
       'hourlyWorkLabel': 'घंटे का कार्य',
+      'activeWorkLabel': 'सक्रिय',
+      'setActiveWorkButton': 'सक्रिय करें',
+      'settingActiveWorkLabel': 'सक्रिय किया जा रहा है...',
+      'workActivatedMessage': 'कार्य सफलतापूर्वक सक्रिय किया गया।',
       'workNameLabel': 'कार्य का नाम',
       'workNameHint': 'उदाहरण: रेस्टोरेंट, गोदाम',
       'hourlySalaryLabel': 'घंटे की मजदूरी',
@@ -353,6 +361,10 @@ class AppLocalizations {
       'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜ ਕੇ\nਹਾਜ਼ਰੀ ਟ੍ਰੈਕ ਕਰਨੀ ਸ਼ੁਰੂ ਕਰੋ',
       'addYourFirstWork': 'ਆਪਣਾ ਪਹਿਲਾ ਕੰਮ ਜੋੜੋ',
       'hourlyWorkLabel': 'ਘੰਟਾਵਾਰੀ ਕੰਮ',
+      'activeWorkLabel': 'ਸਰਗਰਮ',
+      'setActiveWorkButton': 'ਸਰਗਰਮ ਕਰੋ',
+      'settingActiveWorkLabel': 'ਸਰਗਰਮ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...',
+      'workActivatedMessage': 'ਕੰਮ ਨੂੰ ਸਰਗਰਮ ਕੀਤਾ ਗਿਆ ਹੈ।',
       'workNameLabel': 'ਕੰਮ ਦਾ ਨਾਮ',
       'workNameHint': 'ਉਦਾਹਰਣ: ਰੈਸਟੋਰੈਂਟ, ਗੋਦਾਮ',
       'hourlySalaryLabel': 'ਘੰਟਾਵਾਰੀ ਮਜ਼ਦੂਰੀ',
@@ -497,6 +509,10 @@ class AppLocalizations {
       'Inizia a registrare le presenze\naggiungendo il tuo primo lavoro',
       'addYourFirstWork': 'Aggiungi il tuo primo lavoro',
       'hourlyWorkLabel': 'Lavoro Orario',
+      'activeWorkLabel': 'Attivo',
+      'setActiveWorkButton': 'Imposta come attivo',
+      'settingActiveWorkLabel': 'Attivazione...',
+      'workActivatedMessage': 'Lavoro impostato come attivo con successo.',
       'workNameLabel': 'Nome del Lavoro',
       'workNameHint': 'Es. Ristorante, Magazzino',
       'hourlySalaryLabel': 'Paga Oraria',
@@ -661,6 +677,10 @@ class AppLocalizations {
   String get startTrackingAttendance => _value('startTrackingAttendance');
   String get addYourFirstWork => _value('addYourFirstWork');
   String get hourlyWorkLabel => _value('hourlyWorkLabel');
+  String get activeWorkLabel => _value('activeWorkLabel');
+  String get setActiveWorkButton => _value('setActiveWorkButton');
+  String get settingActiveWorkLabel => _value('settingActiveWorkLabel');
+  String get workActivatedMessage => _value('workActivatedMessage');
   String get workNameLabel => _value('workNameLabel');
   String get workNameHint => _value('workNameHint');
   String get hourlySalaryLabel => _value('hourlySalaryLabel');
