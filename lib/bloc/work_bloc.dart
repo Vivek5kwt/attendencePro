@@ -15,8 +15,10 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     on<WorkRefreshed>(_onRefreshed);
     on<WorkAdded>(_onAdded);
     on<WorkDeleted>(_onDeleted);
+    on<WorkUpdated>(_onUpdated);
     on<WorkMessageCleared>(_onMessageCleared);
     on<WorkAddStatusCleared>(_onAddStatusCleared);
+    on<WorkUpdateStatusCleared>(_onUpdateStatusCleared);
   }
 
   final WorkRepository _repository;
@@ -191,6 +193,65 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     }
   }
 
+  Future<void> _onUpdated(WorkUpdated event, Emitter<WorkState> emit) async {
+    if (state.updateStatus == WorkActionStatus.inProgress) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        updateStatus: WorkActionStatus.inProgress,
+        lastErrorMessage: null,
+        lastSuccessMessage: null,
+        requiresAuthentication: false,
+        feedbackKind: null,
+      ),
+    );
+
+    try {
+      final result = await _repository.updateWork(
+        work: event.work,
+        name: event.name,
+        hourlyRate: event.hourlyRate,
+      );
+      final successMessage = (result.message ?? '').trim();
+      final works = await _repository.fetchWorks();
+      emit(
+        state.copyWith(
+          updateStatus: WorkActionStatus.success,
+          works: works,
+          loadStatus: WorkLoadStatus.success,
+          lastSuccessMessage: successMessage,
+          feedbackKind: WorkFeedbackKind.update,
+        ),
+      );
+    } on WorkAuthException {
+      emit(
+        state.copyWith(
+          updateStatus: WorkActionStatus.failure,
+          requiresAuthentication: true,
+          feedbackKind: WorkFeedbackKind.update,
+        ),
+      );
+    } on WorkRepositoryException catch (e) {
+      emit(
+        state.copyWith(
+          updateStatus: WorkActionStatus.failure,
+          lastErrorMessage: e.message,
+          feedbackKind: WorkFeedbackKind.update,
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          updateStatus: WorkActionStatus.failure,
+          lastErrorMessage: 'Unable to update work. Please try again.',
+          feedbackKind: WorkFeedbackKind.update,
+        ),
+      );
+    }
+  }
+
   Future<void> _onDeleted(WorkDeleted event, Emitter<WorkState> emit) async {
     if (state.deletingWorkId != null) {
       event.completer?.complete(false);
@@ -263,6 +324,15 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
   ) {
     if (state.addStatus != WorkActionStatus.idle) {
       emit(state.copyWith(addStatus: WorkActionStatus.idle));
+    }
+  }
+
+  void _onUpdateStatusCleared(
+    WorkUpdateStatusCleared event,
+    Emitter<WorkState> emit,
+  ) {
+    if (state.updateStatus != WorkActionStatus.idle) {
+      emit(state.copyWith(updateStatus: WorkActionStatus.idle));
     }
   }
 }

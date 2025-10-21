@@ -82,7 +82,12 @@ class AppLocalizations {
       'saveWorkButton': 'Save Work',
       'workNameRequiredMessage': 'Please enter a work name.',
       'workAddedMessage': 'Work added successfully.',
+      'workUpdatedMessage': 'Work updated successfully.',
       'invalidHourlyRateMessage': 'Please enter a valid hourly rate.',
+      'editWorkTitle': 'Edit Work',
+      'editWorkSubtitle': 'Update your work details',
+      'updateWorkButton': 'Update Work',
+      'editWorkTooltip': 'Edit work',
       'workDeleteConfirmationTitle': 'Delete Work',
       'workDeleteConfirmationMessage':
           'Are you sure you want to delete this work?',
@@ -218,7 +223,12 @@ class AppLocalizations {
       'saveWorkButton': 'कार्य सहेजें',
       'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
+      'workUpdatedMessage': 'कार्य सफलतापूर्वक अपडेट किया गया।',
       'invalidHourlyRateMessage': 'कृपया मान्य प्रति घंटा दर दर्ज करें।',
+      'editWorkTitle': 'कार्य संपादित करें',
+      'editWorkSubtitle': 'अपने कार्य का विवरण अपडेट करें',
+      'updateWorkButton': 'कार्य अपडेट करें',
+      'editWorkTooltip': 'कार्य संपादित करें',
       'workDeleteConfirmationTitle': 'काम हटाएं',
       'workDeleteConfirmationMessage':
           'क्या आप वाकई इस काम को हटाना चाहते हैं?',
@@ -354,7 +364,12 @@ class AppLocalizations {
       'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
       'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
+      'workUpdatedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਅੱਪਡੇਟ ਹੋਇਆ।',
       'invalidHourlyRateMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਠੀਕ ਘੰਟਾਵਾਰੀ ਦਰ ਦਰਜ ਕਰੋ।',
+      'editWorkTitle': 'ਕੰਮ ਸੰਪਾਦਿਤ ਕਰੋ',
+      'editWorkSubtitle': 'ਆਪਣੇ ਕੰਮ ਦੇ ਵੇਰਵੇ ਅੱਪਡੇਟ ਕਰੋ',
+      'updateWorkButton': 'ਕੰਮ ਅੱਪਡੇਟ ਕਰੋ',
+      'editWorkTooltip': 'ਕੰਮ ਸੰਪਾਦਿਤ ਕਰੋ',
       'workDeleteConfirmationTitle': 'ਕੰਮ ਮਿਟਾਓ',
       'workDeleteConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਇਹ ਕੰਮ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?',
       'workDeleteConfirmButton': 'ਮਿਟਾਓ',
@@ -493,7 +508,12 @@ class AppLocalizations {
       'saveWorkButton': 'Salva Lavoro',
       'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
       'workAddedMessage': 'Lavoro aggiunto con successo.',
+      'workUpdatedMessage': 'Lavoro aggiornato con successo.',
       'invalidHourlyRateMessage': 'Inserisci una tariffa oraria valida.',
+      'editWorkTitle': 'Modifica lavoro',
+      'editWorkSubtitle': 'Aggiorna i dettagli del lavoro',
+      'updateWorkButton': 'Aggiorna lavoro',
+      'editWorkTooltip': 'Modifica lavoro',
       'workDeleteConfirmationTitle': 'Elimina lavoro',
       'workDeleteConfirmationMessage':
           'Sei sicuro di voler eliminare questo lavoro?',
@@ -652,7 +672,12 @@ class AppLocalizations {
   String get saveWorkButton => _value('saveWorkButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
+  String get workUpdatedMessage => _value('workUpdatedMessage');
   String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
+  String get editWorkTitle => _value('editWorkTitle');
+  String get editWorkSubtitle => _value('editWorkSubtitle');
+  String get updateWorkButton => _value('updateWorkButton');
+  String get editWorkTooltip => _value('editWorkTooltip');
   String get workDeleteConfirmationTitle =>
       _value('workDeleteConfirmationTitle');
   String get workDeleteConfirmationMessage =>
