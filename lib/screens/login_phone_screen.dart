@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/locale_cubit.dart';
+import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 import '../widgets/app_dialogs.dart';
@@ -122,6 +124,10 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           }
 
           _showSnack(message);
+
+          // Ensure the drawer/header information and work list are refreshed for
+          // the authenticated user before navigating away from the auth flow.
+          context.read<WorkBloc>().add(const WorkStarted());
 
           Future.delayed(const Duration(milliseconds: 600), () {
             if (mounted) context.go(Routes.home);

@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/auth_cubit.dart';
 import '../bloc/app_cubit.dart';
+import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
 import 'create_password_screen.dart';
 import 'login_phone_screen.dart';
 
@@ -29,6 +31,8 @@ class _AuthFlowState extends State<AuthFlow> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
+          // Refresh the work data and drawer details with the latest session.
+          context.read<WorkBloc>().add(const WorkStarted());
           context.read<AppCubit>().showHome();
         } else if (state is AuthVerifyNumber) {
           final message = state.infoMessage;
