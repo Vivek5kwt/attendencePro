@@ -71,11 +71,8 @@ class _VerifyScreenState extends State<VerifyScreen> {
   }
 
   Future<bool> _onWillPop() async {
-    // Ensure any focused input is unfocused so the UI is clean when navigating back.
     FocusScope.of(context).unfocus();
-    // Drive navigation through the cubit so the auth flow can decide which screen to show.
     context.read<AuthCubit>().backToPhone();
-    // We handle the navigation via state change, so prevent the default pop.
     return false;
   }
 
@@ -92,7 +89,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Make sure we unfocus any text fields before popping.
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {

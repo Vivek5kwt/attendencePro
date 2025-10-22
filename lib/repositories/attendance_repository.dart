@@ -15,15 +15,12 @@ class InMemoryAttendanceRepository implements AttendanceRepository {
 
   @override
   Future<List<Student>> loadStudents() async {
-    // simulate delay
     await Future.delayed(const Duration(milliseconds: 400));
-    // return copy
     return _store.map((s) => s.copyWith()).toList();
   }
 
   @override
   Future<void> saveStudents(List<Student> students) async {
-    // simulate delay
     await Future.delayed(const Duration(milliseconds: 300));
     _store = students.map((s) => s.copyWith()).toList();
   }

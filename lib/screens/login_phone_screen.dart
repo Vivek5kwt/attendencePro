@@ -125,8 +125,6 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
           _showSnack(message);
 
-          // Ensure the drawer/header information and work list are refreshed for
-          // the authenticated user before navigating away from the auth flow.
           context.read<WorkBloc>().add(const WorkStarted());
 
           Future.delayed(const Duration(milliseconds: 600), () {
@@ -137,7 +135,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
       child: Scaffold(
           backgroundColor: const Color(0xFFF8F9FB),
           body: SafeArea(
-            child: SingleChildScrollView( // ✅ Fix overflow
+            child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

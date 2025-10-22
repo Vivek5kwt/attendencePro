@@ -1039,7 +1039,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleLogoutTap(AppLocalizations l) async {
     Navigator.of(context).pop();
 
-    // Give the drawer a moment to close before showing the dialog.
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
@@ -1244,7 +1243,6 @@ class _HomeScreenState extends State<HomeScreen> {
           clipBehavior: Clip.none,
           alignment: Alignment.centerRight,
           children: [
-            // Background gradient
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -1261,7 +1259,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Text content
             Positioned(
               left: 24,
               top: 28,

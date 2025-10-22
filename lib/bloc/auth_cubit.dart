@@ -51,7 +51,7 @@ class AuthCubit extends Cubit<AuthState> {
         _sessionManager = sessionManager ?? const SessionManager(),
         super(AuthPhoneInput(isSignup: false));
 
-  String? _pendingPhone; // used by phone flows
+  String? _pendingPhone;
   bool _isSignup = false;
   bool _isReset = false;
   String? _pendingName;
@@ -89,9 +89,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthVerifyNumber(phone, isSignup: isSignup));
   }
 
-  /// REGISTER using provided API:
-  /// POST https://attendancepro.shauryacoder.com/api/auth/register
-  /// body: { "name", "email", "username", "password", "password_confirmation" }
+
   Future<void> register({
     required String name,
     required String email,
@@ -413,7 +411,6 @@ class AuthCubit extends Cubit<AuthState> {
         username: username,
       );
     } catch (_) {
-      // Ignore storage errors to avoid impacting the login flow.
     }
   }
 }

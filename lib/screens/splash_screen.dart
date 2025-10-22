@@ -17,9 +17,8 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ✅ Background image
           Image.asset(
-            AppAssets.splashBackground, // <-- Use your blue+white curve background image
+            AppAssets.splashBackground,
             fit: BoxFit.cover,
           ),
 

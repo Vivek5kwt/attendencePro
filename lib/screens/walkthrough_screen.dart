@@ -64,7 +64,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // PageView (scrollable pages)
             PageView.builder(
               controller: _pageController,
               itemCount: pages.length,
@@ -77,7 +76,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               },
             ),
 
-            // Skip button (top-right)
             Positioned(
               top: 20,
               right: 20,
@@ -94,7 +92,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               ),
             ),
 
-            // Fixed dots (page indicator)
             Positioned(
               bottom: 40,
               left: 30,
@@ -118,7 +115,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               ),
             ),
 
-            // Fixed next button (bottom-right)
             Positioned(
               bottom: 20,
               right: 25,
@@ -159,7 +155,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Image
           Image.asset(
             page.imagePath,
             width: 300,
@@ -168,7 +163,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           ),
           const SizedBox(height: 50),
 
-          // Title
           Text(
             page.title,
             textAlign: TextAlign.center,
@@ -181,7 +175,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Description
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Text(

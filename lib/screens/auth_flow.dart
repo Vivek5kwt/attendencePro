@@ -31,7 +31,6 @@ class _AuthFlowState extends State<AuthFlow> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          // Refresh the work data and drawer details with the latest session.
           context.read<WorkBloc>().add(const WorkStarted());
           context.read<AppCubit>().showHome();
         } else if (state is AuthVerifyNumber) {

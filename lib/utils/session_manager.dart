@@ -1,6 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Centralized helper for persisting authentication/session data locally.
 class SessionManager {
   const SessionManager();
 
@@ -9,7 +8,6 @@ class SessionManager {
   static const _emailKey = 'user_email';
   static const _usernameKey = 'user_username';
 
-  /// Save the session details returned from the login API response.
   Future<void> saveSession({
     required String token,
     String? name,
@@ -29,7 +27,6 @@ class SessionManager {
     }
   }
 
-  /// Returns the stored token if available.
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_tokenKey);
@@ -39,7 +36,6 @@ class SessionManager {
     return token;
   }
 
-  /// Returns a map containing the stored user details.
   Future<Map<String, String?>> getUserDetails() async {
     final prefs = await SharedPreferences.getInstance();
     return {
@@ -49,7 +45,6 @@ class SessionManager {
     };
   }
 
-  /// Clears all persisted session data.
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);

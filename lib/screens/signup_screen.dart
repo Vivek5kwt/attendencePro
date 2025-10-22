@@ -54,7 +54,6 @@ class _SignupScreenState extends State<SignupScreen> {
     final password = _passwordController.text;
     final confirm = _confirmController.text;
 
-    // Simple username derivation from email local part
     String username = email;
     if (email.contains('@')) {
       username = email.split('@').first;
@@ -101,15 +100,12 @@ class _SignupScreenState extends State<SignupScreen> {
             SnackBar(content: Text(state.message)),
           );
         } else if (state is AuthAuthenticated) {
-          // ✅ Always show message from API (for both register & login)
           final msg = state.data?['message'] ??
               state.data?['status'] ??
               AppLocalizations.of(context).operationSuccessful;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(msg)),
           );
-          // Optional navigation to home or next page
-          // Navigator.pushReplacementNamed(context, '/home');
         }
       },
       child: Scaffold(

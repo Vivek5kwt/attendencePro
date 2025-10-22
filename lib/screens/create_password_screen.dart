@@ -45,15 +45,9 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
       Navigator.pop(context);
       return;
     }
-
-    // If we can't pop, try to change app state via AppCubit if it's provided.
-    // Wrap in try/catch to avoid throwing if AppCubit wasn't provided above in the tree.
     try {
       context.read<AppCubit>().showAuth();
     } catch (_) {
-      // No AppCubit provided. Do nothing so we don't pop into a blank screen.
-      // Optionally, you could show a dialog or navigate to a named route here
-      // if you have a known safe route.
     }
   }
 
