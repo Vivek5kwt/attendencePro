@@ -71,18 +71,22 @@ class _AuthFlowState extends State<AuthFlow> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-
-          context.read<AuthCubit>().showPhone();
         }
       },
       builder: (context, state) {
         final bool isLoading = state is AuthLoading;
-        if (!isLoading) {
+        if (!isLoading && state is! AuthError) {
           _lastNonLoadingState = state;
         }
 
-        final AuthState effectiveState =
-            _lastNonLoadingState ?? context.read<AuthCubit>().state;
+        final AuthState effectiveState;
+        if (state is AuthError && _lastNonLoadingState != null) {
+          effectiveState = _lastNonLoadingState!;
+        } else if (isLoading && _lastNonLoadingState != null) {
+          effectiveState = _lastNonLoadingState!;
+        } else {
+          effectiveState = state;
+        }
 
         Widget child;
         if (effectiveState is AuthPhoneInput) {
