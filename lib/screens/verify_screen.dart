@@ -138,7 +138,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
                                 maxLength: 1,
-                                inputFormatters: const [
+                                inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 decoration: InputDecoration(
