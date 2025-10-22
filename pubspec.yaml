@@ -71,6 +71,17 @@ flutter:
   assets:
     - assets/images/
 
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter_24pt-Regular.ttf
+        - asset: fonts/Inter_24pt-Medium.ttf
+          weight: 500
+        - asset: fonts/Inter_24pt-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Inter_24pt-Bold.ttf
+          weight: 700
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

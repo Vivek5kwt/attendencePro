@@ -59,6 +59,7 @@ class AttendanceProApp extends StatelessWidget {
                   theme: ThemeData(
                     primarySwatch: Colors.indigo,
                     useMaterial3: false,
+                    fontFamily: 'Inter',
                   ),
                   locale: locale,
                   supportedLocales: AppLocalizations.supportedLocales,
