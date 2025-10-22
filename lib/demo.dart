@@ -1010,14 +1010,55 @@ class _HomeScreenState extends State<HomeScreen> {
       return _buildWorksEmptyState(l);
     }
 
-    return RefreshIndicator(
-      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: _works.length,
-        itemBuilder: (context, index) => _buildWorkCard(_works[index], l),
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              itemCount: _works.length,
+              itemBuilder: (context, index) => _buildWorkCard(_works[index], l),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: _buildPrimaryActionButton(
+              label: l.addNewWorkLabel,
+              onPressed: _showAddWorkDialog,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryActionButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF007BFF),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -1050,23 +1091,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: _showAddWorkDialog,
-                    child: Text(
-                      l.addYourFirstWork,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                _buildPrimaryActionButton(
+                  label: l.addYourFirstWork,
+                  onPressed: _showAddWorkDialog,
                 ),
                 const SizedBox(height: 60),
               ],
