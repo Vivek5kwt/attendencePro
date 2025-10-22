@@ -175,7 +175,7 @@ class AppLocalizations {
       'passwordsDoNotMatch': 'Passwords do not match.',
       'resetPasswordButton': 'Reset Password',
       'verifyNumberTitle': 'Verify Your Number',
-      'verifyCodeDescription': 'We’ve sent a 4-digit code to your email.',
+      'verifyCodeDescription': 'We’ve sent a 6-digit code to your email.',
       'enterCodeLabel': 'Enter Code',
       'verifyOtpButton': 'Verify OTP',
       'resendCountdown': 'Didn’t receive code? Resend in 00:{seconds}',
@@ -331,7 +331,7 @@ class AppLocalizations {
       'passwordsDoNotMatch': 'पासवर्ड मेल नहीं खाते।',
       'resetPasswordButton': 'पासवर्ड रीसेट करें',
       'verifyNumberTitle': 'अपना नंबर सत्यापित करें',
-      'verifyCodeDescription': 'हमने आपके ईमेल पर 4 अंकों का कोड भेजा है।',
+      'verifyCodeDescription': 'हमने आपके ईमेल पर 6 अंकों का कोड भेजा है।',
       'enterCodeLabel': 'कोड दर्ज करें',
       'verifyOtpButton': 'ओटीपी सत्यापित करें',
       'resendCountdown': 'कोड नहीं मिला? 00:{seconds} में फिर से भेजें',
@@ -490,7 +490,7 @@ class AppLocalizations {
       'resetPasswordButton': 'ਪਾਸਵਰਡ ਰੀਸੈਟ ਕਰੋ',
       'verifyNumberTitle': 'ਆਪਣਾ ਨੰਬਰ ਤਸਦੀਕ ਕਰੋ',
       'verifyCodeDescription':
-      'ਅਸੀਂ ਤੁਹਾਡੇ ਈਮੇਲ ਉੱਤੇ 4 ਅੰਕਾਂ ਦਾ ਕੋਡ ਭੇਜਿਆ ਹੈ।',
+      'ਅਸੀਂ ਤੁਹਾਡੇ ਈਮੇਲ ਉੱਤੇ 6 ਅੰਕਾਂ ਦਾ ਕੋਡ ਭੇਜਿਆ ਹੈ।',
       'enterCodeLabel': 'ਕੋਡ ਦਰਜ ਕਰੋ',
       'verifyOtpButton': 'ਓਟੀਪੀ ਦੀ ਤਸਦੀਕ ਕਰੋ',
       'resendCountdown': 'ਕੋਡ ਨਹੀਂ ਮਿਲਿਆ? 00:{seconds} ਵਿੱਚ ਮੁੜ ਭੇਜੋ',
@@ -649,7 +649,7 @@ class AppLocalizations {
       'resetPasswordButton': 'Reimposta password',
       'verifyNumberTitle': 'Verifica il tuo numero',
       'verifyCodeDescription':
-      'Abbiamo inviato un codice di 4 cifre alla tua email.',
+      'Abbiamo inviato un codice di 6 cifre alla tua email.',
       'enterCodeLabel': 'Inserisci il codice',
       'verifyOtpButton': 'Verifica codice',
       'resendCountdown':
