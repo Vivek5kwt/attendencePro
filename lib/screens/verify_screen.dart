@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
 
@@ -14,8 +15,12 @@ class VerifyScreen extends StatefulWidget {
 }
 
 class _VerifyScreenState extends State<VerifyScreen> {
+  static const int _otpLength = 6;
+
   final List<TextEditingController> _controllers =
-      List.generate(4, (index) => TextEditingController());
+      List.generate(_otpLength, (index) => TextEditingController());
+  final List<FocusNode> _focusNodes =
+      List.generate(_otpLength, (index) => FocusNode());
   late Timer _timer;
   int _start = 45;
 
@@ -40,13 +45,17 @@ class _VerifyScreenState extends State<VerifyScreen> {
   @override
   void dispose() {
     _timer.cancel();
-    for (var c in _controllers) {
-      c.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    for (final node in _focusNodes) {
+      node.dispose();
     }
     super.dispose();
   }
 
   void _verify() {
+    FocusScope.of(context).unfocus();
     final code = _controllers.map((e) => e.text).join();
     context.read<AuthCubit>().verifyCode(code.trim());
   }
@@ -70,7 +79,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final l = AppLocalizations.of(context);
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -113,37 +121,84 @@ class _VerifyScreenState extends State<VerifyScreen> {
                       const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(4, (index) {
-                    return SizedBox(
-                      width: size.width * 0.17,
-                      child: TextField(
-                        controller: _controllers[index],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        maxLength: 1,
-                        decoration: InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: Colors.white,
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.transparent),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final availableWidth = constraints.maxWidth;
+                    final spacing = availableWidth < 320 ? 6.0 : 10.0;
+                    final fieldHeight = availableWidth < 320 ? 52.0 : 58.0;
+                    return Row(
+                      children: [
+                        for (var index = 0; index < _otpLength; index++) ...[
+                          Expanded(
+                            child: SizedBox(
+                              height: fieldHeight,
+                              child: TextField(
+                                controller: _controllers[index],
+                                focusNode: _focusNodes[index],
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                maxLength: 1,
+                                inputFormatters: const [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  counterText: '',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        const BorderSide(color: Colors.transparent),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: Colors.blue),
+                                  ),
+                                ),
+                                onChanged: (value) {
+                                  final trimmedValue = value.trim();
+                                  if (trimmedValue.length > 1) {
+                                    final digits = trimmedValue.replaceAll(
+                                      RegExp(r'[^0-9]'),
+                                      '',
+                                    );
+                                    if (digits.isEmpty) {
+                                      _controllers[index].clear();
+                                      return;
+                                    }
+                                    for (var i = 0; i < digits.length; i++) {
+                                      final targetIndex = index + i;
+                                      if (targetIndex >= _otpLength) break;
+                                      _controllers[targetIndex].text = digits[i];
+                                    }
+                                    final nextIndex = index + digits.length;
+                                    if (nextIndex < _otpLength) {
+                                      _focusNodes[nextIndex].requestFocus();
+                                    } else {
+                                      FocusScope.of(context).unfocus();
+                                    }
+                                    return;
+                                  }
+
+                                  if (trimmedValue.isNotEmpty) {
+                                    if (index < _otpLength - 1) {
+                                      _focusNodes[index + 1].requestFocus();
+                                    } else {
+                                      FocusScope.of(context).unfocus();
+                                    }
+                                  } else if (trimmedValue.isEmpty && index > 0) {
+                                    _focusNodes[index - 1].requestFocus();
+                                  }
+                                },
+                              ),
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.blue),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty && index < 3) {
-                            FocusScope.of(context).nextFocus();
-                          }
-                        },
-                      ),
+                          if (index != _otpLength - 1)
+                            SizedBox(width: spacing),
+                        ],
+                      ],
                     );
-                  }),
+                  },
                 ),
                 const SizedBox(height: 40),
                 SizedBox(
