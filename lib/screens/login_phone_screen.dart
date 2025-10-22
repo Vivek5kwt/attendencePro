@@ -5,6 +5,7 @@ import '../bloc/auth_cubit.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
+import '../widgets/app_dialogs.dart';
 
 class LoginPhoneScreen extends StatefulWidget {
   const LoginPhoneScreen({Key? key}) : super(key: key);
@@ -301,41 +302,34 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     Center(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(24),
-                        onTap: () {
-                          showDialog<String>(
-                            context: context,
-                            builder: (ctx) => SimpleDialog(
-                              title: Text(l.selectLanguageTitle),
-                              children: languageOptions.entries
-                                  .map(
-                                    (entry) => SimpleDialogOption(
-                                      onPressed: () =>
-                                          Navigator.pop(ctx, entry.key),
-                                      child: Text(entry.value),
-                                    ),
-                                  )
-                                  .toList(),
-                            ),
-                          ).then((selected) {
-                            if (selected != null &&
-                                languageOptions.containsKey(selected)) {
-                              context
-                                  .read<LocaleCubit>()
-                                  .setLocale(Locale(selected));
-                              final updatedLocalization =
-                                  AppLocalizations(Locale(selected));
-                              final updatedNames = {
-                                'en': updatedLocalization.languageEnglish,
-                                'hi': updatedLocalization.languageHindi,
-                                'pa': updatedLocalization.languagePunjabi,
-                                'it': updatedLocalization.languageItalian,
-                              };
-                              final label =
-                                  updatedNames[selected] ?? languageOptions[selected]!;
-                              _showSnack(
-                                  updatedLocalization.languageSelection(label));
-                            }
-                          });
+                        onTap: () async {
+                          final currentCode =
+                              context.read<LocaleCubit>().state.languageCode;
+                          final selected = await showCreativeLanguageDialog(
+                            context,
+                            options: languageOptions,
+                            currentSelection: currentCode,
+                            localizations: l,
+                          );
+
+                          if (selected != null &&
+                              languageOptions.containsKey(selected)) {
+                            context
+                                .read<LocaleCubit>()
+                                .setLocale(Locale(selected));
+                            final updatedLocalization =
+                                AppLocalizations(Locale(selected));
+                            final updatedNames = {
+                              'en': updatedLocalization.languageEnglish,
+                              'hi': updatedLocalization.languageHindi,
+                              'pa': updatedLocalization.languagePunjabi,
+                              'it': updatedLocalization.languageItalian,
+                            };
+                            final label =
+                                updatedNames[selected] ?? languageOptions[selected]!;
+                            _showSnack(
+                                updatedLocalization.languageSelection(label));
+                          }
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

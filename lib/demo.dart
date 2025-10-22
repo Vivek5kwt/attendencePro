@@ -11,6 +11,7 @@ import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 import '../utils/session_manager.dart';
+import '../widgets/app_dialogs.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -820,28 +821,8 @@ class _HomeScreenState extends State<HomeScreen> {
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<bool> _showLogoutConfirmationDialog(AppLocalizations l) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l.logoutConfirmationTitle),
-          content: Text(l.logoutConfirmationMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l.logoutCancelButton),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l.logoutConfirmButton),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result ?? false;
+  Future<bool> _showLogoutConfirmationDialog(AppLocalizations l) {
+    return showCreativeLogoutDialog(context, l);
   }
 
   @override
@@ -1334,21 +1315,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showLanguageDialog(BuildContext context,
       Map<String, String> options, AppLocalizations l) async {
-    final selectedCode = await showDialog<String>(
-      context: context,
-      builder: (ctx) {
-        return SimpleDialog(
-          title: Text(l.selectLanguageTitle),
-          children: options.entries
-              .map(
-                (entry) => SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, entry.key),
-              child: Text(entry.value),
-            ),
-          )
-              .toList(),
-        );
-      },
+    final currentCode = context.read<LocaleCubit>().state.languageCode;
+    final selectedCode = await showCreativeLanguageDialog(
+      context,
+      options: options,
+      currentSelection: currentCode,
+      localizations: l,
     );
 
     if (selectedCode != null && options.containsKey(selectedCode)) {
