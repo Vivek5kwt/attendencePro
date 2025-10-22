@@ -1223,12 +1223,96 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             body: Column(
               children: [
-                Image.asset(AppAssets.homeBanner, width: 330),
+                _buildHomeBanner(l),
                 Expanded(child: _buildWorksContent(l, state)),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildHomeBanner(AppLocalizations l) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: SizedBox(
+        height: 190,
+        width: double.infinity,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  AppAssets.homeBanner,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.black.withOpacity(0.45),
+                      Colors.black.withOpacity(0.15),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 24,
+              top: 28,
+              right: 150,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.homeBannerTitle,
+                    style: textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l.homeBannerSubtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                          height: 1.4,
+                        ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: -12,
+              child: Image.asset(
+                AppAssets.homeBannerIllustration,
+                width: 150,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

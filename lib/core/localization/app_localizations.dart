@@ -31,6 +31,9 @@ class AppLocalizations {
       'drawerUserName': 'John Snow',
       'drawerUserPhone': '+39-319-055-5550',
       'dashboardLabel': 'Dashboard',
+      'homeBannerTitle': 'Track Attendance Smarter',
+      'homeBannerSubtitle':
+          'Manage your shifts, track hours, and stay organized every day.',
       'addNewWorkLabel': 'Add New Work',
       'attendanceHistoryLabel': 'Attendance History',
       'contractWorkLabel': 'Contract Work',
@@ -187,6 +190,9 @@ class AppLocalizations {
       'drawerUserName': 'जॉन स्नो',
       'drawerUserPhone': '+39-319-055-5550',
       'dashboardLabel': 'डैशबोर्ड',
+      'homeBannerTitle': 'उपस्थिति को स्मार्ट तरीके से ट्रैक करें',
+      'homeBannerSubtitle':
+          'अपनी शिफ्ट्स प्रबंधित करें, घंटे ट्रैक करें और हर दिन व्यवस्थित रहें।',
       'addNewWorkLabel': 'नया कार्य जोड़ें',
       'attendanceHistoryLabel': 'उपस्थिति इतिहास',
       'contractWorkLabel': 'ठेका कार्य',
@@ -343,6 +349,9 @@ class AppLocalizations {
       'drawerUserName': 'ਜੌਨ ਸਨੋ',
       'drawerUserPhone': '+39-319-055-5550',
       'dashboardLabel': 'ਡੈਸ਼ਬੋਰਡ',
+      'homeBannerTitle': 'ਹਾਜ਼ਰੀ ਨੂੰ ਹੋਰ ਸਮਝਦਾਰੀ ਨਾਲ ਟਰੈਕ ਕਰੋ',
+      'homeBannerSubtitle':
+          'ਆਪਣੀਆਂ ਸ਼ਿਫਟਾਂ ਸੰਭਾਲੋ, ਘੰਟੇ ਟਰੈਕ ਕਰੋ ਅਤੇ ਹਰ ਰੋਜ਼ ਸੁਵਿਧਾਜਨਕ ਰਹੋ।',
       'addNewWorkLabel': 'ਨਵਾਂ ਕੰਮ ਜੋੜੋ',
       'attendanceHistoryLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ',
       'contractWorkLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ',
@@ -502,6 +511,9 @@ class AppLocalizations {
       'drawerUserName': 'John Snow',
       'drawerUserPhone': '+39-319-055-5550',
       'dashboardLabel': 'Dashboard',
+      'homeBannerTitle': 'Monitora le presenze in modo intelligente',
+      'homeBannerSubtitle':
+          'Gestisci i tuoi turni, traccia le ore e rimani organizzato ogni giorno.',
       'addNewWorkLabel': 'Aggiungi nuovo lavoro',
       'attendanceHistoryLabel': 'Storico presenze',
       'contractWorkLabel': 'Lavoro a contratto',
@@ -678,6 +690,8 @@ class AppLocalizations {
   String get drawerUserName => _value('drawerUserName');
   String get drawerUserPhone => _value('drawerUserPhone');
   String get dashboardLabel => _value('dashboardLabel');
+  String get homeBannerTitle => _value('homeBannerTitle');
+  String get homeBannerSubtitle => _value('homeBannerSubtitle');
   String get addNewWorkLabel => _value('addNewWorkLabel');
   String get attendanceHistoryLabel => _value('attendanceHistoryLabel');
   String get contractWorkLabel => _value('contractWorkLabel');
