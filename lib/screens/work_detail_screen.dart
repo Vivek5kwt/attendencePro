@@ -2,23 +2,106 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../models/dashboard_summary.dart';
 import '../models/work.dart';
+import '../repositories/dashboard_repository.dart';
 
-class WorkDetailScreen extends StatelessWidget {
+class WorkDetailScreen extends StatefulWidget {
   const WorkDetailScreen({super.key, required this.work});
 
   final Work work;
+
+  @override
+  State<WorkDetailScreen> createState() => _WorkDetailScreenState();
+}
+
+class _WorkDetailScreenState extends State<WorkDetailScreen> {
+  final DashboardRepository _dashboardRepository = DashboardRepository();
+  DashboardSummary? _dashboardSummary;
+  bool _isSummaryLoading = true;
+  String? _summaryError;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSummary();
+    });
+  }
+
+  Future<void> _loadSummary() async {
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    setState(() {
+      _isSummaryLoading = true;
+      _summaryError = null;
+    });
+
+    try {
+      final summary = await _dashboardRepository.fetchSummary(workId: widget.work.id);
+      if (!mounted) return;
+      setState(() {
+        _dashboardSummary = summary;
+        _isSummaryLoading = false;
+      });
+    } on DashboardAuthException {
+      if (!mounted) return;
+      final message = l.authenticationRequiredMessage;
+      setState(() {
+        _summaryError = message;
+        _isSummaryLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } on DashboardRepositoryException catch (e) {
+      if (!mounted) return;
+      final message = e.message.trim().isNotEmpty
+          ? e.message.trim()
+          : l.dashboardSummaryLoadFailedMessage;
+      setState(() {
+        _summaryError = message;
+        _isSummaryLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      final message = l.dashboardSummaryLoadFailedMessage;
+      setState(() {
+        _summaryError = message;
+        _isSummaryLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final hourlyRateText = _buildHourlyRateText(l);
     final contractItems = _resolveContractItems();
-    final summaryStats = _resolveSummaryStats(l);
-    final dateLabel = _formatDate(DateTime.now());
-    final startTime = work.additionalData['startTime'] as String? ?? '05:00 AM';
-    final endTime = work.additionalData['endTime'] as String? ?? '05:00 AM';
-    final breakTime = work.additionalData['breakTime'] as String? ?? '12:30 AM';
+    final summaryStats = _buildSummaryStats(l);
+    final todayEntry = _dashboardSummary?.todayEntry;
+    final dateLabel = todayEntry?.dateText ?? _formatDate(DateTime.now());
+    final startTime = _formatTimeValue(
+      todayEntry?.startTimeText ??
+          widget.work.additionalData['startTime'] as String?,
+      l,
+    );
+    final endTime = _formatTimeValue(
+      todayEntry?.endTimeText ?? widget.work.additionalData['endTime'] as String?,
+      l,
+    );
+    final breakTime = _formatBreakValue(
+      todayEntry?.breakDurationText ??
+          widget.work.additionalData['breakTime'] as String?,
+      l,
+    );
+    final summarySection = _buildSummarySection(l, summaryStats);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6FB),
@@ -56,7 +139,7 @@ class WorkDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _WorkHeaderCard(
-                work: work,
+                work: widget.work,
                 hourlyRateText: hourlyRateText,
               ),
               const SizedBox(height: 24),
@@ -71,9 +154,7 @@ class WorkDetailScreen extends StatelessWidget {
                 items: contractItems,
               ),
               const SizedBox(height: 24),
-              _MonthlySummarySection(
-                stats: summaryStats,
-              ),
+              summarySection,
             ],
           ),
         ),
@@ -82,10 +163,10 @@ class WorkDetailScreen extends StatelessWidget {
   }
 
   String _buildHourlyRateText(AppLocalizations l) {
-    if (work.isContract) {
+    if (widget.work.isContract) {
       return l.contractWorkLabel;
     }
-    final rate = work.hourlyRate;
+    final rate = widget.work.hourlyRate;
     if (rate == null) {
       return l.notAvailableLabel;
     }
@@ -93,7 +174,7 @@ class WorkDetailScreen extends StatelessWidget {
   }
 
   List<_ContractItem> _resolveContractItems() {
-    final rawItems = work.additionalData['contractItems'];
+    final rawItems = widget.work.additionalData['contractItems'];
     if (rawItems is List) {
       return rawItems
           .whereType<Map>()
@@ -111,8 +192,67 @@ class WorkDetailScreen extends StatelessWidget {
     ];
   }
 
+  List<_SummaryStat> _buildSummaryStats(AppLocalizations l) {
+    final summary = _dashboardSummary;
+    if (summary != null) {
+      final totalHours = summary.totalHours;
+      final totalSalary = summary.totalSalary;
+      return <_SummaryStat>[
+        _SummaryStat(
+          title: l.totalHoursLabel,
+          value: '${totalHours.toStringAsFixed(2)} h',
+          color: const Color(0xFF2563EB),
+        ),
+        _SummaryStat(
+          title: l.totalSalaryLabel,
+          value: '€${totalSalary.toStringAsFixed(2)}',
+          color: const Color(0xFF22C55E),
+        ),
+      ];
+    }
+    return _resolveSummaryStats(l);
+  }
+
+  Widget _buildSummarySection(AppLocalizations l, List<_SummaryStat> stats) {
+    if (_isSummaryLoading) {
+      return _SummaryStatusCard(
+        message: l.reportsLoadingMessage,
+        isLoading: true,
+      );
+    }
+    if (_summaryError != null) {
+      return _SummaryStatusCard(
+        message: _summaryError!,
+        onRetry: _loadSummary,
+      );
+    }
+    return _MonthlySummarySection(stats: stats);
+  }
+
+  String _formatTimeValue(String? value, AppLocalizations l) {
+    if (value == null) {
+      return l.notAvailableLabel;
+    }
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return l.notAvailableLabel;
+    }
+    return trimmed;
+  }
+
+  String _formatBreakValue(String? value, AppLocalizations l) {
+    if (value == null) {
+      return l.notAvailableLabel;
+    }
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return l.notAvailableLabel;
+    }
+    return trimmed;
+  }
+
   List<_SummaryStat> _resolveSummaryStats(AppLocalizations l) {
-    final summary = work.additionalData['summary'];
+    final summary = widget.work.additionalData['summary'];
     if (summary is Map) {
       final totalHours = summary['totalHours']?.toString();
       final totalSalary = summary['totalSalary']?.toString();
@@ -550,6 +690,89 @@ class _ContractSummarySectionState extends State<_ContractSummarySection> {
   }
 }
 
+class _SummaryStatusCard extends StatelessWidget {
+  const _SummaryStatusCard({
+    required this.message,
+    this.isLoading = false,
+    this.onRetry,
+  });
+
+  final String message;
+  final bool isLoading;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final header = '${_formatMonthYearLabel(DateTime.now())} ${l.summaryLabel}';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            header,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ) ??
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 120,
+            child: Center(
+              child: isLoading
+                  ? const CircularProgressIndicator()
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          message,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF374151),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (onRetry != null) ...[
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 40,
+                            child: OutlinedButton(
+                              onPressed: onRetry,
+                              child: Text(
+                                l.retryButtonLabel,
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MonthlySummarySection extends StatelessWidget {
   const _MonthlySummarySection({
     required this.stats,
@@ -559,7 +782,7 @@ class _MonthlySummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final monthName = _formatMonthYear(DateTime.now());
+    final monthName = _formatMonthYearLabel(DateTime.now());
     final l = AppLocalizations.of(context);
 
     return Container(
@@ -614,23 +837,6 @@ class _MonthlySummarySection extends StatelessWidget {
     );
   }
 
-  String _formatMonthYear(DateTime date) {
-    const monthNames = <String>[
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return '${monthNames[date.month - 1]} ${date.year}';
-  }
 }
 
 class _AttendanceTimeCard extends StatelessWidget {
@@ -754,4 +960,22 @@ class _SummaryStat {
   final String title;
   final String value;
   final Color color;
+}
+
+String _formatMonthYearLabel(DateTime date) {
+  const monthNames = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return '${monthNames[date.month - 1]} ${date.year}';
 }
