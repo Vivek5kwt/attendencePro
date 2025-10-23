@@ -108,6 +108,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _handleDashboardTap() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   Future<void> _handleAddWorkFromDrawer() async {
     Navigator.of(context).pop();
     await Future.delayed(const Duration(milliseconds: 200));
@@ -1153,11 +1160,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: BlocBuilder<WorkBloc, WorkState>(
         builder: (context, state) {
           final l = AppLocalizations.of(context);
-          final languageOptions = {
-            'en': l.languageEnglish,
-            'hi': l.languageHindi,
-            'pa': l.languagePunjabi,
-            'it': l.languageItalian,
+          const languageOptions = <String, String>{
+            'en': 'English',
+            'hi': 'Hindi',
+            'pa': 'Punjabi',
+            'it': 'Italian',
           };
           final userName = state.userName ?? l.drawerUserName;
           final userEmail = state.userEmail ?? l.drawerUserPhone;
@@ -1167,7 +1174,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.dashboardLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF1C87FF),
-              onTap: () => (){},
+              onTap: _handleDashboardTap,
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.addNewWork,
@@ -1958,13 +1965,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (selectedCode != null && options.containsKey(selectedCode)) {
       context.read<LocaleCubit>().setLocale(Locale(selectedCode));
       final updatedLocalization = AppLocalizations(Locale(selectedCode));
-      final updatedNames = {
-        'en': updatedLocalization.languageEnglish,
-        'hi': updatedLocalization.languageHindi,
-        'pa': updatedLocalization.languagePunjabi,
-        'it': updatedLocalization.languageItalian,
-      };
-      final label = updatedNames[selectedCode] ?? options[selectedCode] ?? selectedCode;
+      final label = options[selectedCode] ?? selectedCode;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(updatedLocalization.languageSelection(label))),
       );

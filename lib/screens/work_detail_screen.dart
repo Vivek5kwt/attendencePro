@@ -51,11 +51,27 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     });
   }
 
+  String _normalizeTimeString(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    final match = RegExp(r'(\d{1,2}):(\d{1,2})').firstMatch(trimmed);
+    if (match != null) {
+      final hour = match.group(1)!;
+      final minute = match.group(2)!;
+      return '${hour.padLeft(2, '0')}:${minute.padLeft(2, '0')}';
+    }
+
+    return trimmed;
+  }
+
   String? _extractTimeFromMap(Map<String, dynamic> data, List<String> keys) {
     for (final key in keys) {
       final value = data[key];
       if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
+        return _normalizeTimeString(value);
       }
     }
     return null;
@@ -188,7 +204,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ) ??
         entry.startTimeText;
     if (startTime != null && startTime.trim().isNotEmpty) {
-      _startTimeController.text = startTime.trim();
+      _startTimeController.text = _normalizeTimeString(startTime);
     }
 
     final endTime = _extractTimeFromMap(
@@ -197,7 +213,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ) ??
         entry.endTimeText;
     if (endTime != null && endTime.trim().isNotEmpty) {
-      _endTimeController.text = endTime.trim();
+      _endTimeController.text = _normalizeTimeString(endTime);
     }
 
     final breakMinutes =
