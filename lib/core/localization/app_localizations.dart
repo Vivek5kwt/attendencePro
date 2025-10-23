@@ -199,6 +199,17 @@ class AppLocalizations {
       'attendanceRateInvalid': 'Enter a valid rate per unit',
       'attendanceSubmitSuccess': 'Attendance saved successfully',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
+      'attendancePreviewTitle': 'Confirm attendance',
+      'attendancePreviewDescription':
+          'Review the details below before saving your attendance entry.',
+      'attendancePreviewConfirmButton': 'Confirm & Save',
+      'attendancePreviewCancelButton': 'Edit entry',
+      'attendancePreviewHoursLabel': 'Calculated hours',
+      'attendancePreviewSalaryLabel': 'Calculated salary',
+      'attendancePreviewFetchFailed':
+          'Unable to preview attendance. Please try again.',
+      'attendanceDateLabel': 'Date',
+      'attendanceEntryTypeLabel': 'Entry type',
       'submitButton': 'Submit',
       'markAsWorkOffButton': 'Mark as Work Off',
       'contractWorkSummaryTitle': 'Contract Work Summary',
@@ -488,6 +499,17 @@ class AppLocalizations {
       'attendanceRateInvalid': 'कृपया मान्य प्रति इकाई दर दर्ज करें',
       'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
+      'attendancePreviewTitle': 'उपस्थिति की पुष्टि करें',
+      'attendancePreviewDescription':
+          'उपस्थिति सहेजने से पहले नीचे दिए विवरण की जाँच करें।',
+      'attendancePreviewConfirmButton': 'पुष्टि करें और सहेजें',
+      'attendancePreviewCancelButton': 'प्रविष्टि संपादित करें',
+      'attendancePreviewHoursLabel': 'गणना किए गए घंटे',
+      'attendancePreviewSalaryLabel': 'गणना किया गया वेतन',
+      'attendancePreviewFetchFailed':
+          'उपस्थिति प्रीव्यू लोड नहीं हो पाया। कृपया पुनः प्रयास करें।',
+      'attendanceDateLabel': 'तारीख',
+      'attendanceEntryTypeLabel': 'प्रविष्टि प्रकार',
       'submitButton': 'जमा करें',
       'markAsWorkOffButton': 'कार्य अवकाश चिह्नित करें',
       'contractWorkSummaryTitle': 'ठेका कार्य सारांश',
@@ -774,6 +796,17 @@ class AppLocalizations {
       'attendanceRateInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਦਰਜ ਕਰੋ',
       'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'attendancePreviewTitle': 'ਹਾਜ਼ਰੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
+      'attendancePreviewDescription':
+          'ਹਾਜ਼ਰੀ ਸੇਵ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਹੇਠਾਂ ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਦੀ ਜਾਂਚ ਕਰੋ।',
+      'attendancePreviewConfirmButton': 'ਪੁਸ਼ਟੀ ਕਰੋ ਅਤੇ ਸੇਵ ਕਰੋ',
+      'attendancePreviewCancelButton': 'ਐਂਟਰੀ ਸੋਧੋ',
+      'attendancePreviewHoursLabel': 'ਗਿਣੇ ਘੰਟੇ',
+      'attendancePreviewSalaryLabel': 'ਗਿਣੀ ਤਨਖ਼ਾਹ',
+      'attendancePreviewFetchFailed':
+          'ਹਾਜ਼ਰੀ ਪ੍ਰੀਵਿਊ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'attendanceDateLabel': 'ਮਿਤੀ',
+      'attendanceEntryTypeLabel': 'ਐਂਟਰੀ ਕਿਸਮ',
       'submitButton': 'ਜਮ੍ਹਾਂ ਕਰੋ',
       'markAsWorkOffButton': 'ਕੰਮ ਛੁੱਟੀ ਨਿਸ਼ਾਨ ਲਗਾਓ',
       'contractWorkSummaryTitle': 'ਕਾਨਟ੍ਰੈਕਟ ਕੰਮ ਸੰਖੇਪ',
@@ -1066,6 +1099,17 @@ class AppLocalizations {
       'attendanceRateInvalid': 'Inserisci una tariffa per unità valida',
       'attendanceSubmitSuccess': 'Presenza salvata con successo',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
+      'attendancePreviewTitle': 'Conferma presenza',
+      'attendancePreviewDescription':
+          'Controlla i dettagli prima di salvare la registrazione di presenza.',
+      'attendancePreviewConfirmButton': 'Conferma e salva',
+      'attendancePreviewCancelButton': 'Modifica registrazione',
+      'attendancePreviewHoursLabel': 'Ore calcolate',
+      'attendancePreviewSalaryLabel': 'Salario calcolato',
+      'attendancePreviewFetchFailed':
+          'Impossibile mostrare l\'anteprima della presenza. Riprova.',
+      'attendanceDateLabel': 'Data',
+      'attendanceEntryTypeLabel': 'Tipo di registrazione',
       'submitButton': 'Invia',
       'markAsWorkOffButton': 'Segna come riposo',
       'contractWorkSummaryTitle': 'Riepilogo lavoro a contratto',
@@ -1435,6 +1479,22 @@ class AppLocalizations {
   String get attendanceRateInvalid => _value('attendanceRateInvalid');
   String get attendanceSubmitSuccess => _value('attendanceSubmitSuccess');
   String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
+  String get attendancePreviewTitle => _value('attendancePreviewTitle');
+  String get attendancePreviewDescription =>
+      _value('attendancePreviewDescription');
+  String get attendancePreviewConfirmButton =>
+      _value('attendancePreviewConfirmButton');
+  String get attendancePreviewCancelButton =>
+      _value('attendancePreviewCancelButton');
+  String get attendancePreviewHoursLabel =>
+      _value('attendancePreviewHoursLabel');
+  String get attendancePreviewSalaryLabel =>
+      _value('attendancePreviewSalaryLabel');
+  String get attendancePreviewFetchFailed =>
+      _value('attendancePreviewFetchFailed');
+  String get attendanceDateLabel => _value('attendanceDateLabel');
+  String get attendanceEntryTypeLabel =>
+      _value('attendanceEntryTypeLabel');
   String get submitButton => _value('submitButton');
   String get markAsWorkOffButton => _value('markAsWorkOffButton');
   String get contractWorkSummaryTitle => _value('contractWorkSummaryTitle');

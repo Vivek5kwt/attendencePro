@@ -13,6 +13,44 @@ class AttendanceEntryRepository {
   final AttendanceApi _api;
   final SessionManager _sessionManager;
 
+  Future<Map<String, dynamic>?> previewAttendance({
+    required String workId,
+    required DateTime date,
+    required String startTime,
+    required String endTime,
+    required int breakMinutes,
+    bool isContractEntry = false,
+    int? contractTypeId,
+    num? units,
+    num? ratePerUnit,
+  }) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const AttendanceAuthException();
+    }
+
+    final request = _buildRequest(
+      workId: workId,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      breakMinutes: breakMinutes,
+      isContractEntry: isContractEntry,
+      contractTypeId: contractTypeId,
+      units: units,
+      ratePerUnit: ratePerUnit,
+    );
+
+    try {
+      return await _api.previewAttendance(
+        request: request,
+        token: token,
+      );
+    } on ApiException catch (e) {
+      throw AttendanceRepositoryException(e.message);
+    }
+  }
+
   Future<Map<String, dynamic>?> submitAttendance({
     required String workId,
     required DateTime date,
@@ -29,9 +67,8 @@ class AttendanceEntryRepository {
       throw const AttendanceAuthException();
     }
 
-    final payloadWorkId = int.tryParse(workId) ?? workId;
-    final request = AttendanceRequest(
-      workId: payloadWorkId,
+    final request = _buildRequest(
+      workId: workId,
       date: date,
       startTime: startTime,
       endTime: endTime,
@@ -50,6 +87,31 @@ class AttendanceEntryRepository {
     } on ApiException catch (e) {
       throw AttendanceRepositoryException(e.message);
     }
+  }
+
+  AttendanceRequest _buildRequest({
+    required String workId,
+    required DateTime date,
+    required String startTime,
+    required String endTime,
+    required int breakMinutes,
+    required bool isContractEntry,
+    int? contractTypeId,
+    num? units,
+    num? ratePerUnit,
+  }) {
+    final payloadWorkId = int.tryParse(workId) ?? workId;
+    return AttendanceRequest(
+      workId: payloadWorkId,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      breakMinutes: breakMinutes,
+      isContractEntry: isContractEntry,
+      contractTypeId: contractTypeId,
+      units: units,
+      ratePerUnit: ratePerUnit,
+    );
   }
 }
 
