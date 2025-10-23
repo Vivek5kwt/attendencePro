@@ -127,6 +127,8 @@ class AppLocalizations {
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'Fetching the latest summary...',
+      'dashboardSummaryLoadFailedMessage':
+          'Unable to load dashboard summary. Please try again.',
       'reportsLoadFailedMessage': 'Unable to load reports. Please try again.',
       'logoutConfirmationTitle': 'Confirm Logout',
       'logoutConfirmationMessage': 'Are you sure you want to logout?',
@@ -385,6 +387,8 @@ class AppLocalizations {
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'नवीनतम सारांश प्राप्त किया जा रहा है...',
+      'dashboardSummaryLoadFailedMessage':
+          'डैशबोर्ड सारांश लोड नहीं हो सका। कृपया पुनः प्रयास करें।',
       'reportsLoadFailedMessage': 'रिपोर्ट लोड नहीं हो सकीं। कृपया पुनः प्रयास करें।',
       'logoutConfirmationTitle': 'लॉग आउट की पुष्टि करें',
       'logoutConfirmationMessage': 'क्या आप वाकई लॉग आउट करना चाहते हैं?',
@@ -643,6 +647,8 @@ class AppLocalizations {
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'ਤਾਜ਼ਾ ਸੰਖੇਪ ਲਿਆ ਜਾ ਰਿਹਾ ਹੈ...',
+      'dashboardSummaryLoadFailedMessage':
+          'ਡੈਸ਼ਬੋਰਡ ਸੰਖੇਪ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'reportsLoadFailedMessage': 'ਰਿਪੋਰਟ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'logoutConfirmationTitle': 'ਲਾਗਆਉਟ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'logoutConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਲਾਗਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
@@ -907,6 +913,8 @@ class AppLocalizations {
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'Recupero del riepilogo più recente...',
+      'dashboardSummaryLoadFailedMessage':
+          'Impossibile caricare il riepilogo della dashboard. Riprova.',
       'reportsLoadFailedMessage': 'Impossibile caricare i report. Riprova.',
       'logoutConfirmationTitle': 'Conferma logout',
       'logoutConfirmationMessage': 'Sei sicuro di voler uscire?',
@@ -1229,6 +1237,8 @@ class AppLocalizations {
   String get reportsBreakdownSuffix => _value('reportsBreakdownSuffix');
   String get reportsGrandTotalLabel => _value('reportsGrandTotalLabel');
   String get reportsLoadingMessage => _value('reportsLoadingMessage');
+  String get dashboardSummaryLoadFailedMessage =>
+      _value('dashboardSummaryLoadFailedMessage');
   String get reportsLoadFailedMessage => _value('reportsLoadFailedMessage');
   String get logoutConfirmationTitle => _value('logoutConfirmationTitle');
   String get logoutConfirmationMessage =>
