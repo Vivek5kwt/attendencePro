@@ -29,6 +29,10 @@ class AuthRepository {
     return _api.logout(token);
   }
 
+  Future<Map<String, dynamic>?> deleteAccount(String token) {
+    return _api.deleteAccount(token);
+  }
+
   Future<Map<String, dynamic>> forgotPassword(String email) {
     return _api.forgotPassword(email);
   }
