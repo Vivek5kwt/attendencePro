@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/dashboard_summary.dart';
+import '../models/missed_attendance_completion.dart';
 import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
 import '../repositories/dashboard_repository.dart';
@@ -39,6 +40,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   String? _dateLabelOverride;
   List<DateTime> _pendingMissedDates = const <DateTime>[];
   bool _missedDialogShown = false;
+  bool _isCompletingMissedAttendance = false;
 
   @override
   void initState() {
@@ -428,6 +430,15 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
+                if (mounted) {
+                  _openMissedAttendanceCompletion();
+                }
+              },
+              child: Text(l.attendanceMissedEntriesResolveButton),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
                 _jumpToDate(focusDate);
               },
               child: Text(l.attendanceMissedEntriesReviewButton(focusLabel)),
@@ -446,14 +457,52 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_pendingMissedDates.isEmpty) {
       return;
     }
-    final focusDate = _pendingMissedDates.first;
-    _missedDialogShown = true;
-    unawaited(
-      _showMissedAttendanceDialog(
-        dates: _pendingMissedDates,
-        focusDate: focusDate,
-      ),
+    _openMissedAttendanceCompletion();
+  }
+
+  Future<void> _openMissedAttendanceCompletion() async {
+    if (_pendingMissedDates.isEmpty || _isCompletingMissedAttendance) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    _isCompletingMissedAttendance = true;
+
+    final response = await showModalBottomSheet<Map<String, dynamic>?>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return _MissedAttendanceCompletionSheet(
+          dates: _pendingMissedDates.toList(growable: false),
+          workId: widget.work.id,
+          workName: widget.work.name,
+          localization: l,
+          dateFormatter: _formatDate,
+          onSubmit: (entries) => _attendanceRepository.completeMissedAttendance(
+            entries: entries,
+          ),
+        );
+      },
     );
+
+    if (!mounted) {
+      _isCompletingMissedAttendance = false;
+      return;
+    }
+
+    _isCompletingMissedAttendance = false;
+
+    if (response != null) {
+      final message =
+          _extractResponseMessage(response) ?? l.attendanceMissedEntriesCompleteSuccess;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      await _loadSummary();
+    }
   }
 
   void _jumpToDate(DateTime date) {
@@ -1421,6 +1470,540 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     return _tryParseDate(value.substring(match.start, match.end));
+  }
+}
+
+class _MissedAttendanceCompletionSheet extends StatefulWidget {
+  const _MissedAttendanceCompletionSheet({
+    required this.dates,
+    required this.workId,
+    required this.workName,
+    required this.localization,
+    required this.dateFormatter,
+    required this.onSubmit,
+  });
+
+  final List<DateTime> dates;
+  final String workId;
+  final String workName;
+  final AppLocalizations localization;
+  final String Function(DateTime) dateFormatter;
+  final Future<Map<String, dynamic>?> Function(
+    List<MissedAttendanceCompletion> entries,
+  ) onSubmit;
+
+  @override
+  State<_MissedAttendanceCompletionSheet> createState() =>
+      _MissedAttendanceCompletionSheetState();
+}
+
+class _MissedAttendanceCompletionSheetState
+    extends State<_MissedAttendanceCompletionSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late final List<_MissedAttendanceFormData> _entries;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    final sortedDates = widget.dates.toList(growable: false)
+      ..sort((a, b) => a.compareTo(b));
+    _entries = sortedDates
+        .map((date) => _MissedAttendanceFormData(date: date))
+        .toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    for (final entry in _entries) {
+      entry.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.localization;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return FractionallySizedBox(
+      heightFactor: 0.95,
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 48,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + bottomInset),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l.attendanceMissedEntriesTitle,
+                                style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 18,
+                                        ) ??
+                                    const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                    ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l.attendanceMissedEntriesDescription,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF475569),
+                              ) ??
+                              const TextStyle(
+                                color: Color(0xFF475569),
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.workName,
+                                style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF1D4ED8),
+                                        ) ??
+                                    const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1D4ED8),
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l.attendanceMissedEntriesListLabel,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: const Color(0xFF2563EB),
+                                    ) ??
+                                    const TextStyle(
+                                      color: Color(0xFF2563EB),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (_errorMessage != null) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFE4E6),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFFCA5A5)),
+                            ),
+                            child: Text(
+                              _errorMessage!,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFFB91C1C),
+                                  ) ??
+                                  const TextStyle(
+                                    color: Color(0xFFB91C1C),
+                                  ),
+                            ),
+                          ),
+                        ],
+                        ..._entries.map(_buildEntryCard).toList(growable: false),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSubmitting ? null : _handleSubmit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2563EB),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(l.attendanceMissedEntriesResolveButton),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEntryCard(_MissedAttendanceFormData data) {
+    final l = widget.localization;
+    final formattedDate = widget.dateFormatter(data.date);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            formattedDate,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                ) ??
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTimeField(
+                  controller: data.startTimeController,
+                  label: l.startTimeLabel,
+                  icon: Icons.play_arrow_rounded,
+                  enabled: !data.isLeave && !_isSubmitting,
+                  validator: (value) => _validateTime(
+                    value,
+                    isRequired: !data.isLeave,
+                    errorMessage: l.attendanceStartTimeRequired,
+                  ),
+                  onPickTime: () => _pickTime(data.startTimeController),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTimeField(
+                  controller: data.endTimeController,
+                  label: l.endTimeLabel,
+                  icon: Icons.stop_rounded,
+                  enabled: !data.isLeave && !_isSubmitting,
+                  validator: (value) => _validateTime(
+                    value,
+                    isRequired: !data.isLeave,
+                    errorMessage: l.attendanceEndTimeRequired,
+                  ),
+                  onPickTime: () => _pickTime(data.endTimeController),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildBreakField(
+            controller: data.breakMinutesController,
+            enabled: !data.isLeave && !_isSubmitting,
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              l.markAsWorkOffButton,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            value: data.isLeave,
+            onChanged: _isSubmitting
+                ? null
+                : (value) {
+                    setState(() {
+                      data.isLeave = value;
+                      if (value) {
+                        data.startTimeController.clear();
+                        data.endTimeController.clear();
+                        data.breakMinutesController.text = '0';
+                      }
+                    });
+                  },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required bool enabled,
+    required String? Function(String?) validator,
+    required VoidCallback onPickTime,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.access_time_rounded),
+          onPressed: enabled ? onPickTime : null,
+        ),
+      ),
+      keyboardType: TextInputType.datetime,
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
+      ],
+    );
+  }
+
+  Widget _buildBreakField({
+    required TextEditingController controller,
+    required bool enabled,
+  }) {
+    final l = widget.localization;
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      decoration: InputDecoration(
+        labelText: l.breakLabel,
+        prefixIcon: const Icon(Icons.local_cafe_rounded, color: Color(0xFFF59E0B)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        hintText: '0',
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+      ],
+      validator: (value) {
+        if (!enabled) {
+          return null;
+        }
+        if (value == null || value.trim().isEmpty) {
+          return null;
+        }
+        final parsed = int.tryParse(value.trim());
+        if (parsed == null || parsed < 0) {
+          return l.attendanceBreakInvalid;
+        }
+        return null;
+      },
+    );
+  }
+
+  String? _validateTime(
+    String? value, {
+    required bool isRequired,
+    required String errorMessage,
+  }) {
+    if (!isRequired) {
+      return null;
+    }
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return errorMessage;
+    }
+    final parts = trimmed.split(':');
+    if (parts.length != 2) {
+      return widget.localization.attendanceInvalidTimeFormat;
+    }
+    final hours = int.tryParse(parts[0]);
+    final minutes = int.tryParse(parts[1]);
+    if (hours == null || minutes == null) {
+      return widget.localization.attendanceInvalidTimeFormat;
+    }
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return widget.localization.attendanceInvalidTimeFormat;
+    }
+    return null;
+  }
+
+  Future<void> _pickTime(TextEditingController controller) async {
+    FocusScope.of(context).unfocus();
+    final current = controller.text.trim();
+    final initial = _tryParseTimeOfDay(current) ?? TimeOfDay.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+    );
+    if (picked != null) {
+      controller.text = _formatTimeOfDay(picked);
+    }
+  }
+
+  TimeOfDay? _tryParseTimeOfDay(String value) {
+    final parts = value.split(':');
+    if (parts.length != 2) {
+      return null;
+    }
+    final hours = int.tryParse(parts[0]);
+    final minutes = int.tryParse(parts[1]);
+    if (hours == null || minutes == null) {
+      return null;
+    }
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return null;
+    }
+    return TimeOfDay(hour: hours, minute: minutes);
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  int _parseBreakMinutes(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 0;
+    }
+    final parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed < 0) {
+      return 0;
+    }
+    return parsed;
+  }
+
+  Future<void> _handleSubmit() async {
+    final formState = _formKey.currentState;
+    if (formState == null) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    if (!formState.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    final entries = _entries
+        .map(
+          (data) => MissedAttendanceCompletion(
+            workId: widget.workId,
+            date: data.date,
+            startTime: data.isLeave
+                ? '00:00'
+                : data.startTimeController.text.trim(),
+            endTime: data.isLeave
+                ? '00:00'
+                : data.endTimeController.text.trim(),
+            breakMinutes: data.isLeave
+                ? 0
+                : _parseBreakMinutes(data.breakMinutesController.text),
+            isLeave: data.isLeave,
+          ),
+        )
+        .toList(growable: false);
+
+    try {
+      final response = await widget.onSubmit(entries);
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop(response ?? const <String, dynamic>{});
+    } on AttendanceAuthException {
+      final message = widget.localization.authenticationRequiredMessage;
+      setState(() {
+        _errorMessage = message;
+      });
+    } on AttendanceRepositoryException catch (e) {
+      final message = e.message.trim().isNotEmpty
+          ? e.message.trim()
+          : widget.localization.attendanceMissedEntriesCompleteFailed;
+      setState(() {
+        _errorMessage = message;
+      });
+    } catch (_) {
+      final message = widget.localization.attendanceMissedEntriesCompleteFailed;
+      setState(() {
+        _errorMessage = message;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+}
+
+class _MissedAttendanceFormData {
+  _MissedAttendanceFormData({required this.date})
+      : startTimeController = TextEditingController(),
+        endTimeController = TextEditingController(),
+        breakMinutesController = TextEditingController(text: '0');
+
+  final DateTime date;
+  final TextEditingController startTimeController;
+  final TextEditingController endTimeController;
+  final TextEditingController breakMinutesController;
+  bool isLeave = false;
+
+  void dispose() {
+    startTimeController.dispose();
+    endTimeController.dispose();
+    breakMinutesController.dispose();
   }
 }
 
