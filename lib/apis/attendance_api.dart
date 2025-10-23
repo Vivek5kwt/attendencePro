@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../models/attendance_request.dart';
 import 'auth_api.dart' show ApiException;
 import 'logging_client.dart';
 
@@ -16,15 +17,7 @@ class AttendanceApi {
   final http.Client _client;
 
   Future<Map<String, dynamic>?> submitAttendance({
-    required dynamic workId,
-    required DateTime date,
-    required String startTime,
-    required String endTime,
-    required int breakMinutes,
-    required bool isContractEntry,
-    int? contractTypeId,
-    num? units,
-    num? ratePerUnit,
+    required AttendanceRequest request,
     required String token,
   }) async {
     final uri = Uri.parse('$baseUrl/api/attendance');
@@ -34,19 +27,7 @@ class AttendanceApi {
       'Authorization': 'Bearer $token',
     };
 
-    final bodyMap = <String, dynamic>{
-      'work_id': workId,
-      'date': date.toIso8601String().split('T').first,
-      'start_time': startTime,
-      'end_time': endTime,
-      'break_minutes': breakMinutes,
-      'is_contract_entry': isContractEntry,
-      'contract_type_id': contractTypeId,
-      'units': units,
-      'rate_per_unit': ratePerUnit,
-    }..removeWhere((_, value) => value == null);
-
-    final body = jsonEncode(bodyMap);
+    final body = jsonEncode(request.toJson());
 
     try {
       final response = await _client.post(uri, headers: headers, body: body);
