@@ -81,6 +81,33 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: jsonEncode({}));
   }
 
+  /// Delete the authenticated user's account: DELETE /api/account/delete
+  Future<Map<String, dynamic>?> deleteAccount(String token) async {
+    final uri = Uri.parse('$baseUrl/api/account/delete');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    try {
+      final response = await _httpClient.delete(uri, headers: headers);
+      final decoded = _decodeBody(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decoded ?? <String, dynamic>{};
+      }
+
+      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+    } on SocketException {
+      throw ApiException('Unable to reach the server. Please check your connection.');
+    } on HttpException {
+      throw ApiException('A network error occurred while contacting the server.');
+    } on FormatException {
+      throw ApiException('Received an invalid response from the server.');
+    }
+  }
+
   /// Trigger forgot password OTP email: POST /api/auth/forgot-password
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     final uri = Uri.parse('$baseUrl/api/auth/forgot-password');

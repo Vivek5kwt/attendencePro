@@ -111,6 +111,7 @@ class AppLocalizations {
       'helpSupportPolicyValue': 'We follow the AttendancePro customer care standards.',
       'helpSupportLaunchFailed': 'Unable to open the requested application.',
       'helpSupportComingSoon': 'This section will be available soon.',
+      'deleteAccountLabel': 'Delete Account',
       'logoutLabel': 'Logout',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -131,6 +132,13 @@ class AppLocalizations {
       'logoutCancelButton': 'Cancel',
       'logoutSuccessMessage': 'User logged out successfully.',
       'logoutFailedMessage': 'Unable to log out. Please try again.',
+      'deleteAccountConfirmationTitle': 'Delete Account',
+      'deleteAccountConfirmationMessage':
+          'Are you sure you want to delete your account? This action cannot be undone.',
+      'deleteAccountConfirmButton': 'Delete',
+      'deleteAccountCancelButton': 'Cancel',
+      'deleteAccountSuccessMessage': 'Account deleted successfully.',
+      'deleteAccountFailedMessage': 'Unable to delete account. Please try again.',
       'shareAppTitle': 'Share App',
       'shareViaWhatsApp': 'Share Via WhatsApp',
       'copyLink': 'Copy Link',
@@ -356,6 +364,7 @@ class AppLocalizations {
       'helpSupportPolicyValue': 'हम AttendancePro ग्राहक सेवा मानकों का पालन करते हैं।',
       'helpSupportLaunchFailed': 'अनुरोधित ऐप्लिकेशन नहीं खोल सके।',
       'helpSupportComingSoon': 'यह अनुभाग जल्द ही उपलब्ध होगा।',
+      'deleteAccountLabel': 'खाता हटाएँ',
       'logoutLabel': 'लॉग आउट',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -376,6 +385,13 @@ class AppLocalizations {
       'logoutCancelButton': 'रद्द करें',
       'logoutSuccessMessage': 'उपयोगकर्ता सफलतापूर्वक लॉग आउट हुआ।',
       'logoutFailedMessage': 'लॉग आउट नहीं हो सका। कृपया पुनः प्रयास करें।',
+      'deleteAccountConfirmationTitle': 'खाता हटाएँ',
+      'deleteAccountConfirmationMessage':
+          'क्या आप वाकई अपना खाता हटाना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।',
+      'deleteAccountConfirmButton': 'हटाएँ',
+      'deleteAccountCancelButton': 'रद्द करें',
+      'deleteAccountSuccessMessage': 'खाता सफलतापूर्वक हटाया गया।',
+      'deleteAccountFailedMessage': 'खाता हटाने में असमर्थ। कृपया पुनः प्रयास करें।',
       'shareAppTitle': 'ऐप साझा करें',
       'shareViaWhatsApp': 'व्हाट्सऐप से साझा करें',
       'copyLink': 'लिंक कॉपी करें',
@@ -601,6 +617,7 @@ class AppLocalizations {
       'helpSupportPolicyValue': 'ਅਸੀਂ AttendancePro ਗਾਹਕ ਸੇਵਾ ਮਿਆਰਾਂ ਦੀ ਪਾਲਣਾ ਕਰਦੇ ਹਾਂ।',
       'helpSupportLaunchFailed': 'ਅਨੁਰੋਧਿਤ ਐਪ ਖੋਲ੍ਹਣ ਵਿੱਚ ਅਸਮਰੱਥ।',
       'helpSupportComingSoon': 'ਇਹ ਭਾਗ ਜਲਦੀ ਉਪਲਬਧ ਹੋਵੇਗਾ।',
+      'deleteAccountLabel': 'ਖਾਤਾ ਮਿਟਾਓ',
       'logoutLabel': 'ਲੌਗ ਆਉਟ',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -621,6 +638,13 @@ class AppLocalizations {
       'logoutCancelButton': 'ਰੱਦ ਕਰੋ',
       'logoutSuccessMessage': 'ਉਪਭੋਗਤਾ ਸਫਲਤਾਪੂਰਵਕ ਲਾਗਆਉਟ ਹੋ ਗਿਆ।',
       'logoutFailedMessage': 'ਲਾਗਆਉਟ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'deleteAccountConfirmationTitle': 'ਖਾਤਾ ਮਿਟਾਓ',
+      'deleteAccountConfirmationMessage':
+          'ਕੀ ਤੁਸੀਂ ਵਾਕਈ ਆਪਣਾ ਖਾਤਾ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਇਹ ਕਿਰਿਆ ਵਾਪਸ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕਦੀ।',
+      'deleteAccountConfirmButton': 'ਮਿਟਾਓ',
+      'deleteAccountCancelButton': 'ਰੱਦ ਕਰੋ',
+      'deleteAccountSuccessMessage': 'ਖਾਤਾ ਸਫਲਤਾਪੂਰਵਕ ਮਿਟਾਇਆ ਗਿਆ ਹੈ।',
+      'deleteAccountFailedMessage': 'ਖਾਤਾ ਮਿਟਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'shareAppTitle': 'ਐਪ ਸਾਂਝਾ ਕਰੋ',
       'shareViaWhatsApp': 'WhatsApp ਰਾਹੀਂ ਸਾਂਝਾ ਕਰੋ',
       'copyLink': 'ਲਿੰਕ ਕਾਪੀ ਕਰੋ',
@@ -852,6 +876,7 @@ class AppLocalizations {
       'helpSupportLaunchFailed':
           'Impossibile aprire l\'applicazione richiesta.',
       'helpSupportComingSoon': 'Questa sezione sarà disponibile a breve.',
+      'deleteAccountLabel': 'Elimina account',
       'logoutLabel': 'Esci',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -872,6 +897,13 @@ class AppLocalizations {
       'logoutCancelButton': 'Annulla',
       'logoutSuccessMessage': 'Disconnessione avvenuta con successo.',
       'logoutFailedMessage': 'Impossibile disconnettersi. Riprova.',
+      'deleteAccountConfirmationTitle': 'Elimina account',
+      'deleteAccountConfirmationMessage':
+          'Sei sicuro di voler eliminare il tuo account? Questa azione non può essere annullata.',
+      'deleteAccountConfirmButton': 'Elimina',
+      'deleteAccountCancelButton': 'Annulla',
+      'deleteAccountSuccessMessage': 'Account eliminato con successo.',
+      'deleteAccountFailedMessage': 'Impossibile eliminare l\'account. Riprova.',
       'shareAppTitle': 'Condividi app',
       'shareViaWhatsApp': 'Condividi via WhatsApp',
       'copyLink': 'Copia link',
@@ -1154,6 +1186,7 @@ class AppLocalizations {
   String get helpSupportPolicyValue => _value('helpSupportPolicyValue');
   String get helpSupportLaunchFailed => _value('helpSupportLaunchFailed');
   String get helpSupportComingSoon => _value('helpSupportComingSoon');
+  String get deleteAccountLabel => _value('deleteAccountLabel');
   String get logoutLabel => _value('logoutLabel');
   String get reportsSummaryLabel => _value('reportsSummaryLabel');
   String get reportsSummaryMonth => _value('reportsSummaryMonth');
@@ -1182,6 +1215,18 @@ class AppLocalizations {
   String get logoutCancelButton => _value('logoutCancelButton');
   String get logoutSuccessMessage => _value('logoutSuccessMessage');
   String get logoutFailedMessage => _value('logoutFailedMessage');
+  String get deleteAccountConfirmationTitle =>
+      _value('deleteAccountConfirmationTitle');
+  String get deleteAccountConfirmationMessage =>
+      _value('deleteAccountConfirmationMessage');
+  String get deleteAccountConfirmButton =>
+      _value('deleteAccountConfirmButton');
+  String get deleteAccountCancelButton =>
+      _value('deleteAccountCancelButton');
+  String get deleteAccountSuccessMessage =>
+      _value('deleteAccountSuccessMessage');
+  String get deleteAccountFailedMessage =>
+      _value('deleteAccountFailedMessage');
   String get shareAppTitle => _value('shareAppTitle');
   String get shareViaWhatsApp => _value('shareViaWhatsApp');
   String get copyLink => _value('copyLink');

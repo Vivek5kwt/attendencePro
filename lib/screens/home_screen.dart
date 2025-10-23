@@ -1098,6 +1098,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return showCreativeLogoutDialog(context, l);
   }
 
+  Future<void> _handleDeleteAccountTap(AppLocalizations l) async {
+    Navigator.of(context).pop();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+
+    final shouldDelete = await _showDeleteAccountConfirmationDialog(l);
+    if (!shouldDelete || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final success = await context.read<AppCubit>().deleteAccount();
+    if (!mounted) return;
+    final message = success
+        ? l.deleteAccountSuccessMessage
+        : l.deleteAccountFailedMessage;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<bool> _showDeleteAccountConfirmationDialog(AppLocalizations l) {
+    return showCreativeDeleteAccountDialog(context, l);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<WorkBloc, WorkState>(
@@ -1193,6 +1215,13 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF007AFF),
               onTap: _openHelpSupport,
+            ),
+            _DrawerMenuItem(
+              icon: Icons.delete_outline,
+              label: l.deleteAccountLabel,
+              backgroundColor: const Color(0xFFFFF1F2),
+              iconColor: const Color(0xFFFF3B30),
+              onTap: () => _handleDeleteAccountTap(l),
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.logout,

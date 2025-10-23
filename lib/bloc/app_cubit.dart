@@ -58,4 +58,20 @@ class AppCubit extends Cubit<AppState> {
     emit(AppAuth());
     return wasSuccessful;
   }
+
+  Future<bool> deleteAccount() async {
+    final token = await _sessionManager.getToken();
+    if (token == null) {
+      return false;
+    }
+
+    try {
+      await _authRepository.deleteAccount(token);
+      await _sessionManager.clearSession();
+      emit(AppAuth());
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }
