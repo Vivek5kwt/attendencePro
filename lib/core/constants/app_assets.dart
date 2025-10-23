@@ -10,4 +10,5 @@ class AppAssets {
   static const walkthroughImageOne = 'assets/images/img_walkthrough1.png';
   static const walkthroughImageTwo = 'assets/images/img_walkthrough2.png';
   static const walkthroughImageThree = 'assets/images/img_walkthrough3.png';
+  static const bgBanner = 'assets/images/bg_banner.png';
 }

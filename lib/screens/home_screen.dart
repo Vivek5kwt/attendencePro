@@ -1236,8 +1236,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: SizedBox(
+      child: Container(
         height: 190,
+
         width: double.infinity,
         child: Stack(
           clipBehavior: Clip.none,
@@ -1246,19 +1247,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.blue.withOpacity(0.85),
-                      Colors.blue.withOpacity(0.75),
-                    ],
-                  ),
+                    borderRadius: BorderRadius.circular(20)
+                ),
+                child: Image.asset(
+                  AppAssets.bgBanner,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-
             Positioned(
               left: 24,
               top: 28,
