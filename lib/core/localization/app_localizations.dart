@@ -126,6 +126,8 @@ class AppLocalizations {
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
+      'reportsLoadingMessage': 'Fetching the latest summary...',
+      'reportsLoadFailedMessage': 'Unable to load reports. Please try again.',
       'logoutConfirmationTitle': 'Confirm Logout',
       'logoutConfirmationMessage': 'Are you sure you want to logout?',
       'logoutConfirmButton': 'Logout',
@@ -382,6 +384,8 @@ class AppLocalizations {
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
+      'reportsLoadingMessage': 'नवीनतम सारांश प्राप्त किया जा रहा है...',
+      'reportsLoadFailedMessage': 'रिपोर्ट लोड नहीं हो सकीं। कृपया पुनः प्रयास करें।',
       'logoutConfirmationTitle': 'लॉग आउट की पुष्टि करें',
       'logoutConfirmationMessage': 'क्या आप वाकई लॉग आउट करना चाहते हैं?',
       'logoutConfirmButton': 'लॉग आउट',
@@ -638,6 +642,8 @@ class AppLocalizations {
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
+      'reportsLoadingMessage': 'ਤਾਜ਼ਾ ਸੰਖੇਪ ਲਿਆ ਜਾ ਰਿਹਾ ਹੈ...',
+      'reportsLoadFailedMessage': 'ਰਿਪੋਰਟ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'logoutConfirmationTitle': 'ਲਾਗਆਉਟ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'logoutConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਲਾਗਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
       'logoutConfirmButton': 'ਲਾਗਆਉਟ',
@@ -900,6 +906,8 @@ class AppLocalizations {
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
       'reportsGrandTotalLabel': 'Grand Total',
+      'reportsLoadingMessage': 'Recupero del riepilogo più recente...',
+      'reportsLoadFailedMessage': 'Impossibile caricare i report. Riprova.',
       'logoutConfirmationTitle': 'Conferma logout',
       'logoutConfirmationMessage': 'Sei sicuro di voler uscire?',
       'logoutConfirmButton': 'Esci',
@@ -1220,6 +1228,8 @@ class AppLocalizations {
       _value('reportsContractSalaryLabel');
   String get reportsBreakdownSuffix => _value('reportsBreakdownSuffix');
   String get reportsGrandTotalLabel => _value('reportsGrandTotalLabel');
+  String get reportsLoadingMessage => _value('reportsLoadingMessage');
+  String get reportsLoadFailedMessage => _value('reportsLoadFailedMessage');
   String get logoutConfirmationTitle => _value('logoutConfirmationTitle');
   String get logoutConfirmationMessage =>
       _value('logoutConfirmationMessage');

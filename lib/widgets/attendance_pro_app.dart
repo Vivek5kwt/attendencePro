@@ -9,6 +9,7 @@ import '../bloc/work_event.dart';
 import '../core/navigation/app_router.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/work_repository.dart';
+import '../repositories/reports_repository.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
@@ -26,6 +27,9 @@ class AttendanceProApp extends StatelessWidget {
         RepositoryProvider<AttendanceRepository>.value(value: repository),
         RepositoryProvider<AuthRepository>(create: (_) => AuthRepository()),
         RepositoryProvider<WorkRepository>(create: (_) => WorkRepository()),
+        RepositoryProvider<ReportsRepository>(
+          create: (_) => ReportsRepository(),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
