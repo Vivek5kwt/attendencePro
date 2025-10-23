@@ -17,6 +17,7 @@ import '../models/work.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/session_manager.dart';
 import '../widgets/app_dialogs.dart';
+import 'help_support_screen.dart';
 import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
 
@@ -119,6 +120,17 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const ReportsSummaryScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openHelpSupport() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const HelpSupportScreen(),
       ),
     );
   }
@@ -1156,7 +1168,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.helpSupportLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF007AFF),
-              onTap: () => (){},
+              onTap: _openHelpSupport,
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.logout,

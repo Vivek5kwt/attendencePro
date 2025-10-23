@@ -39,6 +39,36 @@ class AppLocalizations {
       'contractWorkLabel': 'Contract Work',
       'changeLanguageLabel': 'Change Language',
       'helpSupportLabel': 'Help & Support',
+      'helpSupportTitle': 'How can we help you today?',
+      'helpSupportSubtitle': 'Find quick answers or reach our support team.',
+      'helpSupportQuickActionsTitle': 'Quick assistance',
+      'helpSupportFaqsLabel': 'FAQs',
+      'helpSupportFaqsSubtitle': 'Browse common questions',
+      'helpSupportGuidesLabel': 'Getting Started',
+      'helpSupportGuidesSubtitle': 'Step-by-step tutorials',
+      'helpSupportReportIssueLabel': 'Report an Issue',
+      'helpSupportReportIssueSubtitle': 'Let us know what went wrong',
+      'helpSupportContactTitle': 'Contact options',
+      'helpSupportEmailLabel': 'Email Us',
+      'helpSupportEmailValue': 'support@attendancepro.app',
+      'helpSupportEmailButton': 'Send email',
+      'helpSupportPhoneLabel': 'Call Us',
+      'helpSupportPhoneValue': '+1 (800) 555-1234',
+      'helpSupportCallButton': 'Call now',
+      'helpSupportChatLabel': 'Live Chat',
+      'helpSupportChatSubtitle': 'Available Mon-Fri, 9am - 6pm',
+      'helpSupportChatButton': 'Start chat',
+      'helpSupportHoursLabel': 'Support hours',
+      'helpSupportHoursValue': 'Mon - Fri, 9 AM - 6 PM (GMT)',
+      'helpSupportResponseTimeLabel': 'Average response time',
+      'helpSupportResponseTimeValue': 'Under 24 hours',
+      'helpSupportAdditionalInfoTitle': 'Additional information',
+      'helpSupportLastUpdatedLabel': 'Last updated',
+      'helpSupportLastUpdatedValue': 'October 2025',
+      'helpSupportPolicyLabel': 'Support policy',
+      'helpSupportPolicyValue': 'We follow the AttendancePro customer care standards.',
+      'helpSupportLaunchFailed': 'Unable to open the requested application.',
+      'helpSupportComingSoon': 'This section will be available soon.',
       'logoutLabel': 'Logout',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -211,6 +241,36 @@ class AppLocalizations {
       'contractWorkLabel': 'ठेका कार्य',
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
+      'helpSupportTitle': 'हम आपकी कैसे मदद कर सकते हैं?',
+      'helpSupportSubtitle': 'त्वरित उत्तर पाएं या हमारी सपोर्ट टीम से संपर्क करें।',
+      'helpSupportQuickActionsTitle': 'त्वरित सहायता',
+      'helpSupportFaqsLabel': 'सामान्य प्रश्न',
+      'helpSupportFaqsSubtitle': 'अक्सर पूछे गए प्रश्न देखें',
+      'helpSupportGuidesLabel': 'शुरू कैसे करें',
+      'helpSupportGuidesSubtitle': 'क्रमबद्ध मार्गदर्शिकाएँ',
+      'helpSupportReportIssueLabel': 'समस्या रिपोर्ट करें',
+      'helpSupportReportIssueSubtitle': 'हमें बताएं क्या गलत हुआ',
+      'helpSupportContactTitle': 'संपर्क विकल्प',
+      'helpSupportEmailLabel': 'हमें ईमेल करें',
+      'helpSupportEmailValue': 'support@attendancepro.app',
+      'helpSupportEmailButton': 'ईमेल भेजें',
+      'helpSupportPhoneLabel': 'हमें कॉल करें',
+      'helpSupportPhoneValue': '+1 (800) 555-1234',
+      'helpSupportCallButton': 'अभी कॉल करें',
+      'helpSupportChatLabel': 'लाइव चैट',
+      'helpSupportChatSubtitle': 'सोम-शुक्र, सुबह 9 से शाम 6 तक उपलब्ध',
+      'helpSupportChatButton': 'चैट प्रारंभ करें',
+      'helpSupportHoursLabel': 'सपोर्ट समय',
+      'helpSupportHoursValue': 'सोम - शुक्र, सुबह 9 से शाम 6 (GMT)',
+      'helpSupportResponseTimeLabel': 'औसत प्रतिक्रिया समय',
+      'helpSupportResponseTimeValue': '24 घंटे से कम',
+      'helpSupportAdditionalInfoTitle': 'अतिरिक्त जानकारी',
+      'helpSupportLastUpdatedLabel': 'अंतिम अपडेट',
+      'helpSupportLastUpdatedValue': 'अक्टूबर 2025',
+      'helpSupportPolicyLabel': 'सपोर्ट नीति',
+      'helpSupportPolicyValue': 'हम AttendancePro ग्राहक सेवा मानकों का पालन करते हैं।',
+      'helpSupportLaunchFailed': 'अनुरोधित ऐप्लिकेशन नहीं खोल सके।',
+      'helpSupportComingSoon': 'यह अनुभाग जल्द ही उपलब्ध होगा।',
       'logoutLabel': 'लॉग आउट',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -383,6 +443,36 @@ class AppLocalizations {
       'contractWorkLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ',
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
+      'helpSupportTitle': 'ਅਸੀਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦੇ ਹਾਂ?',
+      'helpSupportSubtitle': 'ਝਟਪਟ ਜਵਾਬ ਲੱਭੋ ਜਾਂ ਸਾਡੀ ਸਹਾਇਤਾ ਟੀਮ ਨਾਲ ਸੰਪਰਕ ਕਰੋ।',
+      'helpSupportQuickActionsTitle': 'ਤੁਰੰਤ ਮਦਦ',
+      'helpSupportFaqsLabel': 'ਅਕਸਰ ਪੁੱਛੇ ਸਵਾਲ',
+      'helpSupportFaqsSubtitle': 'ਆਮ ਸਵਾਲ ਵੇਖੋ',
+      'helpSupportGuidesLabel': 'ਸ਼ੁਰੂਆਤ ਲਈ ਗਾਈਡ',
+      'helpSupportGuidesSubtitle': 'ਕਦਮ-ਦਰ-ਕਦਮ ਸਿਖਲਾਈ',
+      'helpSupportReportIssueLabel': 'ਮੁੱਦਾ ਰਿਪੋਰਟ ਕਰੋ',
+      'helpSupportReportIssueSubtitle': 'ਸਾਨੂੰ ਦੱਸੋ ਕਿ ਕੀ ਗਲਤ ਹੋਇਆ',
+      'helpSupportContactTitle': 'ਸੰਪਰਕ ਵਿਕਲਪ',
+      'helpSupportEmailLabel': 'ਸਾਨੂੰ ਈਮੇਲ ਕਰੋ',
+      'helpSupportEmailValue': 'support@attendancepro.app',
+      'helpSupportEmailButton': 'ਈਮੇਲ ਭੇਜੋ',
+      'helpSupportPhoneLabel': 'ਸਾਨੂੰ ਕਾਲ ਕਰੋ',
+      'helpSupportPhoneValue': '+1 (800) 555-1234',
+      'helpSupportCallButton': 'ਹੁਣੇ ਕਾਲ ਕਰੋ',
+      'helpSupportChatLabel': 'ਲਾਈਵ ਚੈਟ',
+      'helpSupportChatSubtitle': 'ਸੋਮ-ਸ਼ੁੱਕਰ, ਸਵੇਰੇ 9 ਤੋਂ ਸ਼ਾਮ 6 ਵਜੇ ਤੱਕ',
+      'helpSupportChatButton': 'ਚੈਟ ਸ਼ੁਰੂ ਕਰੋ',
+      'helpSupportHoursLabel': 'ਸਹਾਇਤਾ ਸਮਾਂ',
+      'helpSupportHoursValue': 'ਸੋਮ - ਸ਼ੁੱਕਰ, 9 AM - 6 PM (GMT)',
+      'helpSupportResponseTimeLabel': 'ਔਸਤ ਜਵਾਬ ਸਮਾਂ',
+      'helpSupportResponseTimeValue': '24 ਘੰਟਿਆਂ ਤੋਂ ਘੱਟ',
+      'helpSupportAdditionalInfoTitle': 'ਵਾਧੂ ਜਾਣਕਾਰੀ',
+      'helpSupportLastUpdatedLabel': 'ਆਖਰੀ ਅੱਪਡੇਟ',
+      'helpSupportLastUpdatedValue': 'ਅਕਤੂਬਰ 2025',
+      'helpSupportPolicyLabel': 'ਸਹਾਇਤਾ ਨੀਤੀ',
+      'helpSupportPolicyValue': 'ਅਸੀਂ AttendancePro ਗਾਹਕ ਸੇਵਾ ਮਿਆਰਾਂ ਦੀ ਪਾਲਣਾ ਕਰਦੇ ਹਾਂ।',
+      'helpSupportLaunchFailed': 'ਅਨੁਰੋਧਿਤ ਐਪ ਖੋਲ੍ਹਣ ਵਿੱਚ ਅਸਮਰੱਥ।',
+      'helpSupportComingSoon': 'ਇਹ ਭਾਗ ਜਲਦੀ ਉਪਲਬਧ ਹੋਵੇਗਾ।',
       'logoutLabel': 'ਲੌਗ ਆਉਟ',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -558,6 +648,39 @@ class AppLocalizations {
       'contractWorkLabel': 'Lavoro a contratto',
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
+      'helpSupportTitle': 'Come possiamo aiutarti oggi?',
+      'helpSupportSubtitle':
+          'Trova risposte rapide o contatta il nostro team di supporto.',
+      'helpSupportQuickActionsTitle': 'Assistenza rapida',
+      'helpSupportFaqsLabel': 'Domande frequenti',
+      'helpSupportFaqsSubtitle': 'Consulta le domande comuni',
+      'helpSupportGuidesLabel': 'Guida introduttiva',
+      'helpSupportGuidesSubtitle': 'Tutorial passo dopo passo',
+      'helpSupportReportIssueLabel': 'Segnala un problema',
+      'helpSupportReportIssueSubtitle': 'Facci sapere cosa è successo',
+      'helpSupportContactTitle': 'Opzioni di contatto',
+      'helpSupportEmailLabel': 'Scrivici',
+      'helpSupportEmailValue': 'support@attendancepro.app',
+      'helpSupportEmailButton': 'Invia email',
+      'helpSupportPhoneLabel': 'Chiamaci',
+      'helpSupportPhoneValue': '+1 (800) 555-1234',
+      'helpSupportCallButton': 'Chiama ora',
+      'helpSupportChatLabel': 'Chat live',
+      'helpSupportChatSubtitle': 'Disponibile Lun-Ven, 9:00 - 18:00',
+      'helpSupportChatButton': 'Avvia chat',
+      'helpSupportHoursLabel': 'Orari di supporto',
+      'helpSupportHoursValue': 'Lun - Ven, 9:00 - 18:00 (GMT)',
+      'helpSupportResponseTimeLabel': 'Tempo medio di risposta',
+      'helpSupportResponseTimeValue': 'Entro 24 ore',
+      'helpSupportAdditionalInfoTitle': 'Informazioni aggiuntive',
+      'helpSupportLastUpdatedLabel': 'Ultimo aggiornamento',
+      'helpSupportLastUpdatedValue': 'Ottobre 2025',
+      'helpSupportPolicyLabel': 'Politica di supporto',
+      'helpSupportPolicyValue':
+          'Seguiamo gli standard di assistenza clienti di AttendancePro.',
+      'helpSupportLaunchFailed':
+          'Impossibile aprire l\'applicazione richiesta.',
+      'helpSupportComingSoon': 'Questa sezione sarà disponibile a breve.',
       'logoutLabel': 'Esci',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
@@ -749,6 +872,45 @@ class AppLocalizations {
   String get contractWorkLabel => _value('contractWorkLabel');
   String get changeLanguageLabel => _value('changeLanguageLabel');
   String get helpSupportLabel => _value('helpSupportLabel');
+  String get helpSupportTitle => _value('helpSupportTitle');
+  String get helpSupportSubtitle => _value('helpSupportSubtitle');
+  String get helpSupportQuickActionsTitle =>
+      _value('helpSupportQuickActionsTitle');
+  String get helpSupportFaqsLabel => _value('helpSupportFaqsLabel');
+  String get helpSupportFaqsSubtitle => _value('helpSupportFaqsSubtitle');
+  String get helpSupportGuidesLabel => _value('helpSupportGuidesLabel');
+  String get helpSupportGuidesSubtitle =>
+      _value('helpSupportGuidesSubtitle');
+  String get helpSupportReportIssueLabel =>
+      _value('helpSupportReportIssueLabel');
+  String get helpSupportReportIssueSubtitle =>
+      _value('helpSupportReportIssueSubtitle');
+  String get helpSupportContactTitle => _value('helpSupportContactTitle');
+  String get helpSupportEmailLabel => _value('helpSupportEmailLabel');
+  String get helpSupportEmailValue => _value('helpSupportEmailValue');
+  String get helpSupportEmailButton => _value('helpSupportEmailButton');
+  String get helpSupportPhoneLabel => _value('helpSupportPhoneLabel');
+  String get helpSupportPhoneValue => _value('helpSupportPhoneValue');
+  String get helpSupportCallButton => _value('helpSupportCallButton');
+  String get helpSupportChatLabel => _value('helpSupportChatLabel');
+  String get helpSupportChatSubtitle => _value('helpSupportChatSubtitle');
+  String get helpSupportChatButton => _value('helpSupportChatButton');
+  String get helpSupportHoursLabel => _value('helpSupportHoursLabel');
+  String get helpSupportHoursValue => _value('helpSupportHoursValue');
+  String get helpSupportResponseTimeLabel =>
+      _value('helpSupportResponseTimeLabel');
+  String get helpSupportResponseTimeValue =>
+      _value('helpSupportResponseTimeValue');
+  String get helpSupportAdditionalInfoTitle =>
+      _value('helpSupportAdditionalInfoTitle');
+  String get helpSupportLastUpdatedLabel =>
+      _value('helpSupportLastUpdatedLabel');
+  String get helpSupportLastUpdatedValue =>
+      _value('helpSupportLastUpdatedValue');
+  String get helpSupportPolicyLabel => _value('helpSupportPolicyLabel');
+  String get helpSupportPolicyValue => _value('helpSupportPolicyValue');
+  String get helpSupportLaunchFailed => _value('helpSupportLaunchFailed');
+  String get helpSupportComingSoon => _value('helpSupportComingSoon');
   String get logoutLabel => _value('logoutLabel');
   String get reportsSummaryLabel => _value('reportsSummaryLabel');
   String get reportsSummaryMonth => _value('reportsSummaryMonth');
