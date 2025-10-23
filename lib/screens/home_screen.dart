@@ -20,6 +20,8 @@ import '../widgets/app_dialogs.dart';
 import 'help_support_screen.dart';
 import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
+import 'attendance_history_screen.dart';
+import 'contract_work_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -111,6 +113,28 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     _showAddWorkDialog();
+  }
+
+  Future<void> _openAttendanceHistory() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const AttendanceHistoryScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openContractWork() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const ContractWorkScreen(),
+      ),
+    );
   }
 
   Future<void> _openReportsSummary() async {
@@ -1135,14 +1159,14 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.attendanceHistoryLabel,
               backgroundColor: const Color(0xFFFFF2F2),
               iconColor: const Color(0xFFFF3B30),
-              onTap: () => (){},
+              onTap: _openAttendanceHistory,
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.contractWork,
               label: l.contractWorkLabel,
               backgroundColor: const Color(0xFFEDEBFF),
               iconColor: const Color(0xFF5856D6),
-              onTap: () => (){},
+              onTap: _openContractWork,
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.reports,
