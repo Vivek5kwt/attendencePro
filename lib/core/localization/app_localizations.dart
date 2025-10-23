@@ -176,6 +176,13 @@ class AppLocalizations {
       'startTimeLabel': 'Start Time',
       'endTimeLabel': 'End Time',
       'breakLabel': 'Break',
+      'attendanceSubmitButton': 'Save Attendance',
+      'attendanceStartTimeRequired': 'Start time is required',
+      'attendanceEndTimeRequired': 'End time is required',
+      'attendanceInvalidTimeFormat': 'Please enter time in HH:MM format',
+      'attendanceBreakInvalid': 'Enter break time in minutes',
+      'attendanceSubmitSuccess': 'Attendance saved successfully',
+      'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
       'submitButton': 'Submit',
       'markAsWorkOffButton': 'Mark as Work Off',
       'contractWorkSummaryTitle': 'Contract Work Summary',
@@ -436,6 +443,13 @@ class AppLocalizations {
       'startTimeLabel': 'आरंभ समय',
       'endTimeLabel': 'समाप्ति समय',
       'breakLabel': 'विराम',
+      'attendanceSubmitButton': 'उपस्थिति सहेजें',
+      'attendanceStartTimeRequired': 'आरंभ समय आवश्यक है',
+      'attendanceEndTimeRequired': 'समाप्ति समय आवश्यक है',
+      'attendanceInvalidTimeFormat': 'कृपया समय HH:MM प्रारूप में दर्ज करें',
+      'attendanceBreakInvalid': 'ब्रेक समय मिनटों में दर्ज करें',
+      'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
+      'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
       'submitButton': 'जमा करें',
       'markAsWorkOffButton': 'कार्य अवकाश चिह्नित करें',
       'contractWorkSummaryTitle': 'ठेका कार्य सारांश',
@@ -696,6 +710,13 @@ class AppLocalizations {
       'startTimeLabel': 'ਸ਼ੁਰੂਆਤੀ ਸਮਾਂ',
       'endTimeLabel': 'ਖਤਮ ਸਮਾਂ',
       'breakLabel': 'ਵਿਰਾਮ',
+      'attendanceSubmitButton': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲੋ',
+      'attendanceStartTimeRequired': 'ਸ਼ੁਰੂ ਕਰਨ ਦਾ ਸਮਾਂ ਲਾਜ਼ਮੀ ਹੈ',
+      'attendanceEndTimeRequired': 'ਖਤਮ ਕਰਨ ਦਾ ਸਮਾਂ ਲਾਜ਼ਮੀ ਹੈ',
+      'attendanceInvalidTimeFormat': 'ਕਿਰਪਾ ਕਰਕੇ ਸਮਾਂ HH:MM ਫਾਰਮੈਟ ਵਿੱਚ ਦਰਜ ਕਰੋ',
+      'attendanceBreakInvalid': 'ਬ੍ਰੇਕ ਦਾ ਸਮਾਂ ਮਿੰਟਾਂ ਵਿੱਚ ਲਿਖੋ',
+      'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
+      'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'submitButton': 'ਜਮ੍ਹਾਂ ਕਰੋ',
       'markAsWorkOffButton': 'ਕੰਮ ਛੁੱਟੀ ਨਿਸ਼ਾਨ ਲਗਾਓ',
       'contractWorkSummaryTitle': 'ਕਾਨਟ੍ਰੈਕਟ ਕੰਮ ਸੰਖੇਪ',
@@ -962,6 +983,13 @@ class AppLocalizations {
       'startTimeLabel': 'Ora di inizio',
       'endTimeLabel': 'Ora di fine',
       'breakLabel': 'Pausa',
+      'attendanceSubmitButton': 'Salva presenza',
+      'attendanceStartTimeRequired': "L'orario di inizio è obbligatorio",
+      'attendanceEndTimeRequired': "L'orario di fine è obbligatorio",
+      'attendanceInvalidTimeFormat': 'Inserisci l\'orario nel formato HH:MM',
+      'attendanceBreakInvalid': 'Inserisci la pausa in minuti',
+      'attendanceSubmitSuccess': 'Presenza salvata con successo',
+      'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
       'submitButton': 'Invia',
       'markAsWorkOffButton': 'Segna come riposo',
       'contractWorkSummaryTitle': 'Riepilogo lavoro a contratto',
@@ -1294,6 +1322,16 @@ class AppLocalizations {
   String get startTimeLabel => _value('startTimeLabel');
   String get endTimeLabel => _value('endTimeLabel');
   String get breakLabel => _value('breakLabel');
+  String get attendanceSubmitButton => _value('attendanceSubmitButton');
+  String get attendanceStartTimeRequired =>
+      _value('attendanceStartTimeRequired');
+  String get attendanceEndTimeRequired =>
+      _value('attendanceEndTimeRequired');
+  String get attendanceInvalidTimeFormat =>
+      _value('attendanceInvalidTimeFormat');
+  String get attendanceBreakInvalid => _value('attendanceBreakInvalid');
+  String get attendanceSubmitSuccess => _value('attendanceSubmitSuccess');
+  String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
   String get submitButton => _value('submitButton');
   String get markAsWorkOffButton => _value('markAsWorkOffButton');
   String get contractWorkSummaryTitle => _value('contractWorkSummaryTitle');
