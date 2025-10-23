@@ -36,7 +36,49 @@ class AppLocalizations {
           'Manage your shifts, track hours, and stay organized every day.',
       'addNewWorkLabel': 'Add New Work',
       'attendanceHistoryLabel': 'Attendance History',
+      'attendanceHistoryMonthLabel': 'Select month',
+      'attendanceHistorySummaryTitle': 'This month so far',
+      'attendanceHistoryWorkedDaysLabel': 'Worked Days',
+      'attendanceHistoryLeaveDaysLabel': 'Leaves',
+      'attendanceHistoryOvertimeLabel': 'Overtime',
+      'attendanceHistoryTimelineTitle': 'Daily timeline',
+      'attendanceHistoryNoEntriesLabel': 'No attendance records yet.',
+      'attendanceHistoryHourlyEntry': 'Hourly',
+      'attendanceHistoryContractEntry': 'Contract',
+      'attendanceHistoryLeaveEntry': 'Leave',
+      'attendanceHistoryPendingTitle': 'Pending attendance entries',
+      'attendanceHistoryPendingDescription':
+          'Complete previous days before marking today as present.',
+      'attendanceHistoryResolveButton': 'Resolve now',
+      'attendanceHistoryAllCaughtUp': 'You are all caught up!',
+      'attendanceHistoryAllCaughtUpDescription':
+          'All past attendance entries are completed.',
+      'attendanceHistoryAllWorks': 'All Works',
+      'attendanceHistoryOvertimeEntryLabel': 'Overtime',
+      'attendanceHistoryLoggedHoursLabel': 'Logged Hours',
+      'attendanceHistoryReasonLabel': 'Reason',
       'contractWorkLabel': 'Contract Work',
+      'contractWorkActiveRatesTitle': 'Active contract rates',
+      'contractWorkDefaultTypesTitle': 'Available contract types',
+      'contractWorkRecentEntriesTitle': 'Recent contract entries',
+      'contractWorkRatesNote': 'Rates apply to future entries only.',
+      'contractWorkAddTypeTitle': 'Add contract type',
+      'contractWorkEditTypeTitle': 'Update contract type',
+      'contractWorkNameLabel': 'Contract name',
+      'contractWorkRateLabel': 'Rate per unit',
+      'contractWorkUnitLabel': 'Unit label',
+      'contractWorkUnitsLabel': 'Units',
+      'contractWorkRateRequiredMessage': 'Please enter a valid rate.',
+      'contractWorkNameRequiredMessage': 'Please enter a contract name.',
+      'contractWorkTypeSavedMessage': 'Contract type saved.',
+      'contractWorkNoEntriesLabel': 'No contract entries recorded yet.',
+      'contractWorkLastUpdatedLabel': 'Last updated',
+      'contractWorkEditRateButton': 'Update rate',
+      'contractWorkActiveTypesLabel': 'Active types',
+      'contractWorkTotalUnitsLabel': 'Total units',
+      'contractWorkTotalSalaryLabel': 'Total salary',
+      'contractWorkDefaultTag': 'Default',
+      'contractWorkUnitFallback': 'per unit',
       'changeLanguageLabel': 'Change Language',
       'helpSupportLabel': 'Help & Support',
       'helpSupportTitle': 'How can we help you today?',
@@ -140,6 +182,7 @@ class AppLocalizations {
       'addContractWorkButton': 'Add Contract Work',
       'contractWorkDescription': 'Piece-rate work: Watermelon, Carrot, Ravanello, Orange, etc.',
       'cancelButton': 'Cancel',
+      'saveButtonLabel': 'Save',
       'saveWorkButton': 'Save Work',
       'workNameRequiredMessage': 'Please enter a work name.',
       'workAddedMessage': 'Work added successfully.',
@@ -238,7 +281,49 @@ class AppLocalizations {
           'अपनी शिफ्ट्स प्रबंधित करें, घंटे ट्रैक करें और हर दिन व्यवस्थित रहें।',
       'addNewWorkLabel': 'नया कार्य जोड़ें',
       'attendanceHistoryLabel': 'उपस्थिति इतिहास',
+      'attendanceHistoryMonthLabel': 'माह चुनें',
+      'attendanceHistorySummaryTitle': 'इस महीने अब तक',
+      'attendanceHistoryWorkedDaysLabel': 'काम किए गए दिन',
+      'attendanceHistoryLeaveDaysLabel': 'छुट्टियाँ',
+      'attendanceHistoryOvertimeLabel': 'अतिरिक्त समय',
+      'attendanceHistoryTimelineTitle': 'दैनिक टाइमलाइन',
+      'attendanceHistoryNoEntriesLabel': 'अभी कोई उपस्थिति रिकॉर्ड नहीं है।',
+      'attendanceHistoryHourlyEntry': 'घंटेवार',
+      'attendanceHistoryContractEntry': 'कॉन्ट्रैक्ट',
+      'attendanceHistoryLeaveEntry': 'छुट्टी',
+      'attendanceHistoryPendingTitle': 'लंबित उपस्थिति प्रविष्टियाँ',
+      'attendanceHistoryPendingDescription':
+          'आज उपस्थित चिह्नित करने से पहले पिछले दिनों की प्रविष्टियाँ पूरी करें।',
+      'attendanceHistoryResolveButton': 'अभी पूरा करें',
+      'attendanceHistoryAllCaughtUp': 'आप पूरी तरह अपडेट हैं!',
+      'attendanceHistoryAllCaughtUpDescription':
+          'पिछली सभी उपस्थिति प्रविष्टियाँ पूरी हो चुकी हैं।',
+      'attendanceHistoryAllWorks': 'सभी कार्य',
+      'attendanceHistoryOvertimeEntryLabel': 'अतिरिक्त समय',
+      'attendanceHistoryLoggedHoursLabel': 'लॉग किए गए घंटे',
+      'attendanceHistoryReasonLabel': 'कारण',
       'contractWorkLabel': 'ठेका कार्य',
+      'contractWorkActiveRatesTitle': 'सक्रिय कॉन्ट्रैक्ट दरें',
+      'contractWorkDefaultTypesTitle': 'उपलब्ध कॉन्ट्रैक्ट प्रकार',
+      'contractWorkRecentEntriesTitle': 'हाल की कॉन्ट्रैक्ट प्रविष्टियाँ',
+      'contractWorkRatesNote': 'दरें केवल भविष्य की प्रविष्टियों पर लागू होंगी।',
+      'contractWorkAddTypeTitle': 'कॉन्ट्रैक्ट प्रकार जोड़ें',
+      'contractWorkEditTypeTitle': 'कॉन्ट्रैक्ट प्रकार अपडेट करें',
+      'contractWorkNameLabel': 'कॉन्ट्रैक्ट का नाम',
+      'contractWorkRateLabel': 'प्रति इकाई दर',
+      'contractWorkUnitLabel': 'इकाई लेबल',
+      'contractWorkUnitsLabel': 'इकाइयाँ',
+      'contractWorkRateRequiredMessage': 'कृपया मान्य दर दर्ज करें।',
+      'contractWorkNameRequiredMessage': 'कृपया कॉन्ट्रैक्ट का नाम दर्ज करें।',
+      'contractWorkTypeSavedMessage': 'कॉन्ट्रैक्ट प्रकार सहेजा गया।',
+      'contractWorkNoEntriesLabel': 'कोई कॉन्ट्रैक्ट प्रविष्टि दर्ज नहीं है।',
+      'contractWorkLastUpdatedLabel': 'आखिरी अपडेट',
+      'contractWorkEditRateButton': 'दर अपडेट करें',
+      'contractWorkActiveTypesLabel': 'सक्रिय प्रकार',
+      'contractWorkTotalUnitsLabel': 'कुल इकाइयाँ',
+      'contractWorkTotalSalaryLabel': 'कुल वेतन',
+      'contractWorkDefaultTag': 'डिफ़ॉल्ट',
+      'contractWorkUnitFallback': 'प्रति इकाई',
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
       'helpSupportTitle': 'हम आपकी कैसे मदद कर सकते हैं?',
@@ -342,6 +427,7 @@ class AppLocalizations {
       'addContractWorkButton': 'ठेका कार्य जोड़ें',
       'contractWorkDescription': 'पीस-रेट कार्य: तरबूज, गाजर, रावनेलो, संतरा आदि।',
       'cancelButton': 'रद्द करें',
+      'saveButtonLabel': 'सहेजें',
       'saveWorkButton': 'कार्य सहेजें',
       'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
@@ -440,7 +526,49 @@ class AppLocalizations {
           'ਆਪਣੀਆਂ ਸ਼ਿਫਟਾਂ ਸੰਭਾਲੋ, ਘੰਟੇ ਟਰੈਕ ਕਰੋ ਅਤੇ ਹਰ ਰੋਜ਼ ਸੁਵਿਧਾਜਨਕ ਰਹੋ।',
       'addNewWorkLabel': 'ਨਵਾਂ ਕੰਮ ਜੋੜੋ',
       'attendanceHistoryLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ',
+      'attendanceHistoryMonthLabel': 'ਮਹੀਨਾ ਚੁਣੋ',
+      'attendanceHistorySummaryTitle': 'ਇਸ ਮਹੀਨੇ ਤੱਕ',
+      'attendanceHistoryWorkedDaysLabel': 'ਕੰਮ ਵਾਲੇ ਦਿਨ',
+      'attendanceHistoryLeaveDaysLabel': 'ਛੁੱਟੀਆਂ',
+      'attendanceHistoryOvertimeLabel': 'ਵਾਧੂ ਸਮਾਂ',
+      'attendanceHistoryTimelineTitle': 'ਰੋਜ਼ਾਨਾ ਟਾਈਮਲਾਈਨ',
+      'attendanceHistoryNoEntriesLabel': 'ਹਾਲੇ ਕੋਈ ਹਾਜ਼ਰੀ ਰਿਕਾਰਡ ਨਹੀਂ ਹੈ।',
+      'attendanceHistoryHourlyEntry': 'ਘੰਟਾ ਅਧਾਰਿਤ',
+      'attendanceHistoryContractEntry': 'ਕਾਂਟ੍ਰੈਕਟ',
+      'attendanceHistoryLeaveEntry': 'ਛੁੱਟੀ',
+      'attendanceHistoryPendingTitle': 'ਬਕਾਇਆ ਹਾਜ਼ਰੀ ਐਂਟਰੀਆਂ',
+      'attendanceHistoryPendingDescription':
+          'ਅੱਜ ਹਾਜ਼ਰ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਪਿਛਲੇ ਦਿਨਾਂ ਦੀਆਂ ਐਂਟਰੀਆਂ ਪੂਰੀ ਕਰੋ।',
+      'attendanceHistoryResolveButton': 'ਹੁਣ ਪੂਰਾ ਕਰੋ',
+      'attendanceHistoryAllCaughtUp': 'ਤੁਸੀਂ ਪੂਰੀ ਤਰ੍ਹਾਂ ਅਪਡੇਟ ਹੋ!',
+      'attendanceHistoryAllCaughtUpDescription':
+          'ਪਿਛਲੀਆਂ ਸਾਰੀਆਂ ਹਾਜ਼ਰੀ ਐਂਟਰੀਆਂ ਪੂਰੀਆਂ ਹਨ।',
+      'attendanceHistoryAllWorks': 'ਸਾਰੇ ਕੰਮ',
+      'attendanceHistoryOvertimeEntryLabel': 'ਵਾਧੂ ਸਮਾਂ',
+      'attendanceHistoryLoggedHoursLabel': 'ਲਾਗ ਕੀਤੇ ਘੰਟੇ',
+      'attendanceHistoryReasonLabel': 'ਕਾਰਨ',
       'contractWorkLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ',
+      'contractWorkActiveRatesTitle': 'ਸਰਗਰਮ ਕਾਂਟ੍ਰੈਕਟ ਦਰਾਂ',
+      'contractWorkDefaultTypesTitle': 'ਉਪਲਬਧ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ',
+      'contractWorkRecentEntriesTitle': 'ਤਾਜ਼ੀਆਂ ਕਾਂਟ੍ਰੈਕਟ ਐਂਟਰੀਆਂ',
+      'contractWorkRatesNote': 'ਦਰਾਂ ਸਿਰਫ਼ ਭਵਿੱਖ ਦੀਆਂ ਐਂਟਰੀਆਂ \'ਤੇ ਲਾਗੂ ਹੁੰਦੀਆਂ ਹਨ।',
+      'contractWorkAddTypeTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਸ਼ਾਮਲ ਕਰੋ',
+      'contractWorkEditTypeTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਅਪਡੇਟ ਕਰੋ',
+      'contractWorkNameLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਨਾਮ',
+      'contractWorkRateLabel': 'ਪਰ ਯੂਨਿਟ ਦਰ',
+      'contractWorkUnitLabel': 'ਯੂਨਿਟ ਲੇਬਲ',
+      'contractWorkUnitsLabel': 'ਯੂਨਿਟ',
+      'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਦਰ ਦਰਜ ਕਰੋ।',
+      'contractWorkNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕਾਂਟ੍ਰੈਕਟ ਨਾਮ ਦਰਜ ਕਰੋ।',
+      'contractWorkTypeSavedMessage': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਸੇਵ ਕੀਤੀ ਗਈ।',
+      'contractWorkNoEntriesLabel': 'ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਐਂਟਰੀ ਰਿਕਾਰਡ ਨਹੀਂ ਹੈ।',
+      'contractWorkLastUpdatedLabel': 'ਆਖਰੀ ਅਪਡੇਟ',
+      'contractWorkEditRateButton': 'ਦਰ ਅਪਡੇਟ ਕਰੋ',
+      'contractWorkActiveTypesLabel': 'ਸਰਗਰਮ ਕਿਸਮਾਂ',
+      'contractWorkTotalUnitsLabel': 'ਕੁੱਲ ਯੂਨਿਟ',
+      'contractWorkTotalSalaryLabel': 'ਕੁੱਲ ਤਨਖ਼ਾਹ',
+      'contractWorkDefaultTag': 'ਡਿਫਾਲਟ',
+      'contractWorkUnitFallback': 'ਪਰ ਯੂਨਿਟ',
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
       'helpSupportTitle': 'ਅਸੀਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦੇ ਹਾਂ?',
@@ -544,6 +672,7 @@ class AppLocalizations {
       'addContractWorkButton': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ',
       'contractWorkDescription': 'ਪੀਸ-ਰੇਟ ਕੰਮ: ਤਰਬੂਜ, ਗਾਜਰ, ਰਾਵੇਨੇਲੋ, ਸੰਤਰਾ ਆਦਿ।',
       'cancelButton': 'ਰੱਦ ਕਰੋ',
+      'saveButtonLabel': 'ਸੇਵ ਕਰੋ',
       'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
       'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
@@ -645,7 +774,49 @@ class AppLocalizations {
           'Gestisci i tuoi turni, traccia le ore e rimani organizzato ogni giorno.',
       'addNewWorkLabel': 'Aggiungi nuovo lavoro',
       'attendanceHistoryLabel': 'Storico presenze',
+      'attendanceHistoryMonthLabel': 'Seleziona mese',
+      'attendanceHistorySummaryTitle': 'Questo mese finora',
+      'attendanceHistoryWorkedDaysLabel': 'Giorni lavorati',
+      'attendanceHistoryLeaveDaysLabel': 'Giorni di permesso',
+      'attendanceHistoryOvertimeLabel': 'Straordinari',
+      'attendanceHistoryTimelineTitle': 'Cronologia giornaliera',
+      'attendanceHistoryNoEntriesLabel': 'Nessuna registrazione di presenza.',
+      'attendanceHistoryHourlyEntry': 'Orario',
+      'attendanceHistoryContractEntry': 'Contratto',
+      'attendanceHistoryLeaveEntry': 'Permesso',
+      'attendanceHistoryPendingTitle': 'Registrazioni di presenza in sospeso',
+      'attendanceHistoryPendingDescription':
+          'Completa i giorni precedenti prima di segnare oggi come presente.',
+      'attendanceHistoryResolveButton': 'Completa ora',
+      'attendanceHistoryAllCaughtUp': 'Sei completamente aggiornato!',
+      'attendanceHistoryAllCaughtUpDescription':
+          'Tutte le presenze precedenti sono completate.',
+      'attendanceHistoryAllWorks': 'Tutti i lavori',
+      'attendanceHistoryOvertimeEntryLabel': 'Straordinari',
+      'attendanceHistoryLoggedHoursLabel': 'Ore registrate',
+      'attendanceHistoryReasonLabel': 'Motivo',
       'contractWorkLabel': 'Lavoro a contratto',
+      'contractWorkActiveRatesTitle': 'Tariffe contratto attive',
+      'contractWorkDefaultTypesTitle': 'Tipi di contratto disponibili',
+      'contractWorkRecentEntriesTitle': 'Registrazioni contratto recenti',
+      'contractWorkRatesNote': 'Le tariffe si applicano solo alle registrazioni future.',
+      'contractWorkAddTypeTitle': 'Aggiungi tipo di contratto',
+      'contractWorkEditTypeTitle': 'Aggiorna tipo di contratto',
+      'contractWorkNameLabel': 'Nome contratto',
+      'contractWorkRateLabel': 'Tariffa per unità',
+      'contractWorkUnitLabel': 'Etichetta unità',
+      'contractWorkUnitsLabel': 'Unità',
+      'contractWorkRateRequiredMessage': 'Inserisci una tariffa valida.',
+      'contractWorkNameRequiredMessage': 'Inserisci il nome del contratto.',
+      'contractWorkTypeSavedMessage': 'Tipo di contratto salvato.',
+      'contractWorkNoEntriesLabel': 'Nessuna registrazione contratto.',
+      'contractWorkLastUpdatedLabel': 'Ultimo aggiornamento',
+      'contractWorkEditRateButton': 'Aggiorna tariffa',
+      'contractWorkActiveTypesLabel': 'Tipi attivi',
+      'contractWorkTotalUnitsLabel': 'Unità totali',
+      'contractWorkTotalSalaryLabel': 'Salario totale',
+      'contractWorkDefaultTag': 'Predefinito',
+      'contractWorkUnitFallback': 'per unità',
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
       'helpSupportTitle': 'Come possiamo aiutarti oggi?',
@@ -752,6 +923,7 @@ class AppLocalizations {
       'addContractWorkButton': 'Aggiungi Lavoro a Contratto',
       'contractWorkDescription': 'Lavoro a cottimo: Anguria, Carota, Ravanello, Arancia, ecc.',
       'cancelButton': 'Annulla',
+      'saveButtonLabel': 'Salva',
       'saveWorkButton': 'Salva Lavoro',
       'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
       'workAddedMessage': 'Lavoro aggiunto con successo.',
@@ -869,7 +1041,78 @@ class AppLocalizations {
   String get homeBannerSubtitle => _value('homeBannerSubtitle');
   String get addNewWorkLabel => _value('addNewWorkLabel');
   String get attendanceHistoryLabel => _value('attendanceHistoryLabel');
+  String get attendanceHistoryMonthLabel =>
+      _value('attendanceHistoryMonthLabel');
+  String get attendanceHistorySummaryTitle =>
+      _value('attendanceHistorySummaryTitle');
+  String get attendanceHistoryWorkedDaysLabel =>
+      _value('attendanceHistoryWorkedDaysLabel');
+  String get attendanceHistoryLeaveDaysLabel =>
+      _value('attendanceHistoryLeaveDaysLabel');
+  String get attendanceHistoryOvertimeLabel =>
+      _value('attendanceHistoryOvertimeLabel');
+  String get attendanceHistoryTimelineTitle =>
+      _value('attendanceHistoryTimelineTitle');
+  String get attendanceHistoryNoEntriesLabel =>
+      _value('attendanceHistoryNoEntriesLabel');
+  String get attendanceHistoryHourlyEntry =>
+      _value('attendanceHistoryHourlyEntry');
+  String get attendanceHistoryContractEntry =>
+      _value('attendanceHistoryContractEntry');
+  String get attendanceHistoryLeaveEntry =>
+      _value('attendanceHistoryLeaveEntry');
+  String get attendanceHistoryPendingTitle =>
+      _value('attendanceHistoryPendingTitle');
+  String get attendanceHistoryPendingDescription =>
+      _value('attendanceHistoryPendingDescription');
+  String get attendanceHistoryResolveButton =>
+      _value('attendanceHistoryResolveButton');
+  String get attendanceHistoryAllCaughtUp =>
+      _value('attendanceHistoryAllCaughtUp');
+  String get attendanceHistoryAllCaughtUpDescription =>
+      _value('attendanceHistoryAllCaughtUpDescription');
+  String get attendanceHistoryAllWorks =>
+      _value('attendanceHistoryAllWorks');
+  String get attendanceHistoryOvertimeEntryLabel =>
+      _value('attendanceHistoryOvertimeEntryLabel');
+  String get attendanceHistoryLoggedHoursLabel =>
+      _value('attendanceHistoryLoggedHoursLabel');
+  String get attendanceHistoryReasonLabel =>
+      _value('attendanceHistoryReasonLabel');
   String get contractWorkLabel => _value('contractWorkLabel');
+  String get contractWorkActiveRatesTitle =>
+      _value('contractWorkActiveRatesTitle');
+  String get contractWorkDefaultTypesTitle =>
+      _value('contractWorkDefaultTypesTitle');
+  String get contractWorkRecentEntriesTitle =>
+      _value('contractWorkRecentEntriesTitle');
+  String get contractWorkRatesNote => _value('contractWorkRatesNote');
+  String get contractWorkAddTypeTitle => _value('contractWorkAddTypeTitle');
+  String get contractWorkEditTypeTitle => _value('contractWorkEditTypeTitle');
+  String get contractWorkNameLabel => _value('contractWorkNameLabel');
+  String get contractWorkRateLabel => _value('contractWorkRateLabel');
+  String get contractWorkUnitLabel => _value('contractWorkUnitLabel');
+  String get contractWorkUnitsLabel => _value('contractWorkUnitsLabel');
+  String get contractWorkRateRequiredMessage =>
+      _value('contractWorkRateRequiredMessage');
+  String get contractWorkNameRequiredMessage =>
+      _value('contractWorkNameRequiredMessage');
+  String get contractWorkTypeSavedMessage =>
+      _value('contractWorkTypeSavedMessage');
+  String get contractWorkNoEntriesLabel =>
+      _value('contractWorkNoEntriesLabel');
+  String get contractWorkLastUpdatedLabel =>
+      _value('contractWorkLastUpdatedLabel');
+  String get contractWorkEditRateButton =>
+      _value('contractWorkEditRateButton');
+  String get contractWorkActiveTypesLabel =>
+      _value('contractWorkActiveTypesLabel');
+  String get contractWorkTotalUnitsLabel =>
+      _value('contractWorkTotalUnitsLabel');
+  String get contractWorkTotalSalaryLabel =>
+      _value('contractWorkTotalSalaryLabel');
+  String get contractWorkDefaultTag => _value('contractWorkDefaultTag');
+  String get contractWorkUnitFallback => _value('contractWorkUnitFallback');
   String get changeLanguageLabel => _value('changeLanguageLabel');
   String get helpSupportLabel => _value('helpSupportLabel');
   String get helpSupportTitle => _value('helpSupportTitle');
@@ -992,6 +1235,7 @@ class AppLocalizations {
   String get addContractWorkButton => _value('addContractWorkButton');
   String get contractWorkDescription => _value('contractWorkDescription');
   String get cancelButton => _value('cancelButton');
+  String get saveButtonLabel => _value('saveButtonLabel');
   String get saveWorkButton => _value('saveWorkButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
