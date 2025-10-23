@@ -76,6 +76,13 @@ class AppLocalizations {
       'contractWorkRateRequiredMessage': 'Please enter a valid rate.',
       'contractWorkNameRequiredMessage': 'Please enter a contract name.',
       'contractWorkTypeSavedMessage': 'Contract type saved.',
+      'contractWorkDeleteConfirmationTitle': 'Delete contract type',
+      'contractWorkDeleteConfirmationMessage':
+          'Are you sure you want to delete this contract type?',
+      'contractWorkDeleteButton': 'Delete',
+      'contractWorkTypeDeletedMessage': 'Contract type deleted.',
+      'contractWorkTypeDeleteFailedMessage':
+          'Unable to delete contract type. Please try again.',
       'contractWorkNoEntriesLabel': 'No contract entries recorded yet.',
       'contractWorkLastUpdatedLabel': 'Last updated',
       'contractWorkEditRateButton': 'Update rate',
@@ -355,6 +362,13 @@ class AppLocalizations {
       'contractWorkRateRequiredMessage': 'कृपया मान्य दर दर्ज करें।',
       'contractWorkNameRequiredMessage': 'कृपया कॉन्ट्रैक्ट का नाम दर्ज करें।',
       'contractWorkTypeSavedMessage': 'कॉन्ट्रैक्ट प्रकार सहेजा गया।',
+      'contractWorkDeleteConfirmationTitle': 'कॉन्ट्रैक्ट प्रकार हटाएं',
+      'contractWorkDeleteConfirmationMessage':
+          'क्या आप वाकई इस कॉन्ट्रैक्ट प्रकार को हटाना चाहते हैं?',
+      'contractWorkDeleteButton': 'हटाएं',
+      'contractWorkTypeDeletedMessage': 'कॉन्ट्रैक्ट प्रकार हटाया गया।',
+      'contractWorkTypeDeleteFailedMessage':
+          'कॉन्ट्रैक्ट प्रकार हटाया नहीं जा सका। कृपया पुनः प्रयास करें।',
       'contractWorkNoEntriesLabel': 'कोई कॉन्ट्रैक्ट प्रविष्टि दर्ज नहीं है।',
       'contractWorkLastUpdatedLabel': 'आखिरी अपडेट',
       'contractWorkEditRateButton': 'दर अपडेट करें',
@@ -634,6 +648,13 @@ class AppLocalizations {
       'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਦਰ ਦਰਜ ਕਰੋ।',
       'contractWorkNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕਾਂਟ੍ਰੈਕਟ ਨਾਮ ਦਰਜ ਕਰੋ।',
       'contractWorkTypeSavedMessage': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਸੇਵ ਕੀਤੀ ਗਈ।',
+      'contractWorkDeleteConfirmationTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਓ',
+      'contractWorkDeleteConfirmationMessage':
+          'ਕੀ ਤੁਸੀਂ ਇਹ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?',
+      'contractWorkDeleteButton': 'ਮਿਟਾਓ',
+      'contractWorkTypeDeletedMessage': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਈ ਗਈ ਹੈ।',
+      'contractWorkTypeDeleteFailedMessage':
+          'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਈ ਨਹੀਂ ਜਾ ਸਕੀ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'contractWorkNoEntriesLabel': 'ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਐਂਟਰੀ ਰਿਕਾਰਡ ਨਹੀਂ ਹੈ।',
       'contractWorkLastUpdatedLabel': 'ਆਖਰੀ ਅਪਡੇਟ',
       'contractWorkEditRateButton': 'ਦਰ ਅਪਡੇਟ ਕਰੋ',
@@ -916,6 +937,13 @@ class AppLocalizations {
       'contractWorkRateRequiredMessage': 'Inserisci una tariffa valida.',
       'contractWorkNameRequiredMessage': 'Inserisci il nome del contratto.',
       'contractWorkTypeSavedMessage': 'Tipo di contratto salvato.',
+      'contractWorkDeleteConfirmationTitle': 'Elimina tipo di contratto',
+      'contractWorkDeleteConfirmationMessage':
+          'Sei sicuro di voler eliminare questo tipo di contratto?',
+      'contractWorkDeleteButton': 'Elimina',
+      'contractWorkTypeDeletedMessage': 'Tipo di contratto eliminato.',
+      'contractWorkTypeDeleteFailedMessage':
+          'Impossibile eliminare il tipo di contratto. Riprova.',
       'contractWorkNoEntriesLabel': 'Nessuna registrazione contratto.',
       'contractWorkLastUpdatedLabel': 'Ultimo aggiornamento',
       'contractWorkEditRateButton': 'Aggiorna tariffa',
@@ -1243,6 +1271,16 @@ class AppLocalizations {
       _value('contractWorkNameRequiredMessage');
   String get contractWorkTypeSavedMessage =>
       _value('contractWorkTypeSavedMessage');
+  String get contractWorkDeleteConfirmationTitle =>
+      _value('contractWorkDeleteConfirmationTitle');
+  String get contractWorkDeleteConfirmationMessage =>
+      _value('contractWorkDeleteConfirmationMessage');
+  String get contractWorkDeleteButton =>
+      _value('contractWorkDeleteButton');
+  String get contractWorkTypeDeletedMessage =>
+      _value('contractWorkTypeDeletedMessage');
+  String get contractWorkTypeDeleteFailedMessage =>
+      _value('contractWorkTypeDeleteFailedMessage');
   String get contractWorkNoEntriesLabel =>
       _value('contractWorkNoEntriesLabel');
   String get contractWorkLastUpdatedLabel =>

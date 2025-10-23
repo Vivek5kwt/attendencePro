@@ -135,6 +135,74 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       ..addAll(sorted);
   }
 
+  void _removeContractType(_ContractType type) {
+    setState(() {
+      _userContractTypes.removeWhere((item) => item.id == type.id);
+      _syncAvailableSubtypes();
+    });
+  }
+
+  Future<bool?> _confirmDeleteContractType(_ContractType type) async {
+    final l = AppLocalizations.of(context);
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l.contractWorkDeleteConfirmationTitle),
+          content: Text(l.contractWorkDeleteConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l.cancelButton),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB91C1C),
+              ),
+              child: Text(l.contractWorkDeleteButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) {
+      return false;
+    }
+
+    try {
+      await _repository.deleteContractType(id: type.id);
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) {
+        return false;
+      }
+      final message = error.message.isEmpty
+          ? l.contractWorkTypeDeleteFailedMessage
+          : error.message;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      return false;
+    } catch (_) {
+      if (!mounted) {
+        return false;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
+      );
+      return false;
+    }
+
+    if (!mounted) {
+      return false;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
+    );
+    return true;
+  }
+
   void _showComingSoonSnackBar(BuildContext context) {
     final l = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -621,12 +689,48 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       .map(
                         (type) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: _ContractTypeTile(
-                            type: type,
-                            lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
-                            onEdit: () => _showContractTypeDialog(type: type),
-                            editLabel: l.contractWorkEditRateButton,
-                            defaultTag: l.contractWorkDefaultTag,
+                          child: Dismissible(
+                            key: ValueKey('contract-type-${type.id}'),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (_) =>
+                                _confirmDeleteContractType(type),
+                            onDismissed: (_) => _removeContractType(type),
+                            background: const SizedBox.shrink(),
+                            secondaryBackground: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                alignment: Alignment.centerRight,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 24),
+                                color: const Color(0xFFFEE2E2),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.delete_outline,
+                                      color: Color(0xFFB91C1C),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l.contractWorkDeleteButton,
+                                      style: const TextStyle(
+                                        color: Color(0xFFB91C1C),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            child: _ContractTypeTile(
+                              type: type,
+                              lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
+                              onEdit: () =>
+                                  _showContractTypeDialog(type: type),
+                              editLabel: l.contractWorkEditRateButton,
+                              defaultTag: l.contractWorkDefaultTag,
+                            ),
                           ),
                         ),
                       )
