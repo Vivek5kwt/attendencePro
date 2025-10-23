@@ -450,7 +450,56 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _attendanceStatusIsError = false;
     });
 
+    var previewFetched = false;
+
     try {
+      final previewResponse = await _attendanceRepository.previewAttendance(
+        workId: widget.work.id,
+        date: _selectedDate,
+        startTime: startTime,
+        endTime: endTime,
+        breakMinutes: breakMinutes,
+        isContractEntry: isContractEntry,
+        contractTypeId: contractTypeId,
+        units: units,
+        ratePerUnit: ratePerUnit,
+      );
+
+      previewFetched = true;
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSubmittingAttendance = false;
+      });
+
+      final confirmed = await _showAttendancePreviewDialog(
+        previewResponse: previewResponse,
+        date: _selectedDate,
+        startTime: startTime,
+        endTime: endTime,
+        breakMinutes: breakMinutes,
+        isContractEntry: isContractEntry,
+        units: units,
+        ratePerUnit: ratePerUnit,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!confirmed) {
+        return;
+      }
+
+      setState(() {
+        _isSubmittingAttendance = true;
+        _attendanceStatusMessage = null;
+        _attendanceStatusIsError = false;
+      });
+
       final response = await _attendanceRepository.submitAttendance(
         workId: widget.work.id,
         date: _selectedDate,
@@ -491,9 +540,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (!mounted) {
         return;
       }
+      final fallback = previewFetched
+          ? l.attendanceSubmitFailed
+          : l.attendancePreviewFetchFailed;
       final message = e.message.trim().isNotEmpty
           ? e.message.trim()
-          : l.attendanceSubmitFailed;
+          : fallback;
       setState(() {
         _attendanceStatusMessage = message;
         _attendanceStatusIsError = true;
@@ -505,7 +557,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (!mounted) {
         return;
       }
-      final message = l.attendanceSubmitFailed;
+      final message = previewFetched
+          ? l.attendanceSubmitFailed
+          : l.attendancePreviewFetchFailed;
       setState(() {
         _attendanceStatusMessage = message;
         _attendanceStatusIsError = true;
@@ -520,6 +574,259 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         });
       }
     }
+  }
+
+  Future<bool> _showAttendancePreviewDialog({
+    required Map<String, dynamic>? previewResponse,
+    required DateTime date,
+    required String startTime,
+    required String endTime,
+    required int breakMinutes,
+    required bool isContractEntry,
+    num? units,
+    num? ratePerUnit,
+  }) async {
+    final l = AppLocalizations.of(context);
+    final previewData = _extractPreviewData(previewResponse);
+    final responseMessage = _extractResponseMessage(previewResponse);
+    final description = (responseMessage != null && responseMessage.trim().isNotEmpty)
+        ? responseMessage.trim()
+        : l.attendancePreviewDescription;
+
+    final infoRows = <Widget>[];
+    _addPreviewRow(infoRows, l.attendanceDateLabel, _formatDate(date));
+    _addPreviewRow(
+      infoRows,
+      l.attendanceEntryTypeLabel,
+      isContractEntry ? l.contractWorkLabel : l.hourlyWorkLabel,
+    );
+    _addPreviewRow(infoRows, l.startTimeLabel, startTime);
+    _addPreviewRow(infoRows, l.endTimeLabel, endTime);
+    _addPreviewRow(infoRows, l.breakLabel, _formatBreakMinutesDisplay(breakMinutes));
+
+    if (isContractEntry) {
+      final unitsDisplay = units != null
+          ? _formatNumericValue(units)
+          : _resolvePreviewDisplayValue(previewData, const [
+              'units',
+              'unit_count',
+              'unitsCompleted',
+              'units_count',
+            ]);
+      _addPreviewRow(infoRows, l.contractWorkUnitsLabel, unitsDisplay);
+
+      final rateDisplay = ratePerUnit != null
+          ? _formatNumericValue(ratePerUnit)
+          : _resolvePreviewDisplayValue(previewData, const [
+              'rate_per_unit',
+              'ratePerUnit',
+              'unit_rate',
+              'unitRate',
+            ]);
+      _addPreviewRow(infoRows, l.contractWorkRateLabel, rateDisplay);
+    }
+
+    final hoursDisplay = _resolvePreviewDisplayValue(previewData, const [
+      'total_hours',
+      'totalHours',
+      'hours',
+      'calculated_hours',
+      'calculatedHours',
+      'total_duration',
+      'totalDuration',
+    ]);
+    _addPreviewRow(infoRows, l.attendancePreviewHoursLabel, hoursDisplay);
+
+    final salaryDisplay = _resolvePreviewDisplayValue(previewData, const [
+      'total_salary',
+      'totalSalary',
+      'salary',
+      'amount',
+      'payable_amount',
+      'payableAmount',
+      'total_amount',
+      'totalAmount',
+    ]);
+    _addPreviewRow(infoRows, l.attendancePreviewSalaryLabel, salaryDisplay);
+
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: Text(l.attendancePreviewTitle),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: const Color(0xFF4B5563),
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...infoRows,
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l.attendancePreviewCancelButton),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(l.attendancePreviewConfirmButton),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+  void _addPreviewRow(List<Widget> rows, String label, String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return;
+    }
+    rows.add(_buildPreviewRow(label, trimmed));
+  }
+
+  Widget _buildPreviewRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1F2937),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2563EB),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Map<String, dynamic>? _extractPreviewData(Map<String, dynamic>? response) {
+    if (response == null) {
+      return null;
+    }
+    final data = response['data'];
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+    return response;
+  }
+
+  String? _resolvePreviewDisplayValue(
+    Map<String, dynamic>? data,
+    List<String> keys,
+  ) {
+    final value = _findPreviewValue(data, keys);
+    return _stringifyPreviewValue(value);
+  }
+
+  dynamic _findPreviewValue(Map<String, dynamic>? data, List<String> keys) {
+    if (data == null) {
+      return null;
+    }
+
+    for (final key in keys) {
+      if (data.containsKey(key)) {
+        final value = data[key];
+        if (value != null) {
+          return value;
+        }
+      }
+    }
+
+    for (final entry in data.entries) {
+      final value = entry.value;
+      if (value is Map<String, dynamic>) {
+        final nested = _findPreviewValue(value, keys);
+        if (nested != null) {
+          return nested;
+        }
+      } else if (value is List) {
+        for (final item in value) {
+          if (item is Map<String, dynamic>) {
+            final nested = _findPreviewValue(item, keys);
+            if (nested != null) {
+              return nested;
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  String? _stringifyPreviewValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return _formatNumericValue(value);
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return null;
+      }
+      return trimmed;
+    }
+    return null;
+  }
+
+  String _formatNumericValue(num value) {
+    final doubleValue = value.toDouble();
+    if (doubleValue == doubleValue.roundToDouble()) {
+      return doubleValue.toStringAsFixed(0);
+    }
+    return doubleValue.toStringAsFixed(2);
+  }
+
+  String _formatBreakMinutesDisplay(int minutes) {
+    if (minutes <= 0) {
+      return '0 min';
+    }
+    final hours = minutes ~/ 60;
+    final remaining = minutes % 60;
+    final parts = <String>[];
+    if (hours > 0) {
+      parts.add('${hours}h');
+    }
+    if (remaining > 0) {
+      parts.add(hours > 0 ? '${remaining}m' : '$remaining min');
+    }
+    if (parts.isEmpty) {
+      parts.add('$minutes min');
+    }
+    return parts.join(' ');
   }
 
   @override

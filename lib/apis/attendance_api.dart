@@ -16,6 +16,37 @@ class AttendanceApi {
   final String baseUrl;
   final http.Client _client;
 
+  Future<Map<String, dynamic>?> previewAttendance({
+    required AttendanceRequest request,
+    required String token,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/attendance/preview');
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final body = jsonEncode(request.toJson());
+
+    try {
+      final response = await _client.post(uri, headers: headers, body: body);
+      final decoded = _decodeBody(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decoded;
+      }
+
+      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+    } on SocketException {
+      throw ApiException('Unable to reach the server. Please check your connection.');
+    } on HttpException {
+      throw ApiException('A network error occurred while contacting the server.');
+    } on FormatException {
+      throw ApiException('Received an invalid response from the server.');
+    }
+  }
+
   Future<Map<String, dynamic>?> submitAttendance({
     required AttendanceRequest request,
     required String token,
