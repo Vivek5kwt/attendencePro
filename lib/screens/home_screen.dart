@@ -1245,10 +1245,8 @@ class _HomeScreenState extends State<HomeScreen> {
           alignment: Alignment.centerRight,
           children: [
             Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20)
-                ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
                 child: Image.asset(
                   AppAssets.bgBanner,
                   fit: BoxFit.cover,
