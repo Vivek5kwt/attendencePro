@@ -26,6 +26,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final TextEditingController _endTimeController = TextEditingController();
   final TextEditingController _breakMinutesController =
       TextEditingController(text: '0');
+  final TextEditingController _unitsController = TextEditingController();
+  final TextEditingController _ratePerUnitController = TextEditingController();
 
   DashboardSummary? _dashboardSummary;
   bool _isSummaryLoading = true;
@@ -148,6 +150,27 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     } else if (_breakMinutesController.text.trim().isEmpty) {
       _breakMinutesController.text = '0';
     }
+
+    final unitsText = _extractNumericText(additionalData, const [
+      'units',
+      'unit_count',
+      'unitCount',
+      'unitsCompleted',
+    ]);
+    if (unitsText != null) {
+      _unitsController.text = unitsText;
+    }
+
+    final rateText = _extractNumericText(additionalData, const [
+      'rate_per_unit',
+      'ratePerUnit',
+      'unit_rate',
+      'unitRate',
+      'rate',
+    ]);
+    if (rateText != null) {
+      _ratePerUnitController.text = rateText;
+    }
   }
 
   void _applyAttendanceDetailsFromSummary(DashboardAttendanceEntry? entry) {
@@ -177,6 +200,27 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _extractBreakMinutes(entry.raw, entry.breakDurationText ?? entry.raw['breakTime']?.toString());
     if (breakMinutes != null) {
       _breakMinutesController.text = breakMinutes.toString();
+    }
+
+    final unitsText = _extractNumericText(entry.raw, const [
+      'units',
+      'unit_count',
+      'unitCount',
+      'unitsCompleted',
+    ]);
+    if (unitsText != null && unitsText.trim().isNotEmpty) {
+      _unitsController.text = unitsText.trim();
+    }
+
+    final rateText = _extractNumericText(entry.raw, const [
+      'rate_per_unit',
+      'ratePerUnit',
+      'unit_rate',
+      'unitRate',
+      'rate',
+    ]);
+    if (rateText != null && rateText.trim().isNotEmpty) {
+      _ratePerUnitController.text = rateText.trim();
     }
 
     final dateText = entry.dateText?.trim();
@@ -230,6 +274,38 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return null;
   }
 
+  String? _validateUnits(String? value) {
+    if (!widget.work.isContract) {
+      return null;
+    }
+    final trimmed = value?.trim() ?? '';
+    final l = AppLocalizations.of(context);
+    if (trimmed.isEmpty) {
+      return l.attendanceUnitsRequired;
+    }
+    final parsed = _parseNumberInput(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return l.attendanceUnitsInvalid;
+    }
+    return null;
+  }
+
+  String? _validateRatePerUnit(String? value) {
+    if (!widget.work.isContract) {
+      return null;
+    }
+    final trimmed = value?.trim() ?? '';
+    final l = AppLocalizations.of(context);
+    if (trimmed.isEmpty) {
+      return l.attendanceRateRequired;
+    }
+    final parsed = _parseNumberInput(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return l.attendanceRateInvalid;
+    }
+    return null;
+  }
+
   bool _isValidTimeFormat(String value) {
     final normalized = value.trim();
     final parts = normalized.split(':');
@@ -252,6 +328,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return int.tryParse(trimmed) ?? 0;
   }
 
+  String? _extractNumericText(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) {
+        continue;
+      }
+      if (value is num) {
+        return value.toString();
+      }
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
+  }
+
   String? _extractResponseMessage(Map<String, dynamic>? response) {
     if (response == null) {
       return null;
@@ -261,6 +353,46 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final value = response[key];
       if (value is String && value.trim().isNotEmpty) {
         return value.trim();
+      }
+    }
+    return null;
+  }
+
+  num? _parseNumberInput(String value) {
+    final sanitized = value.replaceAll(',', '.').trim();
+    if (sanitized.isEmpty) {
+      return null;
+    }
+    final intValue = int.tryParse(sanitized);
+    if (intValue != null) {
+      return intValue;
+    }
+    return double.tryParse(sanitized);
+  }
+
+  int? _resolveContractTypeId() {
+    final data = widget.work.additionalData;
+    const keys = ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType'];
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) {
+        continue;
+      }
+      if (value is int) {
+        return value;
+      }
+      if (value is num) {
+        return value.toInt();
+      }
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isEmpty) {
+          continue;
+        }
+        final parsed = int.tryParse(trimmed);
+        if (parsed != null) {
+          return parsed;
+        }
       }
     }
     return null;
@@ -280,6 +412,15 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final startTime = _startTimeController.text.trim();
     final endTime = _endTimeController.text.trim();
     final breakMinutes = _resolveBreakMinutes(_breakMinutesController.text);
+    final bool isContractEntry = widget.work.isContract;
+    num? units;
+    num? ratePerUnit;
+    int? contractTypeId;
+    if (isContractEntry) {
+      units = _parseNumberInput(_unitsController.text);
+      ratePerUnit = _parseNumberInput(_ratePerUnitController.text);
+      contractTypeId = _resolveContractTypeId();
+    }
 
     setState(() {
       _isSubmittingAttendance = true;
@@ -294,6 +435,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         startTime: startTime,
         endTime: endTime,
         breakMinutes: breakMinutes,
+        isContractEntry: isContractEntry,
+        contractTypeId: contractTypeId,
+        units: units,
+        ratePerUnit: ratePerUnit,
       );
       if (!mounted) {
         return;
@@ -360,6 +505,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _startTimeController.dispose();
     _endTimeController.dispose();
     _breakMinutesController.dispose();
+    _unitsController.dispose();
+    _ratePerUnitController.dispose();
     super.dispose();
   }
 
@@ -474,12 +621,17 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 startTimeController: _startTimeController,
                 endTimeController: _endTimeController,
                 breakMinutesController: _breakMinutesController,
+                unitsController: _unitsController,
+                ratePerUnitController: _ratePerUnitController,
                 onSubmit: _submitAttendance,
                 onFieldChanged: _handleAttendanceFieldChanged,
                 isSubmitting: _isSubmittingAttendance,
                 startTimeValidator: _validateStartTime,
                 endTimeValidator: _validateEndTime,
                 breakValidator: _validateBreakMinutes,
+                unitsValidator: _validateUnits,
+                ratePerUnitValidator: _validateRatePerUnit,
+                showContractFields: widget.work.isContract,
                 statusMessage: _attendanceStatusMessage,
                 isStatusError: _attendanceStatusIsError,
               ),
@@ -724,27 +876,41 @@ class _AttendanceSection extends StatelessWidget {
     required this.startTimeController,
     required this.endTimeController,
     required this.breakMinutesController,
+    required this.unitsController,
+    required this.ratePerUnitController,
     required this.onSubmit,
     required this.onFieldChanged,
     required this.isSubmitting,
     required this.startTimeValidator,
     required this.endTimeValidator,
     required this.breakValidator,
+    required this.unitsValidator,
+    required this.ratePerUnitValidator,
+    required this.showContractFields,
     this.statusMessage,
     this.isStatusError = false,
-  });
+  }) : assert(!showContractFields ||
+            (unitsController != null &&
+                ratePerUnitController != null &&
+                unitsValidator != null &&
+                ratePerUnitValidator != null));
 
   final String dateLabel;
   final GlobalKey<FormState> formKey;
   final TextEditingController startTimeController;
   final TextEditingController endTimeController;
   final TextEditingController breakMinutesController;
+  final TextEditingController? unitsController;
+  final TextEditingController? ratePerUnitController;
   final VoidCallback onSubmit;
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
   final String? Function(String?) startTimeValidator;
   final String? Function(String?) endTimeValidator;
   final String? Function(String?) breakValidator;
+  final String? Function(String?)? unitsValidator;
+  final String? Function(String?)? ratePerUnitValidator;
+  final bool showContractFields;
   final String? statusMessage;
   final bool isStatusError;
 
@@ -827,7 +993,7 @@ class _AttendanceSection extends StatelessWidget {
                     ? maxWidth
                     : (maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
 
-                final cards = <Widget>[
+                final inputCards = <Widget>[
                   _AttendanceTimeCard(
                     label: l.startTimeLabel,
                     controller: startTimeController,
@@ -867,7 +1033,8 @@ class _AttendanceSection extends StatelessWidget {
                     color: const Color(0xFFF59E0B),
                     hintText: '0',
                     keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
+                    textInputAction:
+                        showContractFields ? TextInputAction.next : TextInputAction.done,
                     validator: breakValidator,
                     onChanged: (_) => onFieldChanged(),
                     enabled: !isSubmitting,
@@ -875,7 +1042,46 @@ class _AttendanceSection extends StatelessWidget {
                       FilteringTextInputFormatter.digitsOnly,
                     ],
                   ),
-                ]
+                ];
+
+                if (showContractFields &&
+                    unitsController != null &&
+                    ratePerUnitController != null) {
+                  final decimalFormatter =
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'));
+                  inputCards.addAll([
+                    _AttendanceTimeCard(
+                      label: l.contractWorkUnitsLabel,
+                      controller: unitsController!,
+                      icon: Icons.stacked_bar_chart_rounded,
+                      color: const Color(0xFF6366F1),
+                      hintText: '0',
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.next,
+                      validator: unitsValidator,
+                      onChanged: (_) => onFieldChanged(),
+                      enabled: !isSubmitting,
+                      inputFormatters: [decimalFormatter],
+                    ),
+                    _AttendanceTimeCard(
+                      label: l.contractWorkRateLabel,
+                      controller: ratePerUnitController!,
+                      icon: Icons.attach_money,
+                      color: const Color(0xFF2563EB),
+                      hintText: '0.00',
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      validator: ratePerUnitValidator,
+                      onChanged: (_) => onFieldChanged(),
+                      enabled: !isSubmitting,
+                      inputFormatters: [decimalFormatter],
+                    ),
+                  ]);
+                }
+
+                final cards = inputCards
                     .map((card) => SizedBox(
                           width: itemWidth.clamp(0.0, maxWidth),
                           child: card,
