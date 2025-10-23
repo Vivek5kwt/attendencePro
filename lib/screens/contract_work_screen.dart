@@ -17,6 +17,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   final List<_ContractType> _defaultContractTypes = <_ContractType>[];
   final List<_ContractType> _userContractTypes = <_ContractType>[];
+  static const String _customSubtypeOptionValue = '__custom_subtype__';
+  final List<String> _availableSubtypes = <String>[];
 
   final List<_ContractEntry> _recentEntries = <_ContractEntry>[
     _ContractEntry(
@@ -74,6 +76,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                 type: type,
                 isUserDefined: true,
               )));
+        _syncAvailableSubtypes();
         _isLoading = false;
       });
     } on ContractTypeRepositoryException catch (error) {
@@ -106,7 +109,30 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       } else {
         targetList[index] = type;
       }
+      _syncAvailableSubtypes();
     });
+  }
+
+  void _syncAvailableSubtypes() {
+    final unique = <String>{};
+    for (final type in _defaultContractTypes) {
+      final value = type.subtype?.trim();
+      if (value != null && value.isNotEmpty) {
+        unique.add(value);
+      }
+    }
+    for (final type in _userContractTypes) {
+      final value = type.subtype?.trim();
+      if (value != null && value.isNotEmpty) {
+        unique.add(value);
+      }
+    }
+
+    final sorted = unique.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    _availableSubtypes
+      ..clear()
+      ..addAll(sorted);
   }
 
   void _showComingSoonSnackBar(BuildContext context) {
@@ -126,146 +152,286 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     _ContractType? type,
   }) async {
     final l = AppLocalizations.of(context);
+    final rootContext = context;
     final nameController = TextEditingController(text: type?.name ?? '');
     final rateController =
         TextEditingController(text: type != null ? type.rate.toStringAsFixed(2) : '');
     final unitController = TextEditingController(text: type?.unitLabel ?? '');
+    final customSubtypeController = TextEditingController();
+    final subtypeOptions = List<String>.from(_availableSubtypes);
     final isEditing = type != null;
     final isNameEditable = !(type?.isDefault ?? false);
 
+    String? selectedSubtypeValue;
+    if (type?.subtype != null && type!.subtype!.trim().isNotEmpty) {
+      final trimmed = type.subtype!.trim();
+      if (subtypeOptions.contains(trimmed)) {
+        selectedSubtypeValue = trimmed;
+      } else {
+        selectedSubtypeValue = _customSubtypeOptionValue;
+        customSubtypeController.text = trimmed;
+      }
+    } else if (subtypeOptions.isNotEmpty) {
+      selectedSubtypeValue = subtypeOptions.first;
+    } else {
+      selectedSubtypeValue = _customSubtypeOptionValue;
+    }
+
+    bool isSaving = false;
+
     final result = await showDialog<_ContractType>(
-      context: context,
+      context: rootContext,
       barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEDEBFF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Image.asset(
-                  AppAssets.contractWork,
-                  width: 24,
-                  height: 24,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isUsingCustomSubtype =
+                selectedSubtypeValue == _customSubtypeOptionValue;
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDEBFF),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Image.asset(
+                      AppAssets.contractWork,
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isEditing
+                          ? l.contractWorkEditTypeTitle
+                          : l.contractWorkAddTypeTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF111827),
+                          ) ??
+                          const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      readOnly: type?.isDefault ?? false,
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkNameLabel,
+                        hintText: 'Ravanello',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedSubtypeValue,
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkSubtypeLabel,
+                        hintText: l.contractWorkSubtypeHint,
+                      ),
+                      items: [
+                        ...subtypeOptions.map(
+                          (option) => DropdownMenuItem<String>(
+                            value: option,
+                            child: Text(option),
+                          ),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: _customSubtypeOptionValue,
+                          child: Text(l.contractWorkSubtypeCustomOption),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedSubtypeValue =
+                              value ?? _customSubtypeOptionValue;
+                          if (selectedSubtypeValue !=
+                              _customSubtypeOptionValue) {
+                            customSubtypeController.clear();
+                          }
+                        });
+                      },
+                    ),
+                    if (isUsingCustomSubtype) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: customSubtypeController,
+                        decoration: InputDecoration(
+                          labelText: l.contractWorkSubtypeCustomLabel,
+                          hintText: l.contractWorkSubtypeHint,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: rateController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: false,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkRateLabel,
+                        prefixText: '€ ',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: unitController,
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkUnitLabel,
+                        hintText: 'per crate',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l.contractWorkRatesNote,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7280),
+                          ) ??
+                          const TextStyle(
+                            color: Color(0xFF6B7280),
+                          ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  isEditing
-                      ? l.contractWorkEditTypeTitle
-                      : l.contractWorkAddTypeTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF111827),
-                      ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(l.cancelButton),
                 ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameController,
-                  readOnly: type?.isDefault ?? false,
-                  decoration: InputDecoration(
-                    labelText: l.contractWorkNameLabel,
-                    hintText: 'Ravanello',
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5856D6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: rateController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true, signed: false),
-                  decoration: InputDecoration(
-                    labelText: l.contractWorkRateLabel,
-                    prefixText: '€ ',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: unitController,
-                  decoration: InputDecoration(
-                    labelText: l.contractWorkUnitLabel,
-                    hintText: 'per crate',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l.contractWorkRatesNote,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF6B7280),
-                      ) ??
-                      const TextStyle(
-                        color: Color(0xFF6B7280),
-                      ),
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final name = nameController.text.trim();
+                          final rate =
+                              double.tryParse(rateController.text.trim());
+                          final unit = unitController.text.trim();
+                          final selectedOption = selectedSubtypeValue;
+                          final resolvedSubtype = selectedOption ==
+                                  _customSubtypeOptionValue
+                              ? customSubtypeController.text.trim()
+                              : selectedOption?.trim() ?? '';
+
+                          if (name.isEmpty && isNameEditable) {
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text(l.contractWorkNameRequiredMessage),
+                              ),
+                            );
+                            return;
+                          }
+                          if (rate == null || rate <= 0) {
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text(l.contractWorkRateRequiredMessage),
+                              ),
+                            );
+                            return;
+                          }
+                          if (resolvedSubtype.isEmpty) {
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l.contractWorkSubtypeRequiredMessage,
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          final fallbackUnit = l.contractWorkUnitFallback;
+                          final normalizedUnit =
+                              unit.isEmpty ? fallbackUnit : unit;
+
+                          if (type == null || type.id.startsWith('local-')) {
+                            setDialogState(() {
+                              isSaving = true;
+                            });
+                            try {
+                              final created = await _repository.createContractType(
+                                name: name,
+                                subtype: resolvedSubtype,
+                                ratePerUnit: rate,
+                                unitLabel: normalizedUnit,
+                              );
+                              if (!mounted) {
+                                return;
+                              }
+                              Navigator.of(dialogContext).pop(
+                                _ContractType.fromModel(
+                                  type: created,
+                                  isUserDefined: true,
+                                ),
+                              );
+                            } on ContractTypeRepositoryException catch (error) {
+                              setDialogState(() {
+                                isSaving = false;
+                              });
+                              ScaffoldMessenger.of(rootContext).showSnackBar(
+                                SnackBar(content: Text(error.message)),
+                              );
+                            } catch (error) {
+                              setDialogState(() {
+                                isSaving = false;
+                              });
+                              ScaffoldMessenger.of(rootContext).showSnackBar(
+                                SnackBar(content: Text(error.toString())),
+                              );
+                            }
+                            return;
+                          }
+
+                          final updated = type.copyWith(
+                            name: isNameEditable ? name : type.name,
+                            rate: rate,
+                            unitLabel: normalizedUnit,
+                            subtype: resolvedSubtype,
+                            lastUpdated: DateTime.now(),
+                          );
+                          Navigator.of(dialogContext).pop(updated);
+                        },
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(l.saveButtonLabel),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l.cancelButton),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5856D6),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onPressed: () {
-                final name = nameController.text.trim();
-                final rate = double.tryParse(rateController.text.trim());
-                final unit = unitController.text.trim();
-
-                if (name.isEmpty && isNameEditable) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.contractWorkNameRequiredMessage)),
-                  );
-                  return;
-                }
-                if (rate == null || rate <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.contractWorkRateRequiredMessage)),
-                  );
-                  return;
-                }
-                final fallbackUnit = l.contractWorkUnitFallback;
-                final base = type ??
-                    _ContractType.createLocal(
-                      name: name,
-                      rate: rate,
-                      unitLabel: unit.isEmpty ? fallbackUnit : unit,
-                    );
-                final updated = base.copyWith(
-                  name: isNameEditable ? name : base.name,
-                  rate: rate,
-                  unitLabel: unit.isEmpty ? fallbackUnit : unit,
-                  lastUpdated: DateTime.now(),
-                );
-                Navigator.of(context).pop(updated);
-              },
-              child: Text(l.saveButtonLabel),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -708,6 +874,18 @@ class _ContractTypeTile extends StatelessWidget {
                             color: Color(0xFF4B5563),
                           ),
                     ),
+                    if (type.displaySubtype != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        type.displaySubtype!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6B7280),
+                            ) ??
+                            const TextStyle(
+                              color: Color(0xFF6B7280),
+                            ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -966,6 +1144,7 @@ class _ContractType {
     required this.name,
     required this.rate,
     this.unitLabel = 'per unit',
+    this.subtype,
     this.isDefault = false,
     this.isUserDefined = false,
     this.lastUpdated,
@@ -981,25 +1160,10 @@ class _ContractType {
       name: type.name,
       rate: type.rate,
       unitLabel: type.unitLabel,
+      subtype: type.subtype,
       isDefault: isDefaultType,
       isUserDefined: isUserDefined ?? !isDefaultType,
       lastUpdated: type.updatedAt,
-    );
-  }
-
-  factory _ContractType.createLocal({
-    required String name,
-    required double rate,
-    required String unitLabel,
-  }) {
-    return _ContractType(
-      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
-      name: name,
-      rate: rate,
-      unitLabel: unitLabel,
-      isDefault: false,
-      isUserDefined: true,
-      lastUpdated: DateTime.now(),
     );
   }
 
@@ -1007,6 +1171,7 @@ class _ContractType {
   final String name;
   final double rate;
   final String unitLabel;
+  final String? subtype;
   final bool isDefault;
   final bool isUserDefined;
   final DateTime? lastUpdated;
@@ -1016,6 +1181,7 @@ class _ContractType {
     String? name,
     double? rate,
     String? unitLabel,
+    String? subtype,
     bool? isDefault,
     bool? isUserDefined,
     DateTime? lastUpdated,
@@ -1025,6 +1191,7 @@ class _ContractType {
       name: name ?? this.name,
       rate: rate ?? this.rate,
       unitLabel: unitLabel ?? this.unitLabel,
+      subtype: subtype ?? this.subtype,
       isDefault: isDefault ?? this.isDefault,
       isUserDefined: isUserDefined ?? this.isUserDefined,
       lastUpdated: lastUpdated ?? this.lastUpdated,
@@ -1032,6 +1199,14 @@ class _ContractType {
   }
 
   String get displayRate => '€${rate.toStringAsFixed(2)}';
+
+  String? get displaySubtype {
+    final value = subtype?.trim();
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return value;
+  }
 
   String get formattedUpdatedDate {
     final date = lastUpdated;
