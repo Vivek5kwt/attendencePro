@@ -1129,7 +1129,7 @@ class _AttendanceSection extends StatelessWidget {
                     validator: breakValidator,
                     onChanged: (_) => onFieldChanged(),
                     enabled: !isSubmitting,
-                    inputFormatters: const [
+                    inputFormatters:  [
                       FilteringTextInputFormatter.digitsOnly,
                     ],
                   ),

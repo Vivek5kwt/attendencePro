@@ -21,30 +21,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   final List<String> _availableSubtypes = <String>[];
 
   final List<_ContractEntry> _recentEntries = <_ContractEntry>[
-    _ContractEntry(
-      date: DateTime(2025, 10, 21),
-      workName: 'Greenhouse Harvest',
-      contractName: 'Ravanello',
-      unitsCompleted: 180,
-      rate: 0.6,
-      totalAmount: 108,
-    ),
-    _ContractEntry(
-      date: DateTime(2025, 10, 18),
-      workName: 'Packing Line',
-      contractName: 'Carrot',
-      unitsCompleted: 220,
-      rate: 0.45,
-      totalAmount: 99,
-    ),
-    _ContractEntry(
-      date: DateTime(2025, 10, 12),
-      workName: 'Greenhouse Harvest',
-      contractName: 'Radish',
-      unitsCompleted: 150,
-      rate: 0.55,
-      totalAmount: 82.5,
-    ),
+
   ];
 
   bool _isLoading = true;

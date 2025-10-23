@@ -36,64 +36,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   bool _initialized = false;
 
   final List<_AttendanceEntry> _entries = <_AttendanceEntry>[
-    _AttendanceEntry(
-      date: DateTime(2025, 10, 22),
-      workName: 'Greenhouse Harvest',
-      type: _AttendanceEntryType.hourly,
-      startTime: '07:30',
-      endTime: '15:45',
-      breakDuration: '00:45',
-      hoursWorked: 7.5,
-      overtimeHours: 1.0,
-      salary: 92.5,
-    ),
-    _AttendanceEntry(
-      date: DateTime(2025, 10, 21),
-      workName: 'Greenhouse Harvest',
-      type: _AttendanceEntryType.contract,
-      contractType: 'Ravanello',
-      unitsCompleted: 180,
-      ratePerUnit: 0.6,
-      salary: 108,
-      hoursWorked: 5.5,
-    ),
-    _AttendanceEntry(
-      date: DateTime(2025, 10, 20),
-      workName: 'Packing Line',
-      type: _AttendanceEntryType.hourly,
-      startTime: '06:00',
-      endTime: '14:00',
-      breakDuration: '00:30',
-      hoursWorked: 7.5,
-      salary: 82.5,
-    ),
-    _AttendanceEntry(
-      date: DateTime(2025, 10, 19),
-      workName: 'Greenhouse Harvest',
-      type: _AttendanceEntryType.leave,
-      salary: 0,
-      leaveReason: 'Sick Leave',
-    ),
-    _AttendanceEntry(
-      date: DateTime(2025, 10, 18),
-      workName: 'Packing Line',
-      type: _AttendanceEntryType.contract,
-      contractType: 'Carrot',
-      unitsCompleted: 220,
-      ratePerUnit: 0.45,
-      salary: 99,
-      hoursWorked: 6,
-    ),
-    _AttendanceEntry(
-      date: DateTime(2025, 10, 17),
-      workName: 'Greenhouse Harvest',
-      type: _AttendanceEntryType.hourly,
-      startTime: '07:00',
-      endTime: '15:00',
-      breakDuration: '00:30',
-      hoursWorked: 7.5,
-      salary: 90,
-    ),
+
   ];
 
   final List<_PendingEntry> _pendingEntries = <_PendingEntry>[
