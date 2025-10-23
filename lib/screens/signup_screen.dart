@@ -1,7 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
+import 'policy_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   final String? initialName;
@@ -21,6 +23,8 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _passwordVisible = false;
   bool _confirmVisible = false;
   bool _agreed = false;
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
 
   @override
   void initState() {
@@ -28,6 +32,8 @@ class _SignupScreenState extends State<SignupScreen> {
     if (widget.initialName != null) {
       _nameController.text = widget.initialName!;
     }
+    _termsRecognizer = TapGestureRecognizer()..onTap = _openTerms;
+    _privacyRecognizer = TapGestureRecognizer()..onTap = _openPrivacy;
   }
 
   @override
@@ -36,6 +42,8 @@ class _SignupScreenState extends State<SignupScreen> {
     _nameController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     super.dispose();
   }
 
@@ -71,21 +79,18 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  void _showUserAgreement() {
-    final l = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l.userAgreementTitle),
-        content: SingleChildScrollView(
-          child: Text(l.userAgreementContent),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l.close),
-          ),
-        ],
+  void _openTerms() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PolicyScreen(type: PolicyType.terms),
+      ),
+    );
+  }
+
+  void _openPrivacy() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PolicyScreen(type: PolicyType.privacy),
       ),
     );
   }
@@ -246,11 +251,13 @@ class _SignupScreenState extends State<SignupScreen> {
                               TextSpan(
                                 text: l.userAgreement,
                                 style: const TextStyle(color: Color(0xFF007BFF)),
+                                recognizer: _termsRecognizer,
                               ),
                               TextSpan(text: l.and),
                               TextSpan(
                                 text: l.privacyPolicy,
                                 style: const TextStyle(color: Color(0xFF007BFF)),
+                                recognizer: _privacyRecognizer,
                               ),
                             ],
                           ),
