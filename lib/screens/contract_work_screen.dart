@@ -161,9 +161,16 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     final subtypeOptions = List<String>.from(_availableSubtypes);
     final isEditing = type != null;
     final isNameEditable = !(type?.isDefault ?? false);
+    final shouldForceCustomSubtype = type?.isUserDefined ?? true;
 
     String? selectedSubtypeValue;
-    if (type?.subtype != null && type!.subtype!.trim().isNotEmpty) {
+    if (shouldForceCustomSubtype) {
+      selectedSubtypeValue = _customSubtypeOptionValue;
+      final existingSubtype = type?.subtype?.trim();
+      if (existingSubtype != null && existingSubtype.isNotEmpty) {
+        customSubtypeController.text = existingSubtype;
+      }
+    } else if (type?.subtype != null && type!.subtype!.trim().isNotEmpty) {
       final trimmed = type.subtype!.trim();
       if (subtypeOptions.contains(trimmed)) {
         selectedSubtypeValue = trimmed;
@@ -185,7 +192,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final isUsingCustomSubtype =
+            final isUsingCustomSubtype = shouldForceCustomSubtype ||
                 selectedSubtypeValue == _customSubtypeOptionValue;
             return AlertDialog(
               shape: RoundedRectangleBorder(
@@ -238,35 +245,36 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: selectedSubtypeValue,
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkSubtypeLabel,
-                        hintText: l.contractWorkSubtypeHint,
-                      ),
-                      items: [
-                        ...subtypeOptions.map(
-                          (option) => DropdownMenuItem<String>(
-                            value: option,
-                            child: Text(option),
+                    if (!shouldForceCustomSubtype)
+                      DropdownButtonFormField<String>(
+                        value: selectedSubtypeValue,
+                        decoration: InputDecoration(
+                          labelText: l.contractWorkSubtypeLabel,
+                          hintText: l.contractWorkSubtypeHint,
+                        ),
+                        items: [
+                          ...subtypeOptions.map(
+                            (option) => DropdownMenuItem<String>(
+                              value: option,
+                              child: Text(option),
+                            ),
                           ),
-                        ),
-                        DropdownMenuItem<String>(
-                          value: _customSubtypeOptionValue,
-                          child: Text(l.contractWorkSubtypeCustomOption),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setDialogState(() {
-                          selectedSubtypeValue =
-                              value ?? _customSubtypeOptionValue;
-                          if (selectedSubtypeValue !=
-                              _customSubtypeOptionValue) {
-                            customSubtypeController.clear();
-                          }
-                        });
-                      },
-                    ),
+                          DropdownMenuItem<String>(
+                            value: _customSubtypeOptionValue,
+                            child: Text(l.contractWorkSubtypeCustomOption),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setDialogState(() {
+                            selectedSubtypeValue =
+                                value ?? _customSubtypeOptionValue;
+                            if (selectedSubtypeValue !=
+                                _customSubtypeOptionValue) {
+                              customSubtypeController.clear();
+                            }
+                          });
+                        },
+                      ),
                     if (isUsingCustomSubtype) ...[
                       const SizedBox(height: 12),
                       TextField(
@@ -332,10 +340,11 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               double.tryParse(rateController.text.trim());
                           final unit = unitController.text.trim();
                           final selectedOption = selectedSubtypeValue;
-                          final resolvedSubtype = selectedOption ==
-                                  _customSubtypeOptionValue
+                          final resolvedSubtype = shouldForceCustomSubtype
                               ? customSubtypeController.text.trim()
-                              : selectedOption?.trim() ?? '';
+                              : selectedOption == _customSubtypeOptionValue
+                                  ? customSubtypeController.text.trim()
+                                  : selectedOption?.trim() ?? '';
 
                           if (name.isEmpty && isNameEditable) {
                             ScaffoldMessenger.of(rootContext).showSnackBar(
