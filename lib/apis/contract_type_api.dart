@@ -80,6 +80,47 @@ class ContractTypeApi {
     }
   }
 
+  Future<ContractType> updateContractType({
+    required String token,
+    required String contractTypeId,
+    required String name,
+    required String subtype,
+    required double ratePerUnit,
+    required String unitLabel,
+  }) async {
+    final encodedId = Uri.encodeComponent(contractTypeId);
+    final uri = Uri.parse('$baseUrl/api/contract-types/$encodedId');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final payload = jsonEncode({
+      'name': name,
+      'subtype': subtype,
+      'rate_per_unit': ratePerUnit,
+      'unit_label': unitLabel,
+    });
+
+    try {
+      final response = await _client.put(uri, headers: headers, body: payload);
+      final decoded = _decodeBody(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return _parseSingleContractType(decoded);
+      }
+
+      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+    } on SocketException {
+      throw ApiException('Unable to reach the server. Please check your connection.');
+    } on HttpException {
+      throw ApiException('A network error occurred while contacting the server.');
+    } on FormatException {
+      throw ApiException('Received an invalid response from the server.');
+    }
+  }
+
   ContractTypeCollection _parseContractTypes(Map<String, dynamic>? decoded) {
     final data = _extractDataNode(decoded);
     final globalRaw = _extractList(data, const [

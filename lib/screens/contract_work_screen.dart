@@ -378,6 +378,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                           final fallbackUnit = l.contractWorkUnitFallback;
                           final normalizedUnit =
                               unit.isEmpty ? fallbackUnit : unit;
+                          final resolvedName =
+                              type == null || isNameEditable ? name : type!.name;
 
                           if (type == null || type.id.startsWith('local-')) {
                             setDialogState(() {
@@ -385,7 +387,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                             });
                             try {
                               final created = await _repository.createContractType(
-                                name: name,
+                                name: resolvedName,
                                 subtype: resolvedSubtype,
                                 ratePerUnit: rate,
                                 unitLabel: normalizedUnit,
@@ -417,14 +419,41 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                             return;
                           }
 
-                          final updated = type.copyWith(
-                            name: isNameEditable ? name : type.name,
-                            rate: rate,
-                            unitLabel: normalizedUnit,
-                            subtype: resolvedSubtype,
-                            lastUpdated: DateTime.now(),
-                          );
-                          Navigator.of(dialogContext).pop(updated);
+                          setDialogState(() {
+                            isSaving = true;
+                          });
+                          try {
+                            final updated = await _repository.updateContractType(
+                              id: type.id,
+                              name: resolvedName,
+                              subtype: resolvedSubtype,
+                              ratePerUnit: rate,
+                              unitLabel: normalizedUnit,
+                            );
+                            if (!mounted) {
+                              return;
+                            }
+                            Navigator.of(dialogContext).pop(
+                              _ContractType.fromModel(
+                                type: updated,
+                                isUserDefined: type.isUserDefined,
+                              ),
+                            );
+                          } on ContractTypeRepositoryException catch (error) {
+                            setDialogState(() {
+                              isSaving = false;
+                            });
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                              SnackBar(content: Text(error.message)),
+                            );
+                          } catch (error) {
+                            setDialogState(() {
+                              isSaving = false;
+                            });
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                              SnackBar(content: Text(error.toString())),
+                            );
+                          }
                         },
                   child: isSaving
                       ? const SizedBox(
