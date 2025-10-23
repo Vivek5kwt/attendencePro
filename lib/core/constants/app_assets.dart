@@ -13,4 +13,5 @@ class AppAssets {
   static const bgBanner = 'assets/images/bg_banner.png';
   static const clock = 'assets/images/ic_clock.png';
   static const contract = 'assets/images/ic_contract.png';
+  static const reports = 'assets/images/ic_reports.png';
 }

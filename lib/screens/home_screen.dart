@@ -1133,7 +1133,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => (){},
             ),
             _DrawerMenuItem(
-              icon: Icons.summarize_outlined,
+              assetPath: AppAssets.reports,
               label: l.reportsSummaryLabel,
               backgroundColor: const Color(0xFFE6F0FF),
               iconColor: const Color(0xFF2563EB),
@@ -1844,10 +1844,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: item.backgroundColor,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                item.icon,
-                color: item.iconColor,
-                size: 24,
+              child: Center(
+                child: item.assetPath != null
+                    ? Image.asset(
+                        item.assetPath!,
+                        width: 24,
+                        height: 24,
+                      )
+                    : Icon(
+                        item.icon!,
+                        color: item.iconColor,
+                        size: 24,
+                      ),
               ),
             ),
             const SizedBox(width: 16),
@@ -2086,17 +2094,22 @@ class _DashedDivider extends StatelessWidget {
 
 class _DrawerMenuItem {
   const _DrawerMenuItem({
-    required this.icon,
+    this.icon,
+    this.assetPath,
     required this.label,
     required this.backgroundColor,
-    required this.iconColor,
+    this.iconColor,
     required this.onTap,
-  });
+  }) : assert(icon != null || assetPath != null,
+            'Either icon or assetPath must be provided.'),
+        assert(icon == null || assetPath == null,
+            'Provide only one of icon or assetPath.');
 
-  final IconData icon;
+  final IconData? icon;
+  final String? assetPath;
   final String label;
   final Color backgroundColor;
-  final Color iconColor;
+  final Color? iconColor;
   final VoidCallback onTap;
 }
 

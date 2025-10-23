@@ -1,13 +1,92 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 
-class ReportsSummaryScreen extends StatelessWidget {
+class ReportsSummaryScreen extends StatefulWidget {
   const ReportsSummaryScreen({super.key});
+
+  @override
+  State<ReportsSummaryScreen> createState() => _ReportsSummaryScreenState();
+}
+
+class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
+  static const List<String> _monthNames = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  List<String> _availableMonths = const <String>[];
+  String _selectedMonth = '';
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final defaultMonth = l.reportsSummaryMonth;
+    final baseDate = _parseMonth(defaultMonth) ?? DateTime.now();
+    _availableMonths = List.generate(
+      12,
+      (index) => _formatMonth(
+        DateTime(baseDate.year, baseDate.month - index, 1),
+      ),
+    );
+    _selectedMonth = _availableMonths.firstWhere(
+      (month) => month == defaultMonth,
+      orElse: () => _availableMonths.first,
+    );
+    _initialized = true;
+  }
+
+  DateTime? _parseMonth(String value) {
+    final parts = value.split(' ');
+    if (parts.length != 2) {
+      return null;
+    }
+    final monthIndex = _monthNames
+        .indexWhere((month) => month.toLowerCase() == parts[0].toLowerCase());
+    final year = int.tryParse(parts[1]);
+    if (monthIndex == -1 || year == null) {
+      return null;
+    }
+    return DateTime(year, monthIndex + 1, 1);
+  }
+
+  String _formatMonth(DateTime date) {
+    final monthName = _monthNames[date.month - 1];
+    return '$monthName ${date.year}';
+  }
+
+  void _onMonthSelected(String month) {
+    if (month == _selectedMonth) {
+      return;
+    }
+    setState(() {
+      _selectedMonth = month;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final selectedMonth =
+        _selectedMonth.isEmpty ? l.reportsSummaryMonth : _selectedMonth;
+    final months =
+        _availableMonths.isEmpty ? <String>[selectedMonth] : _availableMonths;
 
     const double combinedSalary = 2456;
     const double hoursWorked = 156.5;
@@ -61,9 +140,10 @@ class ReportsSummaryScreen extends StatelessWidget {
                 color: const Color(0xFFE6F0FF),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(
-                Icons.summarize_outlined,
-                color: Color(0xFF2563EB),
+              child: Image.asset(
+                AppAssets.reports,
+                width: 24,
+                height: 24,
               ),
             ),
             const SizedBox(width: 12),
@@ -94,7 +174,12 @@ class ReportsSummaryScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _MonthSelector(label: l.reportsSummaryMonth),
+            _MonthSelector(
+              label: l.reportsSummaryMonth,
+              selectedMonth: selectedMonth,
+              months: months,
+              onMonthSelected: _onMonthSelected,
+            ),
             const SizedBox(height: 16),
             _CombinedSalaryCard(
               title: l.reportsCombinedSalaryTitle,
@@ -131,7 +216,7 @@ class ReportsSummaryScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             _SectionTitle(
-              text: '${l.reportsSummaryMonth} ${l.reportsBreakdownSuffix}',
+              text: '$selectedMonth ${l.reportsBreakdownSuffix}',
             ),
             const SizedBox(height: 12),
             _MonthlyBreakdownCard(
@@ -172,61 +257,170 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _MonthSelector extends StatelessWidget {
-  const _MonthSelector({required this.label});
+  const _MonthSelector({
+    required this.label,
+    required this.selectedMonth,
+    required this.months,
+    required this.onMonthSelected,
+  });
 
   final String label;
+  final String selectedMonth;
+  final List<String> months;
+  final ValueChanged<String> onMonthSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1F2937).withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+        onTap: () => _showMonthPicker(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1F2937).withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.calendar_today,
-              size: 20,
-              color: Color(0xFF2563EB),
-            ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.calendar_today,
+                  size: 20,
+                  color: Color(0xFF2563EB),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  selectedMonth,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF111827),
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Color(0xFF111827),
+                      ),
+                ),
+              ),
+              const Icon(
+                Icons.keyboard_arrow_down,
+                color: Color(0xFF6B7280),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF111827),
-                  ) ??
-                  const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: Color(0xFF111827),
-                  ),
-            ),
-          ),
-          const Icon(
-            Icons.keyboard_arrow_down,
-            color: Color(0xFF6B7280),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Future<void> _showMonthPicker(BuildContext context) async {
+    if (months.isEmpty) {
+      return;
+    }
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final textTheme = Theme.of(context).textTheme;
+        final maxHeight = MediaQuery.of(context).size.height * 0.5;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE5E7EB),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF111827),
+                        ) ??
+                        const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          color: Color(0xFF111827),
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxHeight),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: months.length,
+                    itemBuilder: (context, index) {
+                      final month = months[index];
+                      final isSelected = month == selectedMonth;
+                      return ListTile(
+                        title: Text(
+                          month,
+                          style: textTheme.bodyLarge?.copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: const Color(0xFF111827),
+                              ) ??
+                              TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                fontSize: 16,
+                                color: const Color(0xFF111827),
+                              ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check,
+                                color: Color(0xFF2563EB),
+                              )
+                            : null,
+                        onTap: () => Navigator.of(context).pop(month),
+                      );
+                    },
+                    separatorBuilder: (context, index) => const Divider(
+                      height: 1,
+                      color: Color(0xFFE5E7EB),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (selected != null && selected != selectedMonth) {
+      onMonthSelected(selected);
+    }
   }
 }
 
