@@ -261,6 +261,9 @@ class AppLocalizations {
       'userAgreement': 'User Agreement',
       'and': ' and ',
       'privacyPolicy': 'Privacy Policy',
+      'policyLoadFailed': 'Unable to load the content. Please try again.',
+      'policyRetryButton': 'Try again',
+      'policyLastUpdatedLabel': 'Last updated',
       'signupButton': 'Sign Up',
       'alreadyAccountPrompt': 'Already Have an Account? ',
       'loginAction': 'Login',
@@ -514,6 +517,9 @@ class AppLocalizations {
       'userAgreement': 'उपयोगकर्ता समझौता',
       'and': ' और ',
       'privacyPolicy': 'गोपनीयता नीति',
+      'policyLoadFailed': 'सामग्री लोड नहीं हो पाई। कृपया पुनः प्रयास करें।',
+      'policyRetryButton': 'पुनः प्रयास करें',
+      'policyLastUpdatedLabel': 'अंतिम अद्यतन',
       'signupButton': 'साइन अप',
       'alreadyAccountPrompt': 'पहले से खाता है? ',
       'loginAction': 'लॉगिन',
@@ -768,6 +774,9 @@ class AppLocalizations {
       'userAgreement': 'ਉਪਭੋਗਤਾ ਸਮਝੌਤਾ',
       'and': ' ਅਤੇ ',
       'privacyPolicy': 'ਗੋਪਨੀਯਤਾ ਨੀਤੀ',
+      'policyLoadFailed': 'ਸਮੱਗਰੀ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'policyRetryButton': 'ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ',
+      'policyLastUpdatedLabel': 'ਆਖਰੀ ਵਾਰ ਅੱਪਡੇਟ',
       'signupButton': 'ਸਾਈਨ ਅੱਪ',
       'alreadyAccountPrompt': 'ਕੀ ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ',
       'loginAction': 'ਲਾਗਇਨ',
@@ -1027,6 +1036,9 @@ class AppLocalizations {
       'userAgreement': "l'Accordo utente",
       'and': ' e ',
       'privacyPolicy': "l'Informativa privacy",
+      'policyLoadFailed': 'Impossibile caricare il contenuto. Riprova.',
+      'policyRetryButton': 'Riprova',
+      'policyLastUpdatedLabel': 'Ultimo aggiornamento',
       'signupButton': 'Registrati',
       'alreadyAccountPrompt': 'Hai già un account? ',
       'loginAction': 'Accedi',
@@ -1350,6 +1362,9 @@ class AppLocalizations {
   String get userAgreement => _value('userAgreement');
   String get and => _value('and');
   String get privacyPolicy => _value('privacyPolicy');
+  String get policyLoadFailed => _value('policyLoadFailed');
+  String get policyRetryButton => _value('policyRetryButton');
+  String get policyLastUpdatedLabel => _value('policyLastUpdatedLabel');
   String get signupButton => _value('signupButton');
   String get alreadyAccountPrompt => _value('alreadyAccountPrompt');
   String get loginAction => _value('loginAction');
