@@ -75,6 +75,24 @@ class ContractTypeRepository {
       throw ContractTypeRepositoryException(e.message);
     }
   }
+
+  Future<void> deleteContractType({
+    required String id,
+  }) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const ContractTypeAuthException();
+    }
+
+    try {
+      await _api.deleteContractType(
+        token: token,
+        contractTypeId: id,
+      );
+    } on ApiException catch (e) {
+      throw ContractTypeRepositoryException(e.message);
+    }
+  }
 }
 
 class ContractTypeRepositoryException implements Exception {
