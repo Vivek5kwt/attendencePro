@@ -180,13 +180,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               },
             ),
             const SizedBox(height: 20),
-            if (_pendingEntries.isNotEmpty)
+     /*       if (_pendingEntries.isNotEmpty)
               _PendingEntriesCard(
                 entries: _pendingEntries,
                 onResolvePressed: () => _showComingSoonMessage(context),
               )
             else
-              _AllCaughtUpBanner(onPressed: () => _showComingSoonMessage(context)),
+              _AllCaughtUpBanner(onPressed: () => _showComingSoonMessage(context)),*/
             const SizedBox(height: 20),
             _SummaryCard(
               title: l.attendanceHistorySummaryTitle,
