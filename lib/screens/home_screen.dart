@@ -673,17 +673,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               children: [
                                 Container(
-                                  height: 50,
-                                  width: 50,
+                                  height: 35,
+                                  width: 35,
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Color(0xFFE5F1FF),
                                   ),
-                                  child: const Icon(
-                                    Icons.access_time,
-                                    color: Color(0xFF007BFF),
-                                    size: 28,
-                                  ),
+                                  child:  Image.asset(AppAssets.clock)
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
@@ -776,17 +772,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               children: [
                                 Container(
-                                  height: 50,
-                                  width: 50,
+                                  height: 35,
+                                  width: 35,
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: Color(0xFFFFE8D6),
                                   ),
-                                  child: const Icon(
-                                    Icons.work_outline,
-                                    color: Color(0xFFB15B00),
-                                    size: 28,
-                                  ),
+                                  child: Image.asset(AppAssets.contract)
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -854,7 +846,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     .add(const WorkAddStatusCleared());
                                 Navigator.of(dialogContext).pop();
                               },
+
                               style: OutlinedButton.styleFrom(
+                                backgroundColor:  Colors.black,
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
@@ -862,7 +856,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: Text(
                                 l.cancelButton,
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontWeight: FontWeight.w600,color: Colors.white),
                               ),
                             ),
                           ),
