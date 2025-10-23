@@ -186,6 +186,10 @@ class AppLocalizations {
       'attendanceEndTimeRequired': 'End time is required',
       'attendanceInvalidTimeFormat': 'Please enter time in HH:MM format',
       'attendanceBreakInvalid': 'Enter break time in minutes',
+      'attendanceUnitsRequired': 'Units are required',
+      'attendanceUnitsInvalid': 'Enter a valid number of units',
+      'attendanceRateRequired': 'Rate per unit is required',
+      'attendanceRateInvalid': 'Enter a valid rate per unit',
       'attendanceSubmitSuccess': 'Attendance saved successfully',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
       'submitButton': 'Submit',
@@ -464,6 +468,10 @@ class AppLocalizations {
       'attendanceEndTimeRequired': 'समाप्ति समय आवश्यक है',
       'attendanceInvalidTimeFormat': 'कृपया समय HH:MM प्रारूप में दर्ज करें',
       'attendanceBreakInvalid': 'ब्रेक समय मिनटों में दर्ज करें',
+      'attendanceUnitsRequired': 'इकाइयाँ दर्ज करना आवश्यक है',
+      'attendanceUnitsInvalid': 'कृपया मान्य इकाइयों की संख्या दर्ज करें',
+      'attendanceRateRequired': 'प्रति इकाई दर आवश्यक है',
+      'attendanceRateInvalid': 'कृपया मान्य प्रति इकाई दर दर्ज करें',
       'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
       'submitButton': 'जमा करें',
@@ -739,6 +747,10 @@ class AppLocalizations {
       'attendanceEndTimeRequired': 'ਖਤਮ ਕਰਨ ਦਾ ਸਮਾਂ ਲਾਜ਼ਮੀ ਹੈ',
       'attendanceInvalidTimeFormat': 'ਕਿਰਪਾ ਕਰਕੇ ਸਮਾਂ HH:MM ਫਾਰਮੈਟ ਵਿੱਚ ਦਰਜ ਕਰੋ',
       'attendanceBreakInvalid': 'ਬ੍ਰੇਕ ਦਾ ਸਮਾਂ ਮਿੰਟਾਂ ਵਿੱਚ ਲਿਖੋ',
+      'attendanceUnitsRequired': 'ਯੂਨਿਟ ਦਰਜ ਕਰਨਾ ਲਾਜ਼ਮੀ ਹੈ',
+      'attendanceUnitsInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਯੂਨਿਟਾਂ ਦੀ ਵੈਧ ਗਿਣਤੀ ਦਰਜ ਕਰੋ',
+      'attendanceRateRequired': 'ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਲਾਜ਼ਮੀ ਹੈ',
+      'attendanceRateInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਦਰਜ ਕਰੋ',
       'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'submitButton': 'ਜਮ੍ਹਾਂ ਕਰੋ',
@@ -1020,6 +1032,10 @@ class AppLocalizations {
       'attendanceEndTimeRequired': "L'orario di fine è obbligatorio",
       'attendanceInvalidTimeFormat': 'Inserisci l\'orario nel formato HH:MM',
       'attendanceBreakInvalid': 'Inserisci la pausa in minuti',
+      'attendanceUnitsRequired': 'Inserisci il numero di unità',
+      'attendanceUnitsInvalid': 'Inserisci un numero di unità valido',
+      'attendanceRateRequired': 'Inserisci la tariffa per unità',
+      'attendanceRateInvalid': 'Inserisci una tariffa per unità valida',
       'attendanceSubmitSuccess': 'Presenza salvata con successo',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
       'submitButton': 'Invia',
@@ -1375,6 +1391,10 @@ class AppLocalizations {
   String get attendanceInvalidTimeFormat =>
       _value('attendanceInvalidTimeFormat');
   String get attendanceBreakInvalid => _value('attendanceBreakInvalid');
+  String get attendanceUnitsRequired => _value('attendanceUnitsRequired');
+  String get attendanceUnitsInvalid => _value('attendanceUnitsInvalid');
+  String get attendanceRateRequired => _value('attendanceRateRequired');
+  String get attendanceRateInvalid => _value('attendanceRateInvalid');
   String get attendanceSubmitSuccess => _value('attendanceSubmitSuccess');
   String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
   String get submitButton => _value('submitButton');
