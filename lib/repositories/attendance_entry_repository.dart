@@ -1,5 +1,6 @@
 import '../apis/attendance_api.dart';
 import '../apis/auth_api.dart' show ApiException;
+import '../models/attendance_request.dart';
 import '../utils/session_manager.dart';
 
 class AttendanceEntryRepository {
@@ -29,18 +30,21 @@ class AttendanceEntryRepository {
     }
 
     final payloadWorkId = int.tryParse(workId) ?? workId;
+    final request = AttendanceRequest(
+      workId: payloadWorkId,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      breakMinutes: breakMinutes,
+      isContractEntry: isContractEntry,
+      contractTypeId: contractTypeId,
+      units: units,
+      ratePerUnit: ratePerUnit,
+    );
 
     try {
       return await _api.submitAttendance(
-        workId: payloadWorkId,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        breakMinutes: breakMinutes,
-        isContractEntry: isContractEntry,
-        contractTypeId: contractTypeId,
-        units: units,
-        ratePerUnit: ratePerUnit,
+        request: request,
         token: token,
       );
     } on ApiException catch (e) {
