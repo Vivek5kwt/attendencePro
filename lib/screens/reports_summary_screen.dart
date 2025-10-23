@@ -1,7 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../bloc/work_bloc.dart';
+import '../bloc/work_state.dart';
+import '../models/report_summary.dart';
+import '../models/work.dart';
+import '../repositories/reports_repository.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
   const ReportsSummaryScreen({super.key});
@@ -25,10 +33,23 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     'November',
     'December',
   ];
+  static const List<Color> _contractColorPalette = <Color>[
+    Color(0xFF2EBD5F),
+    Color(0xFF1C87FF),
+    Color(0xFFFFB74D),
+    Color(0xFFFF3B30),
+    Color(0xFF6366F1),
+    Color(0xFF059669),
+  ];
 
   List<String> _availableMonths = const <String>[];
   String _selectedMonth = '';
   bool _initialized = false;
+  ReportSummary? _summary;
+  bool _isLoadingSummary = false;
+  String? _summaryError;
+  int _summaryRequestId = 0;
+  bool _missingWork = false;
 
   @override
   void didChangeDependencies() {
@@ -50,6 +71,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       orElse: () => _availableMonths.first,
     );
     _initialized = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _loadSummary();
+      }
+    });
   }
 
   DateTime? _parseMonth(String value) {
@@ -78,6 +104,174 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     setState(() {
       _selectedMonth = month;
     });
+    _loadSummary();
+  }
+
+  Future<void> _loadSummary() async {
+    final targetDate = _parseMonth(_selectedMonth) ?? DateTime.now();
+    final workState = context.read<WorkBloc>().state;
+    final activeWork = _findActiveWorkFromState(workState);
+    final l = AppLocalizations.of(context);
+
+    if (activeWork == null) {
+      setState(() {
+        _summary = null;
+        _summaryError = null;
+        _missingWork = true;
+        _isLoadingSummary = false;
+      });
+      return;
+    }
+
+    final requestId = ++_summaryRequestId;
+    setState(() {
+      _isLoadingSummary = true;
+      _summaryError = null;
+      _missingWork = false;
+    });
+
+    try {
+      final repository = context.read<ReportsRepository>();
+      final summary = await repository.fetchSummary(
+        workId: activeWork.id,
+        month: targetDate.month,
+        year: targetDate.year,
+      );
+      if (!mounted || requestId != _summaryRequestId) {
+        return;
+      }
+      setState(() {
+        _summary = summary;
+        _summaryError = null;
+        _missingWork = false;
+        _isLoadingSummary = false;
+      });
+    } on ReportsRepositoryException catch (e) {
+      if (!mounted || requestId != _summaryRequestId) {
+        return;
+      }
+      final message = (e.message).trim().isEmpty
+          ? l.reportsLoadFailedMessage
+          : e.message;
+      setState(() {
+        _summary = null;
+        _summaryError = message;
+        _missingWork = false;
+        _isLoadingSummary = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _summaryRequestId) {
+        return;
+      }
+      setState(() {
+        _summary = null;
+        _summaryError = l.reportsLoadFailedMessage;
+        _missingWork = false;
+        _isLoadingSummary = false;
+      });
+    }
+  }
+
+  Work? _findActiveWorkFromState(WorkState state) {
+    if (state.works.isEmpty) {
+      return null;
+    }
+    for (final work in state.works) {
+      if (_isWorkActive(work)) {
+        return work;
+      }
+    }
+    return state.works.first;
+  }
+
+  bool _isWorkActive(Work work) {
+    if (work.isActive) {
+      return true;
+    }
+
+    final data = work.additionalData;
+    const possibleKeys = {
+      'is_active',
+      'isActive',
+      'active',
+      'is_current',
+      'isCurrent',
+      'currently_active',
+    };
+
+    bool? resolve(dynamic value) {
+      if (value is bool) {
+        return value;
+      }
+      if (value is num) {
+        return value != 0;
+      }
+      if (value is String) {
+        final normalized = value.toLowerCase().trim();
+        if (normalized.isEmpty) {
+          return null;
+        }
+        if (['true', '1', 'yes', 'active', 'current'].contains(normalized)) {
+          return true;
+        }
+        if (['false', '0', 'no', 'inactive'].contains(normalized)) {
+          return false;
+        }
+      }
+      return null;
+    }
+
+    for (final key in possibleKeys) {
+      final value = data[key];
+      final resolved = resolve(value);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    return false;
+  }
+
+  List<_ContractWorkItem> _mapContractItems(
+    ReportSummary summary,
+    AppLocalizations l,
+  ) {
+    final items = summary.contractSummary.items;
+    if (items.isEmpty) {
+      return const <_ContractWorkItem>[];
+    }
+
+    final result = <_ContractWorkItem>[];
+    for (var index = 0; index < items.length; index++) {
+      final data = items[index];
+      final colorValue = data.indicatorColorValue;
+      final color = colorValue != null
+          ? Color(colorValue)
+          : _contractColorPalette[index % _contractColorPalette.length];
+      final subtitle = _buildContractSubtitle(data, l);
+      result.add(
+        _ContractWorkItem(
+          title: data.title,
+          subtitle: subtitle,
+          amount: data.resolveAmountLabel(summary.currencySymbol),
+          indicatorColor: color,
+        ),
+      );
+    }
+    return result;
+  }
+
+  String _buildContractSubtitle(
+    ContractWorkItemData data,
+    AppLocalizations l,
+  ) {
+    if (data.subtitle.isNotEmpty) {
+      return data.subtitle;
+    }
+    if (data.unitsCompleted != null) {
+      return '${data.unitsCompleted} ${l.reportsUnitsCompletedSuffix}';
+    }
+    return l.notAvailableLabel;
   }
 
   @override
@@ -125,110 +319,382 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE6F0FF),
-                borderRadius: BorderRadius.circular(16),
+    Widget summaryBody;
+    if (isLoading) {
+      summaryBody = _SummaryLoadingView(
+        key: const ValueKey('loading'),
+        message: l.reportsLoadingMessage,
+      );
+    } else if (_missingWork) {
+      summaryBody = _SummaryEmptyView(
+        key: const ValueKey('missing'),
+        message: l.noWorkAddedYet,
+      );
+    } else if (error != null && error.isNotEmpty) {
+      summaryBody = _SummaryErrorView(
+        key: const ValueKey('error'),
+        message: error,
+        onRetry: _loadSummary,
+      );
+    } else if (summary != null) {
+      final contractItems = _mapContractItems(summary, l);
+      summaryBody = _SummaryLoadedContent(
+        key: const ValueKey('content'),
+        summary: summary,
+        localization: l,
+        selectedMonth: selectedMonth,
+        contractItems: contractItems,
+      );
+    } else {
+      summaryBody = _SummaryEmptyView(
+        key: const ValueKey('empty'),
+        message: l.notAvailableLabel,
+      );
+    }
+
+    return BlocListener<WorkBloc, WorkState>(
+      listenWhen: (previous, current) {
+        final previousId = _findActiveWorkFromState(previous)?.id;
+        final currentId = _findActiveWorkFromState(current)?.id;
+        return previousId != currentId;
+      },
+      listener: (context, state) {
+        final active = _findActiveWorkFromState(state);
+        if (active == null) {
+          setState(() {
+            _summary = null;
+            _summaryError = null;
+            _missingWork = true;
+            _isLoadingSummary = false;
+          });
+          return;
+        }
+        _loadSummary();
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF4F7FB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          titleSpacing: 16,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE6F0FF),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Image.asset(
+                  AppAssets.reports,
+                  width: 24,
+                  height: 24,
+                ),
               ),
-              child: Image.asset(
-                AppAssets.reports,
-                width: 24,
-                height: 24,
+              const SizedBox(width: 12),
+              Text(
+                l.reportsSummaryLabel,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                      color: const Color(0xFF111827),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                      color: Color(0xFF111827),
+                    ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              l.reportsSummaryLabel,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: const Color(0xFF111827),
-                  ) ??
-                  const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: Color(0xFF111827),
-                  ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+              onPressed: () => Navigator.of(context).maybePop(),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
-            onPressed: () => Navigator.of(context).maybePop(),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _MonthSelector(
+                label: l.reportsSummaryMonth,
+                selectedMonth: selectedMonth,
+                months: months,
+                onMonthSelected: _onMonthSelected,
+              ),
+              if (activeWork != null) ...[
+                const SizedBox(height: 12),
+                _ActiveWorkBadge(workName: activeWork.name),
+              ],
+              const SizedBox(height: 16),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: summaryBody,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryLoadedContent extends StatelessWidget {
+  const _SummaryLoadedContent({
+    super.key,
+    required this.summary,
+    required this.localization,
+    required this.selectedMonth,
+    required this.contractItems,
+  });
+
+  final ReportSummary summary;
+  final AppLocalizations localization;
+  final String selectedMonth;
+  final List<_ContractWorkItem> contractItems;
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = summary.currencySymbol;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _CombinedSalaryCard(
+          title: localization.reportsCombinedSalaryTitle,
+          amount: summary.combinedSalary.amount,
+          hoursWorked: summary.combinedSalary.hoursWorked,
+          unitsCompleted: summary.combinedSalary.unitsCompleted,
+          hoursLabel: localization.reportsHoursWorkedSuffix,
+          unitsLabel: localization.reportsUnitsCompletedSuffix,
+          currencySymbol: currency,
+        ),
+        const SizedBox(height: 24),
+        _SectionTitle(text: localization.reportsHourlyWorkSummaryTitle),
+        const SizedBox(height: 12),
+        _HourlyWorkSummaryCard(
+          totalHoursLabel: localization.totalHoursLabel,
+          totalHours: summary.hourlySummary.totalHours,
+          hourlySalaryLabel: localization.hourlySalaryLabel,
+          hourlySalary: summary.hourlySummary.hourlySalary,
+          workingDaysLabel: localization.reportsWorkingDaysLabel,
+          workingDays: summary.hourlySummary.workingDays,
+          averageHoursLabel: localization.reportsAverageHoursPerDayLabel,
+          averageHours: summary.hourlySummary.averageHoursPerDay,
+          lastPayoutLabel: localization.reportsLastPayoutLabel,
+          lastPayout: summary.hourlySummary.lastPayout,
+          currencySymbol: currency,
+        ),
+        const SizedBox(height: 24),
+        _SectionTitle(text: localization.contractWorkSummaryTitle),
+        const SizedBox(height: 12),
+        _ContractWorkSummaryCard(
+          totalUnitsLabel: localization.reportsTotalUnitsLabel,
+          totalUnits: summary.contractSummary.totalUnits,
+          salaryLabel: localization.reportsContractSalaryLabel,
+          salaryAmount: summary.contractSummary.salaryAmount,
+          currencySymbol: currency,
+          items: contractItems,
+          emptyMessage: localization.notAvailableLabel,
+        ),
+        const SizedBox(height: 24),
+        _SectionTitle(
+          text: '$selectedMonth ${localization.reportsBreakdownSuffix}',
+        ),
+        const SizedBox(height: 12),
+        _MonthlyBreakdownCard(
+          hourlyWorkLabel: localization.hourlyWorkLabel,
+          hourlyTotal: summary.breakdown.hourlyTotal,
+          contractWorkLabel: localization.contractWorkLabel,
+          contractTotal: summary.breakdown.contractTotal,
+          grandTotalLabel: localization.reportsGrandTotalLabel,
+          grandTotal: summary.breakdown.grandTotal,
+          currencySymbol: currency,
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryLoadingView extends StatelessWidget {
+  const _SummaryLoadingView({super.key, required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF6B7280),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF6B7280),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 48,
+              height: 48,
+              child: CircularProgressIndicator(),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: textStyle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryErrorView extends StatelessWidget {
+  const _SummaryErrorView({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+          fontSize: 18,
+        );
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF6B7280),
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+        );
+    final l = AppLocalizations.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x11111827),
+            blurRadius: 20,
+            offset: Offset(0, 12),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _MonthSelector(
-              label: l.reportsSummaryMonth,
-              selectedMonth: selectedMonth,
-              months: months,
-              onMonthSelected: _onMonthSelected,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline, color: Color(0xFFDC2626), size: 28),
+          const SizedBox(height: 12),
+          Text(message, style: bodyStyle),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: onRetry,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-            const SizedBox(height: 16),
-            _CombinedSalaryCard(
-              title: l.reportsCombinedSalaryTitle,
-              amount: combinedSalary,
-              hoursWorked: hoursWorked,
-              unitsCompleted: unitsCompleted,
-              hoursLabel: l.reportsHoursWorkedSuffix,
-              unitsLabel: l.reportsUnitsCompletedSuffix,
-            ),
-            const SizedBox(height: 24),
-            _SectionTitle(text: l.reportsHourlyWorkSummaryTitle),
-            const SizedBox(height: 12),
-            _HourlyWorkSummaryCard(
-              totalHoursLabel: l.totalHoursLabel,
-              totalHours: hoursWorked,
-              hourlySalaryLabel: l.hourlySalaryLabel,
-              hourlySalary: hourlySalary,
-              workingDaysLabel: l.reportsWorkingDaysLabel,
-              workingDays: workingDays,
-              averageHoursLabel: l.reportsAverageHoursPerDayLabel,
-              averageHours: averageHours,
-              lastPayoutLabel: l.reportsLastPayoutLabel,
-              lastPayout: lastPayout,
-            ),
-            const SizedBox(height: 24),
-            _SectionTitle(text: l.contractWorkSummaryTitle),
-            const SizedBox(height: 12),
-            _ContractWorkSummaryCard(
-              totalUnitsLabel: l.reportsTotalUnitsLabel,
-              totalUnits: unitsCompleted,
-              salaryLabel: l.reportsContractSalaryLabel,
-              salaryAmount: contractSalary,
-              items: contractItems,
-            ),
-            const SizedBox(height: 24),
-            _SectionTitle(
-              text: '$selectedMonth ${l.reportsBreakdownSuffix}',
-            ),
-            const SizedBox(height: 12),
-            _MonthlyBreakdownCard(
-              hourlyWorkLabel: l.hourlyWorkLabel,
-              hourlyTotal: hourlyBreakdownTotal,
-              contractWorkLabel: l.contractWorkLabel,
-              contractTotal: contractSalary,
-              grandTotalLabel: l.reportsGrandTotalLabel,
-              grandTotal: combinedSalary,
-            ),
-          ],
-        ),
+            icon: const Icon(Icons.refresh),
+            label: Text(l.retryButtonLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryEmptyView extends StatelessWidget {
+  const _SummaryEmptyView({super.key, required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF6B7280),
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.insights_outlined, color: Color(0xFF9CA3AF), size: 32),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: bodyStyle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveWorkBadge extends StatelessWidget {
+  const _ActiveWorkBadge({required this.workName});
+
+  final String workName;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1F2937),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1F2937),
+        );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.work_outline, size: 18, color: Color(0xFF2563EB)),
+          const SizedBox(width: 8),
+          Text(workName, style: textStyle),
+        ],
       ),
     );
   }
@@ -335,30 +801,43 @@ class _MonthSelector extends StatelessWidget {
     }
     final selected = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      clipBehavior: Clip.antiAlias,
       builder: (context) {
         final textTheme = Theme.of(context).textTheme;
-        final maxHeight = MediaQuery.of(context).size.height * 0.5;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE5E7EB),
-                    borderRadius: BorderRadius.circular(2),
+        final mediaQuery = MediaQuery.of(context);
+        final screenHeight = mediaQuery.size.height;
+        const baseHeaderExtent = 136.0;
+        final estimatedHeight =
+            baseHeaderExtent + (months.length * 56.0);
+        final heightFactor =
+            (estimatedHeight / screenHeight).clamp(0.35, 0.85).toDouble();
+        final sheetHeight = screenHeight * heightFactor;
+        final showScrollbar = months.length > 6;
+
+        return SizedBox(
+          height: sheetHeight,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE5E7EB),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
+                  const SizedBox(height: 16),
+                  Text(
                     label,
                     style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -370,49 +849,52 @@ class _MonthSelector extends StatelessWidget {
                           color: Color(0xFF111827),
                         ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxHeight),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: months.length,
-                    itemBuilder: (context, index) {
-                      final month = months[index];
-                      final isSelected = month == selectedMonth;
-                      return ListTile(
-                        title: Text(
-                          month,
-                          style: textTheme.bodyLarge?.copyWith(
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                color: const Color(0xFF111827),
-                              ) ??
-                              TextStyle(
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                fontSize: 16,
-                                color: const Color(0xFF111827),
-                              ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: Scrollbar(
+                      thumbVisibility: showScrollbar,
+                      child: ListView.separated(
+                        padding: EdgeInsets.zero,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: months.length,
+                        itemBuilder: (context, index) {
+                          final month = months[index];
+                          final isSelected = month == selectedMonth;
+                          return ListTile(
+                            title: Text(
+                              month,
+                              style: textTheme.bodyLarge?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    color: const Color(0xFF111827),
+                                  ) ??
+                                  TextStyle(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    fontSize: 16,
+                                    color: const Color(0xFF111827),
+                                  ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(
+                                    Icons.check,
+                                    color: Color(0xFF2563EB),
+                                  )
+                                : null,
+                            onTap: () => Navigator.of(context).pop(month),
+                          );
+                        },
+                        separatorBuilder: (context, index) => const Divider(
+                          height: 1,
+                          color: Color(0xFFE5E7EB),
                         ),
-                        trailing: isSelected
-                            ? const Icon(
-                                Icons.check,
-                                color: Color(0xFF2563EB),
-                              )
-                            : null,
-                        onTap: () => Navigator.of(context).pop(month),
-                      );
-                    },
-                    separatorBuilder: (context, index) => const Divider(
-                      height: 1,
-                      color: Color(0xFFE5E7EB),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -432,6 +914,7 @@ class _CombinedSalaryCard extends StatelessWidget {
     required this.unitsCompleted,
     required this.hoursLabel,
     required this.unitsLabel,
+    required this.currencySymbol,
   });
 
   final String title;
@@ -440,6 +923,7 @@ class _CombinedSalaryCard extends StatelessWidget {
   final int unitsCompleted;
   final String hoursLabel;
   final String unitsLabel;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -517,7 +1001,7 @@ class _CombinedSalaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            '\$${amount.toStringAsFixed(0)}',
+            _formatCurrencyValue(amount, currencySymbol),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
@@ -536,8 +1020,7 @@ class _CombinedSalaryCard extends StatelessWidget {
             children: [
               _MetricChip(
                 icon: Icons.access_time,
-                label:
-                    '${hoursWorked.toStringAsFixed(1)} $hoursLabel',
+                label: '${_formatHoursValue(hoursWorked)} $hoursLabel',
               ),
               _MetricChip(
                 icon: Icons.task_alt,
@@ -595,6 +1078,7 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
     required this.averageHours,
     required this.lastPayoutLabel,
     required this.lastPayout,
+    required this.currencySymbol,
   });
 
   final String totalHoursLabel;
@@ -607,6 +1091,7 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
   final double averageHours;
   final String lastPayoutLabel;
   final double lastPayout;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -627,20 +1112,20 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: [
-              Expanded(
-                child: _SummaryValueTile(
-                  label: totalHoursLabel,
-                  value: '${totalHours.toStringAsFixed(1)} h',
-                  icon: Icons.schedule,
-                  iconColor: const Color(0xFF2563EB),
-                ),
+          children: [
+            Expanded(
+              child: _SummaryValueTile(
+                label: totalHoursLabel,
+                value: '${_formatHoursValue(totalHours)} h',
+                icon: Icons.schedule,
+                iconColor: const Color(0xFF2563EB),
               ),
+            ),
               const SizedBox(width: 16),
               Expanded(
                 child: _SummaryValueTile(
                   label: hourlySalaryLabel,
-                  value: '\$${hourlySalary.toStringAsFixed(0)}',
+                  value: _formatCurrencyValue(hourlySalary, currencySymbol),
                   icon: Icons.payments,
                   iconColor: const Color(0xFF059669),
                   emphasizeValue: true,
@@ -663,7 +1148,7 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
               Expanded(
                 child: _SummaryDetailTile(
                   label: averageHoursLabel,
-                  value: '${averageHours.toStringAsFixed(1)} h',
+                  value: '${_formatHoursValue(averageHours)} h',
                   icon: Icons.timer,
                   color: const Color(0xFFF59E0B),
                 ),
@@ -673,7 +1158,7 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           _SummaryDetailTile(
             label: lastPayoutLabel,
-            value: '\$${lastPayout.toStringAsFixed(0)}',
+            value: _formatCurrencyValue(lastPayout, currencySymbol),
             icon: Icons.account_balance_wallet_outlined,
             color: const Color(0xFF2563EB),
           ),
@@ -831,14 +1316,18 @@ class _ContractWorkSummaryCard extends StatelessWidget {
     required this.totalUnits,
     required this.salaryLabel,
     required this.salaryAmount,
+    required this.currencySymbol,
     required this.items,
+    required this.emptyMessage,
   });
 
   final String totalUnitsLabel;
   final int totalUnits;
   final String salaryLabel;
   final double salaryAmount;
+  final String currencySymbol;
   final List<_ContractWorkItem> items;
+  final String emptyMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -872,7 +1361,7 @@ class _ContractWorkSummaryCard extends StatelessWidget {
               Expanded(
                 child: _SummaryValueTile(
                   label: salaryLabel,
-                  value: '\$${salaryAmount.toStringAsFixed(0)}',
+                  value: _formatCurrencyValue(salaryAmount, currencySymbol),
                   icon: Icons.savings_outlined,
                   iconColor: const Color(0xFF059669),
                   emphasizeValue: true,
@@ -881,11 +1370,33 @@ class _ContractWorkSummaryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          for (var i = 0; i < items.length; i++)
-            Padding(
-              padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 12),
-              child: _ContractWorkTile(item: items[i]),
-            ),
+          if (items.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Text(
+                emptyMessage,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF6B7280),
+                    ) ??
+                    const TextStyle(
+                      color: Color(0xFF6B7280),
+                    ),
+              ),
+            )
+          else
+            for (var i = 0; i < items.length; i++)
+              Padding(
+                padding:
+                    EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 12),
+                child: _ContractWorkTile(item: items[i]),
+              ),
         ],
       ),
     );
@@ -1006,6 +1517,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
     required this.contractTotal,
     required this.grandTotalLabel,
     required this.grandTotal,
+    required this.currencySymbol,
   });
 
   final String hourlyWorkLabel;
@@ -1014,6 +1526,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
   final double contractTotal;
   final String grandTotalLabel;
   final double grandTotal;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -1053,7 +1566,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
         children: [
           _BreakdownRow(
             label: hourlyWorkLabel,
-            value: '\$${hourlyTotal.toStringAsFixed(0)}',
+            value: _formatCurrencyValue(hourlyTotal, currencySymbol),
             labelStyle: labelStyle,
             valueStyle: valueStyle,
             indicatorColor: const Color(0xFF2563EB),
@@ -1061,7 +1574,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
           const SizedBox(height: 12),
           _BreakdownRow(
             label: contractWorkLabel,
-            value: '\$${contractTotal.toStringAsFixed(0)}',
+            value: _formatCurrencyValue(contractTotal, currencySymbol),
             labelStyle: labelStyle,
             valueStyle: valueStyle,
             indicatorColor: const Color(0xFF059669),
@@ -1069,7 +1582,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
           const Divider(height: 32, color: Color(0xFFE5E7EB)),
           _BreakdownRow(
             label: grandTotalLabel,
-            value: '\$${grandTotal.toStringAsFixed(0)}',
+            value: _formatCurrencyValue(grandTotal, currencySymbol),
             labelStyle: labelStyle.copyWith(
               color: const Color(0xFF111827),
             ),
@@ -1119,4 +1632,17 @@ class _BreakdownRow extends StatelessWidget {
       ],
     );
   }
+}
+
+String _formatCurrencyValue(num value, String symbol) {
+  final doubleValue = value.toDouble();
+  final isWhole = doubleValue.floorToDouble() == doubleValue;
+  final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
+  final prefix = doubleValue < 0 ? '-' : '';
+  return '$prefix$symbol$formatted';
+}
+
+String _formatHoursValue(double value) {
+  final isWhole = value.floorToDouble() == value;
+  return value.toStringAsFixed(isWhole ? 0 : 1);
 }
