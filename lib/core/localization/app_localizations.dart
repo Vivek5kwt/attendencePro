@@ -67,6 +67,11 @@ class AppLocalizations {
       'contractWorkNameLabel': 'Contract name',
       'contractWorkRateLabel': 'Rate per unit',
       'contractWorkUnitLabel': 'Unit label',
+      'contractWorkSubtypeLabel': 'Subtype',
+      'contractWorkSubtypeHint': 'Select subtype',
+      'contractWorkSubtypeCustomOption': 'Custom subtype',
+      'contractWorkSubtypeCustomLabel': 'Custom subtype',
+      'contractWorkSubtypeRequiredMessage': 'Please select a subtype.',
       'contractWorkUnitsLabel': 'Units',
       'contractWorkRateRequiredMessage': 'Please enter a valid rate.',
       'contractWorkNameRequiredMessage': 'Please enter a contract name.',
@@ -337,6 +342,11 @@ class AppLocalizations {
       'contractWorkNameLabel': 'कॉन्ट्रैक्ट का नाम',
       'contractWorkRateLabel': 'प्रति इकाई दर',
       'contractWorkUnitLabel': 'इकाई लेबल',
+      'contractWorkSubtypeLabel': 'उप प्रकार',
+      'contractWorkSubtypeHint': 'उप प्रकार चुनें',
+      'contractWorkSubtypeCustomOption': 'कस्टम उप प्रकार',
+      'contractWorkSubtypeCustomLabel': 'कस्टम उप प्रकार',
+      'contractWorkSubtypeRequiredMessage': 'कृपया उप प्रकार चुनें।',
       'contractWorkUnitsLabel': 'इकाइयाँ',
       'contractWorkRateRequiredMessage': 'कृपया मान्य दर दर्ज करें।',
       'contractWorkNameRequiredMessage': 'कृपया कॉन्ट्रैक्ट का नाम दर्ज करें।',
@@ -607,6 +617,11 @@ class AppLocalizations {
       'contractWorkNameLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਨਾਮ',
       'contractWorkRateLabel': 'ਪਰ ਯੂਨਿਟ ਦਰ',
       'contractWorkUnitLabel': 'ਯੂਨਿਟ ਲੇਬਲ',
+      'contractWorkSubtypeLabel': 'ਉਪ-ਕਿਸਮ',
+      'contractWorkSubtypeHint': 'ਉਪ-ਕਿਸਮ ਚੁਣੋ',
+      'contractWorkSubtypeCustomOption': 'ਕਸਟਮ ਉਪ-ਕਿਸਮ',
+      'contractWorkSubtypeCustomLabel': 'ਕਸਟਮ ਉਪ-ਕਿਸਮ',
+      'contractWorkSubtypeRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਉਪ-ਕਿਸਮ ਚੁਣੋ।',
       'contractWorkUnitsLabel': 'ਯੂਨਿਟ',
       'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਦਰ ਦਰਜ ਕਰੋ।',
       'contractWorkNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕਾਂਟ੍ਰੈਕਟ ਨਾਮ ਦਰਜ ਕਰੋ।',
@@ -880,6 +895,11 @@ class AppLocalizations {
       'contractWorkNameLabel': 'Nome contratto',
       'contractWorkRateLabel': 'Tariffa per unità',
       'contractWorkUnitLabel': 'Etichetta unità',
+      'contractWorkSubtypeLabel': 'Sottotipo',
+      'contractWorkSubtypeHint': 'Seleziona sottotipo',
+      'contractWorkSubtypeCustomOption': 'Sottotipo personalizzato',
+      'contractWorkSubtypeCustomLabel': 'Sottotipo personalizzato',
+      'contractWorkSubtypeRequiredMessage': 'Seleziona un sottotipo.',
       'contractWorkUnitsLabel': 'Unità',
       'contractWorkRateRequiredMessage': 'Inserisci una tariffa valida.',
       'contractWorkNameRequiredMessage': 'Inserisci il nome del contratto.',
@@ -1192,6 +1212,14 @@ class AppLocalizations {
   String get contractWorkNameLabel => _value('contractWorkNameLabel');
   String get contractWorkRateLabel => _value('contractWorkRateLabel');
   String get contractWorkUnitLabel => _value('contractWorkUnitLabel');
+  String get contractWorkSubtypeLabel => _value('contractWorkSubtypeLabel');
+  String get contractWorkSubtypeHint => _value('contractWorkSubtypeHint');
+  String get contractWorkSubtypeCustomOption =>
+      _value('contractWorkSubtypeCustomOption');
+  String get contractWorkSubtypeCustomLabel =>
+      _value('contractWorkSubtypeCustomLabel');
+  String get contractWorkSubtypeRequiredMessage =>
+      _value('contractWorkSubtypeRequiredMessage');
   String get contractWorkUnitsLabel => _value('contractWorkUnitsLabel');
   String get contractWorkRateRequiredMessage =>
       _value('contractWorkRateRequiredMessage');

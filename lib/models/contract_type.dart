@@ -6,6 +6,7 @@ class ContractType {
     required this.unitLabel,
     required this.isDefault,
     required this.isGlobal,
+    this.subtype,
     this.updatedAt,
     Map<String, dynamic>? rawJson,
   }) : additionalData = Map<String, dynamic>.from(rawJson ?? const {});
@@ -16,6 +17,7 @@ class ContractType {
   final String unitLabel;
   final bool isDefault;
   final bool isGlobal;
+  final String? subtype;
   final DateTime? updatedAt;
   final Map<String, dynamic> additionalData;
 
@@ -26,6 +28,7 @@ class ContractType {
     final unitLabel = _parseUnitLabel(json) ?? 'per unit';
     final isDefault = _parseFlag(json, const ['is_default', 'isDefault', 'default']);
     final isGlobal = _parseFlag(json, const ['is_global', 'isGlobal', 'global']);
+    final subtype = _parseSubtype(json);
     final updatedAt = _parseUpdatedAt(json);
 
     return ContractType(
@@ -35,6 +38,7 @@ class ContractType {
       unitLabel: unitLabel,
       isDefault: isDefault,
       isGlobal: isGlobal,
+      subtype: subtype,
       updatedAt: updatedAt,
       rawJson: json,
     );
@@ -47,6 +51,7 @@ class ContractType {
     String? unitLabel,
     bool? isDefault,
     bool? isGlobal,
+    String? subtype,
     DateTime? updatedAt,
   }) {
     return ContractType(
@@ -56,6 +61,7 @@ class ContractType {
       unitLabel: unitLabel ?? this.unitLabel,
       isDefault: isDefault ?? this.isDefault,
       isGlobal: isGlobal ?? this.isGlobal,
+      subtype: subtype ?? this.subtype,
       updatedAt: updatedAt ?? this.updatedAt,
       rawJson: additionalData,
     );
@@ -123,6 +129,24 @@ class ContractType {
         return value.trim();
       }
     }
+    return null;
+  }
+
+  static String? _parseSubtype(Map<String, dynamic> json) {
+    const possibleKeys = [
+      'subtype',
+      'contract_subtype',
+      'contractSubtype',
+      'type',
+    ];
+
+    for (final key in possibleKeys) {
+      final value = json[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+
     return null;
   }
 

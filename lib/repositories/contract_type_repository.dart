@@ -25,6 +25,30 @@ class ContractTypeRepository {
       throw ContractTypeRepositoryException(e.message);
     }
   }
+
+  Future<ContractType> createContractType({
+    required String name,
+    required String subtype,
+    required double ratePerUnit,
+    required String unitLabel,
+  }) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const ContractTypeAuthException();
+    }
+
+    try {
+      return await _api.createContractType(
+        token: token,
+        name: name,
+        subtype: subtype,
+        ratePerUnit: ratePerUnit,
+        unitLabel: unitLabel,
+      );
+    } on ApiException catch (e) {
+      throw ContractTypeRepositoryException(e.message);
+    }
+  }
 }
 
 class ContractTypeRepositoryException implements Exception {

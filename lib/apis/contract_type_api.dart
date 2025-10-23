@@ -41,6 +41,45 @@ class ContractTypeApi {
     }
   }
 
+  Future<ContractType> createContractType({
+    required String token,
+    required String name,
+    required String subtype,
+    required double ratePerUnit,
+    required String unitLabel,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/contract-types');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final payload = jsonEncode({
+      'name': name,
+      'subtype': subtype,
+      'rate_per_unit': ratePerUnit,
+      'unit_label': unitLabel,
+    });
+
+    try {
+      final response = await _client.post(uri, headers: headers, body: payload);
+      final decoded = _decodeBody(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return _parseSingleContractType(decoded);
+      }
+
+      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+    } on SocketException {
+      throw ApiException('Unable to reach the server. Please check your connection.');
+    } on HttpException {
+      throw ApiException('A network error occurred while contacting the server.');
+    } on FormatException {
+      throw ApiException('Received an invalid response from the server.');
+    }
+  }
+
   ContractTypeCollection _parseContractTypes(Map<String, dynamic>? decoded) {
     final data = _extractDataNode(decoded);
     final globalRaw = _extractList(data, const [
@@ -113,6 +152,52 @@ class ContractTypeApi {
       globalTypes: partitionedGlobal,
       userTypes: partitionedUser,
     );
+  }
+
+  ContractType _parseSingleContractType(Map<String, dynamic>? decoded) {
+    Map<String, dynamic>? resolve() {
+      final dataNode = _extractDataNode(decoded);
+      if (dataNode == null) {
+        return null;
+      }
+
+      if (_looksLikeContractTypeMap(dataNode)) {
+        return dataNode;
+      }
+
+      const possibleKeys = [
+        'contract_type',
+        'contractType',
+        'item',
+        'result',
+      ];
+
+      for (final key in possibleKeys) {
+        final value = dataNode[key];
+        if (value is Map<String, dynamic>) {
+          return value;
+        }
+      }
+
+      return dataNode;
+    }
+
+    final map = resolve();
+    if (map == null || map.isEmpty) {
+      throw ApiException('Contract type response missing data.');
+    }
+
+    return ContractType.fromJson(map);
+  }
+
+  bool _looksLikeContractTypeMap(Map<String, dynamic> map) {
+    const requiredKeys = ['name', 'rate', 'rate_per_unit', 'unit_label', 'unitLabel'];
+    for (final key in requiredKeys) {
+      if (map.containsKey(key)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Map<String, dynamic>? _decodeBody(String body) {
