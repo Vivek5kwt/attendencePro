@@ -231,6 +231,28 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
   }
 
+  Future<void> _handleDateTap() async {
+    FocusScope.of(context).unfocus();
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(now.year - 1, 1, 1),
+      lastDate: DateTime(now.year + 1, 12, 31),
+    );
+    if (pickedDate == null) {
+      return;
+    }
+
+    final normalizedDate =
+        DateTime(pickedDate.year, pickedDate.month, pickedDate.day);
+    setState(() {
+      _selectedDate = normalizedDate;
+      _dateLabelOverride = _formatDate(normalizedDate);
+    });
+    _handleAttendanceFieldChanged();
+  }
+
   void _handleAttendanceFieldChanged() {
     if (_attendanceStatusMessage != null) {
       setState(() {
@@ -617,6 +639,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               const SizedBox(height: 24),
               _AttendanceSection(
                 dateLabel: dateLabel,
+                onDateTap: _handleDateTap,
                 formKey: _attendanceFormKey,
                 startTimeController: _startTimeController,
                 endTimeController: _endTimeController,
@@ -872,6 +895,7 @@ class _WorkHeaderCard extends StatelessWidget {
 class _AttendanceSection extends StatelessWidget {
   const _AttendanceSection({
     required this.dateLabel,
+    required this.onDateTap,
     required this.formKey,
     required this.startTimeController,
     required this.endTimeController,
@@ -896,6 +920,7 @@ class _AttendanceSection extends StatelessWidget {
                 ratePerUnitValidator != null));
 
   final String dateLabel;
+  final VoidCallback onDateTap;
   final GlobalKey<FormState> formKey;
   final TextEditingController startTimeController;
   final TextEditingController endTimeController;
@@ -951,30 +976,39 @@ class _AttendanceSection extends StatelessWidget {
                         ),
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.calendar_month,
-                        size: 18,
-                        color: Color(0xFF2563EB),
+                    onTap: onDateTap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        dateLabel,
-                        style: const TextStyle(
-                          color: Color(0xFF1D4ED8),
-                          fontWeight: FontWeight.w600,
-                        ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_month,
+                            size: 18,
+                            color: Color(0xFF2563EB),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            dateLabel,
+                            style: const TextStyle(
+                              color: Color(0xFF1D4ED8),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
