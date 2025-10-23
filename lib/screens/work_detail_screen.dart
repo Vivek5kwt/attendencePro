@@ -842,6 +842,7 @@ class _AttendanceSection extends StatelessWidget {
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
                     ],
+                    enableTimePicker: true,
                   ),
                   _AttendanceTimeCard(
                     label: l.endTimeLabel,
@@ -857,6 +858,7 @@ class _AttendanceSection extends StatelessWidget {
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
                     ],
+                    enableTimePicker: true,
                   ),
                   _AttendanceTimeCard(
                     label: l.breakLabel,
@@ -1220,6 +1222,7 @@ class _AttendanceTimeCard extends StatelessWidget {
     required this.onChanged,
     this.enabled = true,
     this.inputFormatters = const <TextInputFormatter>[],
+    this.enableTimePicker = false,
   });
 
   final String label;
@@ -1233,9 +1236,40 @@ class _AttendanceTimeCard extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final bool enabled;
   final List<TextInputFormatter> inputFormatters;
+  final bool enableTimePicker;
 
   @override
   Widget build(BuildContext context) {
+    Future<void> handleTimePicker() async {
+      if (!enableTimePicker || !enabled) {
+        return;
+      }
+      FocusScope.of(context).unfocus();
+      final initialTime = _tryParseTimeOfDay(controller.text) ?? TimeOfDay.now();
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: initialTime,
+        initialEntryMode: TimePickerEntryMode.dial,
+        builder: (context, child) {
+          if (child == null) {
+            return const SizedBox.shrink();
+          }
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child,
+          );
+        },
+      );
+      if (picked == null) {
+        return;
+      }
+      final formatted = _formatTimeOfDay(picked);
+      controller
+        ..text = formatted
+        ..selection = TextSelection.collapsed(offset: formatted.length);
+      onChanged(formatted);
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
@@ -1279,6 +1313,8 @@ class _AttendanceTimeCard extends StatelessWidget {
             onChanged: onChanged,
             enabled: enabled,
             inputFormatters: inputFormatters,
+            readOnly: enableTimePicker,
+            onTap: enableTimePicker ? handleTimePicker : null,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -1294,11 +1330,52 @@ class _AttendanceTimeCard extends StatelessWidget {
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
+              suffixIcon: enableTimePicker
+                  ? const Icon(
+                      Icons.access_time,
+                      color: Color(0xFF9CA3AF),
+                    )
+                  : null,
             ),
           ),
         ],
       ),
     );
+  }
+
+  static TimeOfDay? _tryParseTimeOfDay(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final match = RegExp(r'^(\d{1,2})[:](\d{1,2})\s*([aApP][mM])?$').firstMatch(trimmed);
+    if (match == null) {
+      return null;
+    }
+    final hours = int.tryParse(match.group(1)!);
+    final minutes = int.tryParse(match.group(2)!);
+    if (hours == null || minutes == null) {
+      return null;
+    }
+    var normalizedHours = hours;
+    final period = match.group(3)?.toLowerCase();
+    if (period == 'pm' && normalizedHours < 12) {
+      normalizedHours += 12;
+    } else if (period == 'am' && normalizedHours == 12) {
+      normalizedHours = 0;
+    }
+    final clampedHours = normalizedHours.clamp(0, 23).toInt();
+    final clampedMinutes = minutes.clamp(0, 59).toInt();
+    return TimeOfDay(
+      hour: clampedHours,
+      minute: clampedMinutes,
+    );
+  }
+
+  static String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
 
