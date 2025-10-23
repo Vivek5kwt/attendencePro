@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/dashboard_summary.dart';
 import '../models/work.dart';
+import '../repositories/attendance_entry_repository.dart';
 import '../repositories/dashboard_repository.dart';
 
 class WorkDetailScreen extends StatefulWidget {
@@ -17,16 +19,348 @@ class WorkDetailScreen extends StatefulWidget {
 
 class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final DashboardRepository _dashboardRepository = DashboardRepository();
+  final AttendanceEntryRepository _attendanceRepository =
+      AttendanceEntryRepository();
+  final GlobalKey<FormState> _attendanceFormKey = GlobalKey<FormState>();
+  final TextEditingController _startTimeController = TextEditingController();
+  final TextEditingController _endTimeController = TextEditingController();
+  final TextEditingController _breakMinutesController =
+      TextEditingController(text: '0');
+
   DashboardSummary? _dashboardSummary;
   bool _isSummaryLoading = true;
   String? _summaryError;
+  bool _isSubmittingAttendance = false;
+  String? _attendanceStatusMessage;
+  bool _attendanceStatusIsError = false;
+  DateTime _selectedDate = DateTime.now();
+  String? _dateLabelOverride;
 
   @override
   void initState() {
     super.initState();
+    _initializeAttendanceControllers();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSummary();
     });
+  }
+
+  String? _extractTimeFromMap(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
+  }
+
+  int? _extractBreakMinutes(Map<String, dynamic> data, String? fallbackText) {
+    const keys = ['break_minutes', 'breakMinutes', 'break_time', 'breakTime'];
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) {
+        continue;
+      }
+      if (value is num) {
+        return value.round();
+      }
+      if (value is String) {
+        final parsed = _parseMinutesFromText(value);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
+    }
+    if (fallbackText != null) {
+      return _parseMinutesFromText(fallbackText);
+    }
+    return null;
+  }
+
+  int? _parseMinutesFromText(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    if (trimmed.contains(':')) {
+      final parts = trimmed.split(':');
+      if (parts.length >= 2) {
+        final hours = int.tryParse(parts[0]);
+        final minutes = int.tryParse(parts[1]);
+        if (hours != null && minutes != null) {
+          return (hours * 60) + minutes;
+        }
+      }
+    }
+
+    final hourMatch = RegExp(r'(\d+)\s*h').firstMatch(trimmed);
+    final minuteMatch = RegExp(r'(\d+)\s*m').firstMatch(trimmed);
+    var totalMinutes = 0;
+    var matched = false;
+    if (hourMatch != null) {
+      totalMinutes += int.parse(hourMatch.group(1)!) * 60;
+      matched = true;
+    }
+    if (minuteMatch != null) {
+      totalMinutes += int.parse(minuteMatch.group(1)!);
+      matched = true;
+    }
+    if (matched) {
+      return totalMinutes;
+    }
+
+    final digitsOnly = RegExp(r'^-?\d+$');
+    if (digitsOnly.hasMatch(trimmed)) {
+      return int.tryParse(trimmed);
+    }
+
+    final firstNumber = RegExp(r'(\d+)').firstMatch(trimmed);
+    if (firstNumber != null) {
+      return int.tryParse(firstNumber.group(1)!);
+    }
+
+    return null;
+  }
+
+  void _initializeAttendanceControllers() {
+    _selectedDate = DateTime.now();
+    _dateLabelOverride = null;
+
+    final additionalData = widget.work.additionalData;
+    final startTime =
+        _extractTimeFromMap(additionalData, const ['start_time', 'startTime', 'in_time']);
+    if (startTime != null) {
+      _startTimeController.text = startTime;
+    }
+
+    final endTime =
+        _extractTimeFromMap(additionalData, const ['end_time', 'endTime', 'out_time']);
+    if (endTime != null) {
+      _endTimeController.text = endTime;
+    }
+
+    final breakMinutes =
+        _extractBreakMinutes(additionalData, additionalData['breakTime']?.toString());
+    if (breakMinutes != null) {
+      _breakMinutesController.text = breakMinutes.toString();
+    } else if (_breakMinutesController.text.trim().isEmpty) {
+      _breakMinutesController.text = '0';
+    }
+  }
+
+  void _applyAttendanceDetailsFromSummary(DashboardAttendanceEntry? entry) {
+    if (entry == null) {
+      return;
+    }
+
+    final startTime = _extractTimeFromMap(
+          entry.raw,
+          const ['start_time', 'startTime', 'in_time'],
+        ) ??
+        entry.startTimeText;
+    if (startTime != null && startTime.trim().isNotEmpty) {
+      _startTimeController.text = startTime.trim();
+    }
+
+    final endTime = _extractTimeFromMap(
+          entry.raw,
+          const ['end_time', 'endTime', 'out_time'],
+        ) ??
+        entry.endTimeText;
+    if (endTime != null && endTime.trim().isNotEmpty) {
+      _endTimeController.text = endTime.trim();
+    }
+
+    final breakMinutes =
+        _extractBreakMinutes(entry.raw, entry.breakDurationText ?? entry.raw['breakTime']?.toString());
+    if (breakMinutes != null) {
+      _breakMinutesController.text = breakMinutes.toString();
+    }
+
+    final dateText = entry.dateText?.trim();
+    if (dateText != null && dateText.isNotEmpty && mounted) {
+      setState(() {
+        _dateLabelOverride = dateText;
+      });
+    }
+  }
+
+  void _handleAttendanceFieldChanged() {
+    if (_attendanceStatusMessage != null) {
+      setState(() {
+        _attendanceStatusMessage = null;
+        _attendanceStatusIsError = false;
+      });
+    }
+  }
+
+  String? _validateStartTime(String? value) {
+    final l = AppLocalizations.of(context);
+    if (value == null || value.trim().isEmpty) {
+      return l.attendanceStartTimeRequired;
+    }
+    if (!_isValidTimeFormat(value.trim())) {
+      return l.attendanceInvalidTimeFormat;
+    }
+    return null;
+  }
+
+  String? _validateEndTime(String? value) {
+    final l = AppLocalizations.of(context);
+    if (value == null || value.trim().isEmpty) {
+      return l.attendanceEndTimeRequired;
+    }
+    if (!_isValidTimeFormat(value.trim())) {
+      return l.attendanceInvalidTimeFormat;
+    }
+    return null;
+  }
+
+  String? _validateBreakMinutes(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    final parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed < 0) {
+      return AppLocalizations.of(context).attendanceBreakInvalid;
+    }
+    return null;
+  }
+
+  bool _isValidTimeFormat(String value) {
+    final normalized = value.trim();
+    final parts = normalized.split(':');
+    if (parts.length != 2) {
+      return false;
+    }
+    final hours = int.tryParse(parts[0]);
+    final minutes = int.tryParse(parts[1]);
+    if (hours == null || minutes == null) {
+      return false;
+    }
+    return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+  }
+
+  int _resolveBreakMinutes(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 0;
+    }
+    return int.tryParse(trimmed) ?? 0;
+  }
+
+  String? _extractResponseMessage(Map<String, dynamic>? response) {
+    if (response == null) {
+      return null;
+    }
+    const keys = ['message', 'detail', 'status'];
+    for (final key in keys) {
+      final value = response[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
+  }
+
+  Future<void> _submitAttendance() async {
+    FocusScope.of(context).unfocus();
+    final formState = _attendanceFormKey.currentState;
+    if (formState == null) {
+      return;
+    }
+    if (!formState.validate()) {
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    final startTime = _startTimeController.text.trim();
+    final endTime = _endTimeController.text.trim();
+    final breakMinutes = _resolveBreakMinutes(_breakMinutesController.text);
+
+    setState(() {
+      _isSubmittingAttendance = true;
+      _attendanceStatusMessage = null;
+      _attendanceStatusIsError = false;
+    });
+
+    try {
+      final response = await _attendanceRepository.submitAttendance(
+        workId: widget.work.id,
+        date: _selectedDate,
+        startTime: startTime,
+        endTime: endTime,
+        breakMinutes: breakMinutes,
+      );
+      if (!mounted) {
+        return;
+      }
+      final message =
+          _extractResponseMessage(response) ?? l.attendanceSubmitSuccess;
+      setState(() {
+        _attendanceStatusMessage = message;
+        _attendanceStatusIsError = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      await _loadSummary();
+    } on AttendanceAuthException {
+      if (!mounted) {
+        return;
+      }
+      final message = l.authenticationRequiredMessage;
+      setState(() {
+        _attendanceStatusMessage = message;
+        _attendanceStatusIsError = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } on AttendanceRepositoryException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final message = e.message.trim().isNotEmpty
+          ? e.message.trim()
+          : l.attendanceSubmitFailed;
+      setState(() {
+        _attendanceStatusMessage = message;
+        _attendanceStatusIsError = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      final message = l.attendanceSubmitFailed;
+      setState(() {
+        _attendanceStatusMessage = message;
+        _attendanceStatusIsError = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmittingAttendance = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _startTimeController.dispose();
+    _endTimeController.dispose();
+    _breakMinutesController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSummary() async {
@@ -44,6 +378,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _dashboardSummary = summary;
         _isSummaryLoading = false;
       });
+      _applyAttendanceDetailsFromSummary(summary.todayEntry);
     } on DashboardAuthException {
       if (!mounted) return;
       final message = l.authenticationRequiredMessage;
@@ -86,21 +421,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final contractItems = _resolveContractItems();
     final summaryStats = _buildSummaryStats(l);
     final todayEntry = _dashboardSummary?.todayEntry;
-    final dateLabel = todayEntry?.dateText ?? _formatDate(DateTime.now());
-    final startTime = _formatTimeValue(
-      todayEntry?.startTimeText ??
-          widget.work.additionalData['startTime'] as String?,
-      l,
-    );
-    final endTime = _formatTimeValue(
-      todayEntry?.endTimeText ?? widget.work.additionalData['endTime'] as String?,
-      l,
-    );
-    final breakTime = _formatBreakValue(
-      todayEntry?.breakDurationText ??
-          widget.work.additionalData['breakTime'] as String?,
-      l,
-    );
+    final dateLabel = (_dateLabelOverride?.isNotEmpty ?? false)
+        ? _dateLabelOverride!
+        : (todayEntry?.dateText?.trim().isNotEmpty == true
+            ? todayEntry!.dateText!.trim()
+            : _formatDate(_selectedDate));
     final summarySection = _buildSummarySection(l, summaryStats);
 
     return Scaffold(
@@ -145,9 +470,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               const SizedBox(height: 24),
               _AttendanceSection(
                 dateLabel: dateLabel,
-                startTime: startTime,
-                endTime: endTime,
-                breakTime: breakTime,
+                formKey: _attendanceFormKey,
+                startTimeController: _startTimeController,
+                endTimeController: _endTimeController,
+                breakMinutesController: _breakMinutesController,
+                onSubmit: _submitAttendance,
+                onFieldChanged: _handleAttendanceFieldChanged,
+                isSubmitting: _isSubmittingAttendance,
+                startTimeValidator: _validateStartTime,
+                endTimeValidator: _validateEndTime,
+                breakValidator: _validateBreakMinutes,
+                statusMessage: _attendanceStatusMessage,
+                isStatusError: _attendanceStatusIsError,
               ),
               const SizedBox(height: 24),
               _ContractSummarySection(
@@ -227,28 +561,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       );
     }
     return _MonthlySummarySection(stats: stats);
-  }
-
-  String _formatTimeValue(String? value, AppLocalizations l) {
-    if (value == null) {
-      return l.notAvailableLabel;
-    }
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return l.notAvailableLabel;
-    }
-    return trimmed;
-  }
-
-  String _formatBreakValue(String? value, AppLocalizations l) {
-    if (value == null) {
-      return l.notAvailableLabel;
-    }
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return l.notAvailableLabel;
-    }
-    return trimmed;
   }
 
   List<_SummaryStat> _resolveSummaryStats(AppLocalizations l) {
@@ -408,15 +720,33 @@ class _WorkHeaderCard extends StatelessWidget {
 class _AttendanceSection extends StatelessWidget {
   const _AttendanceSection({
     required this.dateLabel,
-    required this.startTime,
-    required this.endTime,
-    required this.breakTime,
+    required this.formKey,
+    required this.startTimeController,
+    required this.endTimeController,
+    required this.breakMinutesController,
+    required this.onSubmit,
+    required this.onFieldChanged,
+    required this.isSubmitting,
+    required this.startTimeValidator,
+    required this.endTimeValidator,
+    required this.breakValidator,
+    this.statusMessage,
+    this.isStatusError = false,
   });
 
   final String dateLabel;
-  final String startTime;
-  final String endTime;
-  final String breakTime;
+  final GlobalKey<FormState> formKey;
+  final TextEditingController startTimeController;
+  final TextEditingController endTimeController;
+  final TextEditingController breakMinutesController;
+  final VoidCallback onSubmit;
+  final VoidCallback onFieldChanged;
+  final bool isSubmitting;
+  final String? Function(String?) startTimeValidator;
+  final String? Function(String?) endTimeValidator;
+  final String? Function(String?) breakValidator;
+  final String? statusMessage;
+  final bool isStatusError;
 
   @override
   Widget build(BuildContext context) {
@@ -435,146 +765,184 @@ class _AttendanceSection extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l.todaysAttendanceTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.calendar_month,
-                      size: 18,
-                      color: Color(0xFF2563EB),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      dateLabel,
-                      style: const TextStyle(
-                        color: Color(0xFF1D4ED8),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const spacing = 12.0;
-              final maxWidth = constraints.maxWidth;
-              final crossAxisCount = maxWidth < 420
-                  ? 1
-                  : maxWidth < 720
-                      ? 2
-                      : 3;
-              final itemWidth = crossAxisCount == 1
-                  ? maxWidth
-                  : (maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
-
-              final cards = <Widget>[
-                _AttendanceTimeCard(
-                  label: l.startTimeLabel,
-                  value: startTime,
-                  icon: Icons.play_arrow_rounded,
-                  color: const Color(0xFF22C55E),
-                ),
-                _AttendanceTimeCard(
-                  label: l.endTimeLabel,
-                  value: endTime,
-                  icon: Icons.stop_rounded,
-                  color: const Color(0xFFEF4444),
-                ),
-                _AttendanceTimeCard(
-                  label: l.breakLabel,
-                  value: breakTime,
-                  icon: Icons.local_cafe_rounded,
-                  color: const Color(0xFFF59E0B),
-                ),
-              ]
-                  .map((card) => SizedBox(
-                        width: itemWidth.clamp(0.0, maxWidth),
-                        child: card,
-                      ))
-                  .toList();
-
-              return Wrap(
-                spacing: spacing,
-                runSpacing: spacing,
-                children: cards,
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.tonal(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFEFF6FF),
-                    foregroundColor: const Color(0xFF1D4ED8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l.todaysAttendanceTitle,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ) ??
+                        const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
                   ),
-                  onPressed: () {},
-                  child: Text(l.contractWorkLabel),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  onPressed: () {},
-                  child: Text(l.submitButton),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.calendar_month,
+                        size: 18,
+                        color: Color(0xFF2563EB),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        dateLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF1D4ED8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF1F2937),
-              side: const BorderSide(color: Color(0xFFE5E7EB)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              ],
             ),
-            onPressed: () {},
-            child: Text(l.markAsWorkOffButton),
-          ),
-        ],
+            const SizedBox(height: 20),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const spacing = 12.0;
+                final maxWidth = constraints.maxWidth;
+                final crossAxisCount = maxWidth < 420
+                    ? 1
+                    : maxWidth < 720
+                        ? 2
+                        : 3;
+                final itemWidth = crossAxisCount == 1
+                    ? maxWidth
+                    : (maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
+
+                final cards = <Widget>[
+                  _AttendanceTimeCard(
+                    label: l.startTimeLabel,
+                    controller: startTimeController,
+                    icon: Icons.play_arrow_rounded,
+                    color: const Color(0xFF22C55E),
+                    hintText: 'HH:MM',
+                    keyboardType: TextInputType.datetime,
+                    textInputAction: TextInputAction.next,
+                    validator: startTimeValidator,
+                    onChanged: (_) => onFieldChanged(),
+                    enabled: !isSubmitting,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
+                    ],
+                  ),
+                  _AttendanceTimeCard(
+                    label: l.endTimeLabel,
+                    controller: endTimeController,
+                    icon: Icons.stop_rounded,
+                    color: const Color(0xFFEF4444),
+                    hintText: 'HH:MM',
+                    keyboardType: TextInputType.datetime,
+                    textInputAction: TextInputAction.next,
+                    validator: endTimeValidator,
+                    onChanged: (_) => onFieldChanged(),
+                    enabled: !isSubmitting,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp('[0-9:]')),
+                    ],
+                  ),
+                  _AttendanceTimeCard(
+                    label: l.breakLabel,
+                    controller: breakMinutesController,
+                    icon: Icons.local_cafe_rounded,
+                    color: const Color(0xFFF59E0B),
+                    hintText: '0',
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    validator: breakValidator,
+                    onChanged: (_) => onFieldChanged(),
+                    enabled: !isSubmitting,
+                    inputFormatters: const [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ]
+                    .map((card) => SizedBox(
+                          width: itemWidth.clamp(0.0, maxWidth),
+                          child: card,
+                        ))
+                    .toList();
+
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: cards,
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: isSubmitting ? null : onSubmit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        l.attendanceSubmitButton,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
+            ),
+            if (statusMessage != null)
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isStatusError
+                      ? const Color(0xFFFEE2E2)
+                      : const Color(0xFFD1FAE5),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  statusMessage!,
+                  style: TextStyle(
+                    color: isStatusError
+                        ? const Color(0xFFB91C1C)
+                        : const Color(0xFF047857),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -842,15 +1210,29 @@ class _MonthlySummarySection extends StatelessWidget {
 class _AttendanceTimeCard extends StatelessWidget {
   const _AttendanceTimeCard({
     required this.label,
-    required this.value,
+    required this.controller,
     required this.icon,
     required this.color,
+    required this.hintText,
+    required this.keyboardType,
+    required this.textInputAction,
+    required this.validator,
+    required this.onChanged,
+    this.enabled = true,
+    this.inputFormatters = const <TextInputFormatter>[],
   });
 
   final String label;
-  final String value;
+  final TextEditingController controller;
   final IconData icon;
   final Color color;
+  final String hintText;
+  final TextInputType keyboardType;
+  final TextInputAction textInputAction;
+  final FormFieldValidator<String>? validator;
+  final ValueChanged<String> onChanged;
+  final bool enabled;
+  final List<TextInputFormatter> inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -889,12 +1271,29 @@ class _AttendanceTimeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            value,
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            textInputAction: textInputAction,
+            validator: validator,
+            onChanged: onChanged,
+            enabled: enabled,
+            inputFormatters: inputFormatters,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: Color(0xFF111827),
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: hintText,
+              hintStyle: const TextStyle(
+                color: Color(0xFF9CA3AF),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
             ),
           ),
         ],
