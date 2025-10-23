@@ -17,6 +17,7 @@ import '../models/work.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/session_manager.dart';
 import '../widgets/app_dialogs.dart';
+import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -109,6 +110,17 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     _showAddWorkDialog();
+  }
+
+  Future<void> _openReportsSummary() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const ReportsSummaryScreen(),
+      ),
+    );
   }
 
   Future<void> _refreshWorks() {
@@ -1119,6 +1131,13 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: const Color(0xFFEDEBFF),
               iconColor: const Color(0xFF5856D6),
               onTap: () => (){},
+            ),
+            _DrawerMenuItem(
+              icon: Icons.summarize_outlined,
+              label: l.reportsSummaryLabel,
+              backgroundColor: const Color(0xFFE6F0FF),
+              iconColor: const Color(0xFF2563EB),
+              onTap: _openReportsSummary,
             ),
             _DrawerMenuItem(
               icon: Icons.language,

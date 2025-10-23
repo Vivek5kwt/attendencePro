@@ -40,6 +40,19 @@ class AppLocalizations {
       'changeLanguageLabel': 'Change Language',
       'helpSupportLabel': 'Help & Support',
       'logoutLabel': 'Logout',
+      'reportsSummaryLabel': 'Reports & Summary',
+      'reportsSummaryMonth': 'October 2025',
+      'reportsCombinedSalaryTitle': 'Total Combined Salary',
+      'reportsHoursWorkedSuffix': 'hours worked',
+      'reportsUnitsCompletedSuffix': 'units completed',
+      'reportsHourlyWorkSummaryTitle': 'Hourly Work Summary',
+      'reportsWorkingDaysLabel': 'Working Days',
+      'reportsAverageHoursPerDayLabel': 'Average Hours/Day',
+      'reportsLastPayoutLabel': 'Last Payout',
+      'reportsTotalUnitsLabel': 'Total Units',
+      'reportsContractSalaryLabel': 'Contract Salary',
+      'reportsBreakdownSuffix': 'Breakdown',
+      'reportsGrandTotalLabel': 'Grand Total',
       'logoutConfirmationTitle': 'Confirm Logout',
       'logoutConfirmationMessage': 'Are you sure you want to logout?',
       'logoutConfirmButton': 'Logout',
@@ -199,6 +212,19 @@ class AppLocalizations {
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
       'logoutLabel': 'लॉग आउट',
+      'reportsSummaryLabel': 'Reports & Summary',
+      'reportsSummaryMonth': 'October 2025',
+      'reportsCombinedSalaryTitle': 'Total Combined Salary',
+      'reportsHoursWorkedSuffix': 'hours worked',
+      'reportsUnitsCompletedSuffix': 'units completed',
+      'reportsHourlyWorkSummaryTitle': 'Hourly Work Summary',
+      'reportsWorkingDaysLabel': 'Working Days',
+      'reportsAverageHoursPerDayLabel': 'Average Hours/Day',
+      'reportsLastPayoutLabel': 'Last Payout',
+      'reportsTotalUnitsLabel': 'Total Units',
+      'reportsContractSalaryLabel': 'Contract Salary',
+      'reportsBreakdownSuffix': 'Breakdown',
+      'reportsGrandTotalLabel': 'Grand Total',
       'logoutConfirmationTitle': 'लॉग आउट की पुष्टि करें',
       'logoutConfirmationMessage': 'क्या आप वाकई लॉग आउट करना चाहते हैं?',
       'logoutConfirmButton': 'लॉग आउट',
@@ -358,6 +384,19 @@ class AppLocalizations {
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
       'logoutLabel': 'ਲੌਗ ਆਉਟ',
+      'reportsSummaryLabel': 'Reports & Summary',
+      'reportsSummaryMonth': 'October 2025',
+      'reportsCombinedSalaryTitle': 'Total Combined Salary',
+      'reportsHoursWorkedSuffix': 'hours worked',
+      'reportsUnitsCompletedSuffix': 'units completed',
+      'reportsHourlyWorkSummaryTitle': 'Hourly Work Summary',
+      'reportsWorkingDaysLabel': 'Working Days',
+      'reportsAverageHoursPerDayLabel': 'Average Hours/Day',
+      'reportsLastPayoutLabel': 'Last Payout',
+      'reportsTotalUnitsLabel': 'Total Units',
+      'reportsContractSalaryLabel': 'Contract Salary',
+      'reportsBreakdownSuffix': 'Breakdown',
+      'reportsGrandTotalLabel': 'Grand Total',
       'logoutConfirmationTitle': 'ਲਾਗਆਉਟ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'logoutConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਲਾਗਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
       'logoutConfirmButton': 'ਲਾਗਆਉਟ',
@@ -520,6 +559,19 @@ class AppLocalizations {
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
       'logoutLabel': 'Esci',
+      'reportsSummaryLabel': 'Reports & Summary',
+      'reportsSummaryMonth': 'October 2025',
+      'reportsCombinedSalaryTitle': 'Total Combined Salary',
+      'reportsHoursWorkedSuffix': 'hours worked',
+      'reportsUnitsCompletedSuffix': 'units completed',
+      'reportsHourlyWorkSummaryTitle': 'Hourly Work Summary',
+      'reportsWorkingDaysLabel': 'Working Days',
+      'reportsAverageHoursPerDayLabel': 'Average Hours/Day',
+      'reportsLastPayoutLabel': 'Last Payout',
+      'reportsTotalUnitsLabel': 'Total Units',
+      'reportsContractSalaryLabel': 'Contract Salary',
+      'reportsBreakdownSuffix': 'Breakdown',
+      'reportsGrandTotalLabel': 'Grand Total',
       'logoutConfirmationTitle': 'Conferma logout',
       'logoutConfirmationMessage': 'Sei sicuro di voler uscire?',
       'logoutConfirmButton': 'Esci',
@@ -698,6 +750,26 @@ class AppLocalizations {
   String get changeLanguageLabel => _value('changeLanguageLabel');
   String get helpSupportLabel => _value('helpSupportLabel');
   String get logoutLabel => _value('logoutLabel');
+  String get reportsSummaryLabel => _value('reportsSummaryLabel');
+  String get reportsSummaryMonth => _value('reportsSummaryMonth');
+  String get reportsCombinedSalaryTitle =>
+      _value('reportsCombinedSalaryTitle');
+  String get reportsHoursWorkedSuffix =>
+      _value('reportsHoursWorkedSuffix');
+  String get reportsUnitsCompletedSuffix =>
+      _value('reportsUnitsCompletedSuffix');
+  String get reportsHourlyWorkSummaryTitle =>
+      _value('reportsHourlyWorkSummaryTitle');
+  String get reportsWorkingDaysLabel =>
+      _value('reportsWorkingDaysLabel');
+  String get reportsAverageHoursPerDayLabel =>
+      _value('reportsAverageHoursPerDayLabel');
+  String get reportsLastPayoutLabel => _value('reportsLastPayoutLabel');
+  String get reportsTotalUnitsLabel => _value('reportsTotalUnitsLabel');
+  String get reportsContractSalaryLabel =>
+      _value('reportsContractSalaryLabel');
+  String get reportsBreakdownSuffix => _value('reportsBreakdownSuffix');
+  String get reportsGrandTotalLabel => _value('reportsGrandTotalLabel');
   String get logoutConfirmationTitle => _value('logoutConfirmationTitle');
   String get logoutConfirmationMessage =>
       _value('logoutConfirmationMessage');
