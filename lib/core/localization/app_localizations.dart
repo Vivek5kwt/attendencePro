@@ -199,6 +199,13 @@ class AppLocalizations {
       'attendanceRateInvalid': 'Enter a valid rate per unit',
       'attendanceSubmitSuccess': 'Attendance saved successfully',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
+      'attendanceMissedEntriesTitle': 'Complete pending attendance',
+      'attendanceMissedEntriesDescription':
+          'You missed attendance on the following dates. Please complete these entries before adding new ones.',
+      'attendanceMissedEntriesListLabel': 'Pending dates',
+      'attendanceMissedEntriesReviewButton': 'Review {date}',
+      'attendanceMissedEntriesLoadFailed':
+          'Unable to check pending attendance. Please try again.',
       'attendancePreviewTitle': 'Confirm attendance',
       'attendancePreviewDescription':
           'Review the details below before saving your attendance entry.',
@@ -499,6 +506,13 @@ class AppLocalizations {
       'attendanceRateInvalid': 'कृपया मान्य प्रति इकाई दर दर्ज करें',
       'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
+      'attendanceMissedEntriesTitle': 'लंबित उपस्थिति पूरी करें',
+      'attendanceMissedEntriesDescription':
+          'आपने निम्न तिथियों पर उपस्थिति दर्ज नहीं की है। नई प्रविष्टि जोड़ने से पहले इन्हें पूरा करें।',
+      'attendanceMissedEntriesListLabel': 'लंबित तिथियाँ',
+      'attendanceMissedEntriesReviewButton': 'समीक्षा करें {date}',
+      'attendanceMissedEntriesLoadFailed':
+          'लंबित उपस्थिति की जांच नहीं हो सकी। कृपया पुनः प्रयास करें।',
       'attendancePreviewTitle': 'उपस्थिति की पुष्टि करें',
       'attendancePreviewDescription':
           'उपस्थिति सहेजने से पहले नीचे दिए विवरण की जाँच करें।',
@@ -796,6 +810,13 @@ class AppLocalizations {
       'attendanceRateInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਦਰਜ ਕਰੋ',
       'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'attendanceMissedEntriesTitle': 'ਬਕਾਇਆ ਹਾਜ਼ਰੀ ਪੂਰੀ ਕਰੋ',
+      'attendanceMissedEntriesDescription':
+          'ਤੁਸੀਂ ਹੇਠਾਂ ਦਿੱਤੀਆਂ ਤਾਰੀਆਂ ’ਤੇ ਹਾਜ਼ਰੀ ਨਹੀਂ ਭਰੀ। ਨਵੀਂ ਐਂਟਰੀ ਜੋੜਨ ਤੋਂ ਪਹਿਲਾਂ ਇਨ੍ਹਾਂ ਨੂੰ ਪੂਰਾ ਕਰੋ।',
+      'attendanceMissedEntriesListLabel': 'ਬਕਾਇਆ ਤਾਰੀਆਂ',
+      'attendanceMissedEntriesReviewButton': 'ਸਮੀਖਿਆ ਕਰੋ {date}',
+      'attendanceMissedEntriesLoadFailed':
+          'ਬਕਾਇਆ ਹਾਜ਼ਰੀ ਦੀ ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendancePreviewTitle': 'ਹਾਜ਼ਰੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'attendancePreviewDescription':
           'ਹਾਜ਼ਰੀ ਸੇਵ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਹੇਠਾਂ ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਦੀ ਜਾਂਚ ਕਰੋ।',
@@ -1099,6 +1120,13 @@ class AppLocalizations {
       'attendanceRateInvalid': 'Inserisci una tariffa per unità valida',
       'attendanceSubmitSuccess': 'Presenza salvata con successo',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
+      'attendanceMissedEntriesTitle': 'Completa le presenze in sospeso',
+      'attendanceMissedEntriesDescription':
+          'Non hai registrato la presenza nelle seguenti date. Completa i giorni mancanti prima di aggiungere nuove presenze.',
+      'attendanceMissedEntriesListLabel': 'Date in sospeso',
+      'attendanceMissedEntriesReviewButton': 'Rivedi {date}',
+      'attendanceMissedEntriesLoadFailed':
+          'Impossibile verificare le presenze in sospeso. Riprova.',
       'attendancePreviewTitle': 'Conferma presenza',
       'attendancePreviewDescription':
           'Controlla i dettagli prima di salvare la registrazione di presenza.',
@@ -1479,6 +1507,18 @@ class AppLocalizations {
   String get attendanceRateInvalid => _value('attendanceRateInvalid');
   String get attendanceSubmitSuccess => _value('attendanceSubmitSuccess');
   String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
+  String get attendanceMissedEntriesTitle =>
+      _value('attendanceMissedEntriesTitle');
+  String get attendanceMissedEntriesDescription =>
+      _value('attendanceMissedEntriesDescription');
+  String get attendanceMissedEntriesListLabel =>
+      _value('attendanceMissedEntriesListLabel');
+  String get attendanceMissedEntriesLoadFailed =>
+      _value('attendanceMissedEntriesLoadFailed');
+  String attendanceMissedEntriesReviewButton(String date) {
+    return _value('attendanceMissedEntriesReviewButton')
+        .replaceFirst('{date}', date);
+  }
   String get attendancePreviewTitle => _value('attendancePreviewTitle');
   String get attendancePreviewDescription =>
       _value('attendancePreviewDescription');

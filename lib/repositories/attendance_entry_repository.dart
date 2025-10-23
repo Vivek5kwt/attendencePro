@@ -13,6 +13,21 @@ class AttendanceEntryRepository {
   final AttendanceApi _api;
   final SessionManager _sessionManager;
 
+  Future<List<DateTime>> fetchMissedAttendanceDates({
+    required String workId,
+  }) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const AttendanceAuthException();
+    }
+
+    try {
+      return await _api.fetchMissedAttendanceDates(workId: workId, token: token);
+    } on ApiException catch (e) {
+      throw AttendanceRepositoryException(e.message);
+    }
+  }
+
   Future<Map<String, dynamic>?> previewAttendance({
     required String workId,
     required DateTime date,
