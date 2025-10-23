@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../models/contract_type.dart' as models;
+import '../repositories/contract_type_repository.dart';
 
 class ContractWorkScreen extends StatefulWidget {
   const ContractWorkScreen({super.key});
@@ -11,29 +13,10 @@ class ContractWorkScreen extends StatefulWidget {
 }
 
 class _ContractWorkScreenState extends State<ContractWorkScreen> {
-  final List<_ContractType> _contractTypes = <_ContractType>[
-    _ContractType(
-      name: 'Ravanello',
-      rate: 0.60,
-      unitLabel: 'per bunch',
-      isDefault: true,
-      lastUpdated: DateTime(2025, 9, 28),
-    ),
-    _ContractType(
-      name: 'Radish',
-      rate: 0.55,
-      unitLabel: 'per bunch',
-      isDefault: true,
-      lastUpdated: DateTime(2025, 9, 18),
-    ),
-    _ContractType(
-      name: 'Carrot',
-      rate: 0.45,
-      unitLabel: 'per crate',
-      isDefault: true,
-      lastUpdated: DateTime(2025, 8, 30),
-    ),
-  ];
+  final ContractTypeRepository _repository = ContractTypeRepository();
+
+  final List<_ContractType> _defaultContractTypes = <_ContractType>[];
+  final List<_ContractType> _userContractTypes = <_ContractType>[];
 
   final List<_ContractEntry> _recentEntries = <_ContractEntry>[
     _ContractEntry(
@@ -61,6 +44,70 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       totalAmount: 82.5,
     ),
   ];
+
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContractTypes();
+  }
+
+  Future<void> _loadContractTypes() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _repository.fetchContractTypes();
+      if (!mounted) return;
+      setState(() {
+        _defaultContractTypes
+          ..clear()
+          ..addAll(result.globalTypes
+              .map((type) => _ContractType.fromModel(type: type)));
+        _userContractTypes
+          ..clear()
+          ..addAll(result.userTypes.map((type) => _ContractType.fromModel(
+                type: type,
+                isUserDefined: true,
+              )));
+        _isLoading = false;
+      });
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.message;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<_ContractType> get _allContractTypes => <_ContractType>[
+        ..._defaultContractTypes,
+        ..._userContractTypes,
+      ];
+
+  void _upsertContractType(_ContractType type) {
+    final targetList =
+        type.isUserDefined ? _userContractTypes : _defaultContractTypes;
+    final index = targetList.indexWhere((item) => item.id == type.id);
+    setState(() {
+      if (index == -1) {
+        targetList.add(type);
+      } else {
+        targetList[index] = type;
+      }
+    });
+  }
 
   void _showComingSoonSnackBar(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -202,13 +249,18 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   return;
                 }
                 final fallbackUnit = l.contractWorkUnitFallback;
-                final updated = (type ?? _ContractType(name: name, rate: rate))
-                    .copyWith(
-                      name: type?.name ?? name,
+                final base = type ??
+                    _ContractType.createLocal(
+                      name: name,
                       rate: rate,
                       unitLabel: unit.isEmpty ? fallbackUnit : unit,
-                      lastUpdated: DateTime.now(),
                     );
+                final updated = base.copyWith(
+                  name: isNameEditable ? name : base.name,
+                  rate: rate,
+                  unitLabel: unit.isEmpty ? fallbackUnit : unit,
+                  lastUpdated: DateTime.now(),
+                );
                 Navigator.of(context).pop(updated);
               },
               child: Text(l.saveButtonLabel),
@@ -222,14 +274,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       return;
     }
 
-    setState(() {
-      final index = _contractTypes.indexWhere((item) => item.name == result.name);
-      if (index == -1) {
-        _contractTypes.add(result);
-      } else {
-        _contractTypes[index] = result;
-      }
-    });
+    _upsertContractType(result);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
@@ -239,7 +284,177 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final totalTypes = _contractTypes.length;
+    final totalTypes = _allContractTypes.length;
+    final theme = Theme.of(context);
+
+    final Widget bodyContent;
+    if (_isLoading) {
+      bodyContent = const Center(
+        key: ValueKey('contract-types-loading'),
+        child: CircularProgressIndicator(),
+      );
+    } else if (_errorMessage != null) {
+      final fallbackMessage = l.contractWorkLoadError;
+      final details = _errorMessage!.trim();
+      bodyContent = Center(
+        key: const ValueKey('contract-types-error'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                fallbackMessage,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF111827),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF111827),
+                      fontSize: 18,
+                    ),
+              ),
+              if (details.isNotEmpty && details != fallbackMessage) ...[
+                const SizedBox(height: 8),
+                Text(
+                  details,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF6B7280),
+                      ) ??
+                      const TextStyle(
+                        color: Color(0xFF6B7280),
+                      ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadContractTypes,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5856D6),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(l.retryButtonLabel),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      bodyContent = RefreshIndicator(
+        key: const ValueKey('contract-types-content'),
+        onRefresh: _loadContractTypes,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SummaryHeader(
+                title: l.contractWorkActiveRatesTitle,
+                totalTypes: totalTypes,
+                totalUnits: _totalUnits,
+                totalAmount: _totalContractSalary,
+                activeTypesLabel: l.contractWorkActiveTypesLabel,
+                totalUnitsLabel: l.contractWorkTotalUnitsLabel,
+                totalSalaryLabel: l.contractWorkTotalSalaryLabel,
+              ),
+              const SizedBox(height: 20),
+              _SectionTitle(text: l.contractWorkDefaultTypesTitle),
+              const SizedBox(height: 12),
+              if (_defaultContractTypes.isEmpty)
+                _EmptyState(message: l.contractWorkNoEntriesLabel)
+              else
+                Column(
+                  children: _defaultContractTypes
+                      .map(
+                        (type) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ContractTypeTile(
+                            type: type,
+                            lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
+                            onEdit: () => _showContractTypeDialog(type: type),
+                            editLabel: l.contractWorkEditRateButton,
+                            defaultTag: l.contractWorkDefaultTag,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
+                    backgroundColor: const Color(0xFFEEF2FF),
+                    foregroundColor: const Color(0xFF4C1D95),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () => _showContractTypeDialog(),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: Text(l.addContractWorkButton),
+                ),
+              ),
+              const SizedBox(height: 28),
+              _SectionTitle(text: l.contractWorkCustomTypesTitle),
+              const SizedBox(height: 12),
+              if (_userContractTypes.isEmpty)
+                _EmptyState(message: l.contractWorkNoCustomTypesLabel)
+              else
+                Column(
+                  children: _userContractTypes
+                      .map(
+                        (type) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ContractTypeTile(
+                            type: type,
+                            lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
+                            onEdit: () => _showContractTypeDialog(type: type),
+                            editLabel: l.contractWorkEditRateButton,
+                            defaultTag: l.contractWorkDefaultTag,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              const SizedBox(height: 28),
+              _SectionTitle(text: l.contractWorkRecentEntriesTitle),
+              const SizedBox(height: 12),
+              if (_recentEntries.isEmpty)
+                _EmptyState(message: l.contractWorkNoEntriesLabel)
+              else
+                Column(
+                  children: _recentEntries
+                      .map(
+                        (entry) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _ContractEntryTile(
+                            entry: entry,
+                            contractLabel: l.contractWorkLabel,
+                            unitsLabel: l.contractWorkUnitsLabel,
+                            rateLabel: l.contractWorkRateLabel,
+                            onTap: () => _showComingSoonSnackBar(context),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
@@ -285,81 +500,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SummaryHeader(
-              title: l.contractWorkActiveRatesTitle,
-              totalTypes: totalTypes,
-              totalUnits: _totalUnits,
-              totalAmount: _totalContractSalary,
-              activeTypesLabel: l.contractWorkActiveTypesLabel,
-              totalUnitsLabel: l.contractWorkTotalUnitsLabel,
-              totalSalaryLabel: l.contractWorkTotalSalaryLabel,
-            ),
-            const SizedBox(height: 20),
-            _SectionTitle(text: l.contractWorkDefaultTypesTitle),
-            const SizedBox(height: 12),
-            Column(
-              children: _contractTypes
-                  .map(
-                    (type) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _ContractTypeTile(
-                        type: type,
-                        lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
-                        onEdit: () => _showContractTypeDialog(type: type),
-                        editLabel: l.contractWorkEditRateButton,
-                        defaultTag: l.contractWorkDefaultTag,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                style: TextButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  backgroundColor: const Color(0xFFEEF2FF),
-                  foregroundColor: const Color(0xFF4C1D95),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                onPressed: () => _showContractTypeDialog(),
-                icon: const Icon(Icons.add_circle_outline),
-                label: Text(l.addContractWorkButton),
-              ),
-            ),
-            const SizedBox(height: 28),
-            _SectionTitle(text: l.contractWorkRecentEntriesTitle),
-            const SizedBox(height: 12),
-            if (_recentEntries.isEmpty)
-              _EmptyState(message: l.contractWorkNoEntriesLabel)
-            else
-              Column(
-                children: _recentEntries
-                    .map(
-                      (entry) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _ContractEntryTile(
-                          entry: entry,
-                          contractLabel: l.contractWorkLabel,
-                          unitsLabel: l.contractWorkUnitsLabel,
-                          rateLabel: l.contractWorkRateLabel,
-                          onTap: () => _showComingSoonSnackBar(context),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-          ],
-        ),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: bodyContent,
       ),
     );
   }
@@ -819,30 +962,71 @@ class _EmptyState extends StatelessWidget {
 
 class _ContractType {
   const _ContractType({
+    required this.id,
     required this.name,
     required this.rate,
     this.unitLabel = 'per unit',
     this.isDefault = false,
+    this.isUserDefined = false,
     this.lastUpdated,
   });
 
+  factory _ContractType.fromModel({
+    required models.ContractType type,
+    bool? isUserDefined,
+  }) {
+    final isDefaultType = type.isDefault || type.isGlobal;
+    return _ContractType(
+      id: type.id,
+      name: type.name,
+      rate: type.rate,
+      unitLabel: type.unitLabel,
+      isDefault: isDefaultType,
+      isUserDefined: isUserDefined ?? !isDefaultType,
+      lastUpdated: type.updatedAt,
+    );
+  }
+
+  factory _ContractType.createLocal({
+    required String name,
+    required double rate,
+    required String unitLabel,
+  }) {
+    return _ContractType(
+      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+      name: name,
+      rate: rate,
+      unitLabel: unitLabel,
+      isDefault: false,
+      isUserDefined: true,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  final String id;
   final String name;
   final double rate;
   final String unitLabel;
   final bool isDefault;
+  final bool isUserDefined;
   final DateTime? lastUpdated;
 
   _ContractType copyWith({
+    String? id,
     String? name,
     double? rate,
     String? unitLabel,
+    bool? isDefault,
+    bool? isUserDefined,
     DateTime? lastUpdated,
   }) {
     return _ContractType(
+      id: id ?? this.id,
       name: name ?? this.name,
       rate: rate ?? this.rate,
       unitLabel: unitLabel ?? this.unitLabel,
-      isDefault: isDefault,
+      isDefault: isDefault ?? this.isDefault,
+      isUserDefined: isUserDefined ?? this.isUserDefined,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
