@@ -282,42 +282,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     final months =
         _availableMonths.isEmpty ? <String>[selectedMonth] : _availableMonths;
 
-    const double combinedSalary = 2456;
-    const double hoursWorked = 156.5;
-    const int unitsCompleted = 500;
-    const double hourlySalary = 1966;
-    const int workingDays = 23;
-    const double averageHours = 6.8;
-    const double lastPayout = 1520;
-    const double contractSalary = 500;
-    const double hourlyBreakdownTotal = 1956;
-
-    const contractItems = <_ContractWorkItem>[
-      _ContractWorkItem(
-        title: 'Ravanello (10 qty) @ 5\$ / 100 units',
-        subtitle: '100 units completed',
-        amount: '\$500',
-        indicatorColor: Color(0xFF2EBD5F),
-      ),
-      _ContractWorkItem(
-        title: 'Carrots (15 qty) @ 3\$ / 150 units',
-        subtitle: '150 units completed',
-        amount: '\$300',
-        indicatorColor: Color(0xFF1C87FF),
-      ),
-      _ContractWorkItem(
-        title: 'Watermelons (5 qty) @ 8\$ / 80 units',
-        subtitle: '80 units completed',
-        amount: '\$240',
-        indicatorColor: Color(0xFFFFB74D),
-      ),
-      _ContractWorkItem(
-        title: 'Apples (20 qty) @ 4\$ / 120 units',
-        subtitle: '70 units pending',
-        amount: '\$0',
-        indicatorColor: Color(0xFFFF3B30),
-      ),
-    ];
+    final workState = context.watch<WorkBloc>().state;
+    final activeWork = _findActiveWorkFromState(workState);
+    final summary = _summary;
+    final error = _summaryError;
+    final isLoading = _isLoadingSummary;
 
     Widget summaryBody;
     if (isLoading) {
