@@ -226,7 +226,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final dateText = entry.dateText?.trim();
     if (dateText != null && dateText.isNotEmpty && mounted) {
       setState(() {
-        _dateLabelOverride = dateText;
+        _dateLabelOverride = _normalizeDateLabel(dateText);
       });
     }
   }
@@ -591,9 +591,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final summaryStats = _buildSummaryStats(l);
     final todayEntry = _dashboardSummary?.todayEntry;
     final dateLabel = (_dateLabelOverride?.isNotEmpty ?? false)
-        ? _dateLabelOverride!
+        ? _normalizeDateLabel(_dateLabelOverride!)
         : (todayEntry?.dateText?.trim().isNotEmpty == true
-            ? todayEntry!.dateText!.trim()
+            ? _normalizeDateLabel(todayEntry!.dateText!.trim())
             : _formatDate(_selectedDate));
     final summarySection = _buildSummarySection(l, summaryStats);
 
@@ -813,6 +813,41 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final day = date.day.toString().padLeft(2, '0');
     return '$month $day, ${date.year}';
   }
+
+  String _normalizeDateLabel(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    DateTime? parsed = _tryParseDate(trimmed);
+    parsed ??= _extractEmbeddedIsoDate(trimmed);
+
+    if (parsed != null) {
+      final normalized = DateTime(parsed.year, parsed.month, parsed.day);
+      return _formatDate(normalized);
+    }
+
+    return trimmed.replaceAll(RegExp(r'\s+'), ' ');
+  }
+
+  DateTime? _tryParseDate(String value) {
+    try {
+      return DateTime.parse(value).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  DateTime? _extractEmbeddedIsoDate(String value) {
+    final match = RegExp(r'\d{4}-\d{2}-\d{2}(?:[T\s]\d{2}:\d{2}:[^\s]*)?')
+        .firstMatch(value);
+    if (match == null) {
+      return null;
+    }
+
+    return _tryParseDate(value.substring(match.start, match.end));
+  }
 }
 
 class _WorkHeaderCard extends StatelessWidget {
@@ -961,22 +996,22 @@ class _AttendanceSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l.todaysAttendanceTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                        ) ??
-                        const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                        ),
-                  ),
-                ),
-                Material(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 360;
+                final titleText = Text(
+                  l.todaysAttendanceTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                );
+
+                final dateSelector = Material(
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
@@ -999,19 +1034,41 @@ class _AttendanceSection extends StatelessWidget {
                             color: Color(0xFF2563EB),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            dateLabel,
-                            style: const TextStyle(
-                              color: Color(0xFF1D4ED8),
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              dateLabel,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF1D4ED8),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                );
+
+                if (isCompact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleText,
+                      const SizedBox(height: 12),
+                      dateSelector,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: titleText),
+                    const SizedBox(width: 12),
+                    Flexible(child: dateSelector),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 20),
             LayoutBuilder(
