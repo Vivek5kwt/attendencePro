@@ -1,6 +1,7 @@
 import '../apis/attendance_api.dart';
 import '../apis/auth_api.dart' show ApiException;
 import '../models/attendance_request.dart';
+import '../models/missed_attendance_completion.dart';
 import '../utils/session_manager.dart';
 
 class AttendanceEntryRepository {
@@ -96,6 +97,30 @@ class AttendanceEntryRepository {
 
     try {
       return await _api.submitAttendance(
+        request: request,
+        token: token,
+      );
+    } on ApiException catch (e) {
+      throw AttendanceRepositoryException(e.message);
+    }
+  }
+
+  Future<Map<String, dynamic>?> completeMissedAttendance({
+    required List<MissedAttendanceCompletion> entries,
+  }) async {
+    if (entries.isEmpty) {
+      return null;
+    }
+
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const AttendanceAuthException();
+    }
+
+    final request = MissedAttendanceCompletionRequest(items: entries);
+
+    try {
+      return await _api.completeMissedAttendance(
         request: request,
         token: token,
       );

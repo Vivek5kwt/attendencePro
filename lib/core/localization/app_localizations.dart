@@ -206,6 +206,11 @@ class AppLocalizations {
       'attendanceMissedEntriesReviewButton': 'Review {date}',
       'attendanceMissedEntriesLoadFailed':
           'Unable to check pending attendance. Please try again.',
+      'attendanceMissedEntriesResolveButton': 'Resolve now',
+      'attendanceMissedEntriesCompleteSuccess':
+          'Missed attendance completed successfully.',
+      'attendanceMissedEntriesCompleteFailed':
+          'Unable to complete missed attendance. Please try again.',
       'attendancePreviewTitle': 'Confirm attendance',
       'attendancePreviewDescription':
           'Review the details below before saving your attendance entry.',
@@ -513,6 +518,11 @@ class AppLocalizations {
       'attendanceMissedEntriesReviewButton': 'समीक्षा करें {date}',
       'attendanceMissedEntriesLoadFailed':
           'लंबित उपस्थिति की जांच नहीं हो सकी। कृपया पुनः प्रयास करें।',
+      'attendanceMissedEntriesResolveButton': 'अभी हल करें',
+      'attendanceMissedEntriesCompleteSuccess':
+          'छूटी हुई उपस्थिति सफलतापूर्वक पूरी हो गई।',
+      'attendanceMissedEntriesCompleteFailed':
+          'छूटी हुई उपस्थिति पूरी नहीं हो सकी। कृपया फिर प्रयास करें।',
       'attendancePreviewTitle': 'उपस्थिति की पुष्टि करें',
       'attendancePreviewDescription':
           'उपस्थिति सहेजने से पहले नीचे दिए विवरण की जाँच करें।',
@@ -817,6 +827,11 @@ class AppLocalizations {
       'attendanceMissedEntriesReviewButton': 'ਸਮੀਖਿਆ ਕਰੋ {date}',
       'attendanceMissedEntriesLoadFailed':
           'ਬਕਾਇਆ ਹਾਜ਼ਰੀ ਦੀ ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'attendanceMissedEntriesResolveButton': 'ਹੁਣੇ ਹੱਲ ਕਰੋ',
+      'attendanceMissedEntriesCompleteSuccess':
+          'ਰਿਹਿ ਗਈ ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਪੂਰੀ ਹੋ ਗਈ ਹੈ।',
+      'attendanceMissedEntriesCompleteFailed':
+          'ਰਿਹਿ ਗਈ ਹਾਜ਼ਰੀ ਪੂਰੀ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendancePreviewTitle': 'ਹਾਜ਼ਰੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'attendancePreviewDescription':
           'ਹਾਜ਼ਰੀ ਸੇਵ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ ਹੇਠਾਂ ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਦੀ ਜਾਂਚ ਕਰੋ।',
@@ -1127,6 +1142,11 @@ class AppLocalizations {
       'attendanceMissedEntriesReviewButton': 'Rivedi {date}',
       'attendanceMissedEntriesLoadFailed':
           'Impossibile verificare le presenze in sospeso. Riprova.',
+      'attendanceMissedEntriesResolveButton': 'Risolvi ora',
+      'attendanceMissedEntriesCompleteSuccess':
+          'Presenze mancanti completate con successo.',
+      'attendanceMissedEntriesCompleteFailed':
+          'Impossibile completare le presenze mancanti. Riprova.',
       'attendancePreviewTitle': 'Conferma presenza',
       'attendancePreviewDescription':
           'Controlla i dettagli prima di salvare la registrazione di presenza.',
@@ -1515,6 +1535,12 @@ class AppLocalizations {
       _value('attendanceMissedEntriesListLabel');
   String get attendanceMissedEntriesLoadFailed =>
       _value('attendanceMissedEntriesLoadFailed');
+  String get attendanceMissedEntriesResolveButton =>
+      _value('attendanceMissedEntriesResolveButton');
+  String get attendanceMissedEntriesCompleteSuccess =>
+      _value('attendanceMissedEntriesCompleteSuccess');
+  String get attendanceMissedEntriesCompleteFailed =>
+      _value('attendanceMissedEntriesCompleteFailed');
   String attendanceMissedEntriesReviewButton(String date) {
     return _value('attendanceMissedEntriesReviewButton')
         .replaceFirst('{date}', date);
