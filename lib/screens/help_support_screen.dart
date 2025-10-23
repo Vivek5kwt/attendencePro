@@ -80,20 +80,10 @@ class HelpSupportScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SupportHeroCard(
-              title: l.helpSupportTitle,
-              subtitle: l.helpSupportSubtitle,
-              hoursLabel: l.helpSupportHoursLabel,
-              hoursValue: l.helpSupportHoursValue,
-              responseLabel: l.helpSupportResponseTimeLabel,
-              responseValue: l.helpSupportResponseTimeValue,
-            ),
-            const SizedBox(height: 24),
-            _SectionTitle(text: l.helpSupportQuickActionsTitle),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+            /*Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 _QuickActionCard(
                   icon: Icons.help_outline,
@@ -115,7 +105,7 @@ class HelpSupportScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 24),*/
             _SectionTitle(text: l.helpSupportContactTitle),
             const SizedBox(height: 12),
             _ContactCard(
@@ -156,19 +146,6 @@ class HelpSupportScreen extends StatelessWidget {
               onPressed: () => _showComingSoonMessage(context),
             ),
             const SizedBox(height: 24),
-            _SectionTitle(text: l.helpSupportAdditionalInfoTitle),
-            const SizedBox(height: 12),
-            _InfoTile(
-              icon: Icons.update,
-              label: l.helpSupportLastUpdatedLabel,
-              value: l.helpSupportLastUpdatedValue,
-            ),
-            const SizedBox(height: 8),
-            _InfoTile(
-              icon: Icons.shield_outlined,
-              label: l.helpSupportPolicyLabel,
-              value: l.helpSupportPolicyValue,
-            ),
           ],
         ),
       ),
@@ -176,156 +153,6 @@ class HelpSupportScreen extends StatelessWidget {
   }
 }
 
-class _SupportHeroCard extends StatelessWidget {
-  const _SupportHeroCard({
-    required this.title,
-    required this.subtitle,
-    required this.hoursLabel,
-    required this.hoursValue,
-    required this.responseLabel,
-    required this.responseValue,
-  });
-
-  final String title;
-  final String subtitle;
-  final String hoursLabel;
-  final String hoursValue;
-  final String responseLabel;
-  final String responseValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ) ??
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 22,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ) ??
-                          TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 15,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Image.asset(
-                  AppAssets.helpSupport,
-                  width: 48,
-                  height: 48,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _HeroInfoChip(
-                  label: hoursLabel,
-                  value: hoursValue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _HeroInfoChip(
-                  label: responseLabel,
-                  value: responseValue,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroInfoChip extends StatelessWidget {
-  const _HeroInfoChip({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withOpacity(0.85),
-                ) ??
-                TextStyle(
-                  color: Colors.white.withOpacity(0.85),
-                  fontSize: 12,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ) ??
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.text});
