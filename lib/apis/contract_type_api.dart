@@ -47,6 +47,8 @@ class ContractTypeApi {
       'global',
       'global_types',
       'globalTypes',
+      'global_contracts',
+      'globalContracts',
       'default',
       'default_types',
       'defaultTypes',
@@ -55,9 +57,15 @@ class ContractTypeApi {
       'user',
       'user_types',
       'userTypes',
+      'user_contracts',
+      'userContracts',
+      'user_contract_types',
+      'userContractTypes',
       'custom',
       'custom_types',
       'customTypes',
+      'mine',
+      'my',
     ]);
 
     final itemsRaw = _extractList(data, const [
@@ -65,6 +73,10 @@ class ContractTypeApi {
       'contracts',
       'contract_types',
       'contractTypes',
+      'user_contracts',
+      'userContracts',
+      'mine',
+      'my',
       'data',
     ]);
 
