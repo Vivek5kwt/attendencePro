@@ -37,6 +37,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   bool _attendanceStatusIsError = false;
   DateTime _selectedDate = DateTime.now();
   String? _dateLabelOverride;
+  List<DateTime> _pendingMissedDates = const <DateTime>[];
+  bool _missedDialogShown = false;
 
   @override
   void initState() {
@@ -229,6 +231,242 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _dateLabelOverride = _normalizeDateLabel(dateText);
       });
     }
+  }
+
+  Future<void> _refreshMissedAttendance({bool showDialog = false}) async {
+    if (!mounted) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    try {
+      final dates = await _attendanceRepository
+          .fetchMissedAttendanceDates(workId: widget.work.id);
+      if (!mounted) {
+        return;
+      }
+      final normalized = dates
+          .map(_normalizeDateOnly)
+          .toSet()
+          .toList()
+        ..sort((a, b) => a.compareTo(b));
+      setState(() {
+        _pendingMissedDates = normalized;
+        if (_pendingMissedDates.isEmpty) {
+          _missedDialogShown = false;
+        }
+      });
+      if (showDialog && _pendingMissedDates.isNotEmpty && !_missedDialogShown) {
+        _missedDialogShown = true;
+        await _showMissedAttendanceDialog(
+          dates: _pendingMissedDates,
+          focusDate: _pendingMissedDates.first,
+        );
+      }
+    } on AttendanceAuthException {
+      if (!mounted) {
+        return;
+      }
+      final message = l.authenticationRequiredMessage;
+      setState(() {
+        _pendingMissedDates = const <DateTime>[];
+        _missedDialogShown = false;
+      });
+      if (showDialog) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
+    } on AttendanceRepositoryException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final message = e.message.trim().isNotEmpty
+          ? e.message.trim()
+          : l.attendanceMissedEntriesLoadFailed;
+      if (showDialog) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      if (showDialog) {
+        final message = l.attendanceMissedEntriesLoadFailed;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
+    }
+  }
+
+  Future<bool> _ensureNoBlockingMissedEntries() async {
+    final l = AppLocalizations.of(context);
+    try {
+      final dates = await _attendanceRepository
+          .fetchMissedAttendanceDates(workId: widget.work.id);
+      if (!mounted) {
+        return false;
+      }
+      final normalized = dates
+          .map(_normalizeDateOnly)
+          .toSet()
+          .toList()
+        ..sort((a, b) => a.compareTo(b));
+      setState(() {
+        _pendingMissedDates = normalized;
+        if (_pendingMissedDates.isEmpty) {
+          _missedDialogShown = false;
+        }
+      });
+      if (_pendingMissedDates.isEmpty) {
+        return true;
+      }
+      final selectedDate = _normalizeDateOnly(_selectedDate);
+      final earliestPending = _pendingMissedDates.first;
+      if (selectedDate.isAfter(earliestPending)) {
+        _missedDialogShown = true;
+        await _showMissedAttendanceDialog(
+          dates: _pendingMissedDates,
+          focusDate: earliestPending,
+        );
+        return false;
+      }
+      return true;
+    } on AttendanceAuthException {
+      if (!mounted) {
+        return false;
+      }
+      final message = l.authenticationRequiredMessage;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      return false;
+    } on AttendanceRepositoryException catch (e) {
+      if (!mounted) {
+        return false;
+      }
+      final message = e.message.trim().isNotEmpty
+          ? e.message.trim()
+          : l.attendanceMissedEntriesLoadFailed;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      return false;
+    } catch (_) {
+      if (!mounted) {
+        return false;
+      }
+      final message = l.attendanceMissedEntriesLoadFailed;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      return false;
+    }
+  }
+
+  Future<void> _showMissedAttendanceDialog({
+    required List<DateTime> dates,
+    required DateTime focusDate,
+  }) async {
+    if (!mounted || dates.isEmpty) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final focusLabel = _formatDate(focusDate);
+    final labels = dates.map(_formatDate).toList(growable: false);
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l.attendanceMissedEntriesTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.attendanceMissedEntriesDescription,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF92400E),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l.attendanceMissedEntriesListLabel,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF9A3412),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: labels.map((label) {
+                    final isHighlighted = label == focusLabel;
+                    return Chip(
+                      label: Text(label),
+                      backgroundColor: isHighlighted
+                          ? const Color(0xFFFFEDD5)
+                          : const Color(0xFFF1F5F9),
+                      labelStyle: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight:
+                            isHighlighted ? FontWeight.w700 : FontWeight.w500,
+                        color: isHighlighted
+                            ? const Color(0xFF9A3412)
+                            : const Color(0xFF475569),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    );
+                  }).toList(growable: false),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _jumpToDate(focusDate);
+              },
+              child: Text(l.attendanceMissedEntriesReviewButton(focusLabel)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l.close),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handlePendingAttendanceReview() {
+    if (_pendingMissedDates.isEmpty) {
+      return;
+    }
+    final focusDate = _pendingMissedDates.first;
+    _missedDialogShown = true;
+    unawaited(
+      _showMissedAttendanceDialog(
+        dates: _pendingMissedDates,
+        focusDate: focusDate,
+      ),
+    );
+  }
+
+  void _jumpToDate(DateTime date) {
+    if (!mounted) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    final normalized = _normalizeDateOnly(date);
+    setState(() {
+      _selectedDate = normalized;
+      _dateLabelOverride = _formatDate(normalized);
+    });
+    _handleAttendanceFieldChanged();
   }
 
   Future<void> _handleDateTap() async {
@@ -444,6 +682,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       contractTypeId = _resolveContractTypeId();
     }
 
+    final canSubmit = await _ensureNoBlockingMissedEntries();
+    if (!mounted || !canSubmit) {
+      return;
+    }
+
     setState(() {
       _isSubmittingAttendance = true;
       _attendanceStatusMessage = null;
@@ -524,6 +767,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         SnackBar(content: Text(message)),
       );
       await _loadSummary();
+      await _refreshMissedAttendance(showDialog: false);
     } on AttendanceAuthException {
       if (!mounted) {
         return;
@@ -855,6 +1099,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _isSummaryLoading = false;
       });
       _applyAttendanceDetailsFromSummary(summary.todayEntry);
+      await _refreshMissedAttendance(showDialog: true);
     } on DashboardAuthException {
       if (!mounted) return;
       final message = l.authenticationRequiredMessage;
@@ -947,6 +1192,21 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 hourlyRateText: hourlyRateText,
               ),
               const SizedBox(height: 24),
+              if (_pendingMissedDates.isNotEmpty) ...[
+                _PendingAttendanceCard(
+                  title: l.attendanceMissedEntriesTitle,
+                  description: l.attendanceMissedEntriesDescription,
+                  dateLabels: _pendingMissedDates
+                      .map(_formatDate)
+                      .toList(growable: false),
+                  highlightedLabel: _formatDate(_pendingMissedDates.first),
+                  buttonLabel: l.attendanceMissedEntriesReviewButton(
+                    _formatDate(_pendingMissedDates.first),
+                  ),
+                  onReview: _handlePendingAttendanceReview,
+                ),
+                const SizedBox(height: 24),
+              ],
               _AttendanceSection(
                 dateLabel: dateLabel,
                 onDateTap: _handleDateTap,
@@ -1103,6 +1363,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     ];
   }
 
+  DateTime _normalizeDateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
   String _formatDate(DateTime date) {
     const monthNames = <String>[
       'Jan',
@@ -1157,6 +1421,98 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     return _tryParseDate(value.substring(match.start, match.end));
+  }
+}
+
+class _PendingAttendanceCard extends StatelessWidget {
+  const _PendingAttendanceCard({
+    required this.title,
+    required this.description,
+    required this.dateLabels,
+    required this.highlightedLabel,
+    required this.buttonLabel,
+    required this.onReview,
+  });
+
+  final String title;
+  final String description;
+  final List<String> dateLabels;
+  final String highlightedLabel;
+  final String buttonLabel;
+  final VoidCallback onReview;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFFE4C7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF9A3412),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF92400E),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: dateLabels.map((label) {
+              final isHighlighted = label == highlightedLabel;
+              return Chip(
+                label: Text(label),
+                backgroundColor:
+                    isHighlighted ? const Color(0xFFFFEDD5) : Colors.white,
+                labelStyle: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w500,
+                  color:
+                      isHighlighted ? const Color(0xFF9A3412) : const Color(0xFF6B7280),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                side: BorderSide(
+                  color: isHighlighted
+                      ? const Color(0xFFF97316)
+                      : const Color(0xFFE2E8F0),
+                ),
+              );
+            }).toList(growable: false),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onReview,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF97316),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Text(buttonLabel),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
