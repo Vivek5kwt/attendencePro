@@ -200,6 +200,9 @@ class AppLocalizations {
       'contractWorkHeader': 'Contract Work (if have)',
       'addContractWorkButton': 'Add Contract Work',
       'contractWorkDescription': 'Piece-rate work: Watermelon, Carrot, Ravanello, Orange, etc.',
+      'contractWorkCustomTypesTitle': 'Your contract types',
+      'contractWorkNoCustomTypesLabel': 'No custom contract types yet.',
+      'contractWorkLoadError': 'Unable to load contract types right now.',
       'cancelButton': 'Cancel',
       'saveButtonLabel': 'Save',
       'saveWorkButton': 'Save Work',
@@ -346,6 +349,9 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'कुल वेतन',
       'contractWorkDefaultTag': 'डिफ़ॉल्ट',
       'contractWorkUnitFallback': 'प्रति इकाई',
+      'contractWorkCustomTypesTitle': 'आपके कॉन्ट्रैक्ट प्रकार',
+      'contractWorkNoCustomTypesLabel': 'अभी कोई कस्टम कॉन्ट्रैक्ट प्रकार नहीं है।',
+      'contractWorkLoadError': 'अभी कॉन्ट्रैक्ट प्रकार लोड नहीं हो पाए।',
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
       'helpSupportTitle': 'हम आपकी कैसे मदद कर सकते हैं?',
@@ -613,6 +619,9 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'ਕੁੱਲ ਤਨਖ਼ਾਹ',
       'contractWorkDefaultTag': 'ਡਿਫਾਲਟ',
       'contractWorkUnitFallback': 'ਪਰ ਯੂਨਿਟ',
+      'contractWorkCustomTypesTitle': 'ਤੁਹਾਡੀਆਂ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ',
+      'contractWorkNoCustomTypesLabel': 'ਹਾਲੇ ਤੱਕ ਕੋਈ ਕਸਟਮ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਨਹੀਂ ਹੈ।',
+      'contractWorkLoadError': 'ਇਸ ਵੇਲੇ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ।',
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
       'helpSupportTitle': 'ਅਸੀਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦੇ ਹਾਂ?',
@@ -883,6 +892,9 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'Salario totale',
       'contractWorkDefaultTag': 'Predefinito',
       'contractWorkUnitFallback': 'per unità',
+      'contractWorkCustomTypesTitle': 'I tuoi tipi di contratto',
+      'contractWorkNoCustomTypesLabel': 'Nessun tipo di contratto personalizzato.',
+      'contractWorkLoadError': 'Impossibile caricare i tipi di contratto in questo momento.',
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
       'helpSupportTitle': 'Come possiamo aiutarti oggi?',
@@ -1201,6 +1213,11 @@ class AppLocalizations {
       _value('contractWorkTotalSalaryLabel');
   String get contractWorkDefaultTag => _value('contractWorkDefaultTag');
   String get contractWorkUnitFallback => _value('contractWorkUnitFallback');
+  String get contractWorkCustomTypesTitle =>
+      _value('contractWorkCustomTypesTitle');
+  String get contractWorkNoCustomTypesLabel =>
+      _value('contractWorkNoCustomTypesLabel');
+  String get contractWorkLoadError => _value('contractWorkLoadError');
   String get changeLanguageLabel => _value('changeLanguageLabel');
   String get helpSupportLabel => _value('helpSupportLabel');
   String get helpSupportTitle => _value('helpSupportTitle');

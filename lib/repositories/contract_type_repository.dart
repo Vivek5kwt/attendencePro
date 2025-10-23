@@ -1,0 +1,38 @@
+import '../apis/auth_api.dart';
+import '../apis/contract_type_api.dart';
+import '../models/contract_type.dart';
+import '../utils/session_manager.dart';
+
+class ContractTypeRepository {
+  ContractTypeRepository({
+    ContractTypeApi? api,
+    SessionManager? sessionManager,
+  })  : _api = api ?? ContractTypeApi(),
+        _sessionManager = sessionManager ?? const SessionManager();
+
+  final ContractTypeApi _api;
+  final SessionManager _sessionManager;
+
+  Future<ContractTypeCollection> fetchContractTypes() async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const ContractTypeAuthException();
+    }
+
+    try {
+      return await _api.fetchContractTypes(token: token);
+    } on ApiException catch (e) {
+      throw ContractTypeRepositoryException(e.message);
+    }
+  }
+}
+
+class ContractTypeRepositoryException implements Exception {
+  const ContractTypeRepositoryException(this.message);
+  final String message;
+}
+
+class ContractTypeAuthException extends ContractTypeRepositoryException {
+  const ContractTypeAuthException()
+      : super('Authentication required to load contract types.');
+}
