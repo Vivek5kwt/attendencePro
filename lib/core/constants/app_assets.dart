@@ -14,4 +14,11 @@ class AppAssets {
   static const clock = 'assets/images/ic_clock.png';
   static const contract = 'assets/images/ic_contract.png';
   static const reports = 'assets/images/ic_reports.png';
+  static const addNewWork = 'assets/images/ic_add_new_work.png';
+  static const changeLanguage = 'assets/images/ic_change_language.png';
+  static const contractWork = 'assets/images/ic_contract_work.png';
+  static const helpSupport = 'assets/images/ic_help_support.png';
+  static const history = 'assets/images/ic_history.png';
+  static const home = 'assets/images/ic_home.png';
+  static const logout = 'assets/images/ic_logout.png';
 }

@@ -1105,28 +1105,28 @@ class _HomeScreenState extends State<HomeScreen> {
           final userEmail = state.userEmail ?? l.drawerUserPhone;
           final menuItems = <_DrawerMenuItem>[
             _DrawerMenuItem(
-              icon: Icons.home_outlined,
+              assetPath: AppAssets.home,
               label: l.dashboardLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF1C87FF),
               onTap: () => (){},
             ),
             _DrawerMenuItem(
-              icon: Icons.work_outline,
+              assetPath: AppAssets.addNewWork,
               label: l.addNewWorkLabel,
               backgroundColor: const Color(0xFFE8F8F0),
               iconColor: const Color(0xFF2EBD5F),
               onTap: _handleAddWorkFromDrawer,
             ),
             _DrawerMenuItem(
-              icon: Icons.access_time,
+              assetPath: AppAssets.history,
               label: l.attendanceHistoryLabel,
               backgroundColor: const Color(0xFFFFF2F2),
               iconColor: const Color(0xFFFF3B30),
               onTap: () => (){},
             ),
             _DrawerMenuItem(
-              icon: Icons.assignment_outlined,
+              assetPath: AppAssets.contractWork,
               label: l.contractWorkLabel,
               backgroundColor: const Color(0xFFEDEBFF),
               iconColor: const Color(0xFF5856D6),
@@ -1140,7 +1140,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: _openReportsSummary,
             ),
             _DrawerMenuItem(
-              icon: Icons.language,
+              assetPath: AppAssets.changeLanguage,
               label: l.changeLanguageLabel,
               backgroundColor: const Color(0xFFF3E8FF),
               iconColor: const Color(0xFFAF52DE),
@@ -1152,14 +1152,14 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             _DrawerMenuItem(
-              icon: Icons.support_agent_outlined,
+              assetPath: AppAssets.helpSupport,
               label: l.helpSupportLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF007AFF),
               onTap: () => (){},
             ),
             _DrawerMenuItem(
-              icon: Icons.logout,
+              assetPath: AppAssets.logout,
               label: l.logoutLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF007AFF),
