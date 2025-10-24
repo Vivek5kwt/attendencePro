@@ -475,11 +475,11 @@ class _SignupScreenState extends State<SignupScreen> {
       child: InputDecorator(
         decoration: _inputDecoration(l.countryCodeLabel).copyWith(
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
         isEmpty: false,
         child: SizedBox(
-          height: 48,
+          height: 56,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
