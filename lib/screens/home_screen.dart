@@ -17,6 +17,7 @@ import '../models/work.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/session_manager.dart';
 import '../widgets/app_dialogs.dart';
+import '../widgets/work_selection_dialog.dart';
 import 'help_support_screen.dart';
 import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
@@ -158,9 +159,48 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).pop();
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
+    final workState = context.read<WorkBloc>().state;
+    final works = workState.works;
+    if (works.isEmpty) {
+      _showAddWorkDialog();
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    Work? activeWork;
+    for (final work in works) {
+      if (_isWorkActive(work)) {
+        activeWork = work;
+        break;
+      }
+    }
+    activeWork ??= works.first;
+
+    final selectedWork = await showWorkSelectionDialog(
+      context: context,
+      works: works,
+      localization: l,
+      initialSelectedWorkId: activeWork.id,
+      onAddNewWork: () {
+        if (!mounted) {
+          return;
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showAddWorkDialog();
+          }
+        });
+      },
+    );
+    if (!mounted || selectedWork == null) {
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => const ReportsSummaryScreen(),
+        builder: (context) => ReportsSummaryScreen(
+          initialWorkId: selectedWork.id,
+        ),
       ),
     );
   }

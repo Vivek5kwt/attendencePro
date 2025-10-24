@@ -10,9 +10,12 @@ import '../bloc/work_state.dart';
 import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/reports_repository.dart';
+import '../widgets/work_selection_dialog.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
-  const ReportsSummaryScreen({super.key});
+  const ReportsSummaryScreen({super.key, this.initialWorkId});
+
+  final String? initialWorkId;
 
   @override
   State<ReportsSummaryScreen> createState() => _ReportsSummaryScreenState();
@@ -50,6 +53,13 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   String? _summaryError;
   int _summaryRequestId = 0;
   bool _missingWork = false;
+  String? _selectedWorkId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedWorkId = widget.initialWorkId;
+  }
 
   @override
   void didChangeDependencies() {
@@ -110,15 +120,16 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   Future<void> _loadSummary() async {
     final targetDate = _parseMonth(_selectedMonth) ?? DateTime.now();
     final workState = context.read<WorkBloc>().state;
-    final activeWork = _findActiveWorkFromState(workState);
+    final selectedWork = _resolveSelectedWork(workState);
     final l = AppLocalizations.of(context);
 
-    if (activeWork == null) {
+    if (selectedWork == null) {
       setState(() {
         _summary = null;
         _summaryError = null;
         _missingWork = true;
         _isLoadingSummary = false;
+        _selectedWorkId = null;
       });
       return;
     }
@@ -128,12 +139,13 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       _isLoadingSummary = true;
       _summaryError = null;
       _missingWork = false;
+      _selectedWorkId = selectedWork.id;
     });
 
     try {
       final repository = context.read<ReportsRepository>();
       final summary = await repository.fetchSummary(
-        workId: activeWork.id,
+        workId: selectedWork.id,
         month: targetDate.month,
         year: targetDate.year,
       );
@@ -172,6 +184,30 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     }
   }
 
+  Future<void> _handleChangeWork(List<Work> works) async {
+    if (!mounted || works.isEmpty) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final selected = await showWorkSelectionDialog(
+      context: context,
+      works: works,
+      localization: l,
+      initialSelectedWorkId:
+          _selectedWorkId ?? _resolveSelectedWork(context.read<WorkBloc>().state)?.id,
+    );
+    if (!mounted || selected == null) {
+      return;
+    }
+    if (selected.id == _selectedWorkId) {
+      return;
+    }
+    setState(() {
+      _selectedWorkId = selected.id;
+    });
+    _loadSummary();
+  }
+
   Work? _findActiveWorkFromState(WorkState state) {
     if (state.works.isEmpty) {
       return null;
@@ -182,6 +218,23 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       }
     }
     return state.works.first;
+  }
+
+  Work? _resolveSelectedWork(WorkState state) {
+    if (state.works.isEmpty) {
+      return null;
+    }
+
+    final selectedId = _selectedWorkId;
+    if (selectedId != null) {
+      for (final work in state.works) {
+        if (work.id == selectedId) {
+          return work;
+        }
+      }
+    }
+
+    return _findActiveWorkFromState(state);
   }
 
   bool _isWorkActive(Work work) {
@@ -283,7 +336,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         _availableMonths.isEmpty ? <String>[selectedMonth] : _availableMonths;
 
     final workState = context.watch<WorkBloc>().state;
-    final activeWork = _findActiveWorkFromState(workState);
+    final selectedWork = _resolveSelectedWork(workState);
     final summary = _summary;
     final error = _summaryError;
     final isLoading = _isLoadingSummary;
@@ -323,18 +376,41 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
 
     return BlocListener<WorkBloc, WorkState>(
       listenWhen: (previous, current) {
-        final previousId = _findActiveWorkFromState(previous)?.id;
-        final currentId = _findActiveWorkFromState(current)?.id;
-        return previousId != currentId;
+        if (previous.works.length != current.works.length) {
+          return true;
+        }
+        final previousIds = previous.works.map((work) => work.id).toSet();
+        final currentIds = current.works.map((work) => work.id).toSet();
+        if (previousIds.length != currentIds.length) {
+          return true;
+        }
+        if (!previousIds.containsAll(currentIds) ||
+            !currentIds.containsAll(previousIds)) {
+          return true;
+        }
+        final previousActiveId = _findActiveWorkFromState(previous)?.id;
+        final currentActiveId = _findActiveWorkFromState(current)?.id;
+        if (previousActiveId != currentActiveId) {
+          return true;
+        }
+        if (_selectedWorkId != null) {
+          final previousHasSelected = previousIds.contains(_selectedWorkId);
+          final currentHasSelected = currentIds.contains(_selectedWorkId);
+          if (previousHasSelected != currentHasSelected) {
+            return true;
+          }
+        }
+        return false;
       },
       listener: (context, state) {
-        final active = _findActiveWorkFromState(state);
-        if (active == null) {
+        final work = _resolveSelectedWork(state);
+        if (work == null) {
           setState(() {
             _summary = null;
             _summaryError = null;
             _missingWork = true;
             _isLoadingSummary = false;
+            _selectedWorkId = null;
           });
           return;
         }
@@ -395,9 +471,33 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 months: months,
                 onMonthSelected: _onMonthSelected,
               ),
-              if (activeWork != null) ...[
+              if (selectedWork != null) ...[
                 const SizedBox(height: 12),
-                _ActiveWorkBadge(workName: activeWork.name),
+                Row(
+                  children: [
+                    _ActiveWorkBadge(workName: selectedWork.name),
+                    const SizedBox(width: 12),
+                    TextButton(
+                      onPressed: () => _handleChangeWork(workState.works),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF2563EB),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      child: Text(
+                        l.changeWorkButton,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF2563EB),
+                            ) ??
+                            const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2563EB),
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
               const SizedBox(height: 16),
               AnimatedSwitcher(

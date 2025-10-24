@@ -35,6 +35,10 @@ class AppLocalizations {
       'homeBannerSubtitle':
           'Manage your shifts, track hours, and stay organized every day.',
       'addNewWorkLabel': 'Add New Work',
+      'selectWorkTitle': 'Select Work',
+      'workSelectionSubtitle':
+          'Choose the work you want to view reports for.',
+      'confirmSelectionButton': 'Confirm Selection',
       'attendanceHistoryLabel': 'Attendance History',
       'attendanceHistoryMonthLabel': 'Select month',
       'attendanceHistorySummaryTitle': 'This month so far',
@@ -360,6 +364,9 @@ class AppLocalizations {
       'homeBannerSubtitle':
           'अपनी शिफ्ट्स प्रबंधित करें, घंटे ट्रैक करें और हर दिन व्यवस्थित रहें।',
       'addNewWorkLabel': 'नया कार्य जोड़ें',
+      'selectWorkTitle': 'कार्य चुनें',
+      'workSelectionSubtitle': 'रिपोर्ट देखने के लिए कार्य चुनें।',
+      'confirmSelectionButton': 'चयन की पुष्टि करें',
       'attendanceHistoryLabel': 'उपस्थिति इतिहास',
       'attendanceHistoryMonthLabel': 'माह चुनें',
       'attendanceHistorySummaryTitle': 'इस महीने अब तक',
@@ -685,6 +692,9 @@ class AppLocalizations {
       'homeBannerSubtitle':
           'ਆਪਣੀਆਂ ਸ਼ਿਫਟਾਂ ਸੰਭਾਲੋ, ਘੰਟੇ ਟਰੈਕ ਕਰੋ ਅਤੇ ਹਰ ਰੋਜ਼ ਸੁਵਿਧਾਜਨਕ ਰਹੋ।',
       'addNewWorkLabel': 'ਨਵਾਂ ਕੰਮ ਜੋੜੋ',
+      'selectWorkTitle': 'ਕੰਮ ਚੁਣੋ',
+      'workSelectionSubtitle': 'ਰਿਪੋਰਟ ਦੇਖਣ ਲਈ ਕੰਮ ਚੁਣੋ।',
+      'confirmSelectionButton': 'ਚੋਣ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
       'attendanceHistoryLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ',
       'attendanceHistoryMonthLabel': 'ਮਹੀਨਾ ਚੁਣੋ',
       'attendanceHistorySummaryTitle': 'ਇਸ ਮਹੀਨੇ ਤੱਕ',
@@ -1013,6 +1023,10 @@ class AppLocalizations {
       'homeBannerSubtitle':
           'Gestisci i tuoi turni, traccia le ore e rimani organizzato ogni giorno.',
       'addNewWorkLabel': 'Aggiungi nuovo lavoro',
+      'selectWorkTitle': 'Seleziona lavoro',
+      'workSelectionSubtitle':
+          'Scegli il lavoro di cui vuoi visualizzare i report.',
+      'confirmSelectionButton': 'Conferma selezione',
       'attendanceHistoryLabel': 'Storico presenze',
       'attendanceHistoryMonthLabel': 'Seleziona mese',
       'attendanceHistorySummaryTitle': 'Questo mese finora',
@@ -1565,6 +1579,9 @@ class AppLocalizations {
   String get workB => _value('workB');
   String get switchedToWorkA => _value('switchedToWorkA');
   String get switchedToWorkB => _value('switchedToWorkB');
+  String get selectWorkTitle => _value('selectWorkTitle');
+  String get workSelectionSubtitle => _value('workSelectionSubtitle');
+  String get confirmSelectionButton => _value('confirmSelectionButton');
   String get selectLanguageTitle => _value('selectLanguageTitle');
   String get languageEnglish => _value('languageEnglish');
   String get languageHindi => _value('languageHindi');
