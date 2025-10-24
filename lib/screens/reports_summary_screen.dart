@@ -429,14 +429,40 @@ class _SummaryLoadedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currency = summary.currencySymbol;
+    final resolvedHoursWorked = _resolveDoubleMetric(
+      summary.combinedSalary.hoursWorked,
+      summary.hourlySummary.totalHours,
+    );
+    final resolvedUnitsCompleted = _resolveIntMetric(
+      summary.combinedSalary.unitsCompleted,
+      summary.contractSummary.totalUnits,
+    );
+    final resolvedContractTotal = _resolveDoubleMetric(
+      summary.breakdown.contractTotal,
+      summary.contractSummary.salaryAmount,
+    );
+    var resolvedHourlyTotal = _resolveDoubleMetric(
+      summary.breakdown.hourlyTotal,
+      summary.combinedSalary.amount - resolvedContractTotal,
+    );
+    if (_isEffectivelyZero(resolvedHourlyTotal)) {
+      resolvedHourlyTotal = _resolveDoubleMetric(
+        resolvedHourlyTotal,
+        summary.hourlySummary.hourlySalary,
+      );
+    }
+    final resolvedGrandTotal = _resolveDoubleMetric(
+      summary.breakdown.grandTotal,
+      summary.combinedSalary.amount,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _CombinedSalaryCard(
           title: localization.reportsCombinedSalaryTitle,
           amount: summary.combinedSalary.amount,
-          hoursWorked: summary.combinedSalary.hoursWorked,
-          unitsCompleted: summary.combinedSalary.unitsCompleted,
+          hoursWorked: resolvedHoursWorked,
+          unitsCompleted: resolvedUnitsCompleted,
           hoursLabel: localization.reportsHoursWorkedSuffix,
           unitsLabel: localization.reportsUnitsCompletedSuffix,
           currencySymbol: currency,
@@ -476,11 +502,11 @@ class _SummaryLoadedContent extends StatelessWidget {
         const SizedBox(height: 12),
         _MonthlyBreakdownCard(
           hourlyWorkLabel: localization.hourlyWorkLabel,
-          hourlyTotal: summary.breakdown.hourlyTotal,
+          hourlyTotal: resolvedHourlyTotal,
           contractWorkLabel: localization.contractWorkLabel,
-          contractTotal: summary.breakdown.contractTotal,
+          contractTotal: resolvedContractTotal,
           grandTotalLabel: localization.reportsGrandTotalLabel,
-          grandTotal: summary.breakdown.grandTotal,
+          grandTotal: resolvedGrandTotal,
           currencySymbol: currency,
         ),
       ],
@@ -1614,4 +1640,22 @@ String _formatCurrencyValue(num value, String symbol) {
 String _formatHoursValue(double value) {
   final isWhole = value.floorToDouble() == value;
   return value.toStringAsFixed(isWhole ? 0 : 1);
+}
+
+double _resolveDoubleMetric(double primary, double fallback) {
+  if (_isEffectivelyZero(primary) && !_isEffectivelyZero(fallback)) {
+    return fallback;
+  }
+  return primary;
+}
+
+int _resolveIntMetric(int primary, int fallback) {
+  if (primary <= 0 && fallback > 0) {
+    return fallback;
+  }
+  return primary;
+}
+
+bool _isEffectivelyZero(double value) {
+  return value.abs() < 0.0001;
 }
