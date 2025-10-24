@@ -409,6 +409,7 @@ class AuthCubit extends Cubit<AuthState> {
       String? name;
       String? email;
       String? username;
+      String? language;
 
       final user = data['user'];
       if (user is Map<String, dynamic>) {
@@ -424,6 +425,10 @@ class AuthCubit extends Cubit<AuthState> {
         if (potentialUsername is String && potentialUsername.isNotEmpty) {
           username = potentialUsername;
         }
+        final potentialLanguage = user['language'];
+        if (potentialLanguage is String && potentialLanguage.isNotEmpty) {
+          language = potentialLanguage;
+        }
       }
 
       await _sessionManager.saveSession(
@@ -431,6 +436,7 @@ class AuthCubit extends Cubit<AuthState> {
         name: name,
         email: email,
         username: username,
+        language: language,
       );
     } catch (_) {
     }

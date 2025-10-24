@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/app_cubit.dart';
 import '../bloc/work_bloc.dart';
+import '../bloc/locale_cubit.dart';
 import '../bloc/work_event.dart';
 import 'create_password_screen.dart';
 import 'login_phone_screen.dart';
@@ -31,6 +32,10 @@ class _AuthFlowState extends State<AuthFlow> {
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
+          final languageCode = _extractLanguageCode(state.data);
+          if (languageCode != null && languageCode.isNotEmpty) {
+            context.read<LocaleCubit>().setLocale(Locale(languageCode));
+          }
           context.read<WorkBloc>().add(const WorkStarted());
           context.read<AppCubit>().showHome();
         } else if (state is AuthVerifyNumber) {
@@ -125,4 +130,29 @@ class _AuthFlowState extends State<AuthFlow> {
       },
     );
   }
+}
+
+String? _extractLanguageCode(Map<String, dynamic>? data) {
+  if (data == null) {
+    return null;
+  }
+  final payload = data['data'];
+  if (payload is Map<String, dynamic>) {
+    final user = payload['user'];
+    if (user is Map<String, dynamic>) {
+      final language = user['language'];
+      if (language is String) {
+        return language;
+      }
+    }
+    final language = payload['language'];
+    if (language is String) {
+      return language;
+    }
+  }
+  final language = data['language'];
+  if (language is String) {
+    return language;
+  }
+  return null;
 }

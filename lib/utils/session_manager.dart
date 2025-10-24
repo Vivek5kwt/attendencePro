@@ -7,12 +7,14 @@ class SessionManager {
   static const _nameKey = 'user_name';
   static const _emailKey = 'user_email';
   static const _usernameKey = 'user_username';
+  static const _languageKey = 'user_language';
 
   Future<void> saveSession({
     required String token,
     String? name,
     String? email,
     String? username,
+    String? language,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
@@ -24,6 +26,9 @@ class SessionManager {
     }
     if (username != null) {
       await prefs.setString(_usernameKey, username);
+    }
+    if (language != null && language.isNotEmpty) {
+      await prefs.setString(_languageKey, language);
     }
   }
 
@@ -45,11 +50,26 @@ class SessionManager {
     };
   }
 
+  Future<void> savePreferredLanguage(String languageCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_languageKey, languageCode);
+  }
+
+  Future<String?> getPreferredLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final language = prefs.getString(_languageKey);
+    if (language == null || language.isEmpty) {
+      return null;
+    }
+    return language;
+  }
+
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_nameKey);
     await prefs.remove(_emailKey);
     await prefs.remove(_usernameKey);
+    await prefs.remove(_languageKey);
   }
 }
