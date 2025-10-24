@@ -2320,7 +2320,7 @@ class _WorkHeaderCard extends StatelessWidget {
               children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.22),
                     borderRadius: BorderRadius.circular(16),
@@ -2328,10 +2328,10 @@ class _WorkHeaderCard extends StatelessWidget {
                   child: Text(
                     workTypeLabel,
                     style: textTheme.labelLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.2,
-                        ) ??
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ) ??
                         const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -2346,9 +2346,9 @@ class _WorkHeaderCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ) ??
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ) ??
                       const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -2360,9 +2360,9 @@ class _WorkHeaderCard extends StatelessWidget {
                   Text(
                     rateDescription!,
                     style: textTheme.bodyLarge?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.w500,
-                        ) ??
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w500,
+                    ) ??
                         TextStyle(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 16,
@@ -2380,7 +2380,7 @@ class _WorkHeaderCard extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(28),
               child: Image.asset(
-                AppAssets.homeBanner,
+                AppAssets.homeBanner2,
                 fit: BoxFit.contain,
                 height: 220,
               ),

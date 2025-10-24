@@ -3,6 +3,7 @@ class AppAssets {
 
   static const profilePlaceholder = 'assets/profile_placeholder.png';
   static const homeBanner = 'assets/images/ic_women.webp';
+  static const homeBanner2 = 'assets/images/ic_men.webp';
   static const homeBannerIllustration = 'assets/images/ic_slider.webp';
   static const workPlaceholder = 'assets/images/ic_work_placeholder.webp';
   static const splashBackground = 'assets/images/bg_splash.webp';
