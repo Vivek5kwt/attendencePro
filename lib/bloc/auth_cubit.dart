@@ -105,6 +105,10 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError('Name is required.'));
       return;
     }
+    if (username.trim().isEmpty) {
+      emit(AuthError('Username is required.'));
+      return;
+    }
     if (email.trim().isEmpty) {
       emit(AuthError('Email is required.'));
       return;
