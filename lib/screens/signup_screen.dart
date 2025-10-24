@@ -260,7 +260,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
-                          inputFormatters: const [FilteringTextInputFormatter.digitsOnly],
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                           decoration: _inputDecoration(l.phoneNumberLabel),
                           validator: (value) {
                             final trimmed = value?.trim() ?? '';
