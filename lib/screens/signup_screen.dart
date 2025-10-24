@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
+import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import 'policy_screen.dart';
 
@@ -17,8 +19,20 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
+
+  static const List<Map<String, String>> _countryCodeOptions = [
+    {'code': '+1', 'label': 'United States'},
+    {'code': '+39', 'label': 'Italy'},
+    {'code': '+44', 'label': 'United Kingdom'},
+    {'code': '+61', 'label': 'Australia'},
+    {'code': '+91', 'label': 'India'},
+  ];
+
+  String _selectedCountryCode = '+91';
+  late String _selectedLanguage;
 
   bool _passwordVisible = false;
   bool _confirmVisible = false;
@@ -29,6 +43,14 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedLanguage = context.read<LocaleCubit>().state.languageCode;
+    if (!const ['en', 'hi', 'pa', 'it'].contains(_selectedLanguage)) {
+      _selectedLanguage = 'en';
+    }
+    if (!_countryCodeOptions
+        .any((element) => element['code'] == _selectedCountryCode)) {
+      _selectedCountryCode = _countryCodeOptions.first['code']!;
+    }
     if (widget.initialName != null) {
       _nameController.text = widget.initialName!;
     }
@@ -40,6 +62,7 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     _termsRecognizer.dispose();
@@ -49,9 +72,12 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _submitSignup() {
     final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (!_agreed) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(content: Text(l.termsAgreement)),
       );
       return;
@@ -59,8 +85,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmController.text;
+    final countryCode = _selectedCountryCode;
+    final language = _resolveLanguage();
 
     String username = email;
     if (email.contains('@')) {
@@ -76,7 +105,15 @@ class _SignupScreenState extends State<SignupScreen> {
       username: username,
       password: password,
       confirm: confirm,
+      phone: phone,
+      countryCode: countryCode,
+      language: language,
     );
+  }
+
+  String _resolveLanguage() {
+    const supported = {'en', 'hi', 'pa', 'it'};
+    return supported.contains(_selectedLanguage) ? _selectedLanguage : 'en';
   }
 
   void _openTerms() {
@@ -98,17 +135,27 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final languageOptions = <String, String>{
+      'en': l.languageEnglish,
+      'hi': l.languageHindi,
+      'pa': l.languagePunjabi,
+      'it': l.languageItalian,
+    };
+    final selectedLanguage = _resolveLanguage();
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) async {
+        final messenger = ScaffoldMessenger.of(context);
         if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
             SnackBar(content: Text(state.message)),
           );
         } else if (state is AuthAuthenticated) {
           final msg = state.data?['message'] ??
               state.data?['status'] ??
               AppLocalizations.of(context).operationSuccessful;
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
             SnackBar(content: Text(msg)),
           );
         }
@@ -167,6 +214,92 @@ class _SignupScreenState extends State<SignupScreen> {
                       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email))
                         return l.emailInvalid;
                       return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l.phoneNumberLabel,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedCountryCode,
+                          decoration: _inputDecoration(l.countryCodeLabel),
+                          items: _countryCodeOptions
+                              .map(
+                                (option) {
+                                  final code = option['code']!;
+                                  final label = option['label']!;
+                                  return DropdownMenuItem<String>(
+                                    value: code,
+                                    child: Text('$code ($label)'),
+                                  );
+                                },
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _selectedCountryCode = value);
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 6,
+                        child: TextFormField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: const [FilteringTextInputFormatter.digitsOnly],
+                          decoration: _inputDecoration(l.phoneNumberLabel).copyWith(
+                            hintText: l.phoneNumberHint,
+                          ),
+                          validator: (value) {
+                            final trimmed = value?.trim() ?? '';
+                            if (trimmed.isEmpty) return l.phoneRequired;
+                            if (trimmed.length < 6 || trimmed.length > 15) {
+                              return l.phoneInvalid;
+                            }
+                            if (!RegExp(r'^[0-9]+$').hasMatch(trimmed)) {
+                              return l.phoneInvalid;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l.languageLabel,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedLanguage,
+                    decoration: _inputDecoration(l.languageLabel),
+                    items: languageOptions.entries
+                        .map(
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedLanguage = value);
+                      }
                     },
                   ),
                   const SizedBox(height: 20),

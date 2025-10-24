@@ -96,6 +96,9 @@ class AuthCubit extends Cubit<AuthState> {
     required String username,
     required String password,
     required String confirm,
+    required String phone,
+    required String countryCode,
+    required String language,
   })
   async {
     if (name.trim().isEmpty) {
@@ -118,6 +121,18 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError('Passwords do not match.'));
       return;
     }
+    if (phone.trim().isEmpty) {
+      emit(AuthError('Please enter your phone number.'));
+      return;
+    }
+    if (countryCode.trim().isEmpty) {
+      emit(AuthError('Please select a country code.'));
+      return;
+    }
+    if (language.trim().isEmpty) {
+      emit(AuthError('Please select your preferred language.'));
+      return;
+    }
 
     emit(AuthLoading());
     try {
@@ -127,6 +142,9 @@ class AuthCubit extends Cubit<AuthState> {
         username: username,
         password: password,
         confirm: confirm,
+        phone: phone,
+        countryCode: countryCode,
+        language: language,
       );
       await _persistSessionFromResponse(response);
       emit(AuthAuthenticated(data: response));

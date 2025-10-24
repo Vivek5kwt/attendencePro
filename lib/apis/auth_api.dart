@@ -47,7 +47,10 @@ class AuthApi {
   ///   "email": "string",
   ///   "username": "string",
   ///   "password": "string",
-  ///   "password_confirmation": "string"
+  ///   "password_confirmation": "string",
+  ///   "phone": "string",
+  ///   "country_code": "string",
+  ///   "language": "string"
   /// }
   Future<Map<String, dynamic>> register({
     required String name,
@@ -55,6 +58,9 @@ class AuthApi {
     required String username,
     required String password,
     required String confirm,
+    required String phone,
+    required String countryCode,
+    required String language,
   }) async {
     final uri = Uri.parse('$baseUrl/api/auth/register');
     final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
@@ -64,6 +70,9 @@ class AuthApi {
       'username': username,
       'password': password,
       'password_confirmation': confirm,
+      'phone': phone,
+      'country_code': countryCode,
+      'language': language,
     });
 
     return _sendPost(uri, headers: headers, body: body);
