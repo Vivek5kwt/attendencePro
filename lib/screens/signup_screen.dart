@@ -465,21 +465,31 @@ class _SignupScreenState extends State<SignupScreen> {
         isEmpty: false,
         child: Row(
           children: [
-            Text(countryFlag(_selectedCountry.isoCode)),
-            const SizedBox(width: 8),
-            Text(
-              _selectedCountryCode,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                _selectedCountry.name,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.black54),
+              child: Row(
+                children: [
+                  Text(countryFlag(_selectedCountry.isoCode)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _selectedCountryCode,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _selectedCountry.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ),
+                ],
               ),
             ),
             const Icon(Icons.arrow_drop_down, color: Colors.black54),
