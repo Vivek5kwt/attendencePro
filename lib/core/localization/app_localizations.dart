@@ -97,6 +97,27 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'Total salary',
       'contractWorkDefaultTag': 'Default',
       'contractWorkUnitFallback': 'per unit',
+      'profileLabel': 'Profile',
+      'profileTitle': 'Edit Profile',
+      'profileNameLabel': 'Full name',
+      'profileNameHint': 'Enter your name',
+      'profileUsernameLabel': 'Username',
+      'profileUsernameHint': 'Enter your username',
+      'profilePhoneLabel': 'Phone number',
+      'profilePhoneHint': 'Enter your phone number',
+      'profileCountryCodeLabel': 'Country code',
+      'profileCountryCodeHint': 'Enter country code (e.g. +91)',
+      'profileLanguageLabel': 'Preferred language',
+      'profileSaveButton': 'Save changes',
+      'profileUpdateSuccess': 'Profile updated successfully.',
+      'profileUpdateFailed': 'Unable to update profile. Please try again.',
+      'profileAuthRequired': 'Please log in again to update your profile.',
+      'profileValidationName': 'Please enter your name.',
+      'profileValidationUsername': 'Please enter your username.',
+      'profileValidationPhone': 'Please enter your phone number.',
+      'profileValidationCountryCode': 'Please enter your country code.',
+      'profileValidationLanguage': 'Please select a language.',
+      'profileLoadingFailed': 'Unable to load profile details.',
       'changeLanguageLabel': 'Change Language',
       'helpSupportLabel': 'Help & Support',
       'helpSupportTitle': 'How can we help you today?',
@@ -426,6 +447,27 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'कुल वेतन',
       'contractWorkDefaultTag': 'डिफ़ॉल्ट',
       'contractWorkUnitFallback': 'प्रति इकाई',
+      'profileLabel': 'प्रोफ़ाइल',
+      'profileTitle': 'प्रोफ़ाइल संपादित करें',
+      'profileNameLabel': 'पूरा नाम',
+      'profileNameHint': 'अपना नाम दर्ज करें',
+      'profileUsernameLabel': 'उपयोगकर्ता नाम',
+      'profileUsernameHint': 'अपना उपयोगकर्ता नाम दर्ज करें',
+      'profilePhoneLabel': 'फ़ोन नंबर',
+      'profilePhoneHint': 'अपना फ़ोन नंबर दर्ज करें',
+      'profileCountryCodeLabel': 'देश कोड',
+      'profileCountryCodeHint': 'देश कोड दर्ज करें (जैसे +91)',
+      'profileLanguageLabel': 'पसंदीदा भाषा',
+      'profileSaveButton': 'परिवर्तन सहेजें',
+      'profileUpdateSuccess': 'प्रोफ़ाइल सफलतापूर्वक अपडेट हुई।',
+      'profileUpdateFailed': 'प्रोफ़ाइल अपडेट नहीं हो सकी। कृपया पुनः प्रयास करें।',
+      'profileAuthRequired': 'कृपया अपनी प्रोफ़ाइल अपडेट करने के लिए दोबारा लॉगिन करें।',
+      'profileValidationName': 'कृपया अपना नाम दर्ज करें।',
+      'profileValidationUsername': 'कृपया अपना उपयोगकर्ता नाम दर्ज करें।',
+      'profileValidationPhone': 'कृपया अपना फ़ोन नंबर दर्ज करें।',
+      'profileValidationCountryCode': 'कृपया अपना देश कोड दर्ज करें।',
+      'profileValidationLanguage': 'कृपया एक भाषा चुनें।',
+      'profileLoadingFailed': 'प्रोफ़ाइल विवरण लोड नहीं हो सके।',
       'contractWorkCustomTypesTitle': 'आपके कॉन्ट्रैक्ट प्रकार',
       'contractWorkNoCustomTypesLabel': 'अभी कोई कस्टम कॉन्ट्रैक्ट प्रकार नहीं है।',
       'contractWorkLoadError': 'अभी कॉन्ट्रैक्ट प्रकार लोड नहीं हो पाए।',
@@ -755,6 +797,27 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'ਕੁੱਲ ਤਨਖ਼ਾਹ',
       'contractWorkDefaultTag': 'ਡਿਫਾਲਟ',
       'contractWorkUnitFallback': 'ਪਰ ਯੂਨਿਟ',
+      'profileLabel': 'ਪ੍ਰੋਫ਼ਾਈਲ',
+      'profileTitle': 'ਪ੍ਰੋਫ਼ਾਈਲ ਸੋਧੋ',
+      'profileNameLabel': 'ਪੂਰਾ ਨਾਮ',
+      'profileNameHint': 'ਆਪਣਾ ਨਾਮ ਦਰਜ ਕਰੋ',
+      'profileUsernameLabel': 'ਯੂਜ਼ਰਨੇਮ',
+      'profileUsernameHint': 'ਆਪਣਾ ਯੂਜ਼ਰਨੇਮ ਦਰਜ ਕਰੋ',
+      'profilePhoneLabel': 'ਫੋਨ ਨੰਬਰ',
+      'profilePhoneHint': 'ਆਪਣਾ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ',
+      'profileCountryCodeLabel': 'ਦੇਸ਼ ਕੋਡ',
+      'profileCountryCodeHint': 'ਦੇਸ਼ ਕੋਡ ਦਰਜ ਕਰੋ (ਜਿਵੇਂ +91)',
+      'profileLanguageLabel': 'ਪਸੰਦੀਦਾ ਭਾਸ਼ਾ',
+      'profileSaveButton': 'ਬਦਲਾਅ ਸੇਵ ਕਰੋ',
+      'profileUpdateSuccess': 'ਪ੍ਰੋਫ਼ਾਈਲ ਸਫਲਤਾਪੂਰਵਕ ਅੱਪਡੇਟ ਹੋ ਗਈ ਹੈ।',
+      'profileUpdateFailed': 'ਪ੍ਰੋਫ਼ਾਈਲ ਅੱਪਡੇਟ ਨਹੀਂ ਹੋ ਸਕੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'profileAuthRequired': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀ ਪ੍ਰੋਫ਼ਾਈਲ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਦੁਬਾਰਾ ਲਾਗਿਨ ਕਰੋ।',
+      'profileValidationName': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
+      'profileValidationUsername': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਯੂਜ਼ਰਨੇਮ ਦਰਜ ਕਰੋ।',
+      'profileValidationPhone': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
+      'profileValidationCountryCode': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਦੇਸ਼ ਕੋਡ ਦਰਜ ਕਰੋ।',
+      'profileValidationLanguage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੋਈ ਭਾਸ਼ਾ ਚੁਣੋ।',
+      'profileLoadingFailed': 'ਪ੍ਰੋਫ਼ਾਈਲ ਵੇਰਵੇ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।',
       'contractWorkCustomTypesTitle': 'ਤੁਹਾਡੀਆਂ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ',
       'contractWorkNoCustomTypesLabel': 'ਹਾਲੇ ਤੱਕ ਕੋਈ ਕਸਟਮ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਨਹੀਂ ਹੈ।',
       'contractWorkLoadError': 'ਇਸ ਵੇਲੇ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ।',
@@ -1088,6 +1151,27 @@ class AppLocalizations {
       'contractWorkTotalSalaryLabel': 'Salario totale',
       'contractWorkDefaultTag': 'Predefinito',
       'contractWorkUnitFallback': 'per unità',
+      'profileLabel': 'Profilo',
+      'profileTitle': 'Modifica profilo',
+      'profileNameLabel': 'Nome completo',
+      'profileNameHint': 'Inserisci il tuo nome',
+      'profileUsernameLabel': 'Nome utente',
+      'profileUsernameHint': 'Inserisci il tuo nome utente',
+      'profilePhoneLabel': 'Numero di telefono',
+      'profilePhoneHint': 'Inserisci il tuo numero di telefono',
+      'profileCountryCodeLabel': 'Prefisso internazionale',
+      'profileCountryCodeHint': 'Inserisci il prefisso (es. +39)',
+      'profileLanguageLabel': 'Lingua preferita',
+      'profileSaveButton': 'Salva modifiche',
+      'profileUpdateSuccess': 'Profilo aggiornato con successo.',
+      'profileUpdateFailed': 'Impossibile aggiornare il profilo. Riprova.',
+      'profileAuthRequired': 'Accedi nuovamente per aggiornare il profilo.',
+      'profileValidationName': 'Inserisci il tuo nome.',
+      'profileValidationUsername': 'Inserisci il tuo nome utente.',
+      'profileValidationPhone': 'Inserisci il tuo numero di telefono.',
+      'profileValidationCountryCode': 'Inserisci il prefisso internazionale.',
+      'profileValidationLanguage': 'Seleziona una lingua.',
+      'profileLoadingFailed': 'Impossibile caricare i dettagli del profilo.',
       'contractWorkCustomTypesTitle': 'I tuoi tipi di contratto',
       'contractWorkNoCustomTypesLabel': 'Nessun tipo di contratto personalizzato.',
       'contractWorkLoadError': 'Impossibile caricare i tipi di contratto in questo momento.',
@@ -1471,6 +1555,30 @@ class AppLocalizations {
       _value('contractWorkTotalSalaryLabel');
   String get contractWorkDefaultTag => _value('contractWorkDefaultTag');
   String get contractWorkUnitFallback => _value('contractWorkUnitFallback');
+  String get profileLabel => _value('profileLabel');
+  String get profileTitle => _value('profileTitle');
+  String get profileNameLabel => _value('profileNameLabel');
+  String get profileNameHint => _value('profileNameHint');
+  String get profileUsernameLabel => _value('profileUsernameLabel');
+  String get profileUsernameHint => _value('profileUsernameHint');
+  String get profilePhoneLabel => _value('profilePhoneLabel');
+  String get profilePhoneHint => _value('profilePhoneHint');
+  String get profileCountryCodeLabel => _value('profileCountryCodeLabel');
+  String get profileCountryCodeHint => _value('profileCountryCodeHint');
+  String get profileLanguageLabel => _value('profileLanguageLabel');
+  String get profileSaveButton => _value('profileSaveButton');
+  String get profileUpdateSuccess => _value('profileUpdateSuccess');
+  String get profileUpdateFailed => _value('profileUpdateFailed');
+  String get profileAuthRequired => _value('profileAuthRequired');
+  String get profileValidationName => _value('profileValidationName');
+  String get profileValidationUsername =>
+      _value('profileValidationUsername');
+  String get profileValidationPhone => _value('profileValidationPhone');
+  String get profileValidationCountryCode =>
+      _value('profileValidationCountryCode');
+  String get profileValidationLanguage =>
+      _value('profileValidationLanguage');
+  String get profileLoadingFailed => _value('profileLoadingFailed');
   String get contractWorkCustomTypesTitle =>
       _value('contractWorkCustomTypesTitle');
   String get contractWorkNoCustomTypesLabel =>

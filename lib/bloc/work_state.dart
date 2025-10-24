@@ -23,6 +23,10 @@ class WorkState extends Equatable {
     this.activatingWorkId,
     this.userName,
     this.userEmail,
+    this.userPhone,
+    this.userUsername,
+    this.userCountryCode,
+    this.userLanguage,
     this.feedbackKind,
   });
 
@@ -39,6 +43,10 @@ class WorkState extends Equatable {
   final String? activatingWorkId;
   final String? userName;
   final String? userEmail;
+  final String? userPhone;
+  final String? userUsername;
+  final String? userCountryCode;
+  final String? userLanguage;
   final WorkFeedbackKind? feedbackKind;
 
   bool get isLoading => loadStatus == WorkLoadStatus.loading;
@@ -60,6 +68,10 @@ class WorkState extends Equatable {
     Object? feedbackKind = _sentinel,
     String? userName,
     String? userEmail,
+    String? userPhone,
+    String? userUsername,
+    String? userCountryCode,
+    String? userLanguage,
   }) {
     return WorkState(
       loadStatus: loadStatus ?? this.loadStatus,
@@ -87,6 +99,10 @@ class WorkState extends Equatable {
           : feedbackKind as WorkFeedbackKind?,
       userName: userName ?? this.userName,
       userEmail: userEmail ?? this.userEmail,
+      userPhone: userPhone ?? this.userPhone,
+      userUsername: userUsername ?? this.userUsername,
+      userCountryCode: userCountryCode ?? this.userCountryCode,
+      userLanguage: userLanguage ?? this.userLanguage,
     );
   }
 
@@ -114,6 +130,10 @@ class WorkState extends Equatable {
         activatingWorkId,
         userName,
         userEmail,
+        userPhone,
+        userUsername,
+        userCountryCode,
+        userLanguage,
         feedbackKind,
       ];
 }

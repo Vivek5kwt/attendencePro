@@ -1,5 +1,6 @@
 import '../apis/auth_api.dart';
 import '../apis/work_api.dart';
+import '../models/user_profile.dart';
 import '../models/work.dart';
 import '../utils/session_manager.dart';
 
@@ -13,9 +14,9 @@ class WorkRepository {
   final WorkApi _api;
   final SessionManager _sessionManager;
 
-  Future<WorkUserProfile> loadUserProfile() async {
-    final details = await _sessionManager.getUserDetails();
-    return WorkUserProfile.from(details);
+  Future<UserProfile> loadUserProfile() async {
+    final details = await _sessionManager.getUserProfile();
+    return UserProfile.fromSession(details);
   }
 
   Future<List<Work>> fetchWorks() async {
@@ -103,30 +104,6 @@ class WorkRepository {
       throw WorkRepositoryException(e.message);
     }
   }
-}
-
-class WorkUserProfile {
-  const WorkUserProfile({this.name, this.email, this.username});
-
-  factory WorkUserProfile.from(Map<String, String?> raw) {
-    String? _normalize(String? value) {
-      if (value == null) return null;
-      final trimmed = value.trim();
-      return trimmed.isEmpty ? null : trimmed;
-    }
-
-    return WorkUserProfile(
-      name: _normalize(raw['name']),
-      email: _normalize(raw['email']),
-      username: _normalize(raw['username']),
-    );
-  }
-
-  final String? name;
-  final String? email;
-  final String? username;
-
-  String? get displayEmail => email ?? username;
 }
 
 class WorkActionResult {

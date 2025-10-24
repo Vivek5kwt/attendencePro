@@ -410,6 +410,8 @@ class AuthCubit extends Cubit<AuthState> {
       String? email;
       String? username;
       String? language;
+      String? phone;
+      String? countryCode;
 
       final user = data['user'];
       if (user is Map<String, dynamic>) {
@@ -429,6 +431,14 @@ class AuthCubit extends Cubit<AuthState> {
         if (potentialLanguage is String && potentialLanguage.isNotEmpty) {
           language = potentialLanguage;
         }
+        final potentialPhone = user['phone'];
+        if (potentialPhone is String && potentialPhone.isNotEmpty) {
+          phone = potentialPhone;
+        }
+        final potentialCountryCode = user['country_code'];
+        if (potentialCountryCode is String && potentialCountryCode.isNotEmpty) {
+          countryCode = potentialCountryCode;
+        }
       }
 
       await _sessionManager.saveSession(
@@ -436,8 +446,13 @@ class AuthCubit extends Cubit<AuthState> {
         name: name,
         email: email,
         username: username,
+        phone: phone,
+        countryCode: countryCode,
         language: language,
       );
+      if (language != null && language.isNotEmpty) {
+        await _sessionManager.savePreferredLanguage(language);
+      }
     } catch (_) {
     }
   }
