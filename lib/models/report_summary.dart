@@ -10,15 +10,24 @@ class ReportSummary {
   factory ReportSummary.fromJson(Map<String, dynamic> json) {
     final data = _ensureMap(json['data']) ?? json;
 
-    final combinedJson =
-        _ensureMap(data['combined_salary'] ?? data['combinedSalary']) ??
-            <String, dynamic>{};
-    final hourlyJson =
-        _ensureMap(data['hourly_summary'] ?? data['hourlySummary']) ??
-            <String, dynamic>{};
-    final contractJson =
-        _ensureMap(data['contract_summary'] ?? data['contractSummary']) ??
-            <String, dynamic>{};
+    final combinedJson = _ensureMap(
+          data['combined_salary'] ??
+              data['combinedSalary'] ??
+              data['combined_summary'] ??
+              data['combinedSummary'] ??
+              data['combined'],
+        ) ??
+        <String, dynamic>{};
+    final hourlyJson = _ensureMap(
+          data['hourly_summary'] ?? data['hourlySummary'] ?? data['hourly'],
+        ) ??
+        <String, dynamic>{};
+    final contractJson = _ensureMap(
+          data['contract_summary'] ??
+              data['contractSummary'] ??
+              data['contract'],
+        ) ??
+        <String, dynamic>{};
     final breakdownJson = _ensureMap(
           data['breakdown'] ??
               data['monthly_breakdown'] ??
@@ -74,6 +83,7 @@ class CombinedSalaryData {
         'total_salary',
         'total_combined_salary',
         'grand_total',
+        'combined_total',
       ]),
       hoursWorked: _parseDouble(json, const [
         'hours_worked',
