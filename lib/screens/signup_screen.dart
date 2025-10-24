@@ -475,35 +475,29 @@ class _SignupScreenState extends State<SignupScreen> {
       child: InputDecorator(
         decoration: _inputDecoration(l.countryCodeLabel).copyWith(
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
         ),
         isEmpty: false,
         child: SizedBox(
-          height: 56,
+          height: 33,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Spacer(),
               Text(
                 countryFlag(_selectedCountry.isoCode),
-                style: const TextStyle(fontSize: 22),
+                style: const TextStyle(fontSize: 16),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 4),
               Text(
                 _selectedCountryCode,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: dialCodeStyle,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _selectedCountry.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: countryNameStyle,
-                ),
-              ),
               const SizedBox(width: 8),
               const Icon(Icons.arrow_drop_down, color: Colors.black54),
+              Spacer(),
             ],
           ),
         ),
