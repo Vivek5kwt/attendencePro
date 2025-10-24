@@ -43,6 +43,8 @@ class AppLocalizations {
       'attendanceHistoryOvertimeLabel': 'Overtime',
       'attendanceHistoryTimelineTitle': 'Daily timeline',
       'attendanceHistoryNoEntriesLabel': 'No attendance records yet.',
+      'attendanceHistoryLoadFailedMessage':
+          'Unable to load attendance history. Please try again.',
       'attendanceHistoryHourlyEntry': 'Hourly',
       'attendanceHistoryContractEntry': 'Contract',
       'attendanceHistoryLeaveEntry': 'Leave',
@@ -366,6 +368,8 @@ class AppLocalizations {
       'attendanceHistoryOvertimeLabel': 'अतिरिक्त समय',
       'attendanceHistoryTimelineTitle': 'दैनिक टाइमलाइन',
       'attendanceHistoryNoEntriesLabel': 'अभी कोई उपस्थिति रिकॉर्ड नहीं है।',
+      'attendanceHistoryLoadFailedMessage':
+          'उपस्थिति इतिहास लोड नहीं हो सका। कृपया पुनः प्रयास करें।',
       'attendanceHistoryHourlyEntry': 'घंटेवार',
       'attendanceHistoryContractEntry': 'कॉन्ट्रैक्ट',
       'attendanceHistoryLeaveEntry': 'छुट्टी',
@@ -689,6 +693,8 @@ class AppLocalizations {
       'attendanceHistoryOvertimeLabel': 'ਵਾਧੂ ਸਮਾਂ',
       'attendanceHistoryTimelineTitle': 'ਰੋਜ਼ਾਨਾ ਟਾਈਮਲਾਈਨ',
       'attendanceHistoryNoEntriesLabel': 'ਹਾਲੇ ਕੋਈ ਹਾਜ਼ਰੀ ਰਿਕਾਰਡ ਨਹੀਂ ਹੈ।',
+      'attendanceHistoryLoadFailedMessage':
+          'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendanceHistoryHourlyEntry': 'ਘੰਟਾ ਅਧਾਰਿਤ',
       'attendanceHistoryContractEntry': 'ਕਾਂਟ੍ਰੈਕਟ',
       'attendanceHistoryLeaveEntry': 'ਛੁੱਟੀ',
@@ -1015,6 +1021,8 @@ class AppLocalizations {
       'attendanceHistoryOvertimeLabel': 'Straordinari',
       'attendanceHistoryTimelineTitle': 'Cronologia giornaliera',
       'attendanceHistoryNoEntriesLabel': 'Nessuna registrazione di presenza.',
+      'attendanceHistoryLoadFailedMessage':
+          'Impossibile caricare lo storico presenze. Riprova.',
       'attendanceHistoryHourlyEntry': 'Orario',
       'attendanceHistoryContractEntry': 'Contratto',
       'attendanceHistoryLeaveEntry': 'Permesso',
@@ -1367,6 +1375,8 @@ class AppLocalizations {
       _value('attendanceHistoryTimelineTitle');
   String get attendanceHistoryNoEntriesLabel =>
       _value('attendanceHistoryNoEntriesLabel');
+  String get attendanceHistoryLoadFailedMessage =>
+      _value('attendanceHistoryLoadFailedMessage');
   String get attendanceHistoryHourlyEntry =>
       _value('attendanceHistoryHourlyEntry');
   String get attendanceHistoryContractEntry =>
