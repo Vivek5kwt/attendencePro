@@ -224,6 +224,7 @@ class AppLocalizations {
       'attendancePreviewCancelButton': 'Edit entry',
       'attendancePreviewHoursLabel': 'Calculated hours',
       'attendancePreviewSalaryLabel': 'Calculated salary',
+      'attendancePreviewValidationPrompt': 'Are these hours correct?',
       'attendancePreviewFetchFailed':
           'Unable to preview attendance. Please try again.',
       'attendanceDateLabel': 'Date',
@@ -555,6 +556,7 @@ class AppLocalizations {
       'attendancePreviewCancelButton': 'प्रविष्टि संपादित करें',
       'attendancePreviewHoursLabel': 'गणना किए गए घंटे',
       'attendancePreviewSalaryLabel': 'गणना किया गया वेतन',
+      'attendancePreviewValidationPrompt': 'क्या ये घंटे सही हैं?',
       'attendancePreviewFetchFailed':
           'उपस्थिति प्रीव्यू लोड नहीं हो पाया। कृपया पुनः प्रयास करें।',
       'attendanceDateLabel': 'तारीख',
@@ -883,6 +885,7 @@ class AppLocalizations {
       'attendancePreviewCancelButton': 'ਐਂਟਰੀ ਸੋਧੋ',
       'attendancePreviewHoursLabel': 'ਗਿਣੇ ਘੰਟੇ',
       'attendancePreviewSalaryLabel': 'ਗਿਣੀ ਤਨਖ਼ਾਹ',
+      'attendancePreviewValidationPrompt': 'ਕੀ ਇਹ ਘੰਟੇ ਠੀਕ ਹਨ?',
       'attendancePreviewFetchFailed':
           'ਹਾਜ਼ਰੀ ਪ੍ਰੀਵਿਊ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendanceDateLabel': 'ਮਿਤੀ',
@@ -1218,6 +1221,7 @@ class AppLocalizations {
       'attendancePreviewCancelButton': 'Modifica registrazione',
       'attendancePreviewHoursLabel': 'Ore calcolate',
       'attendancePreviewSalaryLabel': 'Salario calcolato',
+      'attendancePreviewValidationPrompt': 'Queste ore sono corrette?',
       'attendancePreviewFetchFailed':
           'Impossibile mostrare l\'anteprima della presenza. Riprova.',
       'attendanceDateLabel': 'Data',
@@ -1639,6 +1643,8 @@ class AppLocalizations {
       _value('attendancePreviewHoursLabel');
   String get attendancePreviewSalaryLabel =>
       _value('attendancePreviewSalaryLabel');
+  String get attendancePreviewValidationPrompt =>
+      _value('attendancePreviewValidationPrompt');
   String get attendancePreviewFetchFailed =>
       _value('attendancePreviewFetchFailed');
   String get attendanceDateLabel => _value('attendanceDateLabel');

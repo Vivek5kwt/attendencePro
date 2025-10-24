@@ -936,16 +936,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ? responseMessage.trim()
         : l.attendancePreviewDescription;
 
-    final infoRows = <Widget>[];
-    _addPreviewRow(infoRows, l.attendanceDateLabel, _formatDate(date));
-    _addPreviewRow(
-      infoRows,
+    final infoEntries = <_PreviewInfoEntry>[];
+    _addPreviewEntry(infoEntries, l.attendanceDateLabel, _formatDate(date));
+    _addPreviewEntry(
+      infoEntries,
       l.attendanceEntryTypeLabel,
       isContractEntry ? l.contractWorkLabel : l.hourlyWorkLabel,
     );
-    _addPreviewRow(infoRows, l.startTimeLabel, startTime);
-    _addPreviewRow(infoRows, l.endTimeLabel, endTime);
-    _addPreviewRow(infoRows, l.breakLabel, _formatBreakMinutesDisplay(breakMinutes));
+    _addPreviewEntry(infoEntries, l.startTimeLabel, startTime);
+    _addPreviewEntry(infoEntries, l.endTimeLabel, endTime);
+    _addPreviewEntry(
+      infoEntries,
+      l.breakLabel,
+      _formatBreakMinutesDisplay(breakMinutes),
+    );
 
     if (isContractEntry) {
       final unitsDisplay = units != null
@@ -956,7 +960,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               'unitsCompleted',
               'units_count',
             ]);
-      _addPreviewRow(infoRows, l.contractWorkUnitsLabel, unitsDisplay);
+      _addPreviewEntry(infoEntries, l.contractWorkUnitsLabel, unitsDisplay);
 
       final rateDisplay = ratePerUnit != null
           ? _formatNumericValue(ratePerUnit)
@@ -966,7 +970,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               'unit_rate',
               'unitRate',
             ]);
-      _addPreviewRow(infoRows, l.contractWorkRateLabel, rateDisplay);
+      _addPreviewEntry(infoEntries, l.contractWorkRateLabel, rateDisplay);
     }
 
     final hoursDisplay = _resolvePreviewDisplayValue(previewData, const [
@@ -978,8 +982,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       'total_duration',
       'totalDuration',
     ]);
-    _addPreviewRow(infoRows, l.attendancePreviewHoursLabel, hoursDisplay);
-
     final salaryDisplay = _resolvePreviewDisplayValue(previewData, const [
       'total_salary',
       'totalSalary',
@@ -990,87 +992,153 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       'total_amount',
       'totalAmount',
     ]);
-    _addPreviewRow(infoRows, l.attendancePreviewSalaryLabel, salaryDisplay);
 
     return await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (dialogContext) {
             return AlertDialog(
-              title: Text(l.attendancePreviewTitle),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              titlePadding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+              title: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 84,
+                    width: 84,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE0F2FE),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.access_time_filled,
+                      size: 44,
+                      color: Color(0xFF1D4ED8),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l.attendancePreviewTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF4B5563),
+                        ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      description,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF4B5563),
-                          ),
+                    _AttendancePreviewSummaryCard(
+                      hoursLabel: l.attendancePreviewHoursLabel,
+                      hoursValue: hoursDisplay ?? '--',
+                      salaryLabel: l.attendancePreviewSalaryLabel,
+                      salaryValue: salaryDisplay,
+                      entries: infoEntries,
                     ),
-                    const SizedBox(height: 16),
-                    ...infoRows,
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Color(0xFFFACC15),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              l.attendancePreviewValidationPrompt,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF78350F),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(false),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF1D4ED8),
+                              side: const BorderSide(color: Color(0xFFBFDBFE)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Text(l.attendancePreviewCancelButton),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(true),
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              backgroundColor: const Color(0xFF2563EB),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Text(l.attendancePreviewConfirmButton),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(l.attendancePreviewCancelButton),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(l.attendancePreviewConfirmButton),
-                ),
-              ],
             );
           },
         ) ??
         false;
   }
 
-  void _addPreviewRow(List<Widget> rows, String label, String? value) {
+  void _addPreviewEntry(
+    List<_PreviewInfoEntry> entries,
+    String label,
+    String? value,
+  ) {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) {
       return;
     }
-    rows.add(_buildPreviewRow(label, trimmed));
-  }
-
-  Widget _buildPreviewRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    entries.add(_PreviewInfoEntry(label: label, value: trimmed));
   }
 
   Map<String, dynamic>? _extractPreviewData(Map<String, dynamic>? response) {
@@ -3111,6 +3179,147 @@ class _SummaryStatCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AttendancePreviewSummaryCard extends StatelessWidget {
+  const _AttendancePreviewSummaryCard({
+    required this.hoursLabel,
+    required this.hoursValue,
+    required this.salaryLabel,
+    required this.salaryValue,
+    required this.entries,
+  });
+
+  final String hoursLabel;
+  final String hoursValue;
+  final String salaryLabel;
+  final String? salaryValue;
+  final List<_PreviewInfoEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14343C4D),
+            offset: Offset(0, 24),
+            blurRadius: 48,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              hoursLabel,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: const Color(0xFF1F2937),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hoursValue,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: const Color(0xFF1D4ED8),
+                    fontWeight: FontWeight.w800,
+                  ) ??
+                  const TextStyle(
+                    fontSize: 44,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1D4ED8),
+                  ),
+            ),
+            if (entries.isNotEmpty) const SizedBox(height: 20),
+            if (entries.isNotEmpty)
+              ...List.generate(entries.length, (index) {
+                final entry = entries[index];
+                final isLast = index == entries.length - 1;
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            entry.label,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          entry.value,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1D4ED8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!isLast)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Divider(
+                          color: Color(0xFFE5E7EB),
+                          height: 1,
+                          thickness: 1,
+                        ),
+                      ),
+                  ],
+                );
+              }),
+            if (salaryValue != null) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        salaryLabel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF166534),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      salaryValue!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF16A34A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PreviewInfoEntry {
+  const _PreviewInfoEntry({required this.label, required this.value});
+
+  final String label;
+  final String value;
 }
 
 class _ContractItem {
