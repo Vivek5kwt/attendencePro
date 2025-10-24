@@ -5,6 +5,7 @@ class MissedAttendanceCompletion {
     required this.startTime,
     required this.endTime,
     required this.breakMinutes,
+    this.contractTypeId,
     this.isLeave = false,
   });
 
@@ -13,6 +14,7 @@ class MissedAttendanceCompletion {
   final String startTime;
   final String endTime;
   final int breakMinutes;
+  final Object? contractTypeId;
   final bool isLeave;
 
   Map<String, dynamic> toJson() {
@@ -23,6 +25,10 @@ class MissedAttendanceCompletion {
       'end_time': endTime,
       'break_minutes': breakMinutes,
     };
+    if (contractTypeId != null) {
+      payload['contract_type_id'] =
+          _normalizeContractTypeId(contractTypeId!);
+    }
     if (isLeave) {
       payload['is_leave'] = true;
     }
@@ -39,6 +45,18 @@ class MissedAttendanceCompletion {
     final stringValue = value.toString();
     final parsed = int.tryParse(stringValue);
     return parsed ?? stringValue;
+  }
+
+  static dynamic _normalizeContractTypeId(Object value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    final stringValue = value.toString();
+    final parsed = int.tryParse(stringValue);
+    return parsed ?? stringValue.trim();
   }
 
   static String _formatDate(DateTime date) {
