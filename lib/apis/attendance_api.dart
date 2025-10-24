@@ -126,6 +126,7 @@ class AttendanceApi {
     };
 
     final body = jsonEncode(request.toJson());
+    print('dsjdsjfjs $body');
 
     try {
       final response = await _client.post(uri, headers: headers, body: body);

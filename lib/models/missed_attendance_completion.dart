@@ -25,10 +25,10 @@ class MissedAttendanceCompletion {
       'end_time': endTime,
       'break_minutes': breakMinutes,
     };
-    if (contractTypeId != null) {
+   /* if (contractTypeId != null) {*/
       payload['contract_type_id'] =
-          _normalizeContractTypeId(contractTypeId!);
-    }
+          1;
+   // }
     if (isLeave) {
       payload['is_leave'] = true;
     }
