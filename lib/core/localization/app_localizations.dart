@@ -300,6 +300,12 @@ class AppLocalizations {
       'emailAddressLabel': 'Email Address',
       'emailRequired': 'Email required',
       'emailInvalid': 'Invalid email',
+      'countryCodeLabel': 'Country Code',
+      'phoneNumberLabel': 'Phone Number',
+      'phoneNumberHint': '9876543210',
+      'phoneRequired': 'Phone number required',
+      'phoneInvalid': 'Enter a valid phone number',
+      'languageLabel': 'Preferred Language',
       'passwordRequired': 'Password required',
       'passwordMinLength': 'Min 6 characters',
       'confirmPasswordLabel': 'Confirm Password',
@@ -609,6 +615,12 @@ class AppLocalizations {
       'emailAddressLabel': 'ईमेल पता',
       'emailRequired': 'ईमेल आवश्यक है',
       'emailInvalid': 'अमान्य ईमेल',
+      'countryCodeLabel': 'देश का कोड',
+      'phoneNumberLabel': 'फ़ोन नंबर',
+      'phoneNumberHint': '9876543210',
+      'phoneRequired': 'फ़ोन नंबर आवश्यक है',
+      'phoneInvalid': 'कृपया मान्य फ़ोन नंबर दर्ज करें',
+      'languageLabel': 'पसंदीदा भाषा',
       'passwordRequired': 'पासवर्ड आवश्यक है',
       'passwordMinLength': 'कम से कम 6 अक्षर',
       'confirmPasswordLabel': 'पासवर्ड की पुष्टि करें',
@@ -918,6 +930,12 @@ class AppLocalizations {
       'emailAddressLabel': 'ਈਮੇਲ ਐਡਰੈੱਸ',
       'emailRequired': 'ਈਮੇਲ ਲਾਜ਼ਮੀ ਹੈ',
       'emailInvalid': 'ਗਲਤ ਈਮੇਲ',
+      'countryCodeLabel': 'ਦੇਸ਼ ਕੋਡ',
+      'phoneNumberLabel': 'ਫੋਨ ਨੰਬਰ',
+      'phoneNumberHint': '9876543210',
+      'phoneRequired': 'ਫੋਨ ਨੰਬਰ ਲਾਜ਼ਮੀ ਹੈ',
+      'phoneInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ',
+      'languageLabel': 'ਪਸੰਦੀਦਾ ਭਾਸ਼ਾ',
       'passwordRequired': 'ਪਾਸਵਰਡ ਲਾਜ਼ਮੀ ਹੈ',
       'passwordMinLength': 'ਘੱਟੋ-ਘੱਟ 6 ਅੱਖਰ',
       'confirmPasswordLabel': 'ਪਾਸਵਰਡ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
@@ -1234,6 +1252,12 @@ class AppLocalizations {
       'emailAddressLabel': 'Indirizzo email',
       'emailRequired': 'Email obbligatoria',
       'emailInvalid': 'Email non valida',
+      'countryCodeLabel': 'Prefisso internazionale',
+      'phoneNumberLabel': 'Numero di telefono',
+      'phoneNumberHint': '9876543210',
+      'phoneRequired': 'Numero di telefono obbligatorio',
+      'phoneInvalid': 'Inserisci un numero di telefono valido',
+      'languageLabel': 'Lingua preferita',
       'passwordRequired': 'Password obbligatoria',
       'passwordMinLength': 'Minimo 6 caratteri',
       'confirmPasswordLabel': 'Conferma password',
@@ -1634,6 +1658,12 @@ class AppLocalizations {
   String get emailAddressLabel => _value('emailAddressLabel');
   String get emailRequired => _value('emailRequired');
   String get emailInvalid => _value('emailInvalid');
+  String get countryCodeLabel => _value('countryCodeLabel');
+  String get phoneNumberLabel => _value('phoneNumberLabel');
+  String get phoneNumberHint => _value('phoneNumberHint');
+  String get phoneRequired => _value('phoneRequired');
+  String get phoneInvalid => _value('phoneInvalid');
+  String get languageLabel => _value('languageLabel');
   String get passwordRequired => _value('passwordRequired');
   String get passwordMinLength => _value('passwordMinLength');
   String get confirmPasswordLabel => _value('confirmPasswordLabel');

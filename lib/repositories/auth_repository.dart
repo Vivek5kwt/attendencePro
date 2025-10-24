@@ -15,6 +15,9 @@ class AuthRepository {
     required String username,
     required String password,
     required String confirm,
+    required String phone,
+    required String countryCode,
+    required String language,
   }) {
     return _api.register(
       name: name,
@@ -22,6 +25,9 @@ class AuthRepository {
       username: username,
       password: password,
       confirm: confirm,
+      phone: phone,
+      countryCode: countryCode,
+      language: language,
     );
   }
 
