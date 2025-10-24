@@ -144,6 +144,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openContractWorkManagerFromAddDialog(
+      BuildContext dialogContext) async {
+    FocusScope.of(dialogContext).unfocus();
+    await Navigator.of(dialogContext, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const ContractWorkScreen(),
+      ),
+    );
+  }
+
   Future<void> _openReportsSummary() async {
     Navigator.of(context).pop();
     await Future.delayed(const Duration(milliseconds: 200));
@@ -848,11 +858,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 16),
                             GestureDetector(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(l.contractWorkTappedMessage)),
-                                );
-                              },
+                              onTap: () =>
+                                  _openContractWorkManagerFromAddDialog(
+                                      dialogContext),
                               child: Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(vertical: 16),

@@ -238,7 +238,8 @@ class AppLocalizations {
       'hourlySalaryHint': '\$ 0.00',
       'contractWorkHeader': 'Contract Work (if have)',
       'addContractWorkButton': 'Add Contract Work',
-      'contractWorkDescription': 'Piece-rate work: Watermelon, Carrot, Ravanello, Orange, etc.',
+      'contractWorkDescription':
+          'Manage piece-rate items like Ravanello, Radish, Carrot or add your own.',
       'contractWorkCustomTypesTitle': 'Your contract types',
       'contractWorkNoCustomTypesLabel': 'No custom contract types yet.',
       'contractWorkLoadError': 'Unable to load contract types right now.',
@@ -563,7 +564,8 @@ class AppLocalizations {
       'hourlySalaryHint': '₹ 0.00',
       'contractWorkHeader': 'ठेका कार्य (यदि हो)',
       'addContractWorkButton': 'ठेका कार्य जोड़ें',
-      'contractWorkDescription': 'पीस-रेट कार्य: तरबूज, गाजर, रावनेलो, संतरा आदि।',
+      'contractWorkDescription':
+          'पीस-रेट कार्य जैसे रावनेलो, मूली, गाजर जोड़ें या अपना नया बनाएं।',
       'cancelButton': 'रद्द करें',
       'saveButtonLabel': 'सहेजें',
       'saveWorkButton': 'कार्य सहेजें',
@@ -885,7 +887,8 @@ class AppLocalizations {
       'hourlySalaryHint': '₹ 0.00',
       'contractWorkHeader': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ (ਜੇ ਹੋਵੇ)',
       'addContractWorkButton': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ',
-      'contractWorkDescription': 'ਪੀਸ-ਰੇਟ ਕੰਮ: ਤਰਬੂਜ, ਗਾਜਰ, ਰਾਵੇਨੇਲੋ, ਸੰਤਰਾ ਆਦਿ।',
+      'contractWorkDescription':
+          'ਰਾਵੇਨੇਲੋ, ਮੂਲੀ, ਗਾਜਰ ਵਰਗੇ ਪੀਸ-ਰੇਟ ਕੰਮ ਜੋੜੋ ਜਾਂ ਆਪਣਾ ਬਣਾਓ।',
       'cancelButton': 'ਰੱਦ ਕਰੋ',
       'saveButtonLabel': 'ਸੇਵ ਕਰੋ',
       'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
@@ -1213,7 +1216,8 @@ class AppLocalizations {
       'hourlySalaryHint': '€ 0,00',
       'contractWorkHeader': 'Lavoro a Contratto (se disponibile)',
       'addContractWorkButton': 'Aggiungi Lavoro a Contratto',
-      'contractWorkDescription': 'Lavoro a cottimo: Anguria, Carota, Ravanello, Arancia, ecc.',
+      'contractWorkDescription':
+          'Gestisci lavori a cottimo come Ravanello, Rapa, Carota oppure aggiungi i tuoi.',
       'cancelButton': 'Annulla',
       'saveButtonLabel': 'Salva',
       'saveWorkButton': 'Salva Lavoro',
