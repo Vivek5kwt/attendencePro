@@ -182,6 +182,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return completer.future;
   }
 
+  Future<void> _handleRefresh(WorkState state) {
+    if (state.works.isEmpty) {
+      return _fetchWorks(showSnackBarOnError: true);
+    }
+    return _refreshWorks();
+  }
+
   void _openWorkDetail(Work work) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -1317,12 +1324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            body: Column(
-              children: [
-                _buildHomeBanner(l),
-                Expanded(child: _buildWorksContent(l, state)),
-              ],
-            ),
+            body: _buildHomeBody(l, state),
           );
         },
       ),
@@ -1406,150 +1408,193 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  Widget _buildWorksContent(AppLocalizations l, WorkState state) {
+  Widget _buildHomeBody(AppLocalizations l, WorkState state) {
     final works = state.works;
     final isActivationInProgress =
         state.activateStatus == WorkActionStatus.inProgress;
     final activatingWorkId = state.activatingWorkId;
     if (state.isLoading && works.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return _buildRefreshableList(
+        l,
+        state,
+        children: const [
+          SizedBox(height: 16),
+          Center(child: CircularProgressIndicator()),
+          SizedBox(height: 24),
+        ],
+      );
     }
 
     if (state.loadStatus == WorkLoadStatus.failure && works.isEmpty) {
       final message = state.requiresAuthentication
           ? l.authenticationRequiredMessage
           : (state.lastErrorMessage != null &&
-          state.lastErrorMessage!.isNotEmpty
-          ? state.lastErrorMessage!
-          : l.worksLoadFailedMessage);
-      return _buildWorksErrorState(l, message);
+                  state.lastErrorMessage!.isNotEmpty
+              ? state.lastErrorMessage!
+              : l.worksLoadFailedMessage);
+      return _buildRefreshableList(
+        l,
+        state,
+        children: [
+          const SizedBox(height: 24),
+          _buildWorksErrorContent(l, message),
+          const SizedBox(height: 24),
+        ],
+        onRefresh: _refreshWorks,
+      );
     }
 
     if (works.isEmpty) {
-      return _buildWorksEmptyState(l);
+      return _buildRefreshableList(
+        l,
+        state,
+        onRefresh: () => _fetchWorks(showSnackBarOnError: true),
+        children: [
+          const SizedBox(height: 12),
+          _buildWorksEmptyContent(l),
+          const SizedBox(height: 24),
+        ],
+      );
     }
 
     return RefreshIndicator(
-      onRefresh: _refreshWorks,
+      onRefresh: () => _handleRefresh(state),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: works.length,
-        itemBuilder: (context, index) => _buildWorkCard(
-          works[index],
-          l,
-          isDeleting: state.deletingWorkId == works[index].id,
-          isActivating:
-          activatingWorkId == works[index].id && isActivationInProgress,
-          activationInProgress: isActivationInProgress,
+        padding: const EdgeInsets.only(bottom: 24),
+        itemCount: works.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _buildHomeBanner(l);
+          }
+          final work = works[index - 1];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildWorkCard(
+              work,
+              l,
+              isDeleting: state.deletingWorkId == work.id,
+              isActivating:
+                  activatingWorkId == work.id && isActivationInProgress,
+              activationInProgress: isActivationInProgress,
+            ),
+          );
+        },
+        separatorBuilder: (context, index) =>
+            SizedBox(height: index == 0 ? 24 : 12),
+      ),
+    );
+  }
+
+  Widget _buildRefreshableList(
+    AppLocalizations l,
+    WorkState state, {
+    required List<Widget> children,
+    Future<void> Function()? onRefresh,
+  }) {
+    return RefreshIndicator(
+      onRefresh: onRefresh ?? () => _handleRefresh(state),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          _buildHomeBanner(l),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorksEmptyContent(AppLocalizations l) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(AppAssets.workPlaceholder, width: 100),
+            const SizedBox(height: 12),
+            Text(
+              l.noWorkAddedYet,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                l.startTrackingAttendance,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF007BFF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: _showAddWorkDialog,
+                child: Text(
+                  l.addYourFirstWork,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 60),
+          ],
         ),
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
       ),
     );
   }
 
-  Widget _buildWorksEmptyState(AppLocalizations l) {
-    return RefreshIndicator(
-      onRefresh: () => _fetchWorks(showSnackBarOnError: true),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(AppAssets.workPlaceholder, width: 100),
-                const SizedBox(height: 12),
-                Text(
-                  l.noWorkAddedYet,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    l.startTrackingAttendance,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: _showAddWorkDialog,
-                    child: Text(
-                      l.addYourFirstWork,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 60),
-              ],
+  Widget _buildWorksErrorContent(AppLocalizations l, String message) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, color: Color(0xFFD32F2F), size: 64),
+            const SizedBox(height: 16),
+            Text(
+              l.worksLoadFailedTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorksErrorState(AppLocalizations l, String message) {
-    return RefreshIndicator(
-      onRefresh: _refreshWorks,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Color(0xFFD32F2F), size: 64),
-                const SizedBox(height: 16),
-                Text(
-                  l.worksLoadFailedTitle,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message,
-                  style: const TextStyle(fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: 160,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _refreshWorks();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: Text(
-                      l.retryButtonLabel,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 160,
+              child: OutlinedButton(
+                onPressed: () {
+                  _refreshWorks();
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-              ],
+                child: Text(
+                  l.retryButtonLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
