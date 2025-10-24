@@ -485,6 +485,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final l = AppLocalizations.of(context);
+    final contractTypeId = _resolveContractTypeId();
     _isCompletingMissedAttendance = true;
 
     final response = await showModalBottomSheet<Map<String, dynamic>?>(
@@ -497,6 +498,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           workName: widget.work.name,
           localization: l,
           dateFormatter: _formatDate,
+          contractTypeId: contractTypeId,
           onSubmit: (entries) => _attendanceRepository.completeMissedAttendance(
             entries: entries,
           ),
@@ -1529,6 +1531,7 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
     required this.workName,
     required this.localization,
     required this.dateFormatter,
+    this.contractTypeId,
     required this.onSubmit,
   });
 
@@ -1537,6 +1540,7 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
   final String workName;
   final AppLocalizations localization;
   final String Function(DateTime) dateFormatter;
+  final Object? contractTypeId;
   final Future<Map<String, dynamic>?> Function(
     List<MissedAttendanceCompletion> entries,
   ) onSubmit;
@@ -1999,6 +2003,7 @@ class _MissedAttendanceCompletionSheetState
             breakMinutes: data.isLeave
                 ? 0
                 : _parseBreakMinutes(data.breakMinutesController.text),
+            contractTypeId: widget.contractTypeId,
             isLeave: data.isLeave,
           ),
         )
