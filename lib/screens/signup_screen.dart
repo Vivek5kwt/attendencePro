@@ -455,6 +455,21 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Widget _buildCountryCodeField(AppLocalizations l) {
+    final textTheme = Theme.of(context).textTheme;
+    final dialCodeStyle = textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        );
+
+    final countryNameStyle = textTheme.bodyMedium?.copyWith(
+          color: Colors.black54,
+        ) ??
+        const TextStyle(color: Colors.black54);
+
     return GestureDetector(
       onTap: _showCountryPicker,
       child: InputDecorator(
@@ -463,37 +478,34 @@ class _SignupScreenState extends State<SignupScreen> {
               const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
         isEmpty: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Text(countryFlag(_selectedCountry.isoCode)),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      _selectedCountryCode,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _selectedCountry.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ),
-                ],
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                countryFlag(_selectedCountry.isoCode),
+                style: const TextStyle(fontSize: 22),
               ),
-            ),
-            const Icon(Icons.arrow_drop_down, color: Colors.black54),
-          ],
+              const SizedBox(width: 12),
+              Text(
+                _selectedCountryCode,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: dialCodeStyle,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _selectedCountry.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: countryNameStyle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_drop_down, color: Colors.black54),
+            ],
+          ),
         ),
       ),
     );
