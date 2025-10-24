@@ -132,6 +132,11 @@ class HourlySummaryData {
         'hourly_rate',
         'hourlyRate',
         'rate',
+        'total_salary',
+        'totalSalary',
+        'total',
+        'salary',
+        'amount',
       ]),
       workingDays: _parseInt(json, const [
         'working_days',
