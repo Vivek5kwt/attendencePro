@@ -702,23 +702,55 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     const keys = ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType'];
     for (final key in keys) {
       final value = data[key];
-      if (value == null) {
-        continue;
+      final resolved = _tryParseContractTypeId(value);
+      if (resolved != null) {
+        return resolved;
       }
-      if (value is int) {
-        return value;
+    }
+    return null;
+  }
+
+  int? _tryParseContractTypeId(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return null;
       }
-      if (value is num) {
-        return value.toInt();
-      }
-      if (value is String) {
-        final trimmed = value.trim();
-        if (trimmed.isEmpty) {
+      final parsed = int.tryParse(trimmed);
+      return parsed;
+    }
+    if (value is Map) {
+      final map = value.cast<dynamic, dynamic>();
+      const candidateKeys = <String>[
+        'id',
+        'contract_type_id',
+        'contractTypeId',
+        'contract_type',
+        'contractType',
+        'value',
+      ];
+      for (final key in candidateKeys) {
+        if (!map.containsKey(key)) {
           continue;
         }
-        final parsed = int.tryParse(trimmed);
-        if (parsed != null) {
-          return parsed;
+        final resolved = _tryParseContractTypeId(map[key]);
+        if (resolved != null) {
+          return resolved;
+        }
+      }
+      for (final entry in map.entries) {
+        final resolved = _tryParseContractTypeId(entry.value);
+        if (resolved != null) {
+          return resolved;
         }
       }
     }

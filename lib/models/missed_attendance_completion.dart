@@ -48,15 +48,84 @@ class MissedAttendanceCompletion {
   }
 
   static dynamic _normalizeContractTypeId(Object value) {
+    final resolved = _resolveContractTypeIdentifier(value);
+    if (resolved is int) {
+      return resolved;
+    }
+    if (resolved is num) {
+      return resolved.toInt();
+    }
+    if (resolved is String) {
+      final trimmed = resolved.trim();
+      if (trimmed.isEmpty) {
+        return trimmed;
+      }
+      final parsed = int.tryParse(trimmed);
+      return parsed ?? trimmed;
+    }
+    if (resolved != null) {
+      return resolved;
+    }
+
     if (value is int) {
       return value;
     }
     if (value is num) {
       return value.toInt();
     }
+    if (value is Map) {
+      return _resolveContractTypeIdentifier(value) ?? '';
+    }
     final stringValue = value.toString();
     final parsed = int.tryParse(stringValue);
     return parsed ?? stringValue.trim();
+  }
+
+  static dynamic? _resolveContractTypeIdentifier(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return null;
+      }
+      final parsed = int.tryParse(trimmed);
+      return parsed ?? trimmed;
+    }
+    if (value is Map) {
+      final map = value.cast<dynamic, dynamic>();
+      const candidateKeys = <String>[
+        'id',
+        'contract_type_id',
+        'contractTypeId',
+        'contract_type',
+        'contractType',
+        'value',
+      ];
+      for (final key in candidateKeys) {
+        if (!map.containsKey(key)) {
+          continue;
+        }
+        final resolved = _resolveContractTypeIdentifier(map[key]);
+        if (resolved != null) {
+          return resolved;
+        }
+      }
+      for (final entry in map.entries) {
+        final resolved = _resolveContractTypeIdentifier(entry.value);
+        if (resolved != null) {
+          return resolved;
+        }
+      }
+    }
+    return null;
   }
 
   static String _formatDate(DateTime date) {
