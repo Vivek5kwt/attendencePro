@@ -1,7 +1,13 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../models/attendance_history.dart';
+import '../models/work.dart';
+import '../repositories/attendance_history_repository.dart';
+import '../repositories/work_repository.dart';
 
 const List<String> _kMonthNames = <String>[
   'January',
@@ -27,65 +33,444 @@ class AttendanceHistoryScreen extends StatefulWidget {
 }
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
-  late final List<String> _availableMonths;
-  late final List<String> _availableWorks;
+  late final AttendanceHistoryRepository _historyRepository;
+  late final WorkRepository _workRepository;
+
+  final List<String> _availableMonths = <String>[];
+  List<String> _availableWorks = <String>[];
+
+  final List<_AttendanceEntry> _entries = <_AttendanceEntry>[];
+  final List<String> _workNames = <String>[];
+  final Map<String, Work> _workLookup = <String, Work>{};
 
   String _selectedMonth = '';
   String _selectedWork = '';
   String _allWorksLabel = '';
   bool _initialized = false;
 
-  final List<_AttendanceEntry> _entries = <_AttendanceEntry>[
+  bool _isLoadingWorks = false;
+  bool _isLoadingEntries = false;
+  bool _missingWork = false;
+  bool _requiresAuthentication = false;
+  String? _errorMessage;
+  String _currencySymbol = '₹';
 
-  ];
+  int _entriesRequestId = 0;
 
-  final List<_PendingEntry> _pendingEntries = <_PendingEntry>[
-    _PendingEntry(
-      date: DateTime(2025, 10, 15),
-      message: 'Select hours or mark leave',
-    ),
-    _PendingEntry(
-      date: DateTime(2025, 10, 14),
-      message: 'Add start and end time',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _historyRepository = AttendanceHistoryRepository();
+    _workRepository = WorkRepository();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final now = DateTime.now();
     if (!_initialized) {
-      _availableMonths = List<String>.generate(
-        6,
-        (index) {
-          final date = DateTime(now.year, now.month - index, 1);
-          return '${_kMonthNames[date.month - 1]} ${date.year}';
-        },
-      );
-      _selectedMonth = _availableMonths.first;
-      _availableWorks = _entries
-          .map((entry) => entry.workName)
-          .toSet()
-          .toList()
-        ..sort();
-      _selectedWork =
-          _availableWorks.isEmpty ? '' : _availableWorks.first;
+      _initializeMonths();
       _initialized = true;
+      _loadWorks();
     }
     final l = AppLocalizations.of(context);
-    final newAllWorksLabel = l.attendanceHistoryAllWorks;
-    final wasAllWorksSelected =
-        _selectedWork.isEmpty || _selectedWork == _allWorksLabel;
-    if (_allWorksLabel.isNotEmpty) {
-      _availableWorks.remove(_allWorksLabel);
-    }
-    _allWorksLabel = newAllWorksLabel;
-    if (!_availableWorks.contains(_allWorksLabel)) {
-      _availableWorks.insert(0, _allWorksLabel);
-    }
-    if (wasAllWorksSelected || _selectedWork == _allWorksLabel) {
+    _updateAllWorksLabel(l.attendanceHistoryAllWorks);
+  }
+
+  void _initializeMonths() {
+    final now = DateTime.now();
+    _availableMonths
+      ..clear()
+      ..addAll(
+        List<String>.generate(
+          6,
+          (index) {
+            final date = DateTime(now.year, now.month - index, 1);
+            return '${_kMonthNames[date.month - 1]} ${date.year}';
+          },
+        ),
+      );
+    _selectedMonth =
+        _availableMonths.isNotEmpty ? _availableMonths.first : '';
+  }
+
+  void _updateAllWorksLabel(String label) {
+    final wasSelected = _selectedWork == _allWorksLabel;
+    _allWorksLabel = label;
+    _availableWorks = _buildWorkOptions(_workNames);
+    if (wasSelected && _allWorksLabel.isNotEmpty) {
       _selectedWork = _allWorksLabel;
+    } else if (_selectedWork.isNotEmpty &&
+        !_availableWorks.contains(_selectedWork)) {
+      _selectedWork = _availableWorks.isNotEmpty ? _availableWorks.first : '';
     }
+  }
+
+  List<String> _buildWorkOptions(List<String> workNames) {
+    if (workNames.isEmpty) {
+      return _allWorksLabel.isNotEmpty
+          ? <String>[_allWorksLabel]
+          : const <String>[];
+    }
+    return <String>[
+      if (_allWorksLabel.isNotEmpty) _allWorksLabel,
+      ...workNames,
+    ];
+  }
+
+  Future<void> _loadWorks() async {
+    setState(() {
+      _isLoadingWorks = true;
+      _errorMessage = null;
+      _requiresAuthentication = false;
+      _missingWork = false;
+    });
+
+    try {
+      final works = await _workRepository.fetchWorks();
+      if (!mounted) {
+        return;
+      }
+      final sortedNames = SplayTreeSet<String>.from(
+        works.map((work) => work.name.trim()).where((name) => name.isNotEmpty),
+      ).toList(growable: false);
+
+      _workLookup
+        ..clear()
+        ..addEntries(
+          works.map((work) => MapEntry(work.name, work)),
+        );
+
+      _workNames
+        ..clear()
+        ..addAll(sortedNames);
+
+      _availableWorks = _buildWorkOptions(_workNames);
+
+      final activeWork = _findActiveWork(works);
+      final defaultSelection = activeWork?.name ??
+          (_workNames.isNotEmpty ? _workNames.first : '');
+
+      setState(() {
+        _isLoadingWorks = false;
+        _missingWork = works.isEmpty;
+        _selectedWork = defaultSelection.isNotEmpty
+            ? defaultSelection
+            : (_availableWorks.contains(_allWorksLabel)
+                ? _allWorksLabel
+                : '');
+      });
+
+      if (works.isNotEmpty) {
+        await _loadEntries();
+      } else {
+        setState(() {
+          _entries.clear();
+          _currencySymbol = '₹';
+        });
+      }
+    } on WorkAuthException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingWorks = false;
+        _requiresAuthentication = true;
+        _missingWork = true;
+        _entries.clear();
+        _workLookup.clear();
+        _workNames.clear();
+        _availableWorks = _buildWorkOptions(_workNames);
+        _selectedWork =
+            _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
+        _currencySymbol = '₹';
+      });
+    } on WorkRepositoryException catch (e) {
+      final l = AppLocalizations.of(context);
+      final message = e.message.trim().isEmpty
+          ? l.worksLoadFailedMessage
+          : e.message;
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingWorks = false;
+        _errorMessage = message;
+        _missingWork = true;
+        _entries.clear();
+        _workLookup.clear();
+        _workNames.clear();
+        _availableWorks = _buildWorkOptions(_workNames);
+        _selectedWork =
+            _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
+        _currencySymbol = '₹';
+      });
+    } catch (_) {
+      final l = AppLocalizations.of(context);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingWorks = false;
+        _errorMessage = l.worksLoadFailedMessage;
+        _missingWork = true;
+        _entries.clear();
+        _workLookup.clear();
+        _workNames.clear();
+        _availableWorks = _buildWorkOptions(_workNames);
+        _selectedWork =
+            _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
+        _currencySymbol = '₹';
+      });
+    }
+  }
+
+  Future<void> _loadEntries() async {
+    if (_selectedMonth.isEmpty) {
+      return;
+    }
+
+    final targetDate = _parseMonthLabel(_selectedMonth) ?? DateTime.now();
+
+    if (_selectedWork.isEmpty && _availableWorks.isNotEmpty) {
+      _selectedWork = _availableWorks.first;
+    }
+
+    if (_selectedWork.isEmpty) {
+      setState(() {
+        _entries.clear();
+        _currencySymbol = '₹';
+      });
+      return;
+    }
+
+    final requestId = ++_entriesRequestId;
+    setState(() {
+      _isLoadingEntries = true;
+      _errorMessage = null;
+      _requiresAuthentication = false;
+    });
+
+    try {
+      AttendanceHistoryData result;
+      if (_selectedWork == _allWorksLabel) {
+        result = await _fetchAllWorksHistory(
+          month: targetDate.month,
+          year: targetDate.year,
+        );
+      } else {
+        final work = _workLookup[_selectedWork];
+        if (work == null) {
+          throw const AttendanceHistoryRepositoryException(
+            'Selected work is unavailable.',
+          );
+        }
+        result = await _historyRepository.fetchHistory(
+          workId: work.id,
+          workName: work.name,
+          month: targetDate.month,
+          year: targetDate.year,
+        );
+      }
+
+      if (!mounted || requestId != _entriesRequestId) {
+        return;
+      }
+
+      final mappedEntries = result.entries
+          .map(_mapEntryFromData)
+          .toList(growable: false)
+        ..sort((a, b) => b.date.compareTo(a.date));
+
+      setState(() {
+        _entries
+          ..clear()
+          ..addAll(mappedEntries);
+        _currencySymbol = result.currencySymbol;
+        _isLoadingEntries = false;
+        _errorMessage = null;
+      });
+    } on AttendanceHistoryAuthException {
+      if (!mounted || requestId != _entriesRequestId) {
+        return;
+      }
+      setState(() {
+        _entries.clear();
+        _currencySymbol = '₹';
+        _isLoadingEntries = false;
+        _requiresAuthentication = true;
+      });
+    } on AttendanceHistoryRepositoryException catch (e) {
+      final l = AppLocalizations.of(context);
+      final message = e.message.trim().isEmpty
+          ? l.attendanceHistoryLoadFailedMessage
+          : e.message;
+      if (!mounted || requestId != _entriesRequestId) {
+        return;
+      }
+      setState(() {
+        _entries.clear();
+        _currencySymbol = '₹';
+        _isLoadingEntries = false;
+        _errorMessage = message;
+      });
+    } catch (_) {
+      final l = AppLocalizations.of(context);
+      if (!mounted || requestId != _entriesRequestId) {
+        return;
+      }
+      setState(() {
+        _entries.clear();
+        _currencySymbol = '₹';
+        _isLoadingEntries = false;
+        _errorMessage = l.attendanceHistoryLoadFailedMessage;
+      });
+    }
+  }
+
+  Future<AttendanceHistoryData> _fetchAllWorksHistory({
+    required int month,
+    required int year,
+  }) async {
+    final entries = <AttendanceHistoryEntryData>[];
+    String resolvedCurrency = _currencySymbol;
+
+    for (final work in _workLookup.values) {
+      final data = await _historyRepository.fetchHistory(
+        workId: work.id,
+        workName: work.name,
+        month: month,
+        year: year,
+      );
+      if (data.currencySymbol.trim().isNotEmpty) {
+        resolvedCurrency = data.currencySymbol;
+      }
+      entries.addAll(data.entries);
+    }
+
+    return AttendanceHistoryData(
+      entries: entries,
+      currencySymbol:
+          resolvedCurrency.trim().isNotEmpty ? resolvedCurrency : '₹',
+    );
+  }
+
+  DateTime? _parseMonthLabel(String label) {
+    final parts = label.split(' ');
+    if (parts.length != 2) {
+      return null;
+    }
+    final monthIndex = _kMonthNames
+        .indexWhere((month) => month.toLowerCase() == parts[0].toLowerCase());
+    final year = int.tryParse(parts[1]);
+    if (monthIndex == -1 || year == null) {
+      return null;
+    }
+    return DateTime(year, monthIndex + 1, 1);
+  }
+
+  _AttendanceEntry _mapEntryFromData(AttendanceHistoryEntryData data) {
+    return _AttendanceEntry(
+      date: data.date,
+      workName: data.workName,
+      type: _mapEntryType(data.type),
+      startTime: data.startTime,
+      endTime: data.endTime,
+      breakDuration: data.breakDuration,
+      hoursWorked: data.hoursWorked,
+      overtimeHours: data.overtimeHours,
+      contractType: data.contractType,
+      unitsCompleted: data.unitsCompleted,
+      ratePerUnit: data.ratePerUnit,
+      leaveReason: data.leaveReason,
+      salary: data.salary,
+    );
+  }
+
+  _AttendanceEntryType _mapEntryType(AttendanceHistoryEntryType type) {
+    switch (type) {
+      case AttendanceHistoryEntryType.hourly:
+        return _AttendanceEntryType.hourly;
+      case AttendanceHistoryEntryType.contract:
+        return _AttendanceEntryType.contract;
+      case AttendanceHistoryEntryType.leave:
+        return _AttendanceEntryType.leave;
+    }
+  }
+
+  Work? _findActiveWork(List<Work> works) {
+    for (final work in works) {
+      if (_isWorkActive(work)) {
+        return work;
+      }
+    }
+    return works.isNotEmpty ? works.first : null;
+  }
+
+  bool _isWorkActive(Work work) {
+    if (work.isActive) {
+      return true;
+    }
+
+    const possibleKeys = <String>{
+      'is_active',
+      'isActive',
+      'active',
+      'is_current',
+      'isCurrent',
+      'currently_active',
+    };
+
+    for (final key in possibleKeys) {
+      final value = work.additionalData[key];
+      final resolved = _resolveBoolean(value);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    return false;
+  }
+
+  bool? _resolveBoolean(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (normalized.isEmpty) {
+        return null;
+      }
+      if (['true', '1', 'yes', 'active', 'current'].contains(normalized)) {
+        return true;
+      }
+      if (['false', '0', 'no', 'inactive'].contains(normalized)) {
+        return false;
+      }
+    }
+    return null;
+  }
+
+  void _onMonthChanged(String value) {
+    if (value == _selectedMonth) {
+      return;
+    }
+    setState(() {
+      _selectedMonth = value;
+    });
+    _loadEntries();
+  }
+
+  void _onWorkChanged(String value) {
+    if (value == _selectedWork) {
+      return;
+    }
+    setState(() {
+      _selectedWork = value;
+    });
+    _loadEntries();
   }
 
   @override
@@ -93,11 +478,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     final l = AppLocalizations.of(context);
     final filteredEntries =
         _selectedWork == _allWorksLabel || _selectedWork.isEmpty
-        ? _entries
-        : _entries.where((entry) => entry.workName == _selectedWork).toList();
+            ? _entries
+            : _entries
+                .where((entry) => entry.workName == _selectedWork)
+                .toList();
 
-    final workedDays =
-        filteredEntries.where((entry) => entry.type != _AttendanceEntryType.leave).length;
+    final workedDays = filteredEntries
+        .where((entry) => entry.type != _AttendanceEntryType.leave)
+        .length;
     final leaveDays = filteredEntries
         .where((entry) => entry.type == _AttendanceEntryType.leave)
         .length;
@@ -113,6 +501,81 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       0,
       (previousValue, element) => previousValue + element.salary,
     );
+
+    Widget content;
+    if (_isLoadingWorks && _entries.isEmpty) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (_requiresAuthentication) {
+      content = _StatusMessage(message: l.authenticationRequiredMessage);
+    } else if (_errorMessage != null) {
+      content = _StatusMessage(
+        message: _errorMessage!,
+        isError: true,
+      );
+    } else if (_missingWork && _entries.isEmpty) {
+      content = _StatusMessage(message: l.startTrackingAttendance);
+    } else {
+      content = SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _FilterBar(
+              months: _availableMonths,
+              selectedMonth: _selectedMonth,
+              works: _availableWorks,
+              selectedWork: _selectedWork,
+              onMonthChanged: _onMonthChanged,
+              onWorkChanged: _onWorkChanged,
+            ),
+            const SizedBox(height: 20),
+            _SummaryCard(
+              title: l.attendanceHistorySummaryTitle,
+              workedDaysLabel: l.attendanceHistoryWorkedDaysLabel,
+              leaveDaysLabel: l.attendanceHistoryLeaveDaysLabel,
+              overtimeLabel: l.attendanceHistoryOvertimeLabel,
+              totalHoursLabel: l.totalHoursLabel,
+              totalSalaryLabel: l.totalSalaryLabel,
+              workedDays: workedDays,
+              leaveDays: leaveDays,
+              totalHours: totalHours,
+              overtimeHours: overtimeHours,
+              totalSalary: totalSalary,
+              currencySymbol: _currencySymbol,
+            ),
+            const SizedBox(height: 24),
+            _SectionTitle(text: l.attendanceHistoryTimelineTitle),
+            const SizedBox(height: 12),
+            if (filteredEntries.isEmpty)
+              _EmptyState(message: l.attendanceHistoryNoEntriesLabel)
+            else
+              Column(
+                children: filteredEntries
+                    .map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _AttendanceEntryTile(
+                          entry: entry,
+                          localization: l,
+                          currencySymbol: _currencySymbol,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+          ],
+        ),
+      );
+    }
+
+    final scaffoldBody = (_isLoadingEntries && _entries.isNotEmpty)
+        ? Stack(
+            children: [
+              content,
+              const _LoadingOverlay(),
+            ],
+          )
+        : content;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
@@ -158,69 +621,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _FilterBar(
-              months: _availableMonths,
-              selectedMonth: _selectedMonth,
-              works: _availableWorks,
-              selectedWork: _selectedWork,
-              onMonthChanged: (value) {
-                setState(() {
-                  _selectedMonth = value;
-                });
-              },
-              onWorkChanged: (value) {
-                setState(() {
-                  _selectedWork = value;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-     /*       if (_pendingEntries.isNotEmpty)
-              _PendingEntriesCard(
-                entries: _pendingEntries,
-                onResolvePressed: () => _showComingSoonMessage(context),
-              )
-            else
-              _AllCaughtUpBanner(onPressed: () => _showComingSoonMessage(context)),*/
-            const SizedBox(height: 20),
-            _SummaryCard(
-              title: l.attendanceHistorySummaryTitle,
-              workedDaysLabel: l.attendanceHistoryWorkedDaysLabel,
-              leaveDaysLabel: l.attendanceHistoryLeaveDaysLabel,
-              overtimeLabel: l.attendanceHistoryOvertimeLabel,
-              totalHoursLabel: l.totalHoursLabel,
-              totalSalaryLabel: l.totalSalaryLabel,
-              workedDays: workedDays,
-              leaveDays: leaveDays,
-              totalHours: totalHours,
-              overtimeHours: overtimeHours,
-              totalSalary: totalSalary,
-            ),
-            const SizedBox(height: 24),
-            _SectionTitle(text: l.attendanceHistoryTimelineTitle),
-            const SizedBox(height: 12),
-            if (filteredEntries.isEmpty)
-              _EmptyState(message: l.attendanceHistoryNoEntriesLabel)
-            else
-              Column(
-                children: filteredEntries
-                    .map((entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _AttendanceEntryTile(
-                            entry: entry,
-                            localization: l,
-                          ),
-                        ))
-                    .toList(),
-              ),
-          ],
-        ),
-      ),
+      body: scaffoldBody,
     );
   }
 
@@ -228,6 +629,60 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     final l = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l.helpSupportComingSoon)),
+    );
+  }
+}
+
+class _StatusMessage extends StatelessWidget {
+  const _StatusMessage({required this.message, this.isError = false});
+
+  final String message;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isError ? const Color(0xFFB91C1C) : const Color(0xFF6B7280);
+    final background = isError ? const Color(0xFFFFE4E6) : Colors.white;
+    final border = isError ? const Color(0xFFFCA5A5) : const Color(0xFFE5E7EB);
+
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ) ??
+        TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+        );
+
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: border),
+        ),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: textStyle,
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingOverlay extends StatelessWidget {
+  const _LoadingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black.withOpacity(0.08),
+      child: const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
@@ -592,6 +1047,7 @@ class _SummaryCard extends StatelessWidget {
     required this.totalHours,
     required this.overtimeHours,
     required this.totalSalary,
+    required this.currencySymbol,
   });
 
   final String title;
@@ -605,6 +1061,7 @@ class _SummaryCard extends StatelessWidget {
   final double totalHours;
   final double overtimeHours;
   final double totalSalary;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -694,7 +1151,7 @@ class _SummaryCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '€${totalSalary.toStringAsFixed(2)}',
+                      _formatCurrency(totalSalary),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -709,6 +1166,11 @@ class _SummaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatCurrency(double value) {
+    final symbol = currencySymbol.trim().isEmpty ? '₹' : currencySymbol.trim();
+    return '$symbol${value.toStringAsFixed(2)}';
   }
 }
 
@@ -812,10 +1274,12 @@ class _AttendanceEntryTile extends StatelessWidget {
   const _AttendanceEntryTile({
     required this.entry,
     required this.localization,
+    required this.currencySymbol,
   });
 
   final _AttendanceEntry entry;
   final AppLocalizations localization;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -870,7 +1334,7 @@ class _AttendanceEntryTile extends StatelessWidget {
                 ),
               ),
               Text(
-                '€${entry.salary.toStringAsFixed(2)}',
+                _formatCurrency(entry.salary),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF111827),
@@ -968,8 +1432,9 @@ class _AttendanceEntryTile extends StatelessWidget {
           const SizedBox(height: 8),
           _EntryRow(
             label: localization.contractWorkRateLabel,
-            value:
-                entry.ratePerUnit != null ? '€${entry.ratePerUnit!.toStringAsFixed(2)}' : '--',
+            value: entry.ratePerUnit != null
+                ? _formatCurrency(entry.ratePerUnit!)
+                : '--',
           ),
           if (entry.hoursWorked > 0) ...[
             const SizedBox(height: 12),
@@ -987,6 +1452,11 @@ class _AttendanceEntryTile extends StatelessWidget {
           ),
         ];
     }
+  }
+
+  String _formatCurrency(double value) {
+    final symbol = currencySymbol.trim().isEmpty ? '₹' : currencySymbol.trim();
+    return '$symbol${value.toStringAsFixed(2)}';
   }
 }
 
