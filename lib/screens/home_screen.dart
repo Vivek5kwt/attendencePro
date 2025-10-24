@@ -19,6 +19,7 @@ import '../utils/session_manager.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/work_selection_dialog.dart';
 import 'help_support_screen.dart';
+import 'profile_screen.dart';
 import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
 import 'attendance_history_screen.dart';
@@ -1226,7 +1227,10 @@ class _HomeScreenState extends State<HomeScreen> {
             'it': 'Italian',
           };
           final userName = state.userName ?? l.drawerUserName;
-          final userEmail = state.userEmail ?? l.drawerUserPhone;
+          final userContact = state.userEmail ??
+              state.userPhone ??
+              state.userUsername ??
+              l.drawerUserPhone;
           final menuItems = <_DrawerMenuItem>[
             _DrawerMenuItem(
               assetPath: AppAssets.home,
@@ -1255,6 +1259,22 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: const Color(0xFFEDEBFF),
               iconColor: const Color(0xFF5856D6),
               onTap: _openContractWork,
+            ),
+            _DrawerMenuItem(
+              icon: Icons.person_outline,
+              label: l.profileLabel,
+              backgroundColor: const Color(0xFFEFF6FF),
+              iconColor: const Color(0xFF2563EB),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await Future.delayed(const Duration(milliseconds: 200));
+                if (!mounted) return;
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ProfileScreen(),
+                  ),
+                );
+              },
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.reports,
@@ -1340,7 +1360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     _DrawerHeader(
                       userName: userName,
-                      userEmail: userEmail,
+                      userEmail: userContact,
                     ),
                     const SizedBox(height: 16),
                     Expanded(

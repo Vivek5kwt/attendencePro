@@ -20,6 +20,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     on<WorkMessageCleared>(_onMessageCleared);
     on<WorkAddStatusCleared>(_onAddStatusCleared);
     on<WorkUpdateStatusCleared>(_onUpdateStatusCleared);
+    on<WorkProfileRefreshed>(_onProfileRefreshed);
   }
 
   final WorkRepository _repository;
@@ -43,7 +44,11 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           loadStatus: WorkLoadStatus.success,
           works: works,
           userName: profile.name,
-          userEmail: profile.displayEmail,
+          userEmail: profile.displayContact,
+          userPhone: profile.phone,
+          userUsername: profile.username,
+          userCountryCode: profile.countryCode,
+          userLanguage: profile.language,
         ),
       );
     } on WorkAuthException {
@@ -53,7 +58,11 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           works: const <Work>[],
           requiresAuthentication: true,
           userName: profile.name,
-          userEmail: profile.displayEmail,
+          userEmail: profile.displayContact,
+          userPhone: profile.phone,
+          userUsername: profile.username,
+          userCountryCode: profile.countryCode,
+          userLanguage: profile.language,
           feedbackKind: WorkFeedbackKind.load,
         ),
       );
@@ -64,7 +73,11 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           works: const <Work>[],
           lastErrorMessage: e.message,
           userName: profile.name,
-          userEmail: profile.displayEmail,
+          userEmail: profile.displayContact,
+          userPhone: profile.phone,
+          userUsername: profile.username,
+          userCountryCode: profile.countryCode,
+          userLanguage: profile.language,
           feedbackKind: WorkFeedbackKind.load,
         ),
       );
@@ -75,7 +88,11 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           works: const <Work>[],
           lastErrorMessage: 'Failed to load works. Please try again.',
           userName: profile.name,
-          userEmail: profile.displayEmail,
+          userEmail: profile.displayContact,
+          userPhone: profile.phone,
+          userUsername: profile.username,
+          userCountryCode: profile.countryCode,
+          userLanguage: profile.language,
           feedbackKind: WorkFeedbackKind.load,
         ),
       );
@@ -399,5 +416,22 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         ),
       );
     }
+  }
+
+  Future<void> _onProfileRefreshed(
+    WorkProfileRefreshed event,
+    Emitter<WorkState> emit,
+  ) async {
+    final profile = await _repository.loadUserProfile();
+    emit(
+      state.copyWith(
+        userName: profile.name,
+        userEmail: profile.displayContact,
+        userPhone: profile.phone,
+        userUsername: profile.username,
+        userCountryCode: profile.countryCode,
+        userLanguage: profile.language,
+      ),
+    );
   }
 }

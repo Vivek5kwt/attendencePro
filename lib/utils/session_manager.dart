@@ -7,6 +7,8 @@ class SessionManager {
   static const _nameKey = 'user_name';
   static const _emailKey = 'user_email';
   static const _usernameKey = 'user_username';
+  static const _phoneKey = 'user_phone';
+  static const _countryCodeKey = 'user_country_code';
   static const _languageKey = 'user_language';
 
   Future<void> saveSession({
@@ -14,22 +16,18 @@ class SessionManager {
     String? name,
     String? email,
     String? username,
+    String? phone,
+    String? countryCode,
     String? language,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
-    if (name != null) {
-      await prefs.setString(_nameKey, name);
-    }
-    if (email != null) {
-      await prefs.setString(_emailKey, email);
-    }
-    if (username != null) {
-      await prefs.setString(_usernameKey, username);
-    }
-    if (language != null && language.isNotEmpty) {
-      await prefs.setString(_languageKey, language);
-    }
+    await _setOptionalString(prefs, _nameKey, name);
+    await _setOptionalString(prefs, _emailKey, email);
+    await _setOptionalString(prefs, _usernameKey, username);
+    await _setOptionalString(prefs, _phoneKey, phone);
+    await _setOptionalString(prefs, _countryCodeKey, countryCode);
+    await _setOptionalString(prefs, _languageKey, language);
   }
 
   Future<String?> getToken() async {
@@ -41,13 +39,33 @@ class SessionManager {
     return token;
   }
 
-  Future<Map<String, String?>> getUserDetails() async {
+  Future<Map<String, String?>> getUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     return {
       'name': prefs.getString(_nameKey),
       'email': prefs.getString(_emailKey),
       'username': prefs.getString(_usernameKey),
+      'phone': prefs.getString(_phoneKey),
+      'country_code': prefs.getString(_countryCodeKey),
+      'language': prefs.getString(_languageKey),
     };
+  }
+
+  Future<void> saveUserProfile({
+    String? name,
+    String? email,
+    String? username,
+    String? phone,
+    String? countryCode,
+    String? language,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await _setOptionalString(prefs, _nameKey, name);
+    await _setOptionalString(prefs, _emailKey, email);
+    await _setOptionalString(prefs, _usernameKey, username);
+    await _setOptionalString(prefs, _phoneKey, phone);
+    await _setOptionalString(prefs, _countryCodeKey, countryCode);
+    await _setOptionalString(prefs, _languageKey, language);
   }
 
   Future<void> savePreferredLanguage(String languageCode) async {
@@ -70,6 +88,24 @@ class SessionManager {
     await prefs.remove(_nameKey);
     await prefs.remove(_emailKey);
     await prefs.remove(_usernameKey);
+    await prefs.remove(_phoneKey);
+    await prefs.remove(_countryCodeKey);
     await prefs.remove(_languageKey);
+  }
+
+  Future<void> _setOptionalString(
+    SharedPreferences prefs,
+    String key,
+    String? value,
+  ) async {
+    if (value == null) {
+      return;
+    }
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      await prefs.remove(key);
+      return;
+    }
+    await prefs.setString(key, trimmed);
   }
 }
