@@ -296,6 +296,11 @@ class AppLocalizations {
       'snackForgotInvalidEmail': 'Please enter a valid email address.',
       'signupTitle': 'Sign Up',
       'fullNameLabel': 'Full Name',
+      'usernameLabel': 'Username',
+      'usernameHint': 'Choose a unique username',
+      'usernameRequired': 'Username required',
+      'usernameInvalid':
+          'Use 3-20 letters, numbers, dots, underscores, or hyphens',
       'nameRequired': 'Name required',
       'emailAddressLabel': 'Email Address',
       'emailRequired': 'Email required',
@@ -611,6 +616,11 @@ class AppLocalizations {
       'snackForgotInvalidEmail': 'कृपया मान्य ईमेल पता दर्ज करें।',
       'signupTitle': 'साइन अप',
       'fullNameLabel': 'पूरा नाम',
+      'usernameLabel': 'उपयोगकर्ता नाम',
+      'usernameHint': 'एक अद्वितीय उपयोगकर्ता नाम चुनें',
+      'usernameRequired': 'उपयोगकर्ता नाम आवश्यक है',
+      'usernameInvalid':
+          '3-20 अक्षर, अंक, डॉट, अंडरस्कोर या हाइफ़न का उपयोग करें',
       'nameRequired': 'नाम आवश्यक है',
       'emailAddressLabel': 'ईमेल पता',
       'emailRequired': 'ईमेल आवश्यक है',
@@ -926,6 +936,11 @@ class AppLocalizations {
       'snackForgotInvalidEmail': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਈਮੇਲ ਐਡਰੈੱਸ ਦਰਜ ਕਰੋ।',
       'signupTitle': 'ਸਾਈਨ ਅੱਪ',
       'fullNameLabel': 'ਪੂਰਾ ਨਾਮ',
+      'usernameLabel': 'ਯੂਜ਼ਰਨਾਮ',
+      'usernameHint': 'ਇੱਕ ਵਿਲੱਖਣ ਯੂਜ਼ਰਨਾਮ ਚੁਣੋ',
+      'usernameRequired': 'ਯੂਜ਼ਰਨਾਮ ਲਾਜ਼ਮੀ ਹੈ',
+      'usernameInvalid':
+          '3-20 ਅੱਖਰ, ਅੰਕ, ਡਾਟ, ਅੰਡਰਸਕੋਰ ਜਾਂ ਹਾਈਫਨ ਵਰਤੋ',
       'nameRequired': 'ਨਾਮ ਲਾਜ਼ਮੀ ਹੈ',
       'emailAddressLabel': 'ਈਮੇਲ ਐਡਰੈੱਸ',
       'emailRequired': 'ਈਮੇਲ ਲਾਜ਼ਮੀ ਹੈ',
@@ -1248,6 +1263,11 @@ class AppLocalizations {
       'snackForgotInvalidEmail': 'Inserisci un indirizzo email valido.',
       'signupTitle': 'Registrati',
       'fullNameLabel': 'Nome completo',
+      'usernameLabel': 'Nome utente',
+      'usernameHint': 'Scegli un nome utente univoco',
+      'usernameRequired': 'Nome utente obbligatorio',
+      'usernameInvalid':
+          'Usa da 3 a 20 lettere, numeri, punti, underscore o trattini',
       'nameRequired': 'Nome obbligatorio',
       'emailAddressLabel': 'Indirizzo email',
       'emailRequired': 'Email obbligatoria',
@@ -1654,6 +1674,10 @@ class AppLocalizations {
   String get snackForgotInvalidEmail => _value('snackForgotInvalidEmail');
   String get signupTitle => _value('signupTitle');
   String get fullNameLabel => _value('fullNameLabel');
+  String get usernameLabel => _value('usernameLabel');
+  String get usernameHint => _value('usernameHint');
+  String get usernameRequired => _value('usernameRequired');
+  String get usernameInvalid => _value('usernameInvalid');
   String get nameRequired => _value('nameRequired');
   String get emailAddressLabel => _value('emailAddressLabel');
   String get emailRequired => _value('emailRequired');

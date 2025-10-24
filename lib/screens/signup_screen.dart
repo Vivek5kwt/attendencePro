@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
+import '../data/country_codes.dart';
 import 'policy_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -19,18 +20,13 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
 
-  static const List<Map<String, String>> _countryCodeOptions = [
-    {'code': '+1', 'label': 'United States'},
-    {'code': '+39', 'label': 'Italy'},
-    {'code': '+44', 'label': 'United Kingdom'},
-    {'code': '+61', 'label': 'Australia'},
-    {'code': '+91', 'label': 'India'},
-  ];
-
+  late final List<CountryCodeOption> _countryCodeOptions;
+  late CountryCodeOption _selectedCountry;
   String _selectedCountryCode = '+91';
   late String _selectedLanguage;
 
@@ -43,16 +39,30 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
+    _countryCodeOptions = CountryCodes.all;
     _selectedLanguage = context.read<LocaleCubit>().state.languageCode;
     if (!const ['en', 'hi', 'pa', 'it'].contains(_selectedLanguage)) {
       _selectedLanguage = 'en';
     }
-    if (!_countryCodeOptions
-        .any((element) => element['code'] == _selectedCountryCode)) {
-      _selectedCountryCode = _countryCodeOptions.first['code']!;
-    }
+    final normalizedCode = _selectedCountryCode;
+    _selectedCountry = _countryCodeOptions.firstWhere(
+      (country) => country.dialCode == normalizedCode,
+      orElse: () => _countryCodeOptions.first,
+    );
+    _selectedCountryCode = _selectedCountry.dialCode;
     if (widget.initialName != null) {
       _nameController.text = widget.initialName!;
+    }
+    if (_usernameController.text.isEmpty && widget.initialName != null) {
+      final generated = widget.initialName!
+          .trim()
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+          .replaceAll(RegExp(r'_+'), '_')
+          .replaceAll(RegExp(r'^_|_$'), '');
+      if (generated.isNotEmpty) {
+        _usernameController.text = generated;
+      }
     }
     _termsRecognizer = TapGestureRecognizer()..onTap = _openTerms;
     _privacyRecognizer = TapGestureRecognizer()..onTap = _openPrivacy;
@@ -62,6 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
+    _usernameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
@@ -85,19 +96,12 @@ class _SignupScreenState extends State<SignupScreen> {
 
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final username = _usernameController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmController.text;
     final countryCode = _selectedCountryCode;
     final language = _resolveLanguage();
-
-    String username = email;
-    if (email.contains('@')) {
-      username = email.split('@').first;
-      if (username.isEmpty) username = name.replaceAll(' ', '').toLowerCase();
-    } else {
-      username = name.replaceAll(' ', '').toLowerCase();
-    }
 
     context.read<AuthCubit>().register(
       name: name,
@@ -199,6 +203,34 @@ class _SignupScreenState extends State<SignupScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
+                      l.usernameLabel,
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _usernameController,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username],
+                    decoration: _inputDecoration(l.usernameHint)
+                        .copyWith(labelText: l.usernameLabel),
+                    validator: (value) {
+                      final trimmed = value?.trim() ?? '';
+                      if (trimmed.isEmpty) return l.usernameRequired;
+                      if (trimmed.length < 3 || trimmed.length > 20) {
+                        return l.usernameInvalid;
+                      }
+                      if (RegExp(r'[^a-zA-Z0-9._-]').hasMatch(trimmed)) {
+                        return l.usernameInvalid;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
                       l.emailAddressLabel,
                       style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
@@ -226,27 +258,60 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 8),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 4,
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedCountryCode,
-                          decoration: _inputDecoration(l.countryCodeLabel),
+                        child: DropdownButtonFormField<CountryCodeOption>(
+                          value: _selectedCountry,
+                          isExpanded: true,
+                          decoration: _inputDecoration(l.countryCodeLabel)
+                              .copyWith(contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8)),
+                          menuMaxHeight: 320,
                           items: _countryCodeOptions
                               .map(
-                                (option) {
-                                  final code = option['code']!;
-                                  final label = option['label']!;
-                                  return DropdownMenuItem<String>(
-                                    value: code,
-                                    child: Text('$code ($label)'),
-                                  );
-                                },
+                                (country) => DropdownMenuItem<CountryCodeOption>(
+                                  value: country,
+                                  child: Row(
+                                    children: [
+                                      Text(countryFlag(country.isoCode)),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${country.dialCode} (${country.name})',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          selectedItemBuilder: (context) => _countryCodeOptions
+                              .map(
+                                (country) => Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Row(
+                                    children: [
+                                      Text(countryFlag(country.isoCode)),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${country.dialCode} (${country.name})',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               )
                               .toList(),
                           onChanged: (value) {
                             if (value != null) {
-                              setState(() => _selectedCountryCode = value);
+                              setState(() {
+                                _selectedCountry = value;
+                                _selectedCountryCode = value.dialCode;
+                              });
                             }
                           },
                         ),
