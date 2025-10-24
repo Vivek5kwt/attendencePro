@@ -1204,6 +1204,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final hourlyRateText = _buildHourlyRateText(l);
+    final workTypeLabel = _resolveWorkTypeLabel(l);
+    final normalizedRate = hourlyRateText.trim();
+    final normalizedWorkType = workTypeLabel.trim();
+    final normalizedNotAvailable = l.notAvailableLabel.trim();
+    final hideRateDescription = normalizedRate.isEmpty ||
+        normalizedRate.toLowerCase() == normalizedNotAvailable.toLowerCase() ||
+        normalizedRate.toLowerCase() == normalizedWorkType.toLowerCase();
+    final rateDescription = hideRateDescription ? null : normalizedRate;
     final contractItems = _resolveContractItems();
     final summaryStats = _buildSummaryStats(l);
     final todayEntry = _dashboardSummary?.todayEntry;
@@ -1254,7 +1262,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             children: [
               _WorkHeaderCard(
                 work: widget.work,
-                hourlyRateText: hourlyRateText,
+                workTypeLabel: workTypeLabel,
+                rateDescription: rateDescription,
               ),
               const SizedBox(height: 24),
               if (_pendingMissedDates.isNotEmpty) ...[
@@ -1315,6 +1324,30 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return l.notAvailableLabel;
     }
     return '${String.fromCharCode(36)}${rate.toStringAsFixed(2)}/hour';
+  }
+
+  String _resolveWorkTypeLabel(AppLocalizations l) {
+    const possibleKeys = [
+      'job_type',
+      'jobType',
+      'work_type',
+      'workType',
+      'type',
+      'category',
+      'role',
+    ];
+
+    for (final key in possibleKeys) {
+      final value = widget.work.additionalData[key];
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isNotEmpty) {
+          return trimmed;
+        }
+      }
+    }
+
+    return widget.work.isContract ? l.contractWorkLabel : l.hourlyWorkLabel;
   }
 
   List<_ContractItem> _resolveContractItems() {
@@ -2118,28 +2151,65 @@ class _PendingAttendanceCard extends StatelessWidget {
 class _WorkHeaderCard extends StatelessWidget {
   const _WorkHeaderCard({
     required this.work,
-    required this.hourlyRateText,
+    required this.workTypeLabel,
+    this.rateDescription,
   });
 
   final Work work;
-  final String hourlyRateText;
+  final String workTypeLabel;
+  final String? rateDescription;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final textTheme = Theme.of(context).textTheme;
+
+    return SizedBox(
+      height: 190,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Expanded(
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      AppAssets.bgBanner,
+                      fit: BoxFit.cover,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF0F172A).withOpacity(0.55),
+                            const Color(0xFF0F172A).withOpacity(0.2),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 24,
+            top: 28,
+            right: 150,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2147,44 +2217,69 @@ class _WorkHeaderCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withOpacity(0.22),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    hourlyRateText,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                    workTypeLabel,
+                    style: textTheme.labelLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          letterSpacing: 0.2,
+                        ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   work.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ) ??
+                      const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Restaurant Job',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                if (rateDescription != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    rateDescription!,
+                    style: textTheme.bodyLarge?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
+                        ) ??
+                        TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
-          const SizedBox(width: 20),
-          SizedBox(
-            height: 110,
-            width: 110,
-            child: Image.asset(AppAssets.homeBanner, fit: BoxFit.cover),
+          Positioned(
+            right: -20,
+            top: -20,
+            bottom: 0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Image.asset(
+                AppAssets.homeBanner,
+                fit: BoxFit.contain,
+                height: 220,
+              ),
+            ),
           ),
         ],
       ),
