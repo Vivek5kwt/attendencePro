@@ -280,6 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
                                   height: 50,
@@ -295,17 +296,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text(
-                                  l.editWorkSubtitle,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ) ??
-                                      const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                Expanded(
+                                  child: Text(
+                                    l.editWorkSubtitle,
+                                    style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                    softWrap: true,
+                                  ),
                                 ),
                               ],
                             ),
