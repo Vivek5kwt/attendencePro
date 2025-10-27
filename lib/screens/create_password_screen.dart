@@ -24,7 +24,6 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
   final TextEditingController _confirmController = TextEditingController();
   bool _obscurePass = true;
   bool _obscureConfirm = true;
-  String? _errorText;
 
   void _resetPassword() {
     if (_formKey.currentState?.validate() ?? false) {
@@ -63,27 +62,33 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xFFF8F9FC),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: _back,
+        ),
+        title: Text(
+          l.createPasswordTitle,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _back,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l.createPasswordTitle,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 24),
                 Text(
                   l.newPasswordLabel,
                   style:
@@ -93,6 +98,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                 TextFormField(
                   controller: _passController,
                   obscureText: _obscurePass,
+                  textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -116,16 +122,11 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.length < 6) {
-                      setState(() {
-                        _errorText = l.passwordMinEight;
-                      });
-                      return '';
+                    if (value == null || value.isEmpty) {
+                      return l.passwordRequired;
                     }
-                    if (_errorText != null) {
-                      setState(() {
-                        _errorText = null;
-                      });
+                    if (value.length < 8) {
+                      return l.passwordMinEight;
                     }
                     return null;
                   },
@@ -140,6 +141,8 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                 TextFormField(
                   controller: _confirmController,
                   obscureText: _obscureConfirm,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _resetPassword(),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
@@ -163,29 +166,18 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value != _passController.text) {
-                      setState(() {
-                        _errorText = l.passwordsDoNotMatch;
-                      });
-                      return '';
+                    if (value == null || value.isEmpty) {
+                      return l.passwordRequired;
                     }
-                    if (_errorText != null) {
-                      setState(() {
-                        _errorText = null;
-                      });
+                    if (value.length < 8) {
+                      return l.passwordMinEight;
+                    }
+                    if (value != _passController.text) {
+                      return l.passwordsDoNotMatch;
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
-                if (_errorText != null)
-                  Text(
-                    _errorText!,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 14,
-                    ),
-                  ),
                 const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
