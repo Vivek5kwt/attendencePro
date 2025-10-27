@@ -172,34 +172,49 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           color: Colors.black87,
         );
 
-    return Row(
-      children: [
-        _buildCountrySelector(dialCodeStyle),
-        const SizedBox(width: 12),
-        Expanded(
-          child: TextField(
-            controller: _loginController,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(color: Colors.black38),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(32),
-                borderSide: BorderSide.none,
-              ),
-              prefixIcon: const Icon(
-                Icons.phone_outlined,
-                color: Colors.black38,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(36),
+        border: Border.all(color: const Color(0xFFD9E2EF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          _buildCountrySelector(dialCodeStyle),
+          const SizedBox(width: 12),
+          Container(
+            width: 1,
+            height: 32,
+            color: const Color(0xFFE5E7EB),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _loginController,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 16,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -228,46 +243,39 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   }
 
   Widget _buildCountrySelector(TextStyle dialCodeStyle) {
-    return SizedBox(
-      width: 118,
-      child: GestureDetector(
-        onTap: _showCountryPicker,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFD9E2EF)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 12,
-                offset: Offset(0, 4),
+    return InkWell(
+      onTap: _showCountryPicker,
+      borderRadius: BorderRadius.circular(32),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(16),
               ),
-            ],
-          ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Text(
-                countryFlag(_selectedCountry.isoCode),
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  _selectedCountryCode,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: dialCodeStyle,
-                ),
-              ),
-              const Icon(
+              alignment: Alignment.center,
+              child: const Icon(
                 Icons.arrow_drop_down,
-                color: Color(0xFF6B7280),
+                color: Color(0xFF1F2937),
+                size: 20,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              countryFlag(_selectedCountry.isoCode),
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              _selectedCountryCode,
+              style: dialCodeStyle,
+            ),
+          ],
         ),
       ),
     );
