@@ -21,19 +21,19 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           title: l.walkthroughTitleOne,
           description: l.walkthroughDescOne,
           imagePath: AppAssets.walkthroughImageOne,
-          backgroundColor: const Color(0xFFF7F8FA),
+          backgroundColor: const Color(0xFFF4F6FB),
         ),
         _WalkPageData(
           title: l.walkthroughTitleTwo,
           description: l.walkthroughDescTwo,
           imagePath: AppAssets.walkthroughImageTwo,
-          backgroundColor: const Color(0xFFF7F8FA),
+          backgroundColor: const Color(0xFFF4F6FB),
         ),
         _WalkPageData(
           title: l.walkthroughTitleThree,
           description: l.walkthroughDescThree,
           imagePath: AppAssets.walkthroughImageThree,
-          backgroundColor: const Color(0xFFF7F8FA),
+          backgroundColor: const Color(0xFFF4F6FB),
         ),
       ];
 
@@ -74,6 +74,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                 final page = pages[index];
                 return _buildPage(page);
               },
+              physics: const BouncingScrollPhysics(),
             ),
 
             Positioned(
@@ -93,29 +94,6 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             ),
 
             Positioned(
-              bottom: 40,
-              left: 30,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  pages.length,
-                      (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 10,
-                    width: _currentPage == index ? 22 : 10,
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                    decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? const Color(0xFF2E3A59)
-                          : const Color(0xFFD0D3D8),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            Positioned(
               bottom: 20,
               right: 25,
               child: GestureDetector(
@@ -125,13 +103,21 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF007AFF),
                     borderRadius: BorderRadius.circular(50),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF2F80ED),
+                        Color(0xFF1C60E0),
+                      ],
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(2, 4),
+                        color: const Color(0xFF1C60E0).withOpacity(0.35),
+                        blurRadius: 14,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -143,6 +129,29 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                 ),
               ),
             ),
+
+            Positioned(
+              bottom: 44,
+              left: 30,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  pages.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 10,
+                    width: _currentPage == index ? 28 : 10,
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? const Color(0xFF2F80ED)
+                          : const Color(0xFFD6DEFF),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -150,45 +159,72 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
   }
 
   Widget _buildPage(_WalkPageData page) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            page.imagePath,
-            width: 300,
-            height: 340,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 50),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final imageHeight = (constraints.maxHeight * 0.55).clamp(260.0, 360.0);
 
-          Text(
-            page.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-              height: 1.3,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: Text(
-              page.description,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF707070),
-                height: 1.5,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                height: imageHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(40),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFE7EEFF),
+                      Color(0xFFF6F8FF),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1C60E0).withOpacity(0.08),
+                      blurRadius: 30,
+                      offset: const Offset(0, 18),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  child: Image.asset(
+                    page.imagePath,
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 44),
+              Text(
+                page.title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1F2E55),
+                  height: 1.32,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                page.description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF6F7A93),
+                  height: 1.6,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
