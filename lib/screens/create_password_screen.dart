@@ -28,8 +28,8 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
   void _resetPassword() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().createPassword(
-            _passController.text,
-            _confirmController.text,
+            _passController.text.trim(),
+            _confirmController.text.trim(),
           );
     }
   }
@@ -39,15 +39,16 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
   /// - If there's nothing to pop to (popping would reveal a blank/black screen),
   ///   try to use AppCubit to navigate to a safe app state (e.g., Auth screen).
   /// - If AppCubit is not available, do nothing (prevents showing a black screen).
-  void _back() {
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context);
+  Future<void> _back() async {
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    final didPop = await navigator.maybePop();
+    if (didPop) {
       return;
     }
-    try {
-      context.read<AppCubit>().showAuth();
-    } catch (_) {
-    }
+
+    final appCubit = BlocProvider.maybeOf<AppCubit>(context);
+    appCubit?.showAuth();
   }
 
   @override
@@ -122,10 +123,11 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    final password = value?.trim() ?? '';
+                    if (password.isEmpty) {
                       return l.passwordRequired;
                     }
-                    if (value.length < 8) {
+                    if (password.length < 6) {
                       return l.passwordMinEight;
                     }
                     return null;
@@ -166,13 +168,14 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    final confirmPassword = value?.trim() ?? '';
+                    if (confirmPassword.isEmpty) {
                       return l.passwordRequired;
                     }
-                    if (value.length < 8) {
+                    if (confirmPassword.length < 6) {
                       return l.passwordMinEight;
                     }
-                    if (value != _passController.text) {
+                    if (confirmPassword != _passController.text.trim()) {
                       return l.passwordsDoNotMatch;
                     }
                     return null;
