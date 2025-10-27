@@ -33,10 +33,21 @@ class AuthApi {
   ///
   /// On success returns the decoded JSON response as a Map.
   /// On failure throws an [ApiException] with a readable message.
-  Future<Map<String, dynamic>> login(String login, String password) async {
+  Future<Map<String, dynamic>> login(
+    String login,
+    String password, {
+    String? countryCode,
+  }) async {
     final uri = Uri.parse('$baseUrl/api/auth/login');
     final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
-    final body = jsonEncode({'login': login, 'password': password});
+    final payload = <String, dynamic>{
+      'login': login,
+      'password': password,
+    };
+    if (countryCode != null && countryCode.trim().isNotEmpty) {
+      payload['country_code'] = countryCode.trim();
+    }
+    final body = jsonEncode(payload);
 
     return _sendPost(uri, headers: headers, body: body);
   }

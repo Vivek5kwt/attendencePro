@@ -154,7 +154,11 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   /// LOGIN FUNCTION (Backend API)
-  Future<void> login(String login, String password) async {
+  Future<void> login(
+    String login,
+    String password, {
+    String? countryCode,
+  }) async {
     if (login.trim().isEmpty) {
       emit(AuthError('Please enter your email or phone number.'));
       return;
@@ -166,7 +170,8 @@ class AuthCubit extends Cubit<AuthState> {
 
     emit(AuthLoading());
     try {
-      final response = await _repository.login(login, password);
+      final response =
+          await _repository.login(login, password, countryCode: countryCode);
       await _persistSessionFromResponse(response);
       emit(AuthAuthenticated(data: response));
     } on ApiException catch (e) {
