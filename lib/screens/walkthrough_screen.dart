@@ -95,9 +95,10 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                   textStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+
                   ),
                 ),
-                child: Text(l.skip),
+                child: Text(l.skip,style: TextStyle(color: Colors.black,fontWeight: FontWeight.w400,fontSize: 16),),
               ),
             ),
 
@@ -156,29 +157,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF1C60E0).withOpacity(0.08),
-                            blurRadius: 14,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        '${_currentPage + 1} / ${pages.length}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2F3B62),
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
