@@ -123,60 +123,64 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               left: 0,
               right: 0,
               bottom: 44 + bottomInset,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      pages.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        height: _currentPage == index ? 12 : 10,
-                        width: _currentPage == index ? 12 : 10,
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? const Color(0xFF2F80ED)
-                              : const Color(0xFFD6DEFF),
-                          shape: BoxShape.circle,
-                          boxShadow: _currentPage == index
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF2F80ED).withOpacity(0.35),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ]
-                              : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(
+                        pages.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          height: _currentPage == index ? 12 : 10,
+                          width: _currentPage == index ? 12 : 10,
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: _currentPage == index
+                                ? const Color(0xFF2F80ED)
+                                : const Color(0xFFD6DEFF),
+                            shape: BoxShape.circle,
+                            boxShadow: _currentPage == index
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF2F80ED).withOpacity(0.35),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ]
+                                : null,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF1C60E0).withOpacity(0.08),
-                          blurRadius: 14,
-                          offset: const Offset(0, 8),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF1C60E0).withOpacity(0.08),
+                            blurRadius: 14,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '${_currentPage + 1} / ${pages.length}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2F3B62),
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      '${_currentPage + 1} / ${pages.length}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2F3B62),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
