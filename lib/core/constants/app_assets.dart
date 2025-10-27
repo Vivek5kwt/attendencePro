@@ -10,6 +10,8 @@ class AppAssets {
   static const walkthroughImageOne = 'assets/images/img_walkthrough1.webp';
   static const walkthroughImageTwo = 'assets/images/img_walkthrough2.webp';
   static const walkthroughImageThree = 'assets/images/img_walkthrough3.webp';
+  static const walkthroughNextArrow =
+      'assets/images/arrow_next_with_blue_shape.png';
   static const bgBanner = 'assets/images/bg_banner.webp';
   static const clock = 'assets/images/ic_clock.webp';
   static const contract = 'assets/images/ic_contract.webp';

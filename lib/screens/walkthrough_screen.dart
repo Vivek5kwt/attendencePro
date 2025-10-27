@@ -94,37 +94,15 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             ),
 
             Positioned(
-              bottom: 20,
-              right: 25,
+              bottom: 0,
+              right: 0,
               child: GestureDetector(
                 onTap: _onNext,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF2F80ED),
-                        Color(0xFF1C60E0),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF1C60E0).withOpacity(0.35),
-                        blurRadius: 14,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 30,
+                child: SafeArea(
+                  minimum: const EdgeInsets.only(bottom: 12, right: 12),
+                  child: Image.asset(
+                    AppAssets.walkthroughNextArrow,
+                    width: 110,
                   ),
                 ),
               ),
