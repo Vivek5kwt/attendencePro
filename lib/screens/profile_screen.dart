@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.profileTitle),
+        title: Text(l.profileTitle,style: TextStyle(color: Colors.white),),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -57,11 +57,10 @@ class ContractTypeApi {
 
     final payload = jsonEncode({
       'name': name,
-      'subtype': subtype,
+      'type': subtype,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
-
     try {
       final response = await _client.post(uri, headers: headers, body: payload);
       final decoded = _decodeBody(response.body);
@@ -98,7 +97,7 @@ class ContractTypeApi {
 
     final payload = jsonEncode({
       'name': name,
-      'subtype': subtype,
+      'type': subtype,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
