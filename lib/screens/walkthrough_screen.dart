@@ -98,11 +98,11 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               right: 0,
               child: GestureDetector(
                 onTap: _onNext,
-                child: SafeArea(
-                  minimum: const EdgeInsets.only(bottom: 12, right: 12),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 4, right: 4),
                   child: Image.asset(
                     AppAssets.walkthroughNextArrow,
-                    width: 110,
+                    width: 90,
                   ),
                 ),
               ),
