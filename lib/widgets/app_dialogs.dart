@@ -151,6 +151,7 @@ Future<bool> showCreativeDeleteAccountDialog(
   AppLocalizations localizations,
 ) async {
   final theme = Theme.of(context);
+  final responsive = context.responsive;
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: true,
