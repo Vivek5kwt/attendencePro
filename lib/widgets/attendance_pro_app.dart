@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/work_event.dart';
+import '../core/constants/app_strings.dart';
 import '../core/navigation/app_router.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/work_repository.dart';
@@ -60,11 +61,11 @@ class AttendanceProApp extends StatelessWidget {
                 final localizations = AppLocalizations(locale);
                 return MaterialApp.router(
                   debugShowCheckedModeBanner: false,
-                  title: localizations.appTitle,
+                  title: AppString.appName,
                   theme: ThemeData(
                     primarySwatch: Colors.indigo,
                     useMaterial3: false,
-                    fontFamily: 'Inter',
+                    fontFamily: AppString.fontFamily,
                   ),
                   locale: locale,
                   supportedLocales: AppLocalizations.supportedLocales,
