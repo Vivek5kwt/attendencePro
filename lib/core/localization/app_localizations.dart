@@ -308,8 +308,14 @@ class AppLocalizations {
       'skip': 'Skip',
       'splashTitle': 'AttendancePro',
       'loginTitle': 'Login',
+      'loginPhoneTab': 'Phone',
+      'loginEmailTab': 'Email',
       'loginIdentifierLabel': 'Email or Phone',
       'loginIdentifierHint': 'you@example.com or 9876543210',
+      'loginPhoneLabel': 'Phone Number',
+      'loginPhoneHint': '+1 987 654 3210',
+      'loginEmailLabel': 'Email Address',
+      'loginEmailHint': 'you@example.com',
       'emailLabel': 'Email',
       'emailHint': 'you@example.com',
       'passwordLabel': 'Password',
@@ -327,6 +333,8 @@ class AppLocalizations {
       'changeLanguage': 'Change Language',
       'snackEnterLoginIdentifier': 'Please enter your email or phone number.',
       'snackEnterValidLoginIdentifier': 'Please enter a valid email address or phone number.',
+      'snackEnterPhone': 'Please enter your phone number.',
+      'snackEnterValidPhone': 'Please enter a valid phone number.',
       'snackEnterEmail': 'Please enter your email.',
       'snackEnterValidEmail': 'Please enter a valid email address.',
       'snackEnterPassword': 'Please enter your password.',
@@ -668,8 +676,14 @@ class AppLocalizations {
       'skip': 'स्किप करें',
       'splashTitle': 'अटेंडेंस प्रो',
       'loginTitle': 'लॉगिन',
+      'loginPhoneTab': 'फोन',
+      'loginEmailTab': 'ईमेल',
       'loginIdentifierLabel': 'ईमेल या फोन नंबर',
       'loginIdentifierHint': 'you@example.com या 9876543210',
+      'loginPhoneLabel': 'फोन नंबर',
+      'loginPhoneHint': '+91 98765 43210',
+      'loginEmailLabel': 'ईमेल पता',
+      'loginEmailHint': 'you@example.com',
       'emailLabel': 'ईमेल',
       'emailHint': 'you@example.com',
       'passwordLabel': 'पासवर्ड',
@@ -687,6 +701,8 @@ class AppLocalizations {
       'changeLanguage': 'भाषा बदलें',
       'snackEnterLoginIdentifier': 'कृपया अपना ईमेल या फोन नंबर दर्ज करें।',
       'snackEnterValidLoginIdentifier': 'कृपया मान्य ईमेल पता या फोन नंबर दर्ज करें।',
+      'snackEnterPhone': 'कृपया अपना फोन नंबर दर्ज करें।',
+      'snackEnterValidPhone': 'कृपया मान्य फोन नंबर दर्ज करें।',
       'snackEnterEmail': 'कृपया अपना ईमेल दर्ज करें।',
       'snackEnterValidEmail': 'कृपया मान्य ईमेल पता दर्ज करें।',
       'snackEnterPassword': 'कृपया अपना पासवर्ड दर्ज करें।',
@@ -1028,8 +1044,14 @@ class AppLocalizations {
       'skip': 'ਛੱਡੋ',
       'splashTitle': 'ਅਟੈਂਡੈਂਸ ਪ੍ਰੋ',
       'loginTitle': 'ਲਾਗਇਨ',
+      'loginPhoneTab': 'ਫੋਨ',
+      'loginEmailTab': 'ਈਮੇਲ',
       'loginIdentifierLabel': 'ਈਮੇਲ ਜਾਂ ਫੋਨ ਨੰਬਰ',
       'loginIdentifierHint': 'you@example.com ਜਾਂ 9876543210',
+      'loginPhoneLabel': 'ਫੋਨ ਨੰਬਰ',
+      'loginPhoneHint': '+91 98765 43210',
+      'loginEmailLabel': 'ਈਮੇਲ ਪਤਾ',
+      'loginEmailHint': 'you@example.com',
       'emailLabel': 'ਈਮੇਲ',
       'emailHint': 'you@example.com',
       'passwordLabel': 'ਪਾਸਵਰਡ',
@@ -1047,6 +1069,8 @@ class AppLocalizations {
       'changeLanguage': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'snackEnterLoginIdentifier': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਈਮੇਲ ਜਾਂ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
       'snackEnterValidLoginIdentifier': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਈਮੇਲ ਐਡਰੈੱਸ ਜਾਂ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
+      'snackEnterPhone': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
+      'snackEnterValidPhone': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
       'snackEnterEmail': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਈਮੇਲ ਦਰਜ ਕਰੋ।',
       'snackEnterValidEmail': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਈਮੇਲ ਐਡਰੈੱਸ ਦਰਜ ਕਰੋ।',
       'snackEnterPassword': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ।',
@@ -1396,8 +1420,14 @@ class AppLocalizations {
       'skip': 'Salta',
       'splashTitle': 'PresenzePro',
       'loginTitle': 'Accesso',
+      'loginPhoneTab': 'Telefono',
+      'loginEmailTab': 'Email',
       'loginIdentifierLabel': 'Email o numero di telefono',
       'loginIdentifierHint': 'you@example.com o 9876543210',
+      'loginPhoneLabel': 'Numero di telefono',
+      'loginPhoneHint': '+39 987 654 3210',
+      'loginEmailLabel': 'Indirizzo email',
+      'loginEmailHint': 'you@example.com',
       'emailLabel': 'Email',
       'emailHint': 'you@example.com',
       'passwordLabel': 'Password',
@@ -1415,6 +1445,8 @@ class AppLocalizations {
       'changeLanguage': 'Cambia lingua',
       'snackEnterLoginIdentifier': 'Inserisci la tua email o il numero di telefono.',
       'snackEnterValidLoginIdentifier': 'Inserisci un indirizzo email o un numero di telefono valido.',
+      'snackEnterPhone': 'Inserisci il tuo numero di telefono.',
+      'snackEnterValidPhone': 'Inserisci un numero di telefono valido.',
       'snackEnterEmail': 'Inserisci la tua email.',
       'snackEnterValidEmail': 'Inserisci un indirizzo email valido.',
       'snackEnterPassword': 'Inserisci la tua password.',
@@ -1850,8 +1882,14 @@ class AppLocalizations {
   String get skip => _value('skip');
   String get splashTitle => _value('splashTitle');
   String get loginTitle => _value('loginTitle');
+  String get loginPhoneTab => _value('loginPhoneTab');
+  String get loginEmailTab => _value('loginEmailTab');
   String get loginIdentifierLabel => _value('loginIdentifierLabel');
   String get loginIdentifierHint => _value('loginIdentifierHint');
+  String get loginPhoneLabel => _value('loginPhoneLabel');
+  String get loginPhoneHint => _value('loginPhoneHint');
+  String get loginEmailLabel => _value('loginEmailLabel');
+  String get loginEmailHint => _value('loginEmailHint');
   String get emailLabel => _value('emailLabel');
   String get emailHint => _value('emailHint');
   String get passwordLabel => _value('passwordLabel');
@@ -1868,6 +1906,8 @@ class AppLocalizations {
   String get changeLanguage => _value('changeLanguage');
   String get snackEnterLoginIdentifier => _value('snackEnterLoginIdentifier');
   String get snackEnterValidLoginIdentifier => _value('snackEnterValidLoginIdentifier');
+  String get snackEnterPhone => _value('snackEnterPhone');
+  String get snackEnterValidPhone => _value('snackEnterValidPhone');
   String get snackEnterEmail => _value('snackEnterEmail');
   String get snackEnterValidEmail => _value('snackEnterValidEmail');
   String get snackEnterPassword => _value('snackEnterPassword');
