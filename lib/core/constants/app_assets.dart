@@ -23,4 +23,6 @@ class AppAssets {
   static const history = 'assets/images/ic_history.webp';
   static const home = 'assets/images/ic_home.webp';
   static const logout = 'assets/images/ic_logout.webp';
+  static const dropDownIcon = 'assets/images/ic_down.png';
+  static const language = 'assets/images/ic_lang.png';
 }

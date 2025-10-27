@@ -5,6 +5,7 @@ import '../bloc/auth_cubit.dart';
 import '../bloc/locale_cubit.dart';
 import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
+import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 import '../widgets/app_dialogs.dart';
@@ -164,11 +165,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
   Widget _buildPhoneLoginField(String hint) {
     final dialCodeStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w400,
           color: Colors.black87,
         ) ??
         const TextStyle(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w400,
           color: Colors.black87,
         );
 
@@ -252,20 +253,12 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(16),
-              ),
+              width: 12,
+              height: 12,
               alignment: Alignment.center,
-              child: const Icon(
-                Icons.arrow_drop_down,
-                color: Color(0xFF1F2937),
-                size: 20,
-              ),
+              child: Image.asset(AppAssets.dropDownIcon)
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Text(
               countryFlag(_selectedCountry.isoCode),
               style: const TextStyle(fontSize: 20),
@@ -643,8 +636,8 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                           l.forgotPassword,
                           style: const TextStyle(
                             color: Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ),
@@ -662,13 +655,14 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                             text: l.signupPromptPrefix,
                             style: const TextStyle(
                               color: Colors.black87,
-                              fontSize: 15,
+                              fontSize: 14,
                               height: 1.5,
                             ),
                             children: [
                               TextSpan(
                                 text: l.signupPromptAction,
                                 style: const TextStyle(
+                                  fontSize: 14,
                                   color: Color(0xFF007BFF),
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -714,14 +708,14 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.language, color: Color(0xFF007BFF)),
+                            Image.asset(AppAssets.language,height: 28,width: 28,),
                             const SizedBox(width: 8),
                             Text(
                               l.changeLanguage,
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 color: Colors.black87,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
