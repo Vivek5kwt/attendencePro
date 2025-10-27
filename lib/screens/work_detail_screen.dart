@@ -1840,11 +1840,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           title: l.totalHoursLabel,
           value: '${totalHours.toStringAsFixed(2)} h',
           color: const Color(0xFF2563EB),
+          icon: Icons.access_time_filled,
         ),
         _SummaryStat(
           title: l.totalSalaryLabel,
           value: '€${totalSalary.toStringAsFixed(2)}',
           color: const Color(0xFF22C55E),
+          icon: Icons.payments_rounded,
         ),
       ];
     }
