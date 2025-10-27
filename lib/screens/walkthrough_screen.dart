@@ -64,17 +64,22 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            PageView.builder(
-              controller: _pageController,
-              itemCount: pages.length,
-              onPageChanged: (index) {
-                setState(() => _currentPage = index);
-              },
-              itemBuilder: (context, index) {
-                final page = pages[index];
-                return _buildPage(page);
-              },
-              physics: const BouncingScrollPhysics(),
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: 120 + MediaQuery.of(context).padding.bottom,
+              ),
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: pages.length,
+                onPageChanged: (index) {
+                  setState(() => _currentPage = index);
+                },
+                itemBuilder: (context, index) {
+                  final page = pages[index];
+                  return _buildPage(page);
+                },
+                physics: const BouncingScrollPhysics(),
+              ),
             ),
 
             Positioned(
@@ -99,7 +104,10 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
               child: GestureDetector(
                 onTap: _onNext,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 4, right: 4),
+                  padding: EdgeInsets.only(
+                    right: 4,
+                    bottom: MediaQuery.of(context).padding.bottom,
+                  ),
                   child: Image.asset(
                     AppAssets.walkthroughNextArrow,
                     width: 90,
