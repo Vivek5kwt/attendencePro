@@ -156,7 +156,7 @@ class AuthCubit extends Cubit<AuthState> {
   /// LOGIN FUNCTION (Backend API)
   Future<void> login(String login, String password) async {
     if (login.trim().isEmpty) {
-      emit(AuthError('Please enter your email/username.'));
+      emit(AuthError('Please enter your email or phone number.'));
       return;
     }
     if (password.isEmpty) {

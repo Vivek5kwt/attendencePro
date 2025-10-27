@@ -308,6 +308,8 @@ class AppLocalizations {
       'skip': 'Skip',
       'splashTitle': 'AttendancePro',
       'loginTitle': 'Login',
+      'loginIdentifierLabel': 'Email or Phone',
+      'loginIdentifierHint': 'you@example.com or 9876543210',
       'emailLabel': 'Email',
       'emailHint': 'you@example.com',
       'passwordLabel': 'Password',
@@ -317,6 +319,8 @@ class AppLocalizations {
       'signupPromptPrefix': 'Don’t Have an Account? ',
       'signupPromptAction': 'Sign Up',
       'changeLanguage': 'Change Language',
+      'snackEnterLoginIdentifier': 'Please enter your email or phone number.',
+      'snackEnterValidLoginIdentifier': 'Please enter a valid email address or phone number.',
       'snackEnterEmail': 'Please enter your email.',
       'snackEnterValidEmail': 'Please enter a valid email address.',
       'snackEnterPassword': 'Please enter your password.',
@@ -658,6 +662,8 @@ class AppLocalizations {
       'skip': 'स्किप करें',
       'splashTitle': 'अटेंडेंस प्रो',
       'loginTitle': 'लॉगिन',
+      'loginIdentifierLabel': 'ईमेल या फोन नंबर',
+      'loginIdentifierHint': 'you@example.com या 9876543210',
       'emailLabel': 'ईमेल',
       'emailHint': 'you@example.com',
       'passwordLabel': 'पासवर्ड',
@@ -667,6 +673,8 @@ class AppLocalizations {
       'signupPromptPrefix': 'खाता नहीं है? ',
       'signupPromptAction': 'साइन अप',
       'changeLanguage': 'भाषा बदलें',
+      'snackEnterLoginIdentifier': 'कृपया अपना ईमेल या फोन नंबर दर्ज करें।',
+      'snackEnterValidLoginIdentifier': 'कृपया मान्य ईमेल पता या फोन नंबर दर्ज करें।',
       'snackEnterEmail': 'कृपया अपना ईमेल दर्ज करें।',
       'snackEnterValidEmail': 'कृपया मान्य ईमेल पता दर्ज करें।',
       'snackEnterPassword': 'कृपया अपना पासवर्ड दर्ज करें।',
@@ -1008,6 +1016,8 @@ class AppLocalizations {
       'skip': 'ਛੱਡੋ',
       'splashTitle': 'ਅਟੈਂਡੈਂਸ ਪ੍ਰੋ',
       'loginTitle': 'ਲਾਗਇਨ',
+      'loginIdentifierLabel': 'ਈਮੇਲ ਜਾਂ ਫੋਨ ਨੰਬਰ',
+      'loginIdentifierHint': 'you@example.com ਜਾਂ 9876543210',
       'emailLabel': 'ਈਮੇਲ',
       'emailHint': 'you@example.com',
       'passwordLabel': 'ਪਾਸਵਰਡ',
@@ -1017,6 +1027,8 @@ class AppLocalizations {
       'signupPromptPrefix': 'ਖਾਤਾ ਨਹੀਂ ਹੈ? ',
       'signupPromptAction': 'ਸਾਈਨ ਅੱਪ',
       'changeLanguage': 'ਭਾਸ਼ਾ ਬਦਲੋ',
+      'snackEnterLoginIdentifier': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਈਮੇਲ ਜਾਂ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
+      'snackEnterValidLoginIdentifier': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਈਮੇਲ ਐਡਰੈੱਸ ਜਾਂ ਫੋਨ ਨੰਬਰ ਦਰਜ ਕਰੋ।',
       'snackEnterEmail': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਈਮੇਲ ਦਰਜ ਕਰੋ।',
       'snackEnterValidEmail': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਈਮੇਲ ਐਡਰੈੱਸ ਦਰਜ ਕਰੋ।',
       'snackEnterPassword': 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ।',
@@ -1366,6 +1378,8 @@ class AppLocalizations {
       'skip': 'Salta',
       'splashTitle': 'PresenzePro',
       'loginTitle': 'Accesso',
+      'loginIdentifierLabel': 'Email o numero di telefono',
+      'loginIdentifierHint': 'you@example.com o 9876543210',
       'emailLabel': 'Email',
       'emailHint': 'you@example.com',
       'passwordLabel': 'Password',
@@ -1375,6 +1389,8 @@ class AppLocalizations {
       'signupPromptPrefix': 'Non hai un account? ',
       'signupPromptAction': 'Registrati',
       'changeLanguage': 'Cambia lingua',
+      'snackEnterLoginIdentifier': 'Inserisci la tua email o il numero di telefono.',
+      'snackEnterValidLoginIdentifier': 'Inserisci un indirizzo email o un numero di telefono valido.',
       'snackEnterEmail': 'Inserisci la tua email.',
       'snackEnterValidEmail': 'Inserisci un indirizzo email valido.',
       'snackEnterPassword': 'Inserisci la tua password.',
@@ -1810,6 +1826,8 @@ class AppLocalizations {
   String get skip => _value('skip');
   String get splashTitle => _value('splashTitle');
   String get loginTitle => _value('loginTitle');
+  String get loginIdentifierLabel => _value('loginIdentifierLabel');
+  String get loginIdentifierHint => _value('loginIdentifierHint');
   String get emailLabel => _value('emailLabel');
   String get emailHint => _value('emailHint');
   String get passwordLabel => _value('passwordLabel');
@@ -1819,6 +1837,8 @@ class AppLocalizations {
   String get signupPromptPrefix => _value('signupPromptPrefix');
   String get signupPromptAction => _value('signupPromptAction');
   String get changeLanguage => _value('changeLanguage');
+  String get snackEnterLoginIdentifier => _value('snackEnterLoginIdentifier');
+  String get snackEnterValidLoginIdentifier => _value('snackEnterValidLoginIdentifier');
   String get snackEnterEmail => _value('snackEnterEmail');
   String get snackEnterValidEmail => _value('snackEnterValidEmail');
   String get snackEnterPassword => _value('snackEnterPassword');

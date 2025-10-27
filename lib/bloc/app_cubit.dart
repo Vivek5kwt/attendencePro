@@ -11,7 +11,11 @@ class AppWalkthrough extends AppState {}
 
 class AppAuth extends AppState {}
 
-class AppHome extends AppState {}
+class AppHome extends AppState {
+  AppHome({this.openDashboardOnLogin = false});
+
+  final bool openDashboardOnLogin;
+}
 
 class AppCubit extends Cubit<AppState> {
   final SessionManager _sessionManager;
@@ -41,7 +45,8 @@ class AppCubit extends Cubit<AppState> {
 
   void showAuth() => emit(AppAuth());
 
-  void showHome() => emit(AppHome());
+  void showHome({bool openDashboardOnLogin = false}) =>
+      emit(AppHome(openDashboardOnLogin: openDashboardOnLogin));
 
   Future<bool> logout() async {
     final token = await _sessionManager.getToken();

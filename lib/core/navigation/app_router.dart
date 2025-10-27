@@ -55,7 +55,13 @@ class AppRouter {
         GoRoute(
           path: Routes.home,
           name: 'home',
-          builder: (context, state) => const HomeScreen(),
+          builder: (context, state) {
+            final currentState = appCubit.state;
+            final openDashboardOnLogin = currentState is AppHome
+                ? currentState.openDashboardOnLogin
+                : false;
+            return HomeScreen(openDashboardOnLogin: openDashboardOnLogin);
+          },
         ),
       ],
       redirect: (BuildContext context, GoRouterState state) {

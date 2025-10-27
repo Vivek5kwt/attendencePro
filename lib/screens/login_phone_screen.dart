@@ -17,21 +17,23 @@ class LoginPhoneScreen extends StatefulWidget {
 }
 
 class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   void _submitLogin(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final emailToUse = _emailController.text.trim();
+    final rawLoginValue = _loginController.text.trim();
     final password = _passwordController.text;
 
-    if (emailToUse.isEmpty) {
-      _showSnack(l.snackEnterEmail);
+    if (rawLoginValue.isEmpty) {
+      _showSnack(l.snackEnterLoginIdentifier);
       return;
     }
-    if (!_isValidEmail(emailToUse)) {
-      _showSnack(l.snackEnterValidEmail);
+
+    final preparedLoginValue = _prepareLoginValue(rawLoginValue);
+    if (preparedLoginValue == null) {
+      _showSnack(l.snackEnterValidLoginIdentifier);
       return;
     }
     if (password.isEmpty) {
@@ -41,7 +43,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
     FocusScope.of(context).unfocus();
     final authCubit = context.read<AuthCubit>();
-    authCubit.login(emailToUse, password.trim());
+    authCubit.login(preparedLoginValue, password.trim());
   }
 
   void _showSnack(String message) {
@@ -56,6 +58,42 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     );
   }
 
+  String? _prepareLoginValue(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    if (trimmed.contains('@')) {
+      return _isValidEmail(trimmed) ? trimmed : null;
+    }
+
+    final normalizedPhone = _normalizePhone(trimmed);
+    if (normalizedPhone == null) {
+      return null;
+    }
+
+    return _isValidPhone(normalizedPhone) ? normalizedPhone : null;
+  }
+
+  String? _normalizePhone(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    if (trimmed.startsWith('+')) {
+      final digits = trimmed.substring(1).replaceAll(RegExp(r'\D'), '');
+      if (digits.isEmpty) {
+        return null;
+      }
+      return '+$digits';
+    }
+
+    final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
+    return digitsOnly.isEmpty ? null : digitsOnly;
+  }
+
   bool _isValidEmail(String email) {
     final trimmed = email.trim();
     if (trimmed.isEmpty) return false;
@@ -63,9 +101,24 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     return regex.hasMatch(trimmed);
   }
 
+  bool _isValidPhone(String phone) {
+    if (phone.isEmpty) {
+      return false;
+    }
+
+    final digits = phone.startsWith('+') ? phone.substring(1) : phone;
+    if (digits.length < 7 || digits.length > 15) {
+      return false;
+    }
+
+    final regex = RegExp(r'^\+?\d+$');
+    return regex.hasMatch(phone);
+  }
+
+
   @override
   void dispose() {
-    _emailController.dispose();
+    _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -155,7 +208,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     ),
                     const SizedBox(height: 40),
                     Text(
-                      l.emailLabel,
+                      l.loginIdentifierLabel,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
@@ -164,10 +217,10 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     ),
                     const SizedBox(height: 8),
                     TextField(
-                      controller: _emailController,
+                      controller: _loginController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        hintText: l.emailHint,
+                        hintText: l.loginIdentifierHint,
                         hintStyle: const TextStyle(color: Colors.black38),
                         filled: true,
                         fillColor: Colors.white,
@@ -250,18 +303,17 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          final emailToUse = _emailController.text.trim();
+                          final contactValue = _loginController.text.trim();
                           final authCubit = context.read<AuthCubit>();
-                          if (emailToUse.isEmpty) {
+                          if (contactValue.isEmpty) {
                             _showSnack(l.snackResetEmail);
                             return;
                           }
-                          if (emailToUse.contains('@') &&
-                              !_isValidEmail(emailToUse)) {
+                          if (!_isValidEmail(contactValue)) {
                             _showSnack(l.snackForgotInvalidEmail);
                             return;
                           }
-                          authCubit.forgotPassword(emailToUse);
+                          authCubit.forgotPassword(contactValue);
                         },
                         child: Text(
                           l.forgotPassword,
