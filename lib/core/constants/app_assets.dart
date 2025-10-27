@@ -27,4 +27,5 @@ class AppAssets {
   static const language = 'assets/images/ic_lang.png';
   static const icTick = 'assets/images/ic_tick.png';
   static const icClose = 'assets/images/ic_close.png';
+  static const icShare = 'assets/images/ic_share.png';
 }
