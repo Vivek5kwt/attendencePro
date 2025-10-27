@@ -71,7 +71,7 @@ abstract final class AppString {
       'selectWorkTitle': 'Select Work',
       'workSelectionSubtitle':
           'Choose the work you want to view reports for.',
-      'confirmSelectionButton': 'Confirm Selection',
+      'confirmSelectionButton': 'Confirm',
       'workSelectionHourSuffix': '/hour',
       'attendanceHistoryLabel': 'Attendance History',
       'attendanceHistoryMonthLabel': 'Select month',
