@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
+import '../utils/responsive.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String phone;
@@ -79,51 +80,62 @@ class _VerifyScreenState extends State<VerifyScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FC),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding:
+                responsive.scaledSymmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    size: responsive.scale(22),
+                  ),
                   onPressed: () {
                     FocusScope.of(context).unfocus();
                     context.read<AuthCubit>().backToPhone();
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: responsive.scale(16)),
                 Text(
                   l.verifyNumberTitle,
-                  style: const TextStyle(
-                    fontSize: 26,
+                  style: TextStyle(
+                    fontSize: responsive.scaleText(26),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: responsive.scale(8)),
                 Text(
                   l.verifyCodeDescription,
                   style: TextStyle(
                     color: Colors.grey[700],
-                    fontSize: 15,
+                    fontSize: responsive.scaleText(15),
                   ),
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: responsive.scale(30)),
                 Text(
                   l.enterCodeLabel,
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: responsive.scaleText(16),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: responsive.scale(12)),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final availableWidth = constraints.maxWidth;
-                    final spacing = availableWidth < 320 ? 6.0 : 10.0;
-                    final fieldHeight = availableWidth < 320 ? 52.0 : 58.0;
+                    final spacing = availableWidth < 320
+                        ? responsive.scale(6)
+                        : responsive.scale(10);
+                    final fieldHeight = availableWidth < 320
+                        ? responsive.scale(52)
+                        : responsive.scale(58);
                     return Row(
                       children: [
                         for (var index = 0; index < _otpLength; index++) ...[
@@ -144,12 +156,16 @@ class _VerifyScreenState extends State<VerifyScreen> {
                                   filled: true,
                                   fillColor: Colors.white,
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      responsive.scale(12),
+                                    ),
                                     borderSide:
                                         const BorderSide(color: Colors.transparent),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(
+                                      responsive.scale(12),
+                                    ),
                                     borderSide: const BorderSide(color: Colors.blue),
                                   ),
                                 ),
@@ -198,26 +214,29 @@ class _VerifyScreenState extends State<VerifyScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: responsive.scale(40)),
                 SizedBox(
                   width: double.infinity,
-                  height: 55,
+                  height: responsive.scale(55),
                   child: ElevatedButton(
                     onPressed: _verify,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF007BFF),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius:
+                            BorderRadius.circular(responsive.scale(30)),
                       ),
                     ),
                     child: Text(
                       l.verifyOtpButton,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(18),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: responsive.scale(20)),
                 Center(
                   child: TextButton(
                     onPressed: _resend,
@@ -228,9 +247,9 @@ class _VerifyScreenState extends State<VerifyScreen> {
                       _start > 0
                           ? l.resendCountdown(_start)
                           : l.resendCode,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF007BFF),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(15),
+                        color: const Color(0xFF007BFF),
                       ),
                     ),
                   ),

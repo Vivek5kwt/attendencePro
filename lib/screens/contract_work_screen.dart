@@ -4,6 +4,7 @@ import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/contract_type.dart' as models;
 import '../repositories/contract_type_repository.dart';
+import '../utils/responsive.dart';
 
 class ContractWorkScreen extends StatefulWidget {
   const ContractWorkScreen({super.key});
@@ -545,6 +546,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     final totalTypes = _allContractTypes.length;
     final theme = Theme.of(context);
 
@@ -560,7 +562,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       bodyContent = Center(
         key: const ValueKey('contract-types-error'),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: responsive.scaledSymmetric(horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -571,14 +573,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF111827),
                     ) ??
-                    const TextStyle(
+                    TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF111827),
-                      fontSize: 18,
+                      color: const Color(0xFF111827),
+                      fontSize: responsive.scaleText(18),
                     ),
               ),
               if (details.isNotEmpty && details != fallbackMessage) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: responsive.scale(8)),
                 Text(
                   details,
                   textAlign: TextAlign.center,
@@ -590,16 +592,17 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       ),
                 ),
               ],
-              const SizedBox(height: 16),
+              SizedBox(height: responsive.scale(16)),
               ElevatedButton(
                 onPressed: _loadContractTypes,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5856D6),
                   foregroundColor: Colors.white,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      responsive.scaledSymmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius:
+                        BorderRadius.circular(responsive.scale(14)),
                   ),
                 ),
                 child: Text(l.retryButtonLabel),
@@ -614,7 +617,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         onRefresh: _loadContractTypes,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          padding: EdgeInsets.fromLTRB(
+            responsive.scale(16),
+            responsive.scale(16),
+            responsive.scale(16),
+            responsive.scale(32),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -627,9 +635,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                 totalUnitsLabel: l.contractWorkTotalUnitsLabel,
                 totalSalaryLabel: l.contractWorkTotalSalaryLabel,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: responsive.scale(20)),
               _SectionTitle(text: l.contractWorkDefaultTypesTitle),
-              const SizedBox(height: 12),
+              SizedBox(height: responsive.scale(12)),
               if (_defaultContractTypes.isEmpty)
                 _EmptyState(message: l.contractWorkNoEntriesLabel)
               else
@@ -637,7 +645,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   children: _defaultContractTypes
                       .map(
                         (type) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: EdgeInsets.only(
+                            bottom: responsive.scale(12),
+                          ),
                           child: _ContractTypeTile(
                             type: type,
                             lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
@@ -649,17 +659,18 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       )
                       .toList(),
                 ),
-              const SizedBox(height: 12),
+              SizedBox(height: responsive.scale(12)),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
+                    padding: responsive.scaledSymmetric(
                         horizontal: 20, vertical: 14),
                     backgroundColor: const Color(0xFFEEF2FF),
                     foregroundColor: const Color(0xFF4C1D95),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius:
+                          BorderRadius.circular(responsive.scale(16)),
                     ),
                   ),
                   onPressed: () => _showContractTypeDialog(),
@@ -667,9 +678,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   label: Text(l.addContractWorkButton),
                 ),
               ),
-              const SizedBox(height: 28),
+              SizedBox(height: responsive.scale(28)),
               _SectionTitle(text: l.contractWorkCustomTypesTitle),
-              const SizedBox(height: 12),
+              SizedBox(height: responsive.scale(12)),
               if (_userContractTypes.isEmpty)
                 _EmptyState(message: l.contractWorkNoCustomTypesLabel)
               else
@@ -677,7 +688,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   children: _userContractTypes
                       .map(
                         (type) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: EdgeInsets.only(
+                            bottom: responsive.scale(12),
+                          ),
                           child: Dismissible(
                             key: ValueKey('contract-type-${type.id}'),
                             direction: DismissDirection.endToStart,
@@ -686,11 +699,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                             onDismissed: (_) => _removeContractType(type),
                             background: const SizedBox.shrink(),
                             secondaryBackground: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius:
+                                  BorderRadius.circular(responsive.scale(20)),
                               child: Container(
                                 alignment: Alignment.centerRight,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 24),
+                                padding: responsive.scaledSymmetric(
+                                  horizontal: 24,
+                                ),
                                 color: const Color(0xFFFEE2E2),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
