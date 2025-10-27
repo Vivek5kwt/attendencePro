@@ -5,8 +5,12 @@ class AuthRepository {
 
   AuthRepository({AuthApi? api}) : _api = api ?? AuthApi();
 
-  Future<Map<String, dynamic>> login(String login, String password) {
-    return _api.login(login, password);
+  Future<Map<String, dynamic>> login(
+    String login,
+    String password, {
+    String? countryCode,
+  }) {
+    return _api.login(login, password, countryCode: countryCode);
   }
 
   Future<Map<String, dynamic>> register({

@@ -59,14 +59,21 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           isPhoneMode ? l.snackEnterValidPhone : l.snackEnterValidEmail);
       return;
     }
-    if (password.isEmpty) {
+    final trimmedPassword = password.trim();
+    if (trimmedPassword.isEmpty) {
       _showSnack(l.snackEnterPassword);
       return;
     }
 
     FocusScope.of(context).unfocus();
     final authCubit = context.read<AuthCubit>();
-    authCubit.login(preparedLoginValue, password.trim());
+    final countryCode =
+        isPhoneMode ? _resolveCountryCode(preparedLoginValue) : null;
+    authCubit.login(
+      preparedLoginValue,
+      trimmedPassword,
+      countryCode: countryCode,
+    );
   }
 
   void _showSnack(String message) {
@@ -480,6 +487,19 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     }
 
     return '+$countryDigits$digitsOnly';
+  }
+
+  String _resolveCountryCode(String normalizedPhone) {
+    if (!normalizedPhone.startsWith('+')) {
+      return _selectedCountryCode;
+    }
+
+    final match = _countryCodeOptions.firstWhere(
+      (option) => normalizedPhone.startsWith(option.dialCode),
+      orElse: () => _selectedCountry,
+    );
+
+    return match.dialCode;
   }
 
   bool _isValidEmail(String email) {
