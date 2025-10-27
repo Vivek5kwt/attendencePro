@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/app_cubit.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
+import '../utils/responsive.dart';
 
 /// The CreatePasswordScreen allows the user to create/reset a password.
 /// The back button behavior has been updated so that if there is no
@@ -66,20 +67,25 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFFF8F9FC),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+            size: responsive.scale(22),
+          ),
           onPressed: _back,
         ),
         title: Text(
           l.createPasswordTitle,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.black,
-            fontSize: 20,
+            fontSize: responsive.scaleText(20),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -87,20 +93,22 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: responsive.scaledSymmetric(horizontal: 24, vertical: 16),
           child: Form(
             key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 24),
+                SizedBox(height: responsive.scale(24)),
                 Text(
                   l.newPasswordLabel,
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: responsive.scaleText(16),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: responsive.scale(8)),
                 TextFormField(
                   controller: _passController,
                   obscureText: _obscurePass,
@@ -113,17 +121,20 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                       icon: Icon(
                         _obscurePass ? Icons.visibility_off : Icons.visibility,
                         color: Colors.grey,
+                        size: responsive.scale(20),
                       ),
                       onPressed: () {
                         setState(() => _obscurePass = !_obscurePass);
                       },
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(responsive.scale(12)),
                       borderSide: const BorderSide(color: Colors.transparent),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(responsive.scale(12)),
                       borderSide: const BorderSide(color: Colors.blue),
                     ),
                   ),
@@ -138,13 +149,15 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: responsive.scale(16)),
                 Text(
                   l.confirmPasswordLabel,
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: responsive.scaleText(16),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: responsive.scale(8)),
                 TextFormField(
                   controller: _confirmController,
                   obscureText: _obscureConfirm,
@@ -158,17 +171,20 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                       icon: Icon(
                         _obscureConfirm ? Icons.visibility_off : Icons.visibility,
                         color: Colors.grey,
+                        size: responsive.scale(20),
                       ),
                       onPressed: () {
                         setState(() => _obscureConfirm = !_obscureConfirm);
                       },
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(responsive.scale(12)),
                       borderSide: const BorderSide(color: Colors.transparent),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(responsive.scale(12)),
                       borderSide: const BorderSide(color: Colors.blue),
                     ),
                   ),
@@ -186,28 +202,29 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: responsive.scale(30)),
                 SizedBox(
                   width: double.infinity,
-                  height: 55,
+                  height: responsive.scale(55),
                   child: ElevatedButton(
                     onPressed: _resetPassword,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF007BFF),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius:
+                            BorderRadius.circular(responsive.scale(30)),
                       ),
                     ),
                     child: Text(
                       l.resetPasswordButton,
-                      style: const TextStyle(
-                        fontSize: 18,
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(18),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: responsive.scale(16)),
               ],
             ),
           ),

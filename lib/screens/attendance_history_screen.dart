@@ -8,6 +8,7 @@ import '../models/attendance_history.dart';
 import '../models/work.dart';
 import '../repositories/attendance_history_repository.dart';
 import '../repositories/work_repository.dart';
+import '../utils/responsive.dart';
 
 const List<String> _kMonthNames = <String>[
   'January',
@@ -476,6 +477,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     final filteredEntries =
         _selectedWork == _allWorksLabel || _selectedWork.isEmpty
             ? _entries
@@ -516,7 +518,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       content = _StatusMessage(message: l.startTrackingAttendance);
     } else {
       content = SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        padding: EdgeInsets.fromLTRB(
+          responsive.scale(16),
+          responsive.scale(16),
+          responsive.scale(16),
+          responsive.scale(32),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -528,7 +535,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               onMonthChanged: _onMonthChanged,
               onWorkChanged: _onWorkChanged,
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: responsive.scale(20)),
             _SummaryCard(
               title: l.attendanceHistorySummaryTitle,
               workedDaysLabel: l.attendanceHistoryWorkedDaysLabel,
@@ -543,9 +550,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               totalSalary: totalSalary,
               currencySymbol: _currencySymbol,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: responsive.scale(24)),
             _SectionTitle(text: l.attendanceHistoryTimelineTitle),
-            const SizedBox(height: 12),
+            SizedBox(height: responsive.scale(12)),
             if (filteredEntries.isEmpty)
               _EmptyState(message: l.attendanceHistoryNoEntriesLabel)
             else
@@ -553,7 +560,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                 children: filteredEntries
                     .map(
                       (entry) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.only(
+                          bottom: responsive.scale(12),
+                        ),
                         child: _AttendanceEntryTile(
                           entry: entry,
                           localization: l,

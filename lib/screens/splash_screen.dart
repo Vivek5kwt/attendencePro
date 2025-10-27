@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
+import '../utils/responsive.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,17 +13,23 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Scaffold(
       backgroundColor: Colors.blue,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            AppAssets.splashBackground,
-            fit: BoxFit.cover,
-          ),
-
-      ],
+      body: SizedBox(
+        width: responsive.widthFraction(1),
+        height: responsive.heightFraction(1),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                AppAssets.splashBackground,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
