@@ -9,6 +9,288 @@ import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
 import '../repositories/dashboard_repository.dart';
 
+const List<int> _timeHourOptions = <int>[
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+];
+
+const List<int> _timeMinuteOptions = <int>[
+  0,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50,
+  55,
+];
+
+const List<int> _breakDurationOptions = <int>[
+  0,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50,
+  55,
+  60,
+];
+
+List<_TimeDropdownOption> _generateTimeDropdownOptions() {
+  final options = <_TimeDropdownOption>[];
+  for (final period in DayPeriod.values) {
+    for (final hour in _timeHourOptions) {
+      for (final minute in _timeMinuteOptions) {
+        final value = _formatTimeDropdownValue(hour, minute, period);
+        final label = _formatTimeDropdownLabel(hour, minute, period);
+        options.add(_TimeDropdownOption(value: value, label: label));
+      }
+    }
+  }
+  return options;
+}
+
+final List<_TimeDropdownOption> _timeDropdownOptions =
+    _generateTimeDropdownOptions();
+
+final Set<String> _timeDropdownValueSet =
+    _timeDropdownOptions.map((option) => option.value).toSet();
+
+String _formatTimeDropdownValue(int hour, int minute, DayPeriod period) {
+  final hour24 = _to24Hour(hour, period);
+  final hourText = hour24.toString().padLeft(2, '0');
+  final minuteText = minute.toString().padLeft(2, '0');
+  return '$hourText:$minuteText';
+}
+
+String _formatTimeDropdownLabel(int hour, int minute, DayPeriod period) {
+  final minuteText = minute.toString().padLeft(2, '0');
+  final periodText = period == DayPeriod.am ? 'AM' : 'PM';
+  return '$hour:$minuteText $periodText';
+}
+
+int _to24Hour(int hour, DayPeriod period) {
+  var normalized = hour % 12;
+  if (period == DayPeriod.pm) {
+    normalized += 12;
+  } else if (period == DayPeriod.am && hour == 12) {
+    normalized = 0;
+  }
+  return normalized;
+}
+
+List<DropdownMenuItem<String?>> _buildTimeDropdownMenuItems({TextStyle? textStyle}) {
+  final items = <DropdownMenuItem<String?>>[
+    DropdownMenuItem<String?> (
+      value: null,
+      child: Text(
+        '--:--',
+        style: textStyle,
+      ),
+    ),
+  ];
+  for (final option in _timeDropdownOptions) {
+    items.add(
+      DropdownMenuItem<String?> (
+        value: option.value,
+        child: Text(
+          option.label,
+          style: textStyle,
+        ),
+      ),
+    );
+  }
+  return items;
+}
+
+String? _normalizeTimeDropdownValue(String value) {
+  final parsed = _parseFlexibleTime(value);
+  if (parsed == null) {
+    return null;
+  }
+  final normalized = _formatTimeOfDay(parsed);
+  return _timeDropdownValueSet.contains(normalized) ? normalized : null;
+}
+
+TimeOfDay? _parseFlexibleTime(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) {
+    return null;
+  }
+
+  final parts = trimmed.split(RegExp('\\s+'));
+  if (parts.isEmpty) {
+    return null;
+  }
+
+  final timePart = parts.first;
+  final timePieces = timePart.split(':');
+  if (timePieces.length != 2) {
+    return null;
+  }
+
+  final hours = int.tryParse(timePieces[0]);
+  final minutes = int.tryParse(timePieces[1]);
+  if (hours == null || minutes == null) {
+    return null;
+  }
+  if (minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  var normalizedHours = hours;
+  if (parts.length > 1) {
+    final periodText = parts[1].toLowerCase();
+    normalizedHours = hours % 12;
+    if (periodText.startsWith('p')) {
+      normalizedHours += 12;
+    } else if (periodText.startsWith('a') && hours == 12) {
+      normalizedHours = 0;
+    }
+  }
+
+  if (normalizedHours < 0 || normalizedHours > 23) {
+    return null;
+  }
+
+  return TimeOfDay(hour: normalizedHours, minute: minutes);
+}
+
+String _formatTimeOfDay(TimeOfDay time) {
+  final hour = time.hour.toString().padLeft(2, '0');
+  final minute = time.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
+}
+
+List<DropdownMenuItem<int?>> _buildBreakDropdownMenuItems({TextStyle? textStyle}) {
+  final items = <DropdownMenuItem<int?>>[
+    DropdownMenuItem<int?> (
+      value: null,
+      child: Text(
+        '--',
+        style: textStyle,
+      ),
+    ),
+  ];
+
+  for (final minutes in _breakDurationOptions) {
+    items.add(
+      DropdownMenuItem<int?> (
+        value: minutes,
+        child: Text(
+          _formatBreakOptionLabel(minutes),
+          style: textStyle,
+        ),
+      ),
+    );
+  }
+  return items;
+}
+
+String _formatBreakOptionLabel(int minutes) {
+  if (minutes == 0) {
+    return '0 min';
+  }
+  if (minutes == 60) {
+    return '60 min (1h)';
+  }
+  return '$minutes min';
+}
+
+Widget _buildTimeDropdownField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  required bool enabled,
+  required String? Function(String?) validator,
+  VoidCallback? onChanged,
+}) {
+  final normalizedValue = _normalizeTimeDropdownValue(controller.text);
+  return DropdownButtonFormField<String?> (
+    value: normalizedValue,
+    items: _buildTimeDropdownMenuItems(),
+    onChanged: enabled
+        ? (value) {
+            final text = value ?? '';
+            controller
+              ..text = text
+              ..selection = TextSelection.collapsed(offset: text.length);
+            onChanged?.call();
+          }
+        : null,
+    validator: validator,
+    isExpanded: true,
+    decoration: InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    hint: const Text('--:--'),
+    dropdownColor: Colors.white,
+  );
+}
+
+Widget _buildBreakDropdownField({
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  required bool enabled,
+  String? Function(String?)? validator,
+  VoidCallback? onChanged,
+}) {
+  final parsed = int.tryParse(controller.text.trim());
+  final selectedValue =
+      parsed != null && _breakDurationOptions.contains(parsed) ? parsed : null;
+  return DropdownButtonFormField<int?> (
+    value: selectedValue,
+    items: _buildBreakDropdownMenuItems(),
+    onChanged: enabled
+        ? (value) {
+            final text = value?.toString() ?? '';
+            controller
+              ..text = text
+              ..selection = TextSelection.collapsed(offset: text.length);
+            onChanged?.call();
+          }
+        : null,
+    validator: validator == null ? null : (value) => validator(value?.toString()),
+    isExpanded: true,
+    decoration: InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFFF59E0B)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    dropdownColor: Colors.white,
+  );
+}
+
 class WorkDetailScreen extends StatefulWidget {
   const WorkDetailScreen({super.key, required this.work});
 
@@ -31,52 +313,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final TextEditingController _ratePerUnitController = TextEditingController();
 
   bool _contractFieldsEnabled = false;
-
-  static const List<int> _timeHourOptions = <int>[
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-  ];
-
-  static const List<int> _timeMinuteOptions = <int>[
-    0,
-    5,
-    10,
-    15,
-    20,
-    25,
-    30,
-    35,
-    40,
-    45,
-    50,
-    55,
-  ];
-
-  static const List<int> _breakDurationOptions = <int>[
-    0,
-    5,
-    10,
-    15,
-    20,
-    25,
-    30,
-    35,
-    40,
-    45,
-    50,
-    55,
-    60,
-  ];
 
   DashboardSummary? _dashboardSummary;
   bool _isSummaryLoading = true;
@@ -270,248 +506,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     } else {
       _contractFieldsEnabled = hasData;
     }
-  }
-
-  static List<_TimeDropdownOption> _generateTimeDropdownOptions() {
-    final options = <_TimeDropdownOption>[];
-    for (final period in DayPeriod.values) {
-      for (final hour in _timeHourOptions) {
-        for (final minute in _timeMinuteOptions) {
-          final value = _formatTimeDropdownValue(hour, minute, period);
-          final label = _formatTimeDropdownLabel(hour, minute, period);
-          options.add(_TimeDropdownOption(value: value, label: label));
-        }
-      }
-    }
-    return options;
-  }
-
-  static final List<_TimeDropdownOption> _timeDropdownOptions =
-      _generateTimeDropdownOptions();
-
-  static final Set<String> _timeDropdownValueSet =
-      _timeDropdownOptions.map((option) => option.value).toSet();
-
-  static String _formatTimeDropdownValue(
-      int hour, int minute, DayPeriod period) {
-    final hour24 = _to24Hour(hour, period);
-    final hourText = hour24.toString().padLeft(2, '0');
-    final minuteText = minute.toString().padLeft(2, '0');
-    return '$hourText:$minuteText';
-  }
-
-  static String _formatTimeDropdownLabel(
-      int hour, int minute, DayPeriod period) {
-    final minuteText = minute.toString().padLeft(2, '0');
-    final periodText = period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$minuteText $periodText';
-  }
-
-  static int _to24Hour(int hour, DayPeriod period) {
-    var normalized = hour % 12;
-    if (period == DayPeriod.pm) {
-      normalized += 12;
-    } else if (period == DayPeriod.am && hour == 12) {
-      normalized = 0;
-    }
-    return normalized;
-  }
-
-  static List<DropdownMenuItem<String?>> _buildTimeDropdownMenuItems(
-      {TextStyle? textStyle}) {
-    final items = <DropdownMenuItem<String?>>[
-      DropdownMenuItem<String?> (
-        value: null,
-        child: Text(
-          '--:--',
-          style: textStyle,
-        ),
-      ),
-    ];
-    for (final option in _timeDropdownOptions) {
-      items.add(
-        DropdownMenuItem<String?> (
-          value: option.value,
-          child: Text(
-            option.label,
-            style: textStyle,
-          ),
-        ),
-      );
-    }
-    return items;
-  }
-
-  static String? _normalizeTimeDropdownValue(String value) {
-    final parsed = _parseFlexibleTime(value);
-    if (parsed == null) {
-      return null;
-    }
-    final normalized = _formatTimeOfDay(parsed);
-    return _timeDropdownValueSet.contains(normalized) ? normalized : null;
-  }
-
-  static TimeOfDay? _parseFlexibleTime(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return null;
-    }
-
-    final parts = trimmed.split(RegExp('\\s+'));
-    if (parts.isEmpty) {
-      return null;
-    }
-
-    final timePart = parts.first;
-    final timePieces = timePart.split(':');
-    if (timePieces.length != 2) {
-      return null;
-    }
-
-    final hours = int.tryParse(timePieces[0]);
-    final minutes = int.tryParse(timePieces[1]);
-    if (hours == null || minutes == null) {
-      return null;
-    }
-    if (minutes < 0 || minutes > 59) {
-      return null;
-    }
-
-    var normalizedHours = hours;
-    if (parts.length > 1) {
-      final periodText = parts[1].toLowerCase();
-      normalizedHours = hours % 12;
-      if (periodText.startsWith('p')) {
-        normalizedHours += 12;
-      } else if (periodText.startsWith('a') && hours == 12) {
-        normalizedHours = 0;
-      }
-    }
-
-    if (normalizedHours < 0 || normalizedHours > 23) {
-      return null;
-    }
-
-    return TimeOfDay(hour: normalizedHours, minute: minutes);
-  }
-
-  static String _formatTimeOfDay(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  Widget _buildTimeDropdownField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required bool enabled,
-    required String? Function(String?) validator,
-    VoidCallback? onChanged,
-  }) {
-    final normalizedValue = _normalizeTimeDropdownValue(controller.text);
-    return DropdownButtonFormField<String?> (
-      value: normalizedValue,
-      items: _buildTimeDropdownMenuItems(),
-      onChanged: enabled
-          ? (value) {
-              final text = value ?? '';
-              controller
-                ..text = text
-                ..selection = TextSelection.collapsed(offset: text.length);
-              onChanged?.call();
-            }
-          : null,
-      validator: validator,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-      hint: const Text('--:--'),
-      dropdownColor: Colors.white,
-    );
-  }
-
-  static List<DropdownMenuItem<int?>> _buildBreakDropdownMenuItems(
-      {TextStyle? textStyle}) {
-    final items = <DropdownMenuItem<int?>>[
-      DropdownMenuItem<int?> (
-        value: null,
-        child: Text(
-          '--',
-          style: textStyle,
-        ),
-      ),
-    ];
-
-    for (final minutes in _breakDurationOptions) {
-      items.add(
-        DropdownMenuItem<int?> (
-          value: minutes,
-          child: Text(
-            _formatBreakOptionLabel(minutes),
-            style: textStyle,
-          ),
-        ),
-      );
-    }
-    return items;
-  }
-
-  static String _formatBreakOptionLabel(int minutes) {
-    if (minutes == 0) {
-      return '0 min';
-    }
-    if (minutes == 60) {
-      return '60 min (1h)';
-    }
-    return '$minutes min';
-  }
-
-  Widget _buildBreakDropdownField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required bool enabled,
-    String? Function(String?)? validator,
-    VoidCallback? onChanged,
-  }) {
-    final parsed = int.tryParse(controller.text.trim());
-    final selectedValue =
-        parsed != null && _breakDurationOptions.contains(parsed) ? parsed : null;
-    return DropdownButtonFormField<int?> (
-      value: selectedValue,
-      items: _buildBreakDropdownMenuItems(),
-      onChanged: enabled
-          ? (value) {
-              final text = value?.toString() ?? '';
-              controller
-                ..text = text
-                ..selection = TextSelection.collapsed(offset: text.length);
-              onChanged?.call();
-            }
-          : null,
-      validator: validator == null
-          ? null
-          : (value) => validator(value?.toString()),
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFFF59E0B)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-      dropdownColor: Colors.white,
-    );
   }
 
   void _applyAttendanceDetailsFromSummary(DashboardAttendanceEntry? entry) {
@@ -2840,8 +2834,7 @@ class _AttendanceSection extends StatelessWidget {
                 final parsedBreakValue =
                     int.tryParse(breakMinutesController.text.trim());
                 final initialBreakValue = parsedBreakValue != null &&
-                        _WorkDetailScreenState._breakDurationOptions
-                            .contains(parsedBreakValue)
+                        _breakDurationOptions.contains(parsedBreakValue)
                     ? parsedBreakValue
                     : null;
 
@@ -2858,9 +2851,9 @@ class _AttendanceSection extends StatelessWidget {
                     onChanged: (_) => onFieldChanged(),
                     enabled: !isSubmitting,
                     customField: DropdownButtonFormField<String?> (
-                      value: _WorkDetailScreenState._normalizeTimeDropdownValue(
-                          startTimeController.text),
-                      items: _WorkDetailScreenState._buildTimeDropdownMenuItems(
+                      value:
+                          _normalizeTimeDropdownValue(startTimeController.text),
+                      items: _buildTimeDropdownMenuItems(
                         textStyle: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -2912,9 +2905,9 @@ class _AttendanceSection extends StatelessWidget {
                     onChanged: (_) => onFieldChanged(),
                     enabled: !isSubmitting,
                     customField: DropdownButtonFormField<String?> (
-                      value: _WorkDetailScreenState._normalizeTimeDropdownValue(
-                          endTimeController.text),
-                      items: _WorkDetailScreenState._buildTimeDropdownMenuItems(
+                      value:
+                          _normalizeTimeDropdownValue(endTimeController.text),
+                      items: _buildTimeDropdownMenuItems(
                         textStyle: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -2970,7 +2963,7 @@ class _AttendanceSection extends StatelessWidget {
                     enabled: !isSubmitting,
                     customField: DropdownButtonFormField<int?> (
                       value: initialBreakValue,
-                      items: _WorkDetailScreenState._buildBreakDropdownMenuItems(
+                      items: _buildBreakDropdownMenuItems(
                         textStyle: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
