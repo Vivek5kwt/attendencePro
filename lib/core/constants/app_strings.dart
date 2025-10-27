@@ -21,14 +21,14 @@ abstract final class AppString {
   static const String euroPrefix = '€ ';
   static const String emDash = '—';
   static const String fallbackContractItemTitle = 'Ravanello (10 qty)';
-  static const String fallbackContractItemPriceLow = '\\$3 / 100 units';
-  static const String fallbackContractItemPriceHigh = '\\$4 / 100 units';
+  static const String fallbackContractItemPriceLow = '\$3 / 100 units';
+  static const String fallbackContractItemPriceHigh = '\$4 / 100 units';
   static const String fallbackContractItemCarrotTitle = 'Carrot';
-  static const String fallbackContractItemCarrotPrice = '\\$5 / crate';
+  static const String fallbackContractItemCarrotPrice = '\$5 / crate';
   static const String fallbackSummaryHours = '156.5h';
-  static const String fallbackSummarySalary = '\\$1950';
-  static const String fallbackSummaryHourly = '\\$956';
-  static const String fallbackSummaryContract = '\\$994';
+  static const String fallbackSummarySalary = '\$1950';
+  static const String fallbackSummaryHourly = '\$956';
+  static const String fallbackSummaryContract = '\$994';
   static const List<String> shortMonthAbbreviations = <String>[
     'Jan',
     'Feb',
