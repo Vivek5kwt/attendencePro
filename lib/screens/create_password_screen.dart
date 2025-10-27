@@ -64,7 +64,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Form(
             key: _formKey,
@@ -116,11 +116,16 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.length < 8) {
+                    if (value == null || value.length < 6) {
                       setState(() {
                         _errorText = l.passwordMinEight;
                       });
                       return '';
+                    }
+                    if (_errorText != null) {
+                      setState(() {
+                        _errorText = null;
+                      });
                     }
                     return null;
                   },
@@ -164,6 +169,11 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                       });
                       return '';
                     }
+                    if (_errorText != null) {
+                      setState(() {
+                        _errorText = null;
+                      });
+                    }
                     return null;
                   },
                 ),
@@ -197,6 +207,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
