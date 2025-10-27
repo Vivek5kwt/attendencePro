@@ -39,6 +39,7 @@ class AppLocalizations {
       'workSelectionSubtitle':
           'Choose the work you want to view reports for.',
       'confirmSelectionButton': 'Confirm Selection',
+      'workSelectionHourSuffix': '/hour',
       'attendanceHistoryLabel': 'Attendance History',
       'attendanceHistoryMonthLabel': 'Select month',
       'attendanceHistorySummaryTitle': 'This month so far',
@@ -407,6 +408,7 @@ class AppLocalizations {
       'selectWorkTitle': 'कार्य चुनें',
       'workSelectionSubtitle': 'रिपोर्ट देखने के लिए कार्य चुनें।',
       'confirmSelectionButton': 'चयन की पुष्टि करें',
+      'workSelectionHourSuffix': '/घंटा',
       'attendanceHistoryLabel': 'उपस्थिति इतिहास',
       'attendanceHistoryMonthLabel': 'माह चुनें',
       'attendanceHistorySummaryTitle': 'इस महीने अब तक',
@@ -775,6 +777,7 @@ class AppLocalizations {
       'selectWorkTitle': 'ਕੰਮ ਚੁਣੋ',
       'workSelectionSubtitle': 'ਰਿਪੋਰਟ ਦੇਖਣ ਲਈ ਕੰਮ ਚੁਣੋ।',
       'confirmSelectionButton': 'ਚੋਣ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ',
+      'workSelectionHourSuffix': '/ਘੰਟਾ',
       'attendanceHistoryLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ',
       'attendanceHistoryMonthLabel': 'ਮਹੀਨਾ ਚੁਣੋ',
       'attendanceHistorySummaryTitle': 'ਇਸ ਮਹੀਨੇ ਤੱਕ',
@@ -1147,6 +1150,7 @@ class AppLocalizations {
       'workSelectionSubtitle':
           'Scegli il lavoro di cui vuoi visualizzare i report.',
       'confirmSelectionButton': 'Conferma selezione',
+      'workSelectionHourSuffix': '/ora',
       'attendanceHistoryLabel': 'Storico presenze',
       'attendanceHistoryMonthLabel': 'Seleziona mese',
       'attendanceHistorySummaryTitle': 'Questo mese finora',
@@ -1766,6 +1770,7 @@ class AppLocalizations {
   String get selectWorkTitle => _value('selectWorkTitle');
   String get workSelectionSubtitle => _value('workSelectionSubtitle');
   String get confirmSelectionButton => _value('confirmSelectionButton');
+  String get workSelectionHourSuffix => _value('workSelectionHourSuffix');
   String get selectLanguageTitle => _value('selectLanguageTitle');
   String get languageEnglish => _value('languageEnglish');
   String get languageHindi => _value('languageHindi');

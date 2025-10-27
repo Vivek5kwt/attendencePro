@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
@@ -28,159 +30,202 @@ Future<Work?> showWorkSelectionDialog({
       );
 
       return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: StatefulBuilder(
           builder: (context, setState) {
-            return ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 280, maxWidth: 400),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                localization.selectWorkTitle,
-                                style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: const Color(0xFF111827),
-                                        ) ??
-                                    const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF111827),
-                                    ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                localization.workSelectionSubtitle,
-                                style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: const Color(0xFF6B7280),
-                                        ) ??
-                                    const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF6B7280),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
-                          splashRadius: 20,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Flexible(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 320),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Column(
-                            children: [
-                              for (final work in works)
-                                _WorkSelectionTile(
-                                  work: work,
-                                  isSelected: work.id == selectedId,
-                                  localization: localization,
-                                  onTap: () {
-                                    setState(() {
-                                      selectedId = work.id;
-                                    });
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    if (onAddNewWork != null) ...[
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(_kAddNewWorkResult);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Color(0xFFD1D5DB)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          icon: const Icon(Icons.add, color: Color(0xFF2563EB)),
-                          label: Text(
-                            localization.addNewWorkLabel,
-                            style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF2563EB),
-                                    ) ??
-                                const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2563EB),
-                                ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (selectedId == null) {
-                            Navigator.of(dialogContext).pop();
-                            return;
-                          }
-                          Navigator.of(dialogContext).pop(selectedId);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: const Color(0xFF2563EB),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          localization.confirmSelectionButton,
-                          style: Theme.of(context)
-                                  .textTheme
-                                  .labelLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ) ??
-                              const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                        ),
-                      ),
+            final mediaQuery = MediaQuery.of(context);
+            final double availableWidth = mediaQuery.size.width - 32;
+            final double maxDialogWidth = math.min(
+              420,
+              availableWidth > 0 ? availableWidth : mediaQuery.size.width,
+            );
+            final double minDialogWidth = math.min(280, maxDialogWidth);
+            final double maxDialogHeight = math.min(
+              math.max(mediaQuery.size.height * 0.82, 360),
+              520,
+            );
+
+            return Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  minWidth: minDialogWidth,
+                  maxWidth: maxDialogWidth,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 42,
+                      offset: const Offset(0, 24),
                     ),
                   ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: Material(
+                    color: Colors.white,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: maxDialogHeight),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(width: 40),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        localization.selectWorkTitle,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                                .textTheme
+                                                .titleLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: const Color(0xFF111827),
+                                                ) ??
+                                            const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF111827),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        localization.workSelectionSubtitle,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: const Color(0xFF6B7280),
+                                                ) ??
+                                            const TextStyle(
+                                              fontSize: 14,
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.of(dialogContext).pop(),
+                                  icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
+                                  splashRadius: 20,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Flexible(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxHeight: math.min(mediaQuery.size.height * 0.4, 320),
+                                ),
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  clipBehavior: Clip.none,
+                                  shrinkWrap: true,
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: works.length,
+                                  itemBuilder: (context, index) {
+                                    final work = works[index];
+                                    return _WorkSelectionTile(
+                                      work: work,
+                                      isSelected: work.id == selectedId,
+                                      localization: localization,
+                                      onTap: () {
+                                        setState(() {
+                                          selectedId = work.id;
+                                        });
+                                      },
+                                    );
+                                  },
+                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            if (onAddNewWork != null) ...[
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.of(dialogContext).pop(_kAddNewWorkResult);
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    side: const BorderSide(color: Color(0xFFD1D5DB)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.add, color: Color(0xFF2563EB)),
+                                  label: Text(
+                                    localization.addNewWorkLabel,
+                                    style: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF2563EB),
+                                            ) ??
+                                        const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2563EB),
+                                        ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (selectedId == null) {
+                                    Navigator.of(dialogContext).pop();
+                                    return;
+                                  }
+                                  Navigator.of(dialogContext).pop(selectedId);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 18),
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  localization.confirmSelectionButton,
+                                  style: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ) ??
+                                      const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             );
@@ -256,105 +301,88 @@ class _WorkSelectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtitle = _formatHourlyRate(work, localization);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color:
-                    isSelected ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB),
-                width: isSelected ? 1.5 : 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color:
+                  isSelected ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB),
+              width: isSelected ? 1.5 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  alignment: Alignment.center,
-                  child: Image.asset(
-                    AppAssets.workPlaceholder,
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        work.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                            ) ??
-                            const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF111827),
-                            ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                            ) ??
-                            const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF6B7280),
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 26,
-                  width: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color:
-                        isSelected ? const Color(0xFF2563EB) : Colors.white,
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFF2563EB)
-                          : const Color(0xFFD1D5DB),
-                      width: 2,
+            ],
+          ),
+          child: Row(
+            children: [
+              _WorkTileIcon(work: work),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      work.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF111827),
+                          ) ??
+                          const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827),
+                          ),
                     ),
-                  ),
-                  child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Colors.white,
-                        )
-                      : null,
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7280),
+                          ) ??
+                          const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF6B7280),
+                          ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: 26,
+                width: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color:
+                      isSelected ? const Color(0xFF2563EB) : Colors.white,
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF2563EB)
+                        : const Color(0xFFD1D5DB),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? const Icon(
+                        Icons.check,
+                        size: 16,
+                        color: Colors.white,
+                      )
+                    : null,
+              ),
+            ],
           ),
         ),
       ),
@@ -370,9 +398,107 @@ String _formatHourlyRate(Work work, AppLocalizations l) {
 
   final double doubleValue = rate.toDouble();
   final bool isWhole = doubleValue.roundToDouble() == doubleValue;
-  final formatted = isWhole
-      ? doubleValue.toStringAsFixed(0)
-      : doubleValue.toStringAsFixed(2);
+  final formattedNumber =
+      isWhole ? doubleValue.toStringAsFixed(0) : doubleValue.toStringAsFixed(2);
+  String sanitized = formattedNumber;
+  if (sanitized.contains('.')) {
+    while (sanitized.endsWith('0')) {
+      sanitized = sanitized.substring(0, sanitized.length - 1);
+    }
+    if (sanitized.endsWith('.')) {
+      sanitized = sanitized.substring(0, sanitized.length - 1);
+    }
+  }
+  final currency = _resolveCurrencySymbol(work.additionalData);
 
-  return '${l.hourlySalaryLabel}: $formatted';
+  return '$currency$sanitized${l.workSelectionHourSuffix}';
+}
+
+String _resolveCurrencySymbol(Map<String, dynamic> data) {
+  const defaultCurrency = r'$';
+  final dynamic value = data['currency_symbol'] ??
+      data['currencySymbol'] ??
+      data['currency'] ??
+      data['currencyCode'] ??
+      data['currencyPrefix'];
+
+  if (value is! String) {
+    return defaultCurrency;
+  }
+
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) {
+    return defaultCurrency;
+  }
+
+  final bool isAlphabeticCode = trimmed.length == 3 &&
+      trimmed.codeUnits.every(
+        (unit) =>
+            (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
+      );
+  if (isAlphabeticCode) {
+    return '$trimmed ';
+  }
+
+  return trimmed;
+}
+
+class _WorkTileIcon extends StatelessWidget {
+  const _WorkTileIcon({required this.work});
+
+  final Work work;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 56,
+      width: 56,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      alignment: Alignment.center,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: _buildIconWidget(),
+      ),
+    );
+  }
+
+  Widget _buildIconWidget() {
+    final dynamic iconValue = work.additionalData['icon'] ??
+        work.additionalData['image'] ??
+        work.additionalData['asset'];
+
+    if (iconValue is String && iconValue.trim().isNotEmpty) {
+      final iconPath = iconValue.trim();
+      if (iconPath.startsWith('http')) {
+        return Image.network(
+          iconPath,
+          width: 40,
+          height: 40,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _placeholderIcon(),
+        );
+      }
+      return Image.asset(
+        iconPath,
+        width: 40,
+        height: 40,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => _placeholderIcon(),
+      );
+    }
+
+    return _placeholderIcon();
+  }
+
+  Widget _placeholderIcon() {
+    return Image.asset(
+      AppAssets.workPlaceholder,
+      width: 40,
+      height: 40,
+      fit: BoxFit.contain,
+    );
+  }
 }
