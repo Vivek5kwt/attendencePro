@@ -1675,16 +1675,29 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF2563EB),
-                side: const BorderSide(color: Color(0xFF2563EB)),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               onPressed: () => Navigator.of(context).pop(),
-              child: Text(l.changeWorkButton),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.sync_alt_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Text(l.changeWorkButton),
+                ],
+              ),
             ),
           ),
         ],
@@ -1866,21 +1879,25 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           title: l.totalHoursLabel,
           value: totalHours ?? '0h',
           color: const Color(0xFF2563EB),
+          icon: Icons.access_time_filled,
         ),
         _SummaryStat(
           title: l.totalSalaryLabel,
           value: totalSalary ?? '${String.fromCharCode(36)}0',
           color: const Color(0xFF22C55E),
+          icon: Icons.payments_rounded,
         ),
         _SummaryStat(
           title: l.hourlyWorkLabel,
           value: hourlyWork ?? '${String.fromCharCode(36)}0',
           color: const Color(0xFF2563EB),
+          icon: Icons.timelapse_rounded,
         ),
         _SummaryStat(
           title: l.contractWorkLabel,
           value: contractWork ?? '${String.fromCharCode(36)}0',
           color: const Color(0xFF22C55E),
+          icon: Icons.assignment_turned_in_rounded,
         ),
       ];
     }
@@ -1890,21 +1907,25 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         title: l.totalHoursLabel,
         value: AppString.fallbackSummaryHours,
         color: const Color(0xFF2563EB),
+        icon: Icons.access_time_filled,
       ),
       _SummaryStat(
         title: l.totalSalaryLabel,
         value: AppString.fallbackSummarySalary,
         color: const Color(0xFF22C55E),
+        icon: Icons.payments_rounded,
       ),
       _SummaryStat(
         title: l.hourlyWorkLabel,
         value: AppString.fallbackSummaryHourly,
         color: const Color(0xFF2563EB),
+        icon: Icons.timelapse_rounded,
       ),
       _SummaryStat(
         title: l.contractWorkLabel,
         value: AppString.fallbackSummaryContract,
         color: const Color(0xFF22C55E),
+        icon: Icons.assignment_turned_in_rounded,
       ),
     ];
   }
@@ -2517,121 +2538,160 @@ class _WorkHeaderCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 190,
+      height: 200,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned.fill(
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.08),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
+                    blurRadius: 22,
+                    offset: const Offset(0, 16),
                   ),
                 ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(
-                      AppAssets.bgBanner,
-                      fit: BoxFit.cover,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF0F172A).withOpacity(0.55),
-                            const Color(0xFF0F172A).withOpacity(0.2),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                    ),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF0EA5E9),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: Opacity(
+                opacity: 0.18,
+                child: Image.asset(
+                  AppAssets.bgBanner,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
           Positioned(
-            left: 24,
-            top: 28,
-            right: 150,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            top: 18,
+            right: 24,
+            child: Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          workTypeLabel,
+                          style: textTheme.labelLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ) ??
+                              const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                letterSpacing: 0.2,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        work.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ) ??
+                            const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.22),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.payments_rounded,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              rateDescription ?? workTypeLabel,
+                              style: textTheme.bodyLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ) ??
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  width: 118,
+                  height: 118,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.22),
-                    borderRadius: BorderRadius.circular(16),
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    workTypeLabel,
-                    style: textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ) ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          letterSpacing: 0.2,
-                        ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  work.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ) ??
-                      const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: ClipOval(
+                      child: Image.asset(
+                        AppAssets.homeBanner2,
+                        fit: BoxFit.cover,
                       ),
-                ),
-                if (rateDescription != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    rateDescription!,
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w500,
-                    ) ??
-                        TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    ),
                   ),
-                ],
+                ),
               ],
-            ),
-          ),
-          Positioned(
-            right: -20,
-            top: -20,
-            bottom: 0,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: Image.asset(
-                AppAssets.homeBanner2,
-                fit: BoxFit.contain,
-                height: 220,
-              ),
             ),
           ),
         ],
@@ -2716,16 +2776,38 @@ class _AttendanceSection extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final isCompact = constraints.maxWidth < 360;
-                final titleText = Text(
-                  l.todaysAttendanceTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
+                final titleWidget = Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0F2FE),
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.today_rounded,
+                        color: Color(0xFF2563EB),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l.todaysAttendanceTitle,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
+                                ) ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
+                                ),
+                      ),
+                    ),
+                  ],
                 );
 
                 final dateSelector = Material(
@@ -2771,7 +2853,7 @@ class _AttendanceSection extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      titleText,
+                      titleWidget,
                       const SizedBox(height: 12),
                       dateSelector,
                     ],
@@ -2780,7 +2862,7 @@ class _AttendanceSection extends StatelessWidget {
 
                 return Row(
                   children: [
-                    Expanded(child: titleText),
+                    Expanded(child: titleWidget),
                     const SizedBox(width: 12),
                     Flexible(child: dateSelector),
                   ],
@@ -2788,37 +2870,6 @@ class _AttendanceSection extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
-            if (showContractFields && onContractFieldsToggle != null) ...[
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  l.contractWorkLabel,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                subtitle: Text(
-                  '${l.contractWorkUnitsLabel} • ${l.contractWorkRateLabel}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF6B7280),
-                      ) ??
-                      const TextStyle(
-                        color: Color(0xFF6B7280),
-                      ),
-                ),
-                value: contractFieldsEnabled,
-                onChanged: isSubmitting
-                    ? null
-                    : (value) {
-                        onContractFieldsToggle?.call(value);
-                        onFieldChanged();
-                      },
-              ),
-              const SizedBox(height: 12),
-            ],
             LayoutBuilder(
               builder: (context, constraints) {
                 const spacing = 12.0;
@@ -3060,38 +3111,27 @@ class _AttendanceSection extends StatelessWidget {
               },
             ),
             const SizedBox(height: 24),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: isSubmitting ? null : onSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                child: isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        l.attendanceSubmitButton,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
+            if (showContractFields && onContractFieldsToggle != null) ...[
+              Row(
+                children: [
+                  Expanded(child: _buildContractToggleButton(l)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildSubmitButton(context, l)),
+                ],
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                '${l.contractWorkUnitsLabel} • ${l.contractWorkRateLabel}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF6B7280),
+                    ) ??
+                    const TextStyle(
+                      color: Color(0xFF6B7280),
+                    ),
+              ),
+            ] else ...[
+              _buildSubmitButton(context, l),
+            ],
             if (statusMessage != null)
               Container(
                 margin: const EdgeInsets.only(top: 16),
@@ -3114,6 +3154,70 @@ class _AttendanceSection extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(BuildContext context, AppLocalizations l) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: isSubmitting ? null : onSubmit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2563EB),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        child: isSubmitting
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(l.attendanceSubmitButton),
+      ),
+    );
+  }
+
+  Widget _buildContractToggleButton(AppLocalizations l) {
+    final isEnabled = contractFieldsEnabled;
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: (onContractFieldsToggle == null || isSubmitting)
+            ? null
+            : () {
+                final nextValue = !isEnabled;
+                onContractFieldsToggle?.call(nextValue);
+                onFieldChanged();
+              },
+        icon: const Icon(Icons.stacked_bar_chart_rounded),
+        label: Text(l.contractWorkLabel),
+        style: OutlinedButton.styleFrom(
+          backgroundColor:
+              isEnabled ? const Color(0xFF1D4ED8) : const Color(0xFFEFF6FF),
+          foregroundColor:
+              isEnabled ? Colors.white : const Color(0xFF1D4ED8),
+          side: BorderSide(
+            color: isEnabled ? Colors.transparent : const Color(0xFFBFDBFE),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -3486,18 +3590,39 @@ class _SummaryStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: stat.color.withOpacity(0.08),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14222C3A),
+            offset: Offset(0, 18),
+            blurRadius: 36,
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: stat.color.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              stat.icon,
+              color: stat.color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             stat.title,
             style: TextStyle(
-              color: stat.color.withOpacity(0.8),
+              color: const Color(0xFF64748B),
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -3508,7 +3633,7 @@ class _SummaryStatCard extends StatelessWidget {
             style: TextStyle(
               color: stat.color,
               fontWeight: FontWeight.w700,
-              fontSize: 20,
+              fontSize: 22,
             ),
           ),
         ],
@@ -3670,11 +3795,13 @@ class _SummaryStat {
     required this.title,
     required this.value,
     required this.color,
+    required this.icon,
   });
 
   final String title;
   final String value;
   final Color color;
+  final IconData icon;
 }
 
 String _formatMonthYearLabel(DateTime date) {
