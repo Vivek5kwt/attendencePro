@@ -1,7 +1,5 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
@@ -105,12 +103,12 @@ Future<Work?> showWorkSelectionDialog({
                                             localization.selectWorkTitle,
                                             textAlign: TextAlign.center,
                                             style: Theme.of(context)
-                                                    .textTheme
-                                                    .titleLarge
-                                                    ?.copyWith(
-                                                      fontWeight: FontWeight.w700,
-                                                      color: const Color(0xFF111827),
-                                                    ) ??
+                                                .textTheme
+                                                .titleLarge
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF111827),
+                                            ) ??
                                                 const TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.w700,
@@ -118,34 +116,24 @@ Future<Work?> showWorkSelectionDialog({
                                                 ),
                                           ),
                                           const SizedBox(height: 8),
-                                          Text(
-                                            localization.workSelectionSubtitle,
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyMedium
-                                                    ?.copyWith(
-                                                      color: const Color(0xFF6B7280),
-                                                    ) ??
-                                                const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Color(0xFF6B7280),
-                                                ),
-                                          ),
                                         ],
                                       ),
                                     ),
-                                    _DialogCloseButton(onPressed: () {
-                                      Navigator.of(dialogContext).pop();
-                                    }),
+                                    _DialogCloseButton(
+                                      onPressed: () {
+                                        Navigator.of(dialogContext).pop();
+                                      },
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 24),
                                 Flexible(
                                   child: ConstrainedBox(
                                     constraints: BoxConstraints(
-                                      maxHeight:
-                                          math.min(mediaQuery.size.height * 0.4, 320),
+                                      maxHeight: math.min(
+                                        mediaQuery.size.height * 0.4,
+                                        320,
+                                      ),
                                     ),
                                     child: ListView.separated(
                                       padding: EdgeInsets.zero,
@@ -166,7 +154,8 @@ Future<Work?> showWorkSelectionDialog({
                                           },
                                         );
                                       },
-                                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                      separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 12),
                                     ),
                                   ),
                                 ),
@@ -180,15 +169,20 @@ Future<Work?> showWorkSelectionDialog({
                                             .pop(_kAddNewWorkResult);
                                       },
                                       style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        side: const BorderSide(color: Color(0xFFD1D5DB)),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                        side: const BorderSide(
+                                            color: Color(0xFFD1D5DB)),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(18),
+                                          borderRadius:
+                                          BorderRadius.circular(18),
                                         ),
-                                        foregroundColor: const Color(0xFF2563EB),
+                                        foregroundColor:
+                                        const Color(0xFF2563EB),
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.center,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Container(
@@ -197,7 +191,8 @@ Future<Work?> showWorkSelectionDialog({
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               border: Border.all(
-                                                color: const Color(0xFFD1D5DB),
+                                                color:
+                                                const Color(0xFFD1D5DB),
                                               ),
                                               color: Colors.white,
                                             ),
@@ -213,16 +208,19 @@ Future<Work?> showWorkSelectionDialog({
                                             child: Text(
                                               localization.addNewWorkLabel,
                                               style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelLarge
-                                                      ?.copyWith(
-                                                        fontWeight: FontWeight.w600,
-                                                        color: const Color(0xFF2563EB),
-                                                      ) ??
+                                                  .textTheme
+                                                  .labelLarge
+                                                  ?.copyWith(
+                                                fontWeight:
+                                                FontWeight.w600,
+                                                color: const Color(
+                                                    0xFF2563EB),
+                                              ) ??
                                                   const TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF2563EB),
+                                                    color:
+                                                    Color(0xFF2563EB),
                                                   ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -241,25 +239,29 @@ Future<Work?> showWorkSelectionDialog({
                                         Navigator.of(dialogContext).pop();
                                         return;
                                       }
-                                      Navigator.of(dialogContext).pop(selectedId);
+                                      Navigator.of(dialogContext)
+                                          .pop(selectedId);
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(vertical: 18),
-                                      backgroundColor: const Color(0xFF2563EB),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 18),
+                                      backgroundColor:
+                                      const Color(0xFF2563EB),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius:
+                                        BorderRadius.circular(20),
                                       ),
                                       elevation: 0,
                                     ),
                                     child: Text(
                                       localization.confirmSelectionButton,
                                       style: Theme.of(context)
-                                              .textTheme
-                                              .labelLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ) ??
+                                          .textTheme
+                                          .labelLarge
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ) ??
                                           const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w700,
@@ -347,99 +349,119 @@ class _WorkSelectionTile extends StatelessWidget {
   final AppLocalizations localization;
   final VoidCallback onTap;
 
+  static const _gradientBorder = LinearGradient(
+    colors: [Color(0xFF2E469D), Color(0xFF0E8CEA)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
   @override
   Widget build(BuildContext context) {
     final subtitle = _formatHourlyRate(work, localization);
+
+    // Inner core card (white) used in both states
+    final Widget _innerCard = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isSelected ? Colors.white : const Color(0xFFE5E7EB),
+          width: 1,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _WorkTileIcon(work: work),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  work.name,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ) ??
+                      const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFF6B7280),
+                  ) ??
+                      const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF6B7280),
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 28,
+            width: 28,
+
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: isSelected
+                  ? ClipOval(
+                key: const ValueKey('selected'),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Image.asset(
+                    AppAssets.icTick,
+                    width: 22,
+                    height: 22,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              )
+                  : const SizedBox.shrink(key: ValueKey('unselected')),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // If selected, wrap the inner card with a thin gradient border outside.
+    final Widget _tileBody = isSelected
+        ? Container(
+      decoration: BoxDecoration(
+        gradient: _gradientBorder,
+        borderRadius: BorderRadius.circular(26), // slightly larger radius
+      ),
+      padding: const EdgeInsets.all(2), // gradient stroke thickness
+      child: _innerCard,
+    )
+        : _innerCard;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFF2F7FF) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFF2563EB)
-                  : const Color(0xFFE5E7EB),
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 24,
-                offset: Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _WorkTileIcon(work: work),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      work.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                            ) ??
-                          const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF111827),
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                            ) ??
-                          const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF6B7280),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 28,
-                width: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color:
-                      isSelected ? const Color(0xFF2563EB) : Colors.white,
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF2563EB)
-                        : const Color(0xFFD1D5DB),
-                    width: 2,
-                  ),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          key: ValueKey('selected'),
-                          size: 16,
-                          color: Colors.white,
-                        )
-                      : const SizedBox.shrink(key: ValueKey('unselected')),
-                ),
-              ),
-            ],
-          ),
+          color: isSelected ? const Color(0xFFF2F7FF) : Colors.transparent,
+          padding: EdgeInsets.zero,
+          child: _tileBody,
         ),
       ),
     );
@@ -448,7 +470,6 @@ class _WorkSelectionTile extends StatelessWidget {
 
 class _DialogCloseButton extends StatelessWidget {
   const _DialogCloseButton({required this.onPressed});
-
   final VoidCallback onPressed;
 
   @override
@@ -459,15 +480,12 @@ class _DialogCloseButton extends StatelessWidget {
       child: Container(
         height: 36,
         width: 36,
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3F4F6),
-          shape: BoxShape.circle,
-        ),
         alignment: Alignment.center,
-        child: const Icon(
-          Icons.close,
-          size: 18,
-          color: Color(0xFF6B7280),
+        child: Image.asset(
+          AppAssets.icClose, // make sure this points to your close image
+          width: 36,
+          height: 36,
+          fit: BoxFit.contain,
         ),
       ),
     );
@@ -482,8 +500,10 @@ String _formatHourlyRate(Work work, AppLocalizations l) {
 
   final double doubleValue = rate.toDouble();
   final bool isWhole = doubleValue.roundToDouble() == doubleValue;
-  final formattedNumber =
-      isWhole ? doubleValue.toStringAsFixed(0) : doubleValue.toStringAsFixed(2);
+  final formattedNumber = isWhole
+      ? doubleValue.toStringAsFixed(0)
+      : doubleValue.toStringAsFixed(2);
+
   String sanitized = formattedNumber;
   if (sanitized.contains('.')) {
     while (sanitized.endsWith('0')) {
@@ -493,8 +513,8 @@ String _formatHourlyRate(Work work, AppLocalizations l) {
       sanitized = sanitized.substring(0, sanitized.length - 1);
     }
   }
-  final currency = _resolveCurrencySymbol(work.additionalData);
 
+  final currency = _resolveCurrencySymbol(work.additionalData);
   return '$currency$sanitized${l.workSelectionHourSuffix}';
 }
 
@@ -517,8 +537,7 @@ String _resolveCurrencySymbol(Map<String, dynamic> data) {
 
   final bool isAlphabeticCode = trimmed.length == 3 &&
       trimmed.codeUnits.every(
-        (unit) =>
-            (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
+            (unit) => (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
       );
   if (isAlphabeticCode) {
     return '$trimmed ';
@@ -529,7 +548,6 @@ String _resolveCurrencySymbol(Map<String, dynamic> data) {
 
 class _WorkTileIcon extends StatelessWidget {
   const _WorkTileIcon({required this.work});
-
   final Work work;
 
   @override
