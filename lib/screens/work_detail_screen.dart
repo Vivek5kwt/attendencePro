@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/dashboard_summary.dart';
 import '../models/missed_attendance_completion.dart';
@@ -84,7 +85,9 @@ String _formatTimeDropdownValue(int hour, int minute, DayPeriod period) {
 
 String _formatTimeDropdownLabel(int hour, int minute, DayPeriod period) {
   final minuteText = minute.toString().padLeft(2, '0');
-  final periodText = period == DayPeriod.am ? 'AM' : 'PM';
+  final periodText = period == DayPeriod.am
+      ? AppString.amLabel
+      : AppString.pmLabel;
   return '$hour:$minuteText $periodText';
 }
 
@@ -100,13 +103,13 @@ int _to24Hour(int hour, DayPeriod period) {
 
 List<DropdownMenuItem<String?>> _buildTimeDropdownMenuItems({TextStyle? textStyle}) {
   final items = <DropdownMenuItem<String?>>[
-    DropdownMenuItem<String?> (
-      value: null,
-      child: Text(
-        '--:--',
-        style: textStyle,
+      DropdownMenuItem<String?> (
+        value: null,
+        child: Text(
+          AppString.timePlaceholder,
+          style: textStyle,
+        ),
       ),
-    ),
   ];
   for (final option in _timeDropdownOptions) {
     items.add(
@@ -208,12 +211,12 @@ List<DropdownMenuItem<int?>> _buildBreakDropdownMenuItems({TextStyle? textStyle}
 
 String _formatBreakOptionLabel(int minutes) {
   if (minutes == 0) {
-    return '0 min';
+    return AppString.zeroMinutesLabel;
   }
   if (minutes == 60) {
-    return '60 min (1h)';
+    return AppString.sixtyMinutesLabel;
   }
-  return '$minutes min';
+  return '$minutes ${AppString.minutesSuffix}';
 }
 
 Widget _buildTimeDropdownField({
@@ -248,7 +251,7 @@ Widget _buildTimeDropdownField({
         borderRadius: BorderRadius.circular(16),
       ),
     ),
-    hint: const Text('--:--'),
+    hint: const Text(AppString.timePlaceholder),
     dropdownColor: Colors.white,
   );
 }
@@ -1551,19 +1554,21 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   String _formatBreakMinutesDisplay(int minutes) {
     if (minutes <= 0) {
-      return '0 min';
+      return AppString.zeroMinutesLabel;
     }
     final hours = minutes ~/ 60;
     final remaining = minutes % 60;
     final parts = <String>[];
     if (hours > 0) {
-      parts.add('${hours}h');
+      parts.add('${hours}${AppString.hourAbbreviation}');
     }
     if (remaining > 0) {
-      parts.add(hours > 0 ? '${remaining}m' : '$remaining min');
+      parts.add(hours > 0
+          ? '${remaining}${AppString.minuteAbbreviation}'
+          : '$remaining ${AppString.minutesSuffix}');
     }
     if (parts.isEmpty) {
-      parts.add('$minutes min');
+      parts.add('$minutes ${AppString.minutesSuffix}');
     }
     return parts.join(' ');
   }
@@ -1797,9 +1802,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           .toList();
     }
     return const <_ContractItem>[
-      _ContractItem(title: 'Ravanello (10 qty)', price: '\$3 / 100 units'),
-      _ContractItem(title: 'Ravanello (10 qty)', price: '\$4 / 100 units'),
-      _ContractItem(title: 'Carrot', price: '\$5 / crate'),
+      _ContractItem(
+        title: AppString.fallbackContractItemTitle,
+        price: AppString.fallbackContractItemPriceLow,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemTitle,
+        price: AppString.fallbackContractItemPriceHigh,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemCarrotTitle,
+        price: AppString.fallbackContractItemCarrotPrice,
+      ),
     ];
   }
 
@@ -1874,22 +1888,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return <_SummaryStat>[
       _SummaryStat(
         title: l.totalHoursLabel,
-        value: '156.5h',
+        value: AppString.fallbackSummaryHours,
         color: const Color(0xFF2563EB),
       ),
       _SummaryStat(
         title: l.totalSalaryLabel,
-        value: '\$1950',
+        value: AppString.fallbackSummarySalary,
         color: const Color(0xFF22C55E),
       ),
       _SummaryStat(
         title: l.hourlyWorkLabel,
-        value: '\$956',
+        value: AppString.fallbackSummaryHourly,
         color: const Color(0xFF2563EB),
       ),
       _SummaryStat(
         title: l.contractWorkLabel,
-        value: '\$994',
+        value: AppString.fallbackSummaryContract,
         color: const Color(0xFF22C55E),
       ),
     ];
@@ -1900,20 +1914,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    const monthNames = <String>[
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const monthNames = AppString.shortMonthAbbreviations;
 
     final month = monthNames[date.month - 1];
     final day = date.day.toString().padLeft(2, '0');
@@ -2844,7 +2845,7 @@ class _AttendanceSection extends StatelessWidget {
                     controller: startTimeController,
                     icon: Icons.play_arrow_rounded,
                     color: const Color(0xFF22C55E),
-                    hintText: 'HH:MM',
+                    hintText: AppString.timeInputHint,
                     keyboardType: TextInputType.datetime,
                     textInputAction: TextInputAction.next,
                     validator: startTimeValidator,
@@ -2877,7 +2878,7 @@ class _AttendanceSection extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                       ),
                       hint: const Text(
-                        '--:--',
+                        AppString.timePlaceholder,
                         style: TextStyle(
                           color: Color(0xFF9CA3AF),
                           fontSize: 16,
@@ -2898,7 +2899,7 @@ class _AttendanceSection extends StatelessWidget {
                     controller: endTimeController,
                     icon: Icons.stop_rounded,
                     color: const Color(0xFFEF4444),
-                    hintText: 'HH:MM',
+                    hintText: AppString.timeInputHint,
                     keyboardType: TextInputType.datetime,
                     textInputAction: TextInputAction.next,
                     validator: endTimeValidator,
@@ -2931,7 +2932,7 @@ class _AttendanceSection extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                       ),
                       hint: const Text(
-                        '--:--',
+                        AppString.timePlaceholder,
                         style: TextStyle(
                           color: Color(0xFF9CA3AF),
                           fontSize: 16,
@@ -2952,7 +2953,7 @@ class _AttendanceSection extends StatelessWidget {
                     controller: breakMinutesController,
                     icon: Icons.local_cafe_rounded,
                     color: const Color(0xFFF59E0B),
-                    hintText: '0',
+                    hintText: AppString.zeroInputHint,
                     keyboardType: TextInputType.number,
                     textInputAction:
                         contractFieldsEnabled
@@ -2987,8 +2988,8 @@ class _AttendanceSection extends StatelessWidget {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      hint: const Text(
-                        '--',
+                        hint: const Text(
+                          AppString.doubleDashPlaceholder,
                         style: TextStyle(
                           color: Color(0xFF9CA3AF),
                           fontSize: 16,
@@ -3018,7 +3019,7 @@ class _AttendanceSection extends StatelessWidget {
                       controller: unitsController!,
                       icon: Icons.stacked_bar_chart_rounded,
                       color: const Color(0xFF6366F1),
-                      hintText: '0',
+                      hintText: AppString.zeroInputHint,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.next,
@@ -3032,7 +3033,7 @@ class _AttendanceSection extends StatelessWidget {
                       controller: ratePerUnitController!,
                       icon: Icons.attach_money,
                       color: const Color(0xFF2563EB),
-                      hintText: '0.00',
+                      hintText: AppString.zeroDecimalInputHint,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.done,
@@ -3677,19 +3678,6 @@ class _SummaryStat {
 }
 
 String _formatMonthYearLabel(DateTime date) {
-  const monthNames = <String>[
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+  const monthNames = AppString.fullMonthNames;
   return '${monthNames[date.month - 1]} ${date.year}';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/contract_type.dart' as models;
 import '../repositories/contract_type_repository.dart';
@@ -298,7 +299,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       readOnly: type?.isDefault ?? false,
                       decoration: InputDecoration(
                         labelText: l.contractWorkNameLabel,
-                        hintText: 'Water melon, Orange',
+                        hintText: AppString.contractNameHint,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -351,8 +352,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       ),
                       decoration: InputDecoration(
                         labelText: l.contractWorkRateLabel,
-                        hintText: 'Price Per 100 Bunches',
-                        prefixText: '€ ',
+                        hintText: AppString.contractRateHint,
+                        prefixText: AppString.euroPrefix,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -360,7 +361,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       controller: unitController,
                       decoration: InputDecoration(
                         labelText: l.contractWorkUnitLabel,
-                        hintText: 'per crate',
+                        hintText: AppString.contractUnitHint,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1357,22 +1358,9 @@ class _ContractType {
   String get formattedUpdatedDate {
     final date = lastUpdated;
     if (date == null) {
-      return '—';
+      return AppString.emDash;
     }
-    const monthNames = <String>[
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const monthNames = AppString.shortMonthAbbreviations;
     final month = monthNames[date.month - 1];
     return '$month ${date.day}, ${date.year}';
   }
@@ -1396,20 +1384,7 @@ class _ContractEntry {
   final double totalAmount;
 
   String get formattedDate {
-    const monthNames = <String>[
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const monthNames = AppString.shortMonthAbbreviations;
     final month = monthNames[date.month - 1];
     return '$month ${date.day.toString().padLeft(2, '0')}, ${date.year}';
   }
