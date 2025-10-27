@@ -221,13 +221,16 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 Center(
                   child: TextButton(
                     onPressed: _resend,
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF007BFF),
+                    ),
                     child: Text(
                       _start > 0
                           ? l.resendCountdown(_start)
                           : l.resendCode,
                       style: const TextStyle(
                         fontSize: 15,
-                        color: Colors.black87,
+                        color: Color(0xFF007BFF),
                       ),
                     ),
                   ),
