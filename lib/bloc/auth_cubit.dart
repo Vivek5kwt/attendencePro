@@ -93,7 +93,6 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> register({
     required String name,
     required String email,
-    required String username,
     required String password,
     required String confirm,
     required String phone,
@@ -103,10 +102,6 @@ class AuthCubit extends Cubit<AuthState> {
   async {
     if (name.trim().isEmpty) {
       emit(AuthError('Name is required.'));
-      return;
-    }
-    if (username.trim().isEmpty) {
-      emit(AuthError('Username is required.'));
       return;
     }
     if (email.trim().isEmpty) {
@@ -143,7 +138,6 @@ class AuthCubit extends Cubit<AuthState> {
       final response = await _repository.register(
         name: name,
         email: email,
-        username: username,
         password: password,
         confirm: confirm,
         phone: phone,
