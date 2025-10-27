@@ -33,16 +33,8 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   void initState() {
     super.initState();
     _countryCodeOptions = CountryCodes.all;
-    final languageCode = context.read<LocaleCubit>().state.languageCode;
-    if (languageCode == 'hi' || languageCode == 'pa') {
-      _selectedCountryCode = '+91';
-    } else if (languageCode == 'en') {
-      _selectedCountryCode = '+1';
-    } else {
-      _selectedCountryCode = '+39';
-    }
     _selectedCountry = _countryCodeOptions.firstWhere(
-      (country) => country.dialCode == _selectedCountryCode,
+      (country) => country.isoCode == 'IT',
       orElse: () => _countryCodeOptions.first,
     );
     _selectedCountryCode = _selectedCountry.dialCode;
@@ -362,7 +354,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                                 itemBuilder: (context, index) {
                                   final country = filtered[index];
                                   final isActive =
-                                      country.dialCode == _selectedCountryCode;
+                                      country.isoCode == _selectedCountry.isoCode;
                                   return ListTile(
                                     onTap: () =>
                                         Navigator.of(sheetContext).pop(country),
