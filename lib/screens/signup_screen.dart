@@ -20,14 +20,13 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
 
   late final List<CountryCodeOption> _countryCodeOptions;
   late CountryCodeOption _selectedCountry;
-  String _selectedCountryCode = '+91';
+  String _selectedCountryCode = '+39';
   late String _selectedLanguage;
 
   bool _passwordVisible = false;
@@ -53,17 +52,6 @@ class _SignupScreenState extends State<SignupScreen> {
     if (widget.initialName != null) {
       _nameController.text = widget.initialName!;
     }
-    if (_usernameController.text.isEmpty && widget.initialName != null) {
-      final generated = widget.initialName!
-          .trim()
-          .toLowerCase()
-          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
-          .replaceAll(RegExp(r'_+'), '_')
-          .replaceAll(RegExp(r'^_|_$'), '');
-      if (generated.isNotEmpty) {
-        _usernameController.text = generated;
-      }
-    }
     _termsRecognizer = TapGestureRecognizer()..onTap = _openTerms;
     _privacyRecognizer = TapGestureRecognizer()..onTap = _openPrivacy;
   }
@@ -72,7 +60,6 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _emailController.dispose();
     _nameController.dispose();
-    _usernameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
@@ -96,7 +83,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
-    final username = _usernameController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmController.text;
@@ -106,7 +92,6 @@ class _SignupScreenState extends State<SignupScreen> {
     context.read<AuthCubit>().register(
       name: name,
       email: email,
-      username: username,
       password: password,
       confirm: confirm,
       phone: phone,
@@ -174,6 +159,15 @@ class _SignupScreenState extends State<SignupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      color: Colors.black87,
+                      onPressed: () =>
+                          context.read<AuthCubit>().showPhone(isSignup: false),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     l.signupTitle,
@@ -198,24 +192,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? l.nameRequired
                         : null,
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _usernameController,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.username],
-                    decoration: _inputDecoration(l.usernameHint),
-                    validator: (value) {
-                      final trimmed = value?.trim() ?? '';
-                      if (trimmed.isEmpty) return l.usernameRequired;
-                      if (trimmed.length < 3 || trimmed.length > 20) {
-                        return l.usernameInvalid;
-                      }
-                      if (RegExp(r'[^a-zA-Z0-9._-]').hasMatch(trimmed)) {
-                        return l.usernameInvalid;
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: 20),
                   Align(

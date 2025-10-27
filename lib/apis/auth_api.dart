@@ -45,7 +45,6 @@ class AuthApi {
   /// Body: {
   ///   "name": "string",
   ///   "email": "string",
-  ///   "username": "string",
   ///   "password": "string",
   ///   "password_confirmation": "string",
   ///   "phone": "string",
@@ -55,7 +54,6 @@ class AuthApi {
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
-    required String username,
     required String password,
     required String confirm,
     required String phone,
@@ -67,7 +65,6 @@ class AuthApi {
     final body = jsonEncode({
       'name': name,
       'email': email,
-      'username': username,
       'password': password,
       'password_confirmation': confirm,
       'phone': phone,

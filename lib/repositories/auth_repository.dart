@@ -12,7 +12,6 @@ class AuthRepository {
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
-    required String username,
     required String password,
     required String confirm,
     required String phone,
@@ -22,7 +21,6 @@ class AuthRepository {
     return _api.register(
       name: name,
       email: email,
-      username: username,
       password: password,
       confirm: confirm,
       phone: phone,
