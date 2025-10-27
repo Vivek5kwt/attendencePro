@@ -13,6 +13,7 @@ import '../repositories/reports_repository.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
+import '../utils/responsive.dart';
 
 class AttendanceProApp extends StatelessWidget {
   final AttendanceRepository repository;
@@ -70,6 +71,16 @@ class AttendanceProApp extends StatelessWidget {
                   localizationsDelegates:
                       AppLocalizations.localizationsDelegates,
                   routerConfig: appRouter.router,
+                  builder: (context, child) {
+                    final responsive = context.responsive;
+                    final media = MediaQuery.of(context);
+                    return MediaQuery(
+                      data: media.copyWith(
+                        textScaleFactor: responsive.textScaleFactor,
+                      ),
+                      child: child ?? const SizedBox.shrink(),
+                    );
+                  },
                 );
               },
             );
