@@ -47,7 +47,9 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
       return;
     }
 
-    final appCubit = BlocProvider.maybeOf<AppCubit>(context);
+    final appCubitProvider =
+        context.findAncestorWidgetOfExactType<BlocProvider<AppCubit>>();
+    final appCubit = appCubitProvider?.bloc;
     appCubit?.showAuth();
   }
 
