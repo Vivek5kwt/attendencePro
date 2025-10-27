@@ -8,6 +8,7 @@ import '../bloc/work_event.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 import '../widgets/app_dialogs.dart';
+import 'forgot_password_screen.dart';
 
 class LoginPhoneScreen extends StatefulWidget {
   const LoginPhoneScreen({Key? key}) : super(key: key);
@@ -303,17 +304,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          final contactValue = _loginController.text.trim();
-                          final authCubit = context.read<AuthCubit>();
-                          if (contactValue.isEmpty) {
-                            _showSnack(l.snackResetEmail);
-                            return;
-                          }
-                          if (!_isValidEmail(contactValue)) {
-                            _showSnack(l.snackForgotInvalidEmail);
-                            return;
-                          }
-                          authCubit.forgotPassword(contactValue);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ForgotPasswordScreen(),
+                            ),
+                          );
                         },
                         child: Text(
                           l.forgotPassword,
