@@ -22,10 +22,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   static const String _customSubtypeOptionValue = '__custom_subtype__';
   final List<String> _availableSubtypes = <String>[];
   static const List<String> _defaultSubtypeOptions = <String>[
-    '10 unit',
-    '15 unit',
-    '18 unit',
-    '18 unit',
+    'Fixed',
+    'Bundle',
   ];
 
   final List<_ContractEntry> _recentEntries = <_ContractEntry>[
@@ -201,6 +199,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   double get _totalContractSalary =>
       _recentEntries.fold<double>(0, (sum, entry) => sum + entry.totalAmount);
 
+
   Future<void> _showContractTypeDialog({
     _ContractType? type,
   }) async {
@@ -209,324 +208,619 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     final nameController = TextEditingController(text: type?.name ?? '');
     final rateController =
         TextEditingController(text: type != null ? type.rate.toStringAsFixed(2) : '');
-    final unitController = TextEditingController(text: type?.unitLabel ?? '');
+    final unitController =
+        TextEditingController(text: type?.unitLabel ?? l.contractWorkUnitFallback);
     final customSubtypeController = TextEditingController();
+    final isEditing = type != null;
+    final isNameEditable = !(type?.isDefault ?? false);
+
     final subtypeOptions = <String>[
       ..._defaultSubtypeOptions,
       ..._availableSubtypes.where(
         (value) => !_defaultSubtypeOptions.contains(value),
       ),
     ];
-    final isEditing = type != null;
-    final isNameEditable = !(type?.isDefault ?? false);
-    final shouldForceCustomSubtype = type?.isUserDefined ?? true;
 
-    String? selectedSubtypeValue;
-    if (shouldForceCustomSubtype) {
-      selectedSubtypeValue = _customSubtypeOptionValue;
-      final existingSubtype = type?.subtype?.trim();
-      if (existingSubtype != null && existingSubtype.isNotEmpty) {
-        customSubtypeController.text = existingSubtype;
-      }
-    } else if (type?.subtype != null && type!.subtype!.trim().isNotEmpty) {
-      final trimmed = type.subtype!.trim();
-      if (subtypeOptions.contains(trimmed)) {
-        selectedSubtypeValue = trimmed;
+    String selectedSubtypeValue = subtypeOptions.isNotEmpty
+        ? subtypeOptions.first
+        : _customSubtypeOptionValue;
+    final existingSubtype = type?.subtype?.trim();
+    if (existingSubtype != null && existingSubtype.isNotEmpty) {
+      if (subtypeOptions.contains(existingSubtype)) {
+        selectedSubtypeValue = existingSubtype;
       } else {
         selectedSubtypeValue = _customSubtypeOptionValue;
-        customSubtypeController.text = trimmed;
+        customSubtypeController.text = existingSubtype;
       }
-    } else if (subtypeOptions.isNotEmpty) {
-      selectedSubtypeValue = subtypeOptions.first;
-    } else {
-      selectedSubtypeValue = _customSubtypeOptionValue;
     }
 
     bool isSaving = false;
+    bool isSelected = true;
 
-    final result = await showDialog<_ContractType>(
+    final result = await showModalBottomSheet<_ContractType>(
       context: rootContext,
-      barrierDismissible: false,
-      builder: (dialogContext) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final isUsingCustomSubtype = shouldForceCustomSubtype ||
+          builder: (context, setSheetState) {
+            final isUsingCustomSubtype =
                 selectedSubtypeValue == _customSubtypeOptionValue;
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEDEBFF),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Image.asset(
-                      AppAssets.contractWork,
-                      width: 24,
-                      height: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      isEditing
-                          ? l.contractWorkEditTypeTitle
-                          : l.contractWorkAddTypeTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF111827),
-                          ) ??
-                          const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF111827),
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      readOnly: type?.isDefault ?? false,
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkNameLabel,
-                        hintText: AppString.contractNameHint,
+            final mediaQuery = MediaQuery.of(context);
+            final textTheme = Theme.of(context).textTheme;
+            final headerTitle =
+                isEditing ? l.contractWorkEditTypeTitle : l.contractWorkAddTypeTitle;
+
+            return AnimatedPadding(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+              child: SafeArea(
+                top: false,
+                child: Container(
+                  color: Colors.transparent,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxHeight: mediaQuery.size.height * 0.95,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (!shouldForceCustomSubtype)
-                      DropdownButtonFormField<String>(
-                        value: selectedSubtypeValue,
-                        decoration: InputDecoration(
-                          labelText: l.contractWorkSubtypeLabel,
-                          hintText: l.contractWorkSubtypeHint,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(32),
                         ),
-                        items: [
-                          ...subtypeOptions.map(
-                            (option) => DropdownMenuItem<String>(
-                              value: option,
-                              child: Text(option),
+                      ),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Container(
+                                width: 44,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD1D5DB),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
-                          ),
-                          DropdownMenuItem<String>(
-                            value: _customSubtypeOptionValue,
-                            child: Text(l.contractWorkSubtypeCustomOption),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedSubtypeValue =
-                                value ?? _customSubtypeOptionValue;
-                            if (selectedSubtypeValue !=
-                                _customSubtypeOptionValue) {
-                              customSubtypeController.clear();
-                            }
-                          });
-                        },
-                      ),
-                    if (isUsingCustomSubtype) ...[
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: customSubtypeController,
-                        decoration: InputDecoration(
-                          labelText: l.contractWorkSubtypeCustomLabel,
-                          hintText: l.contractWorkSubtypeHint,
+                            const SizedBox(height: 16),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF7E6),
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: const Text(
+                                    '🤝',
+                                    style: TextStyle(fontSize: 22),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        headerTitle,
+                                        style: textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF111827),
+                                            ) ??
+                                            const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF111827),
+                                              fontSize: 18,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        l.contractWorkSetupSubtitle,
+                                        style: textTheme.bodyMedium?.copyWith(
+                                              color: const Color(0xFF6B7280),
+                                            ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x10000000),
+                                    blurRadius: 16,
+                                    offset: Offset(0, 12),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.fromLTRB(18, 20, 18, 22),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Transform.translate(
+                                        offset: const Offset(-4, 0),
+                                        child: Checkbox(
+                                          value: isSelected,
+                                          activeColor: const Color(0xFF2563EB),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          onChanged: (value) {
+                                            setSheetState(() {
+                                              isSelected = value ?? true;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF9FAFB),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: const Color(0xFFE5E7EB),
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 12,
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    width: 36,
+                                                    height: 36,
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFFFF1F2),
+                                                      borderRadius: BorderRadius.circular(14),
+                                                    ),
+                                                    alignment: Alignment.center,
+                                                    child: const Text(
+                                                      '📦',
+                                                      style: TextStyle(fontSize: 20),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: TextField(
+                                                      controller: nameController,
+                                                      enabled: isNameEditable,
+                                                      decoration: InputDecoration(
+                                                        border: InputBorder.none,
+                                                        hintText: AppString.contractNameHint,
+                                                        hintStyle: textTheme.bodyMedium?.copyWith(
+                                                              color: const Color(0xFF9CA3AF),
+                                                            ) ??
+                                                            const TextStyle(
+                                                              color: Color(0xFF9CA3AF),
+                                                            ),
+                                                      ),
+                                                      style: textTheme.bodyLarge?.copyWith(
+                                                            fontWeight: FontWeight.w600,
+                                                            color: const Color(0xFF111827),
+                                                          ) ??
+                                                          const TextStyle(
+                                                            fontWeight: FontWeight.w600,
+                                                            color: Color(0xFF111827),
+                                                            fontSize: 16,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 18),
+                                            Text(
+                                              l.contractWorkContractTypeLabel,
+                                              style: textTheme.bodyMedium?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(0xFF1F2937),
+                                                  ) ??
+                                                  const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF1F2937),
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Wrap(
+                                              spacing: 10,
+                                              runSpacing: 10,
+                                              children: [
+                                                for (final option in subtypeOptions)
+                                                  ChoiceChip(
+                                                    label: Text(option),
+                                                    selectedColor:
+                                                        const Color(0xFFE0ECFF),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(14),
+                                                    ),
+                                                    labelStyle:
+                                                        textTheme.bodyMedium?.copyWith(
+                                                              fontWeight: FontWeight.w600,
+                                                              color: selectedSubtypeValue == option
+                                                                  ? const Color(0xFF1D4ED8)
+                                                                  : const Color(0xFF4B5563),
+                                                            ) ??
+                                                            TextStyle(
+                                                              fontWeight: FontWeight.w600,
+                                                              color: selectedSubtypeValue == option
+                                                                  ? const Color(0xFF1D4ED8)
+                                                                  : const Color(0xFF4B5563),
+                                                            ),
+                                                    selected:
+                                                        selectedSubtypeValue == option,
+                                                    onSelected: (_) {
+                                                      setSheetState(() {
+                                                        selectedSubtypeValue = option;
+                                                        customSubtypeController.clear();
+                                                      });
+                                                    },
+                                                  ),
+                                                ChoiceChip(
+                                                  label: Text(l.contractWorkSubtypeCustomOption),
+                                                  selectedColor: const Color(0xFFE0ECFF),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(14),
+                                                  ),
+                                                  labelStyle: textTheme.bodyMedium?.copyWith(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: selectedSubtypeValue ==
+                                                                _customSubtypeOptionValue
+                                                            ? const Color(0xFF1D4ED8)
+                                                            : const Color(0xFF4B5563),
+                                                      ) ??
+                                                      TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: selectedSubtypeValue ==
+                                                                _customSubtypeOptionValue
+                                                            ? const Color(0xFF1D4ED8)
+                                                            : const Color(0xFF4B5563),
+                                                      ),
+                                                  selected: selectedSubtypeValue ==
+                                                      _customSubtypeOptionValue,
+                                                  onSelected: (_) {
+                                                    setSheetState(() {
+                                                      selectedSubtypeValue =
+                                                          _customSubtypeOptionValue;
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                            if (isUsingCustomSubtype) ...[
+                                              const SizedBox(height: 12),
+                                              TextField(
+                                                controller: customSubtypeController,
+                                                decoration: InputDecoration(
+                                                  labelText:
+                                                      l.contractWorkSubtypeCustomLabel,
+                                                  hintText: l.contractWorkSubtypeHint,
+                                                ),
+                                              ),
+                                            ],
+                                            const SizedBox(height: 20),
+                                            Text(
+                                              '${l.contractWorkPricePerCrateLabel} (${AppString.euroPrefix.trim()})',
+                                              style: textTheme.bodyMedium?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(0xFF1F2937),
+                                                  ) ??
+                                                  const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF1F2937),
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF9FAFB),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: const Color(0xFFE5E7EB),
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 10,
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Text(
+                                                    AppString.euroPrefix,
+                                                    style: textTheme.titleMedium?.copyWith(
+                                                          fontWeight: FontWeight.w700,
+                                                          color: const Color(0xFF1D4ED8),
+                                                        ) ??
+                                                        const TextStyle(
+                                                          fontWeight: FontWeight.w700,
+                                                          color: Color(0xFF1D4ED8),
+                                                        ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: TextField(
+                                                      controller: rateController,
+                                                      keyboardType:
+                                                          const TextInputType.numberWithOptions(
+                                                        decimal: true,
+                                                        signed: false,
+                                                      ),
+                                                      decoration: const InputDecoration(
+                                                        border: InputBorder.none,
+                                                        hintText:
+                                                            AppString.contractRateHint,
+                                                      ),
+                                                      style: textTheme.titleMedium?.copyWith(
+                                                            fontWeight: FontWeight.w700,
+                                                            color: const Color(0xFF111827),
+                                                          ) ??
+                                                          const TextStyle(
+                                                            fontWeight: FontWeight.w700,
+                                                            color: Color(0xFF111827),
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            Text(
+                                              l.contractWorkUnitLabel,
+                                              style: textTheme.bodyMedium?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(0xFF1F2937),
+                                                  ) ??
+                                                  const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF1F2937),
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            TextField(
+                                              controller: unitController,
+                                              decoration: InputDecoration(
+                                                hintText: AppString.contractUnitHint,
+                                                filled: true,
+                                                fillColor: const Color(0xFFF9FAFB),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(18),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    l.contractWorkRatesNote,
+                                    style: textTheme.bodySmall?.copyWith(
+                                          color: const Color(0xFF6B7280),
+                                        ) ??
+                                        const TextStyle(
+                                          color: Color(0xFF6B7280),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            OutlinedButton.icon(
+                              onPressed: () => _showComingSoonSnackBar(rootContext),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                                foregroundColor: const Color(0xFF1D4ED8),
+                                side: const BorderSide(color: Color(0xFFE0ECFF)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              icon: const Icon(Icons.add_circle_outline),
+                              label: Text(l.addContractWorkButton),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => Navigator.of(sheetContext).pop(),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(50),
+                                      foregroundColor: const Color(0xFF374151),
+                                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                    ),
+                                    child: Text(l.cancelButton),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: isSaving
+                                        ? null
+                                        : () async {
+                                            FocusScope.of(sheetContext).unfocus();
+                                            final name = nameController.text.trim();
+                                            final rate = double.tryParse(
+                                                rateController.text.trim());
+                                            final unit = unitController.text.trim();
+                                            final resolvedSubtype =
+                                                selectedSubtypeValue ==
+                                                        _customSubtypeOptionValue
+                                                    ? customSubtypeController.text.trim()
+                                                    : selectedSubtypeValue.trim();
+
+                                            if ((name.isEmpty && isNameEditable) ||
+                                                (!isNameEditable &&
+                                                    (type?.name.trim().isEmpty ?? true))) {
+                                              ScaffoldMessenger.of(rootContext)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    l.contractWorkNameRequiredMessage,
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            if (rate == null || rate <= 0) {
+                                              ScaffoldMessenger.of(rootContext)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    l.contractWorkRateRequiredMessage,
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            if (resolvedSubtype.isEmpty) {
+                                              ScaffoldMessenger.of(rootContext)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    l.contractWorkSubtypeRequiredMessage,
+                                                  ),
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            final fallbackUnit =
+                                                l.contractWorkUnitFallback;
+                                            final normalizedUnit = unit.isEmpty
+                                                ? fallbackUnit
+                                                : unit;
+                                            final resolvedName = type == null ||
+                                                    isNameEditable
+                                                ? name
+                                                : type!.name;
+
+                                            setSheetState(() {
+                                              isSaving = true;
+                                            });
+
+                                            Future<_ContractType?> future;
+                                            if (type == null ||
+                                                type.id.startsWith('local-')) {
+                                              future = _repository
+                                                  .createContractType(
+                                                name: resolvedName,
+                                                subtype: resolvedSubtype,
+                                                ratePerUnit: rate,
+                                                unitLabel: normalizedUnit,
+                                              )
+                                                  .then(
+                                                (created) => _ContractType.fromModel(
+                                                  type: created,
+                                                  isUserDefined: true,
+                                                ),
+                                              );
+                                            } else {
+                                              future = _repository
+                                                  .updateContractType(
+                                                id: type.id,
+                                                name: resolvedName,
+                                                subtype: resolvedSubtype,
+                                                ratePerUnit: rate,
+                                                unitLabel: normalizedUnit,
+                                              )
+                                                  .then(
+                                                (updated) => _ContractType.fromModel(
+                                                  type: updated,
+                                                  isUserDefined: type.isUserDefined,
+                                                ),
+                                              );
+                                            }
+
+                                            try {
+                                              final updatedType = await future;
+                                              if (!mounted) {
+                                                return;
+                                              }
+                                              Navigator.of(sheetContext).pop(
+                                                updatedType,
+                                              );
+                                            } on ContractTypeRepositoryException catch (error) {
+                                              setSheetState(() {
+                                                isSaving = false;
+                                              });
+                                              ScaffoldMessenger.of(rootContext)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(error.message),
+                                                ),
+                                              );
+                                            } catch (error) {
+                                              setSheetState(() {
+                                                isSaving = false;
+                                              });
+                                              ScaffoldMessenger.of(rootContext)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(error.toString()),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size.fromHeight(50),
+                                      backgroundColor: const Color(0xFF2563EB),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                    ),
+                                    child: isSaving
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        : Text(l.contractWorkSaveAllButton),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: rateController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                        signed: false,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkRateLabel,
-                        hintText: AppString.contractRateHint,
-                        prefixText: AppString.euroPrefix,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: unitController,
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkUnitLabel,
-                        hintText: AppString.contractUnitHint,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      l.contractWorkRatesNote,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF6B7280),
-                          ) ??
-                          const TextStyle(
-                            color: Color(0xFF6B7280),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(l.cancelButton),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5856D6),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: isSaving
-                      ? null
-                      : () async {
-                          final name = nameController.text.trim();
-                          final rate =
-                              double.tryParse(rateController.text.trim());
-                          final unit = unitController.text.trim();
-                          final selectedOption = selectedSubtypeValue;
-                          final resolvedSubtype = shouldForceCustomSubtype
-                              ? customSubtypeController.text.trim()
-                              : selectedOption == _customSubtypeOptionValue
-                                  ? customSubtypeController.text.trim()
-                                  : selectedOption?.trim() ?? '';
-
-                          if (name.isEmpty && isNameEditable) {
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text(l.contractWorkNameRequiredMessage),
-                              ),
-                            );
-                            return;
-                          }
-                          if (rate == null || rate <= 0) {
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text(l.contractWorkRateRequiredMessage),
-                              ),
-                            );
-                            return;
-                          }
-                          if (resolvedSubtype.isEmpty) {
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  l.contractWorkSubtypeRequiredMessage,
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          final fallbackUnit = l.contractWorkUnitFallback;
-                          final normalizedUnit =
-                              unit.isEmpty ? fallbackUnit : unit;
-                          final resolvedName =
-                              type == null || isNameEditable ? name : type!.name;
-
-                          if (type == null || type.id.startsWith('local-')) {
-                            setDialogState(() {
-                              isSaving = true;
-                            });
-                            try {
-                              final created = await _repository.createContractType(
-                                name: resolvedName,
-                                subtype: resolvedSubtype,
-                                ratePerUnit: rate,
-                                unitLabel: normalizedUnit,
-                              );
-                              if (!mounted) {
-                                return;
-                              }
-                              Navigator.of(dialogContext).pop(
-                                _ContractType.fromModel(
-                                  type: created,
-                                  isUserDefined: true,
-                                ),
-                              );
-                            } on ContractTypeRepositoryException catch (error) {
-                              setDialogState(() {
-                                isSaving = false;
-                              });
-                              ScaffoldMessenger.of(rootContext).showSnackBar(
-                                SnackBar(content: Text(error.message)),
-                              );
-                            } catch (error) {
-                              setDialogState(() {
-                                isSaving = false;
-                              });
-                              ScaffoldMessenger.of(rootContext).showSnackBar(
-                                SnackBar(content: Text(error.toString())),
-                              );
-                            }
-                            return;
-                          }
-
-                          setDialogState(() {
-                            isSaving = true;
-                          });
-                          try {
-                            final updated = await _repository.updateContractType(
-                              id: type.id,
-                              name: resolvedName,
-                              subtype: resolvedSubtype,
-                              ratePerUnit: rate,
-                              unitLabel: normalizedUnit,
-                            );
-                            if (!mounted) {
-                              return;
-                            }
-                            Navigator.of(dialogContext).pop(
-                              _ContractType.fromModel(
-                                type: updated,
-                                isUserDefined: type.isUserDefined,
-                              ),
-                            );
-                          } on ContractTypeRepositoryException catch (error) {
-                            setDialogState(() {
-                              isSaving = false;
-                            });
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              SnackBar(content: Text(error.message)),
-                            );
-                          } catch (error) {
-                            setDialogState(() {
-                              isSaving = false;
-                            });
-                            ScaffoldMessenger.of(rootContext).showSnackBar(
-                              SnackBar(content: Text(error.toString())),
-                            );
-                          }
-                        },
-                  child: isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(l.saveButtonLabel),
                 ),
-              ],
+              ),
             );
           },
         );
