@@ -37,7 +37,7 @@ class _AuthFlowState extends State<AuthFlow> {
             context.read<LocaleCubit>().setLocale(Locale(languageCode));
           }
           context.read<WorkBloc>().add(const WorkStarted());
-          context.read<AppCubit>().showHome();
+          context.read<AppCubit>().showHome(openDashboardOnLogin: true);
         } else if (state is AuthVerifyNumber) {
           final message = state.infoMessage;
           if (message != null && message.trim().isNotEmpty) {

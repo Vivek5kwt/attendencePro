@@ -26,7 +26,9 @@ import 'attendance_history_screen.dart';
 import 'contract_work_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key, this.openDashboardOnLogin = false}) : super(key: key);
+
+  final bool openDashboardOnLogin;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -43,6 +45,24 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Work> _works = const <Work>[];
   bool _isLoadingWorks = false;
   String? _worksError;
+  bool _shouldOpenDashboard = false;
+  bool _hasOpenedDashboard = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _shouldOpenDashboard = widget.openDashboardOnLogin;
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.openDashboardOnLogin && !oldWidget.openDashboardOnLogin) {
+      _shouldOpenDashboard = true;
+      _hasOpenedDashboard = false;
+    }
+  }
+
   Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -236,6 +256,36 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => WorkDetailScreen(work: work),
       ),
     );
+  }
+
+  void _maybeNavigateToDashboard(WorkState state) {
+    if (!_shouldOpenDashboard || _hasOpenedDashboard) {
+      return;
+    }
+
+    if (state.loadStatus != WorkLoadStatus.success) {
+      return;
+    }
+
+    final works = state.works;
+    if (works.isEmpty) {
+      _shouldOpenDashboard = false;
+      return;
+    }
+
+    final Work targetWork = works.firstWhere(
+      (work) => _isWorkActive(work),
+      orElse: () => works.first,
+    );
+
+    _shouldOpenDashboard = false;
+    _hasOpenedDashboard = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<AppCubit>().showHome();
+      _openWorkDetail(targetWork);
+    });
   }
 
   Future<void> _showEditWorkDialog(Work work) async {
@@ -1469,6 +1519,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Widget _buildHomeBody(AppLocalizations l, WorkState state) {
+    _maybeNavigateToDashboard(state);
     final works = state.works;
     final isActivationInProgress =
         state.activateStatus == WorkActionStatus.inProgress;
