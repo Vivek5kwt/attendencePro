@@ -221,7 +221,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           SizedBox(width: responsive.scale(12)),
           Container(
             width: responsive.scale(1),
-            height: responsive.scale(32),
+            height: responsive.scale(35),
             color: const Color(0xFFE5E7EB),
           ),
           SizedBox(width: responsive.scale(12)),

@@ -334,13 +334,13 @@ abstract final class AppString {
       'retryButtonLabel': 'Retry',
       'notAvailableLabel': 'Not available',
       'authenticationRequiredMessage': 'Your session has expired. Please log in again.',
-      'walkthroughTitleOne': 'Track Your Work Hours Easily',
+      'walkthroughTitleOne': 'Track Your Work\n Hours Easily',
       'walkthroughDescOne':
       'Start and end your day with just one tap. Keep your hours accurate and organized.',
-      'walkthroughTitleTwo': 'Add Multiple Jobs, One App',
+      'walkthroughTitleTwo': 'Add Multiple Jobs,\n One App',
       'walkthroughDescTwo':
       'Switch easily between multiple works and see your earnings instantly. One place for all your shifts.',
-      'walkthroughTitleThree': 'Your Language. Your Way.',
+      'walkthroughTitleThree': 'Your Language.\n Your Way.',
       'walkthroughDescThree':
       'Available in English, Hindi, Punjabi, and Italian so you can manage attendance in your own comfort.',
       'skip': 'Skip',

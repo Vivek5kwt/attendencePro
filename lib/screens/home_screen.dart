@@ -1381,7 +1381,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               title: Text(
                 l.appTitle,
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.w500),
               ),
               actions: [
                 IconButton(
