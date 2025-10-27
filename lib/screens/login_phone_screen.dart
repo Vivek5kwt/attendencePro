@@ -8,6 +8,7 @@ import '../bloc/work_event.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
+import '../utils/responsive.dart';
 import '../widgets/app_dialogs.dart';
 import 'forgot_password_screen.dart';
 import '../data/country_codes.dart';
@@ -108,13 +109,14 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   }
 
   Widget _buildLoginModeSelector(AppLocalizations l) {
+    final responsive = context.responsive;
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFE8ECF5),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(responsive.scale(32)),
         border: Border.all(color: Colors.transparent),
       ),
-      padding: const EdgeInsets.all(6),
+      padding: EdgeInsets.all(responsive.scale(6)),
       child: Row(
         children: [
           Expanded(
@@ -130,22 +132,23 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
   Widget _buildLoginModeButton(String label, _LoginMode mode) {
     final isSelected = _loginMode == mode;
+    final responsive = context.responsive;
     return GestureDetector(
       onTap: () => _updateLoginMode(mode),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeInOut,
-        height: 44,
+        height: responsive.scale(44),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(responsive.scale(26)),
           boxShadow: isSelected
-              ? const [
+              ? [
                   BoxShadow(
-                    color: Color(0x33007BFF),
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
+                    color: const Color(0x33007BFF),
+                    blurRadius: responsive.scale(12),
+                    offset: Offset(0, responsive.scale(6)),
                   ),
                 ]
               : null,
@@ -156,7 +159,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
             color:
                 isSelected ? const Color(0xFF007BFF) : const Color(0xFF6B7280),
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: responsive.scaleText(16),
           ),
         ),
       ),
@@ -164,39 +167,47 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   }
 
   Widget _buildPhoneLoginField(String hint) {
+    final responsive = context.responsive;
     final dialCodeStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w400,
           color: Colors.black87,
+          fontSize: responsive.scaleText(
+            Theme.of(context).textTheme.titleMedium?.fontSize ?? 16,
+          ),
         ) ??
-        const TextStyle(
+        TextStyle(
           fontWeight: FontWeight.w400,
           color: Colors.black87,
+          fontSize: responsive.scaleText(16),
         );
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36),
+        borderRadius: BorderRadius.circular(responsive.scale(36)),
         border: Border.all(color: const Color(0xFFD9E2EF)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: const Color(0x14000000),
+            blurRadius: responsive.scale(12),
+            offset: Offset(0, responsive.scale(4)),
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(12),
+        vertical: responsive.scale(6),
+      ),
       child: Row(
         children: [
           _buildCountrySelector(dialCodeStyle),
-          const SizedBox(width: 12),
+          SizedBox(width: responsive.scale(12)),
           Container(
-            width: 1,
-            height: 32,
+            width: responsive.scale(1),
+            height: responsive.scale(32),
             color: const Color(0xFFE5E7EB),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: responsive.scale(12)),
           Expanded(
             child: TextField(
               controller: _loginController,
@@ -204,13 +215,15 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(
+                hintStyle: TextStyle(
                   color: Color(0xFF9CA3AF),
-                  fontSize: 16,
+                  fontSize: responsive.scaleText(16),
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: responsive.scale(12),
+                ),
               ),
             ),
           ),
@@ -220,50 +233,65 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   }
 
   Widget _buildEmailLoginField(String hint) {
+    final responsive = context.responsive;
     return TextField(
       controller: _loginController,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.black38),
+        hintStyle: TextStyle(
+          color: Colors.black38,
+          fontSize: responsive.scaleText(16),
+        ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: responsive.scale(16),
+          vertical: responsive.scale(14),
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(responsive.scale(32)),
           borderSide: BorderSide.none,
         ),
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           Icons.email_outlined,
           color: Colors.black38,
+          size: responsive.scale(20),
         ),
       ),
     );
   }
 
   Widget _buildCountrySelector(TextStyle dialCodeStyle) {
+    final responsive = context.responsive;
     return InkWell(
       onTap: _showCountryPicker,
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(responsive.scale(32)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.scale(4),
+          vertical: responsive.scale(6),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: responsive.scale(12),
+              height: responsive.scale(12),
               alignment: Alignment.center,
-              child: Image.asset(AppAssets.dropDownIcon)
+              child: Image.asset(
+                AppAssets.dropDownIcon,
+                width: responsive.scale(12),
+                height: responsive.scale(12),
+              ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: responsive.scale(8)),
             Text(
               countryFlag(_selectedCountry.isoCode),
-              style: const TextStyle(fontSize: 20),
+              style: TextStyle(fontSize: responsive.scaleText(20)),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: responsive.scale(6)),
             Text(
               _selectedCountryCode,
               style: dialCodeStyle,
@@ -276,12 +304,14 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
   Future<void> _showCountryPicker() async {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     FocusScope.of(context).unfocus();
     final selected = await showModalBottomSheet<CountryCodeOption>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(responsive.scale(16))),
       ),
       builder: (sheetContext) {
         String query = '';
@@ -301,29 +331,40 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
                 child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.75,
+                  height:
+                      MediaQuery.of(context).size.height * (responsive.scale(0.75)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Container(
-                        width: 36,
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: responsive.scale(36),
+                        height: responsive.scale(4),
+                        margin: EdgeInsets.symmetric(
+                          vertical: responsive.scale(12),
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade400,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius:
+                              BorderRadius.circular(responsive.scale(2)),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.scale(20),
+                          vertical: responsive.scale(8),
+                        ),
                         child: TextField(
                           autofocus: true,
                           decoration: InputDecoration(
                             hintText: l.searchCountryCodes,
-                            prefixIcon: const Icon(Icons.search),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              size: responsive.scale(20),
+                            ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(
+                                responsive.scale(28),
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
@@ -334,13 +375,13 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                           }),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: responsive.scale(4)),
                       Expanded(
                         child: filtered.isEmpty
                             ? Center(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 24),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: responsive.scale(24)),
                                   child: Text(
                                     l.noCountryCodeResults,
                                     textAlign: TextAlign.center,
@@ -350,8 +391,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                                 ),
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: responsive.scale(12),
+                                    vertical: responsive.scale(8)),
                                 itemBuilder: (context, index) {
                                   final country = filtered[index];
                                   final isActive =
@@ -361,19 +403,35 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                                         Navigator.of(sheetContext).pop(country),
                                     leading: Text(
                                       countryFlag(country.isoCode),
-                                      style: const TextStyle(fontSize: 20),
+                                      style: TextStyle(
+                                        fontSize: responsive.scaleText(20),
+                                      ),
                                     ),
-                                    title: Text(country.name),
-                                    subtitle: Text(country.dialCode),
+                                    title: Text(
+                                      country.name,
+                                      style: TextStyle(
+                                        fontSize: responsive.scaleText(16),
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      country.dialCode,
+                                      style: TextStyle(
+                                        fontSize: responsive.scaleText(14),
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
                                     trailing: isActive
-                                        ? const Icon(Icons.check,
-                                            color: Color(0xFF007BFF))
+                                        ? Icon(
+                                            Icons.check,
+                                            color: const Color(0xFF007BFF),
+                                            size: responsive.scale(20),
+                                          )
                                         : null,
                                   );
                                 },
-                                separatorBuilder: (_, __) => const Divider(
-                                  height: 1,
-                                  indent: 72,
+                                separatorBuilder: (_, __) => Divider(
+                                  height: responsive.scale(1),
+                                  indent: responsive.scale(72),
                                 ),
                                 itemCount: filtered.length,
                               ),
@@ -456,6 +514,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     final isPhoneMode = _loginMode == _LoginMode.phone;
     final loginLabel =
         isPhoneMode ? l.loginPhoneLabel : l.loginEmailLabel;
@@ -525,46 +584,49 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.scale(24),
+                  vertical: responsive.scale(16),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 10),
+                    SizedBox(height: responsive.scale(10)),
                     Center(
                       child: Text(
                         l.loginTitle,
-                        style: const TextStyle(
-                          fontSize: 28,
+                        style: TextStyle(
+                          fontSize: responsive.scaleText(28),
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: responsive.scale(24)),
                     _buildLoginModeSelector(l),
-                    const SizedBox(height: 32),
+                    SizedBox(height: responsive.scale(32)),
                     Text(
                       loginLabel,
-                      style: const TextStyle(
-                        fontSize: 15,
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(15),
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: responsive.scale(8)),
                     isPhoneMode
                         ? _buildPhoneLoginField(loginHint)
                         : _buildEmailLoginField(loginHint),
-                    const SizedBox(height: 20),
+                    SizedBox(height: responsive.scale(20)),
                     Text(
                       l.passwordLabel,
-                      style: const TextStyle(
-                        fontSize: 15,
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(15),
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: responsive.scale(8)),
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -572,11 +634,17 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         hintText: l.passwordHint,
-                        hintStyle: const TextStyle(color: Colors.black26),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
+                        hintStyle: TextStyle(
+                          color: Colors.black26,
+                          fontSize: responsive.scaleText(14),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: responsive.scale(16),
+                          vertical: responsive.scale(14),
+                        ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
+                          borderRadius:
+                              BorderRadius.circular(responsive.scale(32)),
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
@@ -591,7 +659,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: responsive.scale(20)),
                     BlocBuilder<AuthCubit, AuthState>(
                       buildWhen: (previous, current) =>
                           previous is AuthLoading || current is AuthLoading,
@@ -599,12 +667,13 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         final isProcessing = state is AuthLoading;
                         return SizedBox(
                           width: double.infinity,
-                          height: 55,
+                          height: responsive.scale(55),
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF007BFF),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32),
+                                borderRadius:
+                                    BorderRadius.circular(responsive.scale(32)),
                               ),
                             ),
                             onPressed: isProcessing
@@ -612,8 +681,8 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                                 : () => _submitLogin(context),
                             child: Text(
                               l.loginButton,
-                              style: const TextStyle(
-                                fontSize: 18,
+                              style: TextStyle(
+                                fontSize: responsive.scaleText(18),
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
@@ -622,7 +691,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: responsive.scale(20)),
                     Center(
                       child: TextButton(
                         onPressed: () {
@@ -634,15 +703,15 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         },
                         child: Text(
                           l.forgotPassword,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.black87,
-                            fontSize: 14,
+                            fontSize: responsive.scaleText(14),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: responsive.scale(8)),
                     Center(
                       child: InkWell(
                         onTap: () {
@@ -653,16 +722,16 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         child: RichText(
                           text: TextSpan(
                             text: l.signupPromptPrefix,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.black87,
-                              fontSize: 14,
+                              fontSize: responsive.scaleText(14),
                               height: 1.5,
                             ),
                             children: [
                               TextSpan(
                                 text: l.signupPromptAction,
-                                style: const TextStyle(
-                                  fontSize: 14,
+                                style: TextStyle(
+                                  fontSize: responsive.scaleText(14),
                                   color: Color(0xFF007BFF),
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -672,10 +741,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    SizedBox(height: responsive.scale(40)),
                     Center(
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius:
+                            BorderRadius.circular(responsive.scale(24)),
                         onTap: () async {
                           final currentCode =
                               context.read<LocaleCubit>().state.languageCode;
@@ -708,12 +778,16 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset(AppAssets.language,height: 28,width: 28,),
-                            const SizedBox(width: 8),
+                            Image.asset(
+                              AppAssets.language,
+                              height: responsive.scale(28),
+                              width: responsive.scale(28),
+                            ),
+                            SizedBox(width: responsive.scale(8)),
                             Text(
                               l.changeLanguage,
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: TextStyle(
+                                fontSize: responsive.scaleText(14),
                                 color: Colors.black87,
                                 fontWeight: FontWeight.w400,
                               ),

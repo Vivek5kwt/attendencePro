@@ -10,6 +10,7 @@ import '../bloc/locale_cubit.dart';
 import '../bloc/work_event.dart';
 import 'create_password_screen.dart';
 import 'login_phone_screen.dart';
+import '../utils/responsive.dart';
 
 class AuthFlow extends StatefulWidget {
   const AuthFlow({Key? key}) : super(key: key);
@@ -82,6 +83,7 @@ class _AuthFlowState extends State<AuthFlow> {
         }
       },
       builder: (context, state) {
+        final responsive = context.responsive;
         final bool isLoading = state is AuthLoading;
         if (!isLoading && state is! AuthError) {
           _lastNonLoadingState = state;
@@ -121,7 +123,11 @@ class _AuthFlowState extends State<AuthFlow> {
                 child: Container(
                   color: Colors.black45,
                   alignment: Alignment.center,
-                  child: const CircularProgressIndicator(),
+                  child: SizedBox(
+                    width: responsive.scale(48),
+                    height: responsive.scale(48),
+                    child: const CircularProgressIndicator(),
+                  ),
                 ),
               ),
             ),

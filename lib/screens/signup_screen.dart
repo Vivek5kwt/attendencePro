@@ -8,6 +8,7 @@ import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../data/country_codes.dart';
 import 'policy_screen.dart';
+import '../utils/responsive.dart';
 
 class SignupScreen extends StatefulWidget {
   final String? initialName;
@@ -124,6 +125,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     final languageOptions = <String, String>{
       'en': l.languageEnglish,
       'hi': l.languageHindi,
@@ -153,7 +155,10 @@ class _SignupScreenState extends State<SignupScreen> {
         backgroundColor: const Color(0xFFF8F9FB),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.scale(24),
+              vertical: responsive.scale(10),
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -162,50 +167,60 @@ class _SignupScreenState extends State<SignupScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        size: responsive.scale(24),
+                      ),
                       color: Colors.black87,
                       onPressed: () =>
                           context.read<AuthCubit>().showPhone(isSignup: false),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: responsive.scale(10)),
                   Text(
                     l.signupTitle,
-                    style: const TextStyle(
-                      fontSize: 28,
+                    style: TextStyle(
+                      fontSize: responsive.scaleText(28),
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: responsive.scale(40)),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l.fullNameLabel,
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(16),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.scale(8)),
                   TextFormField(
                     controller: _nameController,
-                    decoration: _inputDecoration(l.fullNameLabel),
+                    decoration: _inputDecoration(l.fullNameLabel, responsive),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? l.nameRequired
                         : null,
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(20)),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l.emailAddressLabel,
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(16),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.scale(8)),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: _inputDecoration(l.emailAddressLabel),
+                    decoration:
+                        _inputDecoration(l.emailAddressLabel, responsive),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return l.emailRequired;
                       final email = v.trim();
@@ -214,33 +229,43 @@ class _SignupScreenState extends State<SignupScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(20)),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l.phoneNumberLabel,
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(16),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  _buildPhoneNumberField(l),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(8)),
+                  _buildPhoneNumberField(l, responsive),
+                  SizedBox(height: responsive.scale(20)),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l.languageLabel,
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(16),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.scale(8)),
                   DropdownButtonFormField<String>(
                     value: selectedLanguage,
-                    decoration: _inputDecoration(l.languageLabel),
+                    decoration: _inputDecoration(l.languageLabel, responsive),
                     items: languageOptions.entries
                         .map(
                           (entry) => DropdownMenuItem<String>(
                             value: entry.key,
-                            child: Text(entry.value),
+                            child: Text(
+                              entry.value,
+                              style:
+                                  TextStyle(fontSize: responsive.scaleText(16)),
+                            ),
                           ),
                         )
                         .toList(),
@@ -250,25 +275,30 @@ class _SignupScreenState extends State<SignupScreen> {
                       }
                     },
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(20)),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l.passwordLabel,
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(16),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.scale(8)),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_passwordVisible,
-                    decoration: _inputDecoration(l.passwordLabel).copyWith(
+                    decoration:
+                        _inputDecoration(l.passwordLabel, responsive).copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
                           _passwordVisible
                               ? Icons.visibility
                               : Icons.visibility_off,
                           color: Colors.grey,
+                          size: responsive.scale(22),
                         ),
                         onPressed: () =>
                             setState(() => _passwordVisible = !_passwordVisible),
@@ -280,25 +310,31 @@ class _SignupScreenState extends State<SignupScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(20)),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l.confirmPasswordLabel,
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: responsive.scaleText(16),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: responsive.scale(8)),
                   TextFormField(
                     controller: _confirmController,
                     obscureText: !_confirmVisible,
-                    decoration: _inputDecoration(l.confirmPasswordLabel).copyWith(
+                    decoration:
+                        _inputDecoration(l.confirmPasswordLabel, responsive)
+                            .copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
                           _confirmVisible
                               ? Icons.visibility
                               : Icons.visibility_off,
                           color: Colors.grey,
+                          size: responsive.scale(22),
                         ),
                         onPressed: () =>
                             setState(() => _confirmVisible = !_confirmVisible),
@@ -312,12 +348,13 @@ class _SignupScreenState extends State<SignupScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(20)),
                   Row(
                     children: [
                       Checkbox(
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4)),
+                            borderRadius:
+                                BorderRadius.circular(responsive.scale(4))),
                         activeColor: const Color(0xFF007BFF),
                         value: _agreed,
                         onChanged: (v) =>
@@ -327,17 +364,30 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: Text.rich(
                           TextSpan(
                             text: l.agreeTextPrefix,
-                            style: const TextStyle(color: Colors.black87),
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: responsive.scaleText(14),
+                            ),
                             children: [
                               TextSpan(
                                 text: l.userAgreement,
-                                style: const TextStyle(color: Color(0xFF007BFF)),
+                                style: TextStyle(
+                                  color: const Color(0xFF007BFF),
+                                  fontSize: responsive.scaleText(14),
+                                ),
                                 recognizer: _termsRecognizer,
                               ),
-                              TextSpan(text: l.and),
+                              TextSpan(
+                                text: l.and,
+                                style:
+                                    TextStyle(fontSize: responsive.scaleText(14)),
+                              ),
                               TextSpan(
                                 text: l.privacyPolicy,
-                                style: const TextStyle(color: Color(0xFF007BFF)),
+                                style: TextStyle(
+                                  color: const Color(0xFF007BFF),
+                                  fontSize: responsive.scaleText(14),
+                                ),
                                 recognizer: _privacyRecognizer,
                               ),
                             ],
@@ -346,7 +396,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 25),
+                  SizedBox(height: responsive.scale(25)),
                   BlocBuilder<AuthCubit, AuthState>(
                     buildWhen: (previous, current) =>
                         previous is AuthLoading || current is AuthLoading,
@@ -354,44 +404,51 @@ class _SignupScreenState extends State<SignupScreen> {
                       final isProcessing = state is AuthLoading;
                       return SizedBox(
                         width: double.infinity,
-                        height: 52,
+                        height: responsive.scale(52),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF007BFF),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius:
+                                  BorderRadius.circular(responsive.scale(30)),
                             ),
                             elevation: 0,
                           ),
                           onPressed: isProcessing ? null : _submitSignup,
                           child: Text(
                             l.signupButton,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: responsive.scaleText(18),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       );
                     },
                   ),
-                  const SizedBox(height: 25),
+                  SizedBox(height: responsive.scale(25)),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(l.alreadyAccountPrompt),
+                      Text(
+                        l.alreadyAccountPrompt,
+                        style: TextStyle(fontSize: responsive.scaleText(14)),
+                      ),
                       GestureDetector(
                         onTap: () =>
                             context.read<AuthCubit>().showPhone(isSignup: false),
                         child: Text(
                           l.loginAction,
-                          style: const TextStyle(
-                            color: Color(0xFF007BFF),
+                          style: TextStyle(
+                            color: const Color(0xFF007BFF),
                             fontWeight: FontWeight.w500,
+                            fontSize: responsive.scaleText(14),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: responsive.scale(20)),
                 ],
               ),
             ),
@@ -401,40 +458,47 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildPhoneNumberField(AppLocalizations l) {
+  Widget _buildPhoneNumberField(
+      AppLocalizations l, Responsive responsive) {
     final dialCodeStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w400,
           color: Colors.black87,
+          fontSize: responsive.scaleText(
+              Theme.of(context).textTheme.titleMedium?.fontSize ?? 16),
         ) ??
-        const TextStyle(
+        TextStyle(
           fontWeight: FontWeight.w400,
           color: Colors.black87,
+          fontSize: responsive.scaleText(16),
         );
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36),
+        borderRadius: BorderRadius.circular(responsive.scale(36)),
         border: Border.all(color: const Color(0xFFD9E2EF)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: const Color(0x14000000),
+            blurRadius: responsive.scale(12),
+            offset: Offset(0, responsive.scale(4)),
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(12),
+        vertical: responsive.scale(6),
+      ),
       child: Row(
         children: [
-          _buildCountrySelector(dialCodeStyle),
-          const SizedBox(width: 12),
+          _buildCountrySelector(dialCodeStyle, responsive),
+          SizedBox(width: responsive.scale(12)),
           Container(
-            width: 1,
-            height: 32,
+            width: responsive.scale(1),
+            height: responsive.scale(32),
             color: const Color(0xFFE5E7EB),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: responsive.scale(12)),
           Expanded(
             child: TextFormField(
               controller: _phoneController,
@@ -443,11 +507,13 @@ class _SignupScreenState extends State<SignupScreen> {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: responsive.scale(12),
+                ),
                 hintText: l.phoneNumberHint,
-                hintStyle: const TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontSize: 16,
+                hintStyle: TextStyle(
+                  color: const Color(0xFF9CA3AF),
+                  fontSize: responsive.scaleText(16),
                 ),
               ),
               validator: (value) {
@@ -468,27 +534,34 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildCountrySelector(TextStyle dialCodeStyle) {
+  Widget _buildCountrySelector(TextStyle dialCodeStyle, Responsive responsive) {
     return InkWell(
       onTap: _showCountryPicker,
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(responsive.scale(32)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.scale(4),
+          vertical: responsive.scale(6),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: responsive.scale(12),
+              height: responsive.scale(12),
               alignment: Alignment.center,
-              child: Image.asset(AppAssets.dropDownIcon),
+              child: Image.asset(
+                AppAssets.dropDownIcon,
+                width: responsive.scale(12),
+                height: responsive.scale(12),
+              ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: responsive.scale(8)),
             Text(
               countryFlag(_selectedCountry.isoCode),
-              style: const TextStyle(fontSize: 20),
+              style: TextStyle(fontSize: responsive.scaleText(20)),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: responsive.scale(6)),
             Text(
               _selectedCountryCode,
               style: dialCodeStyle,
@@ -501,12 +574,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _showCountryPicker() async {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
     FocusScope.of(context).unfocus();
     final selected = await showModalBottomSheet<CountryCodeOption>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(responsive.scale(16))),
       ),
       builder: (sheetContext) {
         String query = '';
@@ -526,29 +601,40 @@ class _SignupScreenState extends State<SignupScreen> {
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
                 child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.75,
+                  height:
+                      MediaQuery.of(context).size.height * responsive.scale(0.75),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Container(
-                        width: 36,
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: responsive.scale(36),
+                        height: responsive.scale(4),
+                        margin: EdgeInsets.symmetric(
+                          vertical: responsive.scale(12),
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade400,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius:
+                              BorderRadius.circular(responsive.scale(2)),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.scale(20),
+                          vertical: responsive.scale(8),
+                        ),
                         child: TextField(
                           autofocus: true,
                           decoration: InputDecoration(
                             hintText: l.searchCountryCodes,
-                            prefixIcon: const Icon(Icons.search),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              size: responsive.scale(20),
+                            ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(
+                                responsive.scale(28),
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
@@ -559,13 +645,13 @@ class _SignupScreenState extends State<SignupScreen> {
                           }),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: responsive.scale(4)),
                       Expanded(
                         child: filtered.isEmpty
                             ? Center(
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 24),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: responsive.scale(24)),
                                   child: Text(
                                     l.noCountryCodeResults,
                                     textAlign: TextAlign.center,
@@ -575,8 +661,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: responsive.scale(12),
+                                    vertical: responsive.scale(8)),
                                 itemBuilder: (context, index) {
                                   final country = filtered[index];
                                   final isActive =
@@ -586,19 +673,35 @@ class _SignupScreenState extends State<SignupScreen> {
                                         Navigator.of(sheetContext).pop(country),
                                     leading: Text(
                                       countryFlag(country.isoCode),
-                                      style: const TextStyle(fontSize: 20),
+                                      style: TextStyle(
+                                        fontSize: responsive.scaleText(20),
+                                      ),
                                     ),
-                                    title: Text(country.name),
-                                    subtitle: Text(country.dialCode),
+                                    title: Text(
+                                      country.name,
+                                      style: TextStyle(
+                                        fontSize: responsive.scaleText(16),
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      country.dialCode,
+                                      style: TextStyle(
+                                        fontSize: responsive.scaleText(14),
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
                                     trailing: isActive
-                                        ? const Icon(Icons.check,
-                                            color: Color(0xFF007BFF))
+                                        ? Icon(
+                                            Icons.check,
+                                            color: const Color(0xFF007BFF),
+                                            size: responsive.scale(20),
+                                          )
                                         : null,
                                   );
                                 },
-                                separatorBuilder: (_, __) => const Divider(
-                                  height: 1,
-                                  indent: 72,
+                                separatorBuilder: (_, __) => Divider(
+                                  height: responsive.scale(1),
+                                  indent: responsive.scale(72),
                                 ),
                                 itemCount: filtered.length,
                               ),
@@ -620,23 +723,25 @@ class _SignupScreenState extends State<SignupScreen> {
     });
   }
 
-  InputDecoration _inputDecoration(String hint) {
+  InputDecoration _inputDecoration(String hint, Responsive responsive) {
     return InputDecoration(
       hintText: hint,
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(20),
+        vertical: responsive.scale(16),
+      ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(responsive.scale(30)),
         borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(responsive.scale(30)),
         borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(responsive.scale(30)),
         borderSide: const BorderSide(color: Color(0xFF007BFF)),
       ),
     );

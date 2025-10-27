@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../core/localization/app_localizations.dart';
+import '../utils/responsive.dart';
 
 Future<bool> showCreativeLogoutDialog(
   BuildContext context,
   AppLocalizations localizations,
 ) async {
   final theme = Theme.of(context);
+  final responsive = context.responsive;
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) {
       return Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: responsive.scale(24),
+          vertical: responsive.scale(24),
+        ),
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -21,38 +26,40 @@ Future<bool> showCreativeLogoutDialog(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(responsive.scale(28)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.15),
-                blurRadius: 24,
-                offset: const Offset(0, 16),
+                blurRadius: responsive.scale(24),
+                offset: Offset(0, responsive.scale(16)),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 28),
+              SizedBox(height: responsive.scale(28)),
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withOpacity(0.12),
                 ),
-                padding: const EdgeInsets.all(16),
-                child: const CircleAvatar(
-                  radius: 38,
+                padding: EdgeInsets.all(responsive.scale(16)),
+                child: CircleAvatar(
+                  radius: responsive.scale(38),
                   backgroundColor: Colors.white,
                   child: Icon(
                     Icons.logout,
-                    size: 34,
+                    size: responsive.scale(34),
                     color: Color(0xFF0F87FF),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: responsive.scale(24)),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.scale(28),
+                ),
                 child: Column(
                   children: [
                     Text(
@@ -63,7 +70,7 @@ Future<bool> showCreativeLogoutDialog(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: responsive.scale(12)),
                     Text(
                       localizations.logoutConfirmationMessage,
                       textAlign: TextAlign.center,
@@ -74,15 +81,20 @@ Future<bool> showCreativeLogoutDialog(
                   ],
                 ),
               ),
-              const SizedBox(height: 28),
+              SizedBox(height: responsive.scale(28)),
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(28),
+                    bottom: Radius.circular(responsive.scale(28)),
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                padding: EdgeInsets.fromLTRB(
+                  responsive.scale(24),
+                  responsive.scale(20),
+                  responsive.scale(24),
+                  responsive.scale(24),
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -92,14 +104,17 @@ Future<bool> showCreativeLogoutDialog(
                           foregroundColor: const Color(0xFF0F87FF),
                           side: const BorderSide(color: Color(0xFFB4CDFF)),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius:
+                                BorderRadius.circular(responsive.scale(18)),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(
+                            vertical: responsive.scale(14),
+                          ),
                         ),
                         child: Text(localizations.logoutCancelButton),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: responsive.scale(16)),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -108,9 +123,12 @@ Future<bool> showCreativeLogoutDialog(
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius:
+                                BorderRadius.circular(responsive.scale(18)),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(
+                            vertical: responsive.scale(14),
+                          ),
                         ),
                         child: Text(localizations.logoutConfirmButton),
                       ),
@@ -139,7 +157,10 @@ Future<bool> showCreativeDeleteAccountDialog(
     builder: (dialogContext) {
       return Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: responsive.scale(24),
+          vertical: responsive.scale(24),
+        ),
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -147,38 +168,40 @@ Future<bool> showCreativeDeleteAccountDialog(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(responsive.scale(28)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.15),
-                blurRadius: 24,
-                offset: const Offset(0, 16),
+                blurRadius: responsive.scale(24),
+                offset: Offset(0, responsive.scale(16)),
               ),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 28),
+              SizedBox(height: responsive.scale(28)),
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withOpacity(0.12),
                 ),
-                padding: const EdgeInsets.all(16),
-                child: const CircleAvatar(
-                  radius: 38,
+                padding: EdgeInsets.all(responsive.scale(16)),
+                child: CircleAvatar(
+                  radius: responsive.scale(38),
                   backgroundColor: Colors.white,
                   child: Icon(
                     Icons.delete_forever,
-                    size: 34,
+                    size: responsive.scale(34),
                     color: Color(0xFFFF1A1A),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: responsive.scale(24)),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.scale(28),
+                ),
                 child: Column(
                   children: [
                     Text(
@@ -189,7 +212,7 @@ Future<bool> showCreativeDeleteAccountDialog(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: responsive.scale(12)),
                     Text(
                       localizations.deleteAccountConfirmationMessage,
                       textAlign: TextAlign.center,
@@ -200,15 +223,20 @@ Future<bool> showCreativeDeleteAccountDialog(
                   ],
                 ),
               ),
-              const SizedBox(height: 28),
+              SizedBox(height: responsive.scale(28)),
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(28),
+                    bottom: Radius.circular(responsive.scale(28)),
                   ),
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                padding: EdgeInsets.fromLTRB(
+                  responsive.scale(24),
+                  responsive.scale(20),
+                  responsive.scale(24),
+                  responsive.scale(24),
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -218,14 +246,17 @@ Future<bool> showCreativeDeleteAccountDialog(
                           foregroundColor: const Color(0xFFFF1A1A),
                           side: const BorderSide(color: Color(0xFFFFB3B8)),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius:
+                                BorderRadius.circular(responsive.scale(18)),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(
+                            vertical: responsive.scale(14),
+                          ),
                         ),
                         child: Text(localizations.deleteAccountCancelButton),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: responsive.scale(16)),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -234,9 +265,12 @@ Future<bool> showCreativeDeleteAccountDialog(
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius:
+                                BorderRadius.circular(responsive.scale(18)),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: EdgeInsets.symmetric(
+                            vertical: responsive.scale(14),
+                          ),
                         ),
                         child: Text(localizations.deleteAccountConfirmButton),
                       ),

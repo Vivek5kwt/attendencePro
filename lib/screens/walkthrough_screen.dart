@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/app_cubit.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../utils/responsive.dart';
 
 class WalkthroughScreen extends StatefulWidget {
   const WalkthroughScreen({Key? key}) : super(key: key);
@@ -58,6 +59,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
     final l = AppLocalizations.of(context);
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.padding.bottom;
+    final responsive = context.responsive;
     final pages = _buildPages(l);
     final currentIndex = _currentPage.clamp(0, pages.length - 1);
     final currentPage = pages[currentIndex];
@@ -68,7 +70,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           children: [
             Padding(
               padding: EdgeInsets.only(
-                bottom: 120 + bottomInset,
+                bottom: responsive.scale(120) + bottomInset,
               ),
               child: PageView.builder(
                 controller: _pageController,
@@ -85,20 +87,30 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             ),
 
             Positioned(
-              top: 16,
-              right: 16,
+              top: responsive.scale(16),
+              right: responsive.scale(16),
               child: TextButton(
                 onPressed: _onSkip,
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF8E9BB4),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.scale(12),
+                    vertical: responsive.scale(8),
+                  ),
+                  textStyle: TextStyle(
+                    fontSize: responsive.scaleText(16),
                     fontWeight: FontWeight.w600,
 
                   ),
                 ),
-                child: Text(l.skip,style: TextStyle(color: Colors.black,fontWeight: FontWeight.w400,fontSize: 16),),
+                child: Text(
+                  l.skip,
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                    fontSize: responsive.scaleText(16),
+                  ),
+                ),
               ),
             ),
 
@@ -109,7 +121,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                 onTap: _onNext,
                 child: Image.asset(
                   AppAssets.walkthroughNextArrow,
-                  width: 90,
+                  width: responsive.scale(90),
                 ),
               ),
             ),
@@ -117,9 +129,11 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 44 + bottomInset,
+              bottom: responsive.scale(44) + bottomInset,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.scale(24),
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,9 +144,13 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                         pages.length,
                         (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          height: _currentPage == index ? 12 : 10,
-                          width: _currentPage == index ? 12 : 10,
-                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          height: responsive.scale(
+                              _currentPage == index ? 12 : 10),
+                          width: responsive.scale(
+                              _currentPage == index ? 12 : 10),
+                          margin: EdgeInsets.symmetric(
+                            horizontal: responsive.scale(6),
+                          ),
                           decoration: BoxDecoration(
                             color: _currentPage == index
                                 ? const Color(0xFF2F80ED)
@@ -165,10 +183,17 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
   Widget _buildPage(_WalkPageData page) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final imageHeight = (constraints.maxHeight * 0.55).clamp(260.0, 360.0);
+        final responsive = context.responsive;
+        final minHeight = responsive.scale(260);
+        final maxHeight = responsive.scale(360);
+        final imageHeight =
+            (constraints.maxHeight * 0.55).clamp(minHeight, maxHeight);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          padding: EdgeInsets.symmetric(
+            horizontal: responsive.scale(24),
+            vertical: responsive.scale(28),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -194,9 +219,9 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 20,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.scale(24),
+                    vertical: responsive.scale(20),
                   ),
                   child: Image.asset(
                     page.imagePath,
@@ -204,24 +229,24 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 44),
+              SizedBox(height: responsive.scale(44)),
               Text(
                 page.title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 28,
+                style: TextStyle(
+                  fontSize: responsive.scaleText(28),
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F2E55),
+                  color: const Color(0xFF1F2E55),
                   height: 1.32,
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: responsive.scale(14)),
               Text(
                 page.description,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF6F7A93),
+                style: TextStyle(
+                  fontSize: responsive.scaleText(16),
+                  color: const Color(0xFF6F7A93),
                   height: 1.6,
                 ),
               ),

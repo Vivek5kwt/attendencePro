@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/student.dart';
+import '../utils/responsive.dart';
 
 class StudentTile extends StatelessWidget {
   final Student student;
@@ -10,15 +11,31 @@ class StudentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final displayInitial = student.name.isNotEmpty ? student.name[0] : '?';
     return ListTile(
-      leading: CircleAvatar(
-        child: Text(student.name.isNotEmpty ? student.name[0] : '?'),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(16),
+        vertical: responsive.scale(8),
       ),
-      title: Text(student.name),
-      trailing: Switch(
-        value: student.isPresent,
-        onChanged: (_) => onToggle(),
-        activeColor: Colors.green,
+      leading: CircleAvatar(
+        radius: responsive.scale(20),
+        child: Text(
+          displayInitial,
+          style: TextStyle(fontSize: responsive.scaleText(16)),
+        ),
+      ),
+      title: Text(
+        student.name,
+        style: TextStyle(fontSize: responsive.scaleText(16)),
+      ),
+      trailing: Transform.scale(
+        scale: responsive.scale(1),
+        child: Switch(
+          value: student.isPresent,
+          onChanged: (_) => onToggle(),
+          activeColor: Colors.green,
+        ),
       ),
       onTap: onToggle,
     );
