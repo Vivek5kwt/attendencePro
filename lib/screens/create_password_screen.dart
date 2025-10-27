@@ -47,8 +47,13 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
       return;
     }
 
-    final appCubit = BlocProvider.maybeOf<AppCubit>(context);
-    appCubit?.showAuth();
+    try {
+      final appCubit = context.read<AppCubit>();
+      appCubit.showAuth();
+    } on ProviderNotFoundException {
+      // If AppCubit is not available in the widget tree, just stay on the
+      // current screen instead of navigating to a blank page.
+    }
   }
 
   @override
