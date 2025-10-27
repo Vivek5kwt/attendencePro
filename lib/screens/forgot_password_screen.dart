@@ -65,6 +65,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
