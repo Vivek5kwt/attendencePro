@@ -56,6 +56,8 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.padding.bottom;
     final pages = _buildPages(l);
     final currentIndex = _currentPage.clamp(0, pages.length - 1);
     final currentPage = pages[currentIndex];
@@ -66,7 +68,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           children: [
             Padding(
               padding: EdgeInsets.only(
-                bottom: 120 + MediaQuery.of(context).padding.bottom,
+                bottom: 120 + bottomInset,
               ),
               child: PageView.builder(
                 controller: _pageController,
@@ -83,18 +85,19 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             ),
 
             Positioned(
-              top: 20,
-              right: 20,
+              top: 16,
+              right: 16,
               child: TextButton(
                 onPressed: _onSkip,
-                child: Text(
-                  l.skip,
-                  style: const TextStyle(
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF8E9BB4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  textStyle: const TextStyle(
                     fontSize: 16,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                child: Text(l.skip),
               ),
             ),
 
@@ -106,7 +109,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
                 child: Padding(
                   padding: EdgeInsets.only(
                     right: 4,
-                    bottom: MediaQuery.of(context).padding.bottom,
+                    bottom: bottomInset,
                   ),
                   child: Image.asset(
                     AppAssets.walkthroughNextArrow,
@@ -117,25 +120,63 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
             ),
 
             Positioned(
-              bottom: 44,
-              left: 30,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  pages.length,
-                  (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 10,
-                    width: _currentPage == index ? 28 : 10,
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                    decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? const Color(0xFF2F80ED)
-                          : const Color(0xFFD6DEFF),
-                      borderRadius: BorderRadius.circular(12),
+              left: 0,
+              right: 0,
+              bottom: 44 + bottomInset,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      pages.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        height: _currentPage == index ? 12 : 10,
+                        width: _currentPage == index ? 12 : 10,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: _currentPage == index
+                              ? const Color(0xFF2F80ED)
+                              : const Color(0xFFD6DEFF),
+                          shape: BoxShape.circle,
+                          boxShadow: _currentPage == index
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF2F80ED).withOpacity(0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1C60E0).withOpacity(0.08),
+                          blurRadius: 14,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '${_currentPage + 1} / ${pages.length}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2F3B62),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
