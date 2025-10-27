@@ -316,6 +316,12 @@ class AppLocalizations {
       'passwordHint': '********',
       'loginButton': 'Login',
       'forgotPassword': 'Forgot Your Password?',
+      'forgotPasswordSubtitle':
+          'Enter your registered email to receive a verification code.',
+      'forgotPasswordFieldLabel': 'Email Address',
+      'forgotPasswordFieldHint': 'you@example.com',
+      'sendOtpButton': 'Send OTP',
+      'backToLogin': 'Back to Login',
       'signupPromptPrefix': 'Don’t Have an Account? ',
       'signupPromptAction': 'Sign Up',
       'changeLanguage': 'Change Language',
@@ -670,6 +676,12 @@ class AppLocalizations {
       'passwordHint': '********',
       'loginButton': 'लॉगिन',
       'forgotPassword': 'क्या आपने पासवर्ड भूल गए?',
+      'forgotPasswordSubtitle':
+          'सत्यापन कोड प्राप्त करने के लिए अपना पंजीकृत ईमेल दर्ज करें।',
+      'forgotPasswordFieldLabel': 'ईमेल पता',
+      'forgotPasswordFieldHint': 'you@example.com',
+      'sendOtpButton': 'ओटीपी भेजें',
+      'backToLogin': 'लॉगिन पर वापस जाएं',
       'signupPromptPrefix': 'खाता नहीं है? ',
       'signupPromptAction': 'साइन अप',
       'changeLanguage': 'भाषा बदलें',
@@ -1024,6 +1036,12 @@ class AppLocalizations {
       'passwordHint': '********',
       'loginButton': 'ਲਾਗਇਨ',
       'forgotPassword': 'ਕੀ ਤੁਸੀਂ ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?',
+      'forgotPasswordSubtitle':
+          'ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ ਪ੍ਰਾਪਤ ਕਰਨ ਲਈ ਆਪਣਾ ਰਜਿਸਟਰਡ ਈਮੇਲ ਦਰਜ ਕਰੋ।',
+      'forgotPasswordFieldLabel': 'ਈਮੇਲ ਪਤਾ',
+      'forgotPasswordFieldHint': 'you@example.com',
+      'sendOtpButton': 'ਓਟੀਪੀ ਭੇਜੋ',
+      'backToLogin': "ਲਾਗਇਨ 'ਤੇ ਵਾਪਸ ਜਾਓ",
       'signupPromptPrefix': 'ਖਾਤਾ ਨਹੀਂ ਹੈ? ',
       'signupPromptAction': 'ਸਾਈਨ ਅੱਪ',
       'changeLanguage': 'ਭਾਸ਼ਾ ਬਦਲੋ',
@@ -1386,6 +1404,12 @@ class AppLocalizations {
       'passwordHint': '********',
       'loginButton': 'Accedi',
       'forgotPassword': 'Password dimenticata?',
+      'forgotPasswordSubtitle':
+          'Inserisci la tua email registrata per ricevere un codice di verifica.',
+      'forgotPasswordFieldLabel': 'Indirizzo email',
+      'forgotPasswordFieldHint': 'you@example.com',
+      'sendOtpButton': 'Invia OTP',
+      'backToLogin': 'Torna al login',
       'signupPromptPrefix': 'Non hai un account? ',
       'signupPromptAction': 'Registrati',
       'changeLanguage': 'Cambia lingua',
@@ -1834,6 +1858,11 @@ class AppLocalizations {
   String get passwordHint => _value('passwordHint');
   String get loginButton => _value('loginButton');
   String get forgotPassword => _value('forgotPassword');
+  String get forgotPasswordSubtitle => _value('forgotPasswordSubtitle');
+  String get forgotPasswordFieldLabel => _value('forgotPasswordFieldLabel');
+  String get forgotPasswordFieldHint => _value('forgotPasswordFieldHint');
+  String get sendOtpButton => _value('sendOtpButton');
+  String get backToLogin => _value('backToLogin');
   String get signupPromptPrefix => _value('signupPromptPrefix');
   String get signupPromptAction => _value('signupPromptAction');
   String get changeLanguage => _value('changeLanguage');
