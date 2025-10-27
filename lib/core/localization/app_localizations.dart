@@ -71,7 +71,7 @@ class AppLocalizations {
       'contractWorkAddTypeTitle': 'Add contract type',
       'contractWorkEditTypeTitle': 'Update contract type',
       'contractWorkNameLabel': 'Contract name',
-      'contractWorkRateLabel': 'Rate per unit',
+      'contractWorkRateLabel': 'Rate per beans',
       'contractWorkUnitLabel': 'Unit label',
       'contractWorkSubtypeLabel': 'Subtype',
       'contractWorkSubtypeHint': 'Select subtype',

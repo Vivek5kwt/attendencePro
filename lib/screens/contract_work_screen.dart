@@ -19,6 +19,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   final List<_ContractType> _userContractTypes = <_ContractType>[];
   static const String _customSubtypeOptionValue = '__custom_subtype__';
   final List<String> _availableSubtypes = <String>[];
+  static const List<String> _defaultSubtypeOptions = <String>[
+    '10 unit',
+    '15 unit',
+    '18 unit',
+    '18 unit',
+  ];
 
   final List<_ContractEntry> _recentEntries = <_ContractEntry>[
 
@@ -203,7 +209,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         TextEditingController(text: type != null ? type.rate.toStringAsFixed(2) : '');
     final unitController = TextEditingController(text: type?.unitLabel ?? '');
     final customSubtypeController = TextEditingController();
-    final subtypeOptions = List<String>.from(_availableSubtypes);
+    final subtypeOptions = <String>[
+      ..._defaultSubtypeOptions,
+      ..._availableSubtypes.where(
+        (value) => !_defaultSubtypeOptions.contains(value),
+      ),
+    ];
     final isEditing = type != null;
     final isNameEditable = !(type?.isDefault ?? false);
     final shouldForceCustomSubtype = type?.isUserDefined ?? true;
@@ -286,7 +297,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       readOnly: type?.isDefault ?? false,
                       decoration: InputDecoration(
                         labelText: l.contractWorkNameLabel,
-                        hintText: 'Ravanello',
+                        hintText: 'Water melon, Orange',
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -339,6 +350,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       ),
                       decoration: InputDecoration(
                         labelText: l.contractWorkRateLabel,
+                        hintText: 'Price Per 100 Bunches',
                         prefixText: '€ ',
                       ),
                     ),
