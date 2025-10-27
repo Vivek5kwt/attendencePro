@@ -59,13 +59,26 @@ class AttendanceProApp extends StatelessWidget {
             return BlocBuilder<LocaleCubit, Locale>(
               builder: (context, locale) {
                 final localizations = AppLocalizations(locale);
+                final baseTheme = ThemeData(
+                  primarySwatch: Colors.indigo,
+                  useMaterial3: false,
+                  fontFamily: AppString.fontFamily,
+                );
+
+                final textTheme = _applyFontFamily(baseTheme.textTheme);
+                final primaryTextTheme =
+                    _applyFontFamily(baseTheme.primaryTextTheme);
+
                 return MaterialApp.router(
                   debugShowCheckedModeBanner: false,
                   title: AppString.appName,
-                  theme: ThemeData(
-                    primarySwatch: Colors.indigo,
-                    useMaterial3: false,
-                    fontFamily: AppString.fontFamily,
+                  theme: baseTheme.copyWith(
+                    textTheme: textTheme,
+                    primaryTextTheme: primaryTextTheme,
+                    appBarTheme: baseTheme.appBarTheme.copyWith(
+                      titleTextStyle: textTheme.titleLarge,
+                      toolbarTextStyle: textTheme.bodyMedium,
+                    ),
                   ),
                   locale: locale,
                   supportedLocales: AppLocalizations.supportedLocales,
@@ -90,4 +103,31 @@ class AttendanceProApp extends StatelessWidget {
       ),
     );
   }
+}
+
+TextTheme _applyFontFamily(TextTheme base) {
+  return base.copyWith(
+    displayLarge:
+        base.displayLarge?.copyWith(fontFamily: AppString.fontFamily),
+    displayMedium:
+        base.displayMedium?.copyWith(fontFamily: AppString.fontFamily),
+    displaySmall:
+        base.displaySmall?.copyWith(fontFamily: AppString.fontFamily),
+    headlineLarge:
+        base.headlineLarge?.copyWith(fontFamily: AppString.fontFamily),
+    headlineMedium:
+        base.headlineMedium?.copyWith(fontFamily: AppString.fontFamily),
+    headlineSmall:
+        base.headlineSmall?.copyWith(fontFamily: AppString.fontFamily),
+    titleLarge: base.titleLarge?.copyWith(fontFamily: AppString.fontFamily),
+    titleMedium:
+        base.titleMedium?.copyWith(fontFamily: AppString.fontFamily),
+    titleSmall: base.titleSmall?.copyWith(fontFamily: AppString.fontFamily),
+    bodyLarge: base.bodyLarge?.copyWith(fontFamily: AppString.fontFamily),
+    bodyMedium: base.bodyMedium?.copyWith(fontFamily: AppString.fontFamily),
+    bodySmall: base.bodySmall?.copyWith(fontFamily: AppString.fontFamily),
+    labelLarge: base.labelLarge?.copyWith(fontFamily: AppString.fontFamily),
+    labelMedium: base.labelMedium?.copyWith(fontFamily: AppString.fontFamily),
+    labelSmall: base.labelSmall?.copyWith(fontFamily: AppString.fontFamily),
+  );
 }
