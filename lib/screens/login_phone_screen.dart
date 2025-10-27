@@ -22,6 +22,16 @@ class LoginPhoneScreen extends StatefulWidget {
   State<LoginPhoneScreen> createState() => _LoginPhoneScreenState();
 }
 
+class _PhoneLoginData {
+  final String number;
+  final String countryCode;
+
+  const _PhoneLoginData({
+    required this.number,
+    required this.countryCode,
+  });
+}
+
 class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -53,11 +63,23 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
       return;
     }
 
-    final preparedLoginValue = _prepareLoginValue(rawLoginValue);
-    if (preparedLoginValue == null) {
-      _showSnack(
-          isPhoneMode ? l.snackEnterValidPhone : l.snackEnterValidEmail);
-      return;
+    String? preparedLoginValue;
+    String? resolvedCountryCode;
+    if (isPhoneMode) {
+      final phoneData = _preparePhoneLogin(rawLoginValue);
+      if (phoneData == null) {
+        _showSnack(l.snackEnterValidPhone);
+        return;
+      }
+      preparedLoginValue = phoneData.number;
+      resolvedCountryCode = phoneData.countryCode;
+    } else {
+      final email = _prepareEmailLogin(rawLoginValue);
+      if (email == null) {
+        _showSnack(l.snackEnterValidEmail);
+        return;
+      }
+      preparedLoginValue = email;
     }
     final trimmedPassword = password.trim();
     if (trimmedPassword.isEmpty) {
@@ -67,12 +89,10 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
     FocusScope.of(context).unfocus();
     final authCubit = context.read<AuthCubit>();
-    final countryCode =
-        isPhoneMode ? _resolveCountryCode(preparedLoginValue) : null;
     authCubit.login(
       preparedLoginValue,
       trimmedPassword,
-      countryCode: countryCode,
+      countryCode: resolvedCountryCode,
     );
   }
 
@@ -97,22 +117,12 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     });
   }
 
-  String? _prepareLoginValue(String value) {
+  String? _prepareEmailLogin(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
       return null;
     }
-
-    if (_loginMode == _LoginMode.email) {
-      return _isValidEmail(trimmed) ? trimmed : null;
-    }
-
-    final normalizedPhone = _normalizePhone(trimmed);
-    if (normalizedPhone == null) {
-      return null;
-    }
-
-    return _isValidPhone(normalizedPhone) ? normalizedPhone : null;
+    return _isValidEmail(trimmed) ? trimmed : null;
   }
 
   Widget _buildLoginModeSelector(AppLocalizations l) {
@@ -460,48 +470,6 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     });
   }
 
-  String? _normalizePhone(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return null;
-    }
-
-    if (trimmed.startsWith('+')) {
-      final digits = trimmed.substring(1).replaceAll(RegExp(r'\D'), '');
-      if (digits.isEmpty) {
-        return null;
-      }
-      return '+$digits';
-    }
-
-    final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
-    if (digitsOnly.isEmpty) {
-      return null;
-    }
-
-    final countryDigits =
-        _selectedCountryCode.replaceAll(RegExp(r'\D'), '').trim();
-
-    if (countryDigits.isEmpty) {
-      return digitsOnly;
-    }
-
-    return '+$countryDigits$digitsOnly';
-  }
-
-  String _resolveCountryCode(String normalizedPhone) {
-    if (!normalizedPhone.startsWith('+')) {
-      return _selectedCountryCode;
-    }
-
-    final match = _countryCodeOptions.firstWhere(
-      (option) => normalizedPhone.startsWith(option.dialCode),
-      orElse: () => _selectedCountry,
-    );
-
-    return match.dialCode;
-  }
-
   bool _isValidEmail(String email) {
     final trimmed = email.trim();
     if (trimmed.isEmpty) return false;
@@ -509,18 +477,70 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     return regex.hasMatch(trimmed);
   }
 
-  bool _isValidPhone(String phone) {
-    if (phone.isEmpty) {
+  _PhoneLoginData? _preparePhoneLogin(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.isEmpty) {
+      return null;
+    }
+
+    if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+      return null;
+    }
+
+    final matchedCode = _matchDialCode(trimmed);
+    final countryCode = matchedCode ?? _selectedCountryCode;
+    final countryDigits = countryCode.replaceAll(RegExp(r'\D'), '');
+
+    String localNumber = digitsOnly;
+    if (matchedCode != null) {
+      if (localNumber.startsWith(countryDigits) &&
+          localNumber.length > countryDigits.length) {
+        localNumber = localNumber.substring(countryDigits.length);
+      } else if (localNumber == countryDigits) {
+        return null;
+      }
+    }
+
+    if (!_isValidLocalPhone(localNumber)) {
+      return null;
+    }
+
+    return _PhoneLoginData(number: localNumber, countryCode: countryCode);
+  }
+
+  String? _matchDialCode(String input) {
+    final normalized = input.trim();
+    if (!normalized.startsWith('+')) {
+      return null;
+    }
+
+    CountryCodeOption? match;
+    for (final option in _countryCodeOptions) {
+      if (normalized.startsWith(option.dialCode)) {
+        if (match == null || option.dialCode.length > match.dialCode.length) {
+          match = option;
+        }
+      }
+    }
+
+    return match?.dialCode;
+  }
+
+  bool _isValidLocalPhone(String digits) {
+    if (digits.isEmpty) {
       return false;
     }
 
-    final digits = phone.startsWith('+') ? phone.substring(1) : phone;
-    if (digits.length < 7 || digits.length > 15) {
+    if (digits.length < 4 || digits.length > 15) {
       return false;
     }
 
-    final regex = RegExp(r'^\+?\d+$');
-    return regex.hasMatch(phone);
+    return RegExp(r'^[0-9]+$').hasMatch(digits);
   }
 
 
