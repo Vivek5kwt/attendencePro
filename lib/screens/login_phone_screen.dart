@@ -9,6 +9,7 @@ import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 import '../widgets/app_dialogs.dart';
 import 'forgot_password_screen.dart';
+import '../data/country_codes.dart';
 
 enum _LoginMode { phone, email }
 
@@ -24,6 +25,28 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   _LoginMode _loginMode = _LoginMode.phone;
+  late final List<CountryCodeOption> _countryCodeOptions;
+  late CountryCodeOption _selectedCountry;
+  String _selectedCountryCode = '+39';
+
+  @override
+  void initState() {
+    super.initState();
+    _countryCodeOptions = CountryCodes.all;
+    final languageCode = context.read<LocaleCubit>().state.languageCode;
+    if (languageCode == 'hi' || languageCode == 'pa') {
+      _selectedCountryCode = '+91';
+    } else if (languageCode == 'en') {
+      _selectedCountryCode = '+1';
+    } else {
+      _selectedCountryCode = '+39';
+    }
+    _selectedCountry = _countryCodeOptions.firstWhere(
+      (country) => country.dialCode == _selectedCountryCode,
+      orElse: () => _countryCodeOptions.first,
+    );
+    _selectedCountryCode = _selectedCountry.dialCode;
+  }
 
   void _submitLogin(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -94,18 +117,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
   Widget _buildLoginModeSelector(AppLocalizations l) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFE8ECF5),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFFE1E6EF)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x11000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.transparent),
       ),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(6),
       child: Row(
         children: [
           Expanded(
@@ -129,19 +145,261 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
         height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF007BFF) : Colors.transparent,
+          color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
+          boxShadow: isSelected
+              ? const [
+                  BoxShadow(
+                    color: Color(0x33007BFF),
+                    blurRadius: 12,
+                    offset: Offset(0, 6),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
+            color:
+                isSelected ? const Color(0xFF007BFF) : const Color(0xFF6B7280),
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildPhoneLoginField(String hint) {
+    final dialCodeStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        );
+
+    return Row(
+      children: [
+        _buildCountrySelector(dialCodeStyle),
+        const SizedBox(width: 12),
+        Expanded(
+          child: TextField(
+            controller: _loginController,
+            keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(color: Colors.black38),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(32),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Icon(
+                Icons.phone_outlined,
+                color: Colors.black38,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailLoginField(String hint) {
+    return TextField(
+      controller: _loginController,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.black38),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(32),
+          borderSide: BorderSide.none,
+        ),
+        prefixIcon: const Icon(
+          Icons.email_outlined,
+          color: Colors.black38,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCountrySelector(TextStyle dialCodeStyle) {
+    return SizedBox(
+      width: 118,
+      child: GestureDetector(
+        onTap: _showCountryPicker,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: const Color(0xFFD9E2EF)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Text(
+                countryFlag(_selectedCountry.isoCode),
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  _selectedCountryCode,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: dialCodeStyle,
+                ),
+              ),
+              const Icon(
+                Icons.arrow_drop_down,
+                color: Color(0xFF6B7280),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showCountryPicker() async {
+    final l = AppLocalizations.of(context);
+    FocusScope.of(context).unfocus();
+    final selected = await showModalBottomSheet<CountryCodeOption>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        String query = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final filtered = _countryCodeOptions.where((country) {
+              if (query.isEmpty) return true;
+              final q = query.toLowerCase();
+              return country.name.toLowerCase().contains(q) ||
+                  country.dialCode.contains(query) ||
+                  country.isoCode.toLowerCase().contains(q);
+            }).toList();
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.75,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade400,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 8),
+                        child: TextField(
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: l.searchCountryCodes,
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(28),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                          ),
+                          onChanged: (value) => setModalState(() {
+                            query = value.trim();
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24),
+                                  child: Text(
+                                    l.noCountryCodeResults,
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                itemBuilder: (context, index) {
+                                  final country = filtered[index];
+                                  final isActive =
+                                      country.dialCode == _selectedCountryCode;
+                                  return ListTile(
+                                    onTap: () =>
+                                        Navigator.of(sheetContext).pop(country),
+                                    leading: Text(
+                                      countryFlag(country.isoCode),
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                    title: Text(country.name),
+                                    subtitle: Text(country.dialCode),
+                                    trailing: isActive
+                                        ? const Icon(Icons.check,
+                                            color: Color(0xFF007BFF))
+                                        : null,
+                                  );
+                                },
+                                separatorBuilder: (_, __) => const Divider(
+                                  height: 1,
+                                  indent: 72,
+                                ),
+                                itemCount: filtered.length,
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (!mounted || selected == null) return;
+    setState(() {
+      _selectedCountry = selected;
+      _selectedCountryCode = selected.dialCode;
+    });
   }
 
   String? _normalizePhone(String value) {
@@ -159,7 +417,18 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     }
 
     final digitsOnly = trimmed.replaceAll(RegExp(r'\D'), '');
-    return digitsOnly.isEmpty ? null : digitsOnly;
+    if (digitsOnly.isEmpty) {
+      return null;
+    }
+
+    final countryDigits =
+        _selectedCountryCode.replaceAll(RegExp(r'\D'), '').trim();
+
+    if (countryDigits.isEmpty) {
+      return digitsOnly;
+    }
+
+    return '+$countryDigits$digitsOnly';
   }
 
   bool _isValidEmail(String email) {
@@ -290,31 +559,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: _loginController,
-                      keyboardType: isPhoneMode
-                          ? TextInputType.phone
-                          : TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        hintText: loginHint,
-                        hintStyle: const TextStyle(color: Colors.black38),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 14),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
-                          borderSide: BorderSide.none,
-                        ),
-                        prefixIcon: Icon(
-                          isPhoneMode
-                              ? Icons.phone_outlined
-                              : Icons.email_outlined,
-                          color: Colors.black38,
-                        ),
-                      ),
-                    ),
+                    isPhoneMode
+                        ? _buildPhoneLoginField(loginHint)
+                        : _buildEmailLoginField(loginHint),
                     const SizedBox(height: 20),
                     Text(
                       l.passwordLabel,
