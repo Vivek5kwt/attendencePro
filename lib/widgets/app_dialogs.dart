@@ -486,9 +486,9 @@ Future<String?> showCreativeLanguageDialog(
                                   ),
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
-                                child: Text(localizations.languageSelection(
-                                  options[tempSelection] ?? tempSelection,
-                                )),
+                                child: Text(
+                                  localizations.confirmSelectionButton,
+                                ),
                               ),
                             ),
                           ],
