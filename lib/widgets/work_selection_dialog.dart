@@ -22,7 +22,7 @@ Future<Work?> showWorkSelectionDialog({
   final result = await showDialog<String>(
     context: context,
     barrierDismissible: true,
-    barrierColor: Colors.black.withOpacity(0.35),
+    barrierColor: const Color(0xCC111827),
     builder: (dialogContext) {
       var selectedId = _initialWorkId(
         works: works,
@@ -47,186 +47,235 @@ Future<Work?> showWorkSelectionDialog({
             );
 
             return Center(
-              child: Container(
-                constraints: BoxConstraints(
-                  minWidth: minDialogWidth,
-                  maxWidth: maxDialogWidth,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 42,
-                      offset: const Offset(0, 24),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: Material(
-                    color: Colors.white,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: maxDialogHeight),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(width: 40),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        localization.selectWorkTitle,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                  color: const Color(0xFF111827),
-                                                ) ??
-                                            const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFF111827),
-                                            ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        localization.workSelectionSubtitle,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                  color: const Color(0xFF6B7280),
-                                                ) ??
-                                            const TextStyle(
-                                              fontSize: 14,
-                                              color: Color(0xFF6B7280),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => Navigator.of(dialogContext).pop(),
-                                  icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
-                                  splashRadius: 20,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Flexible(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxHeight: math.min(mediaQuery.size.height * 0.4, 320),
-                                ),
-                                child: ListView.separated(
-                                  padding: const EdgeInsets.only(bottom: 4),
-                                  clipBehavior: Clip.none,
-                                  shrinkWrap: true,
-                                  physics: const BouncingScrollPhysics(),
-                                  itemCount: works.length,
-                                  itemBuilder: (context, index) {
-                                    final work = works[index];
-                                    return _WorkSelectionTile(
-                                      work: work,
-                                      isSelected: work.id == selectedId,
-                                      localization: localization,
-                                      onTap: () {
-                                        setState(() {
-                                          selectedId = work.id;
-                                        });
-                                      },
-                                    );
-                                  },
-                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            if (onAddNewWork != null) ...[
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    Navigator.of(dialogContext).pop(_kAddNewWorkResult);
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    side: const BorderSide(color: Color(0xFFD1D5DB)),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.add, color: Color(0xFF2563EB)),
-                                  label: Text(
-                                    localization.addNewWorkLabel,
-                                    style: Theme.of(context)
-                                            .textTheme
-                                            .labelLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: const Color(0xFF2563EB),
-                                            ) ??
-                                        const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF2563EB),
-                                        ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (selectedId == null) {
-                                    Navigator.of(dialogContext).pop();
-                                    return;
-                                  }
-                                  Navigator.of(dialogContext).pop(selectedId);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 18),
-                                  backgroundColor: const Color(0xFF2563EB),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: Text(
-                                  localization.confirmSelectionButton,
-                                  style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                          ) ??
-                                      const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          ],
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        width: maxDialogWidth,
+                        height: math.max(0, maxDialogHeight - 32),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE7F1FF), Color(0xFFF7FAFF)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.circular(36),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  Container(
+                    constraints: BoxConstraints(
+                      minWidth: minDialogWidth,
+                      maxWidth: maxDialogWidth,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x33111B2B),
+                          blurRadius: 40,
+                          offset: Offset(0, 28),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Material(
+                        color: Colors.white,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: maxDialogHeight),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(width: 44),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            localization.selectWorkTitle,
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge
+                                                    ?.copyWith(
+                                                      fontWeight: FontWeight.w700,
+                                                      color: const Color(0xFF111827),
+                                                    ) ??
+                                                const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF111827),
+                                                ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            localization.workSelectionSubtitle,
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      color: const Color(0xFF6B7280),
+                                                    ) ??
+                                                const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Color(0xFF6B7280),
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    _DialogCloseButton(onPressed: () {
+                                      Navigator.of(dialogContext).pop();
+                                    }),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+                                Flexible(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxHeight:
+                                          math.min(mediaQuery.size.height * 0.4, 320),
+                                    ),
+                                    child: ListView.separated(
+                                      padding: EdgeInsets.zero,
+                                      clipBehavior: Clip.none,
+                                      shrinkWrap: true,
+                                      physics: const BouncingScrollPhysics(),
+                                      itemCount: works.length,
+                                      itemBuilder: (context, index) {
+                                        final work = works[index];
+                                        return _WorkSelectionTile(
+                                          work: work,
+                                          isSelected: work.id == selectedId,
+                                          localization: localization,
+                                          onTap: () {
+                                            setState(() {
+                                              selectedId = work.id;
+                                            });
+                                          },
+                                        );
+                                      },
+                                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                if (onAddNewWork != null) ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton(
+                                      onPressed: () {
+                                        Navigator.of(dialogContext)
+                                            .pop(_kAddNewWorkResult);
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        side: const BorderSide(color: Color(0xFFD1D5DB)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                        ),
+                                        foregroundColor: const Color(0xFF2563EB),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            height: 32,
+                                            width: 32,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: const Color(0xFFD1D5DB),
+                                              ),
+                                              color: Colors.white,
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: const Icon(
+                                              Icons.add,
+                                              size: 18,
+                                              color: Color(0xFF2563EB),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Flexible(
+                                            child: Text(
+                                              localization.addNewWorkLabel,
+                                              style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelLarge
+                                                      ?.copyWith(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: const Color(0xFF2563EB),
+                                                      ) ??
+                                                  const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF2563EB),
+                                                  ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      if (selectedId == null) {
+                                        Navigator.of(dialogContext).pop();
+                                        return;
+                                      }
+                                      Navigator.of(dialogContext).pop(selectedId);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 18),
+                                      backgroundColor: const Color(0xFF2563EB),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: Text(
+                                      localization.confirmSelectionButton,
+                                      style: Theme.of(context)
+                                              .textTheme
+                                              .labelLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ) ??
+                                          const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -305,22 +354,25 @@ class _WorkSelectionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        borderRadius: BorderRadius.circular(24),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
+            color: isSelected ? const Color(0xFFF2F7FF) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color:
-                  isSelected ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB),
-              width: isSelected ? 1.5 : 1,
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFE5E7EB),
+              width: isSelected ? 2 : 1,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Color(0x14000000),
                 blurRadius: 24,
-                offset: const Offset(0, 12),
+                offset: Offset(0, 12),
               ),
             ],
           ),
@@ -335,9 +387,9 @@ class _WorkSelectionTile extends StatelessWidget {
                     Text(
                       work.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF111827),
-                          ) ??
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                            ) ??
                           const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -348,8 +400,8 @@ class _WorkSelectionTile extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF6B7280),
-                          ) ??
+                              color: const Color(0xFF6B7280),
+                            ) ??
                           const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF6B7280),
@@ -361,8 +413,8 @@ class _WorkSelectionTile extends StatelessWidget {
               const SizedBox(width: 12),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                height: 26,
-                width: 26,
+                height: 28,
+                width: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color:
@@ -374,16 +426,48 @@ class _WorkSelectionTile extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: isSelected
-                    ? const Icon(
-                        Icons.check,
-                        size: 16,
-                        color: Colors.white,
-                      )
-                    : null,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check,
+                          key: ValueKey('selected'),
+                          size: 16,
+                          color: Colors.white,
+                        )
+                      : const SizedBox.shrink(key: ValueKey('unselected')),
+                ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogCloseButton extends StatelessWidget {
+  const _DialogCloseButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        height: 36,
+        width: 36,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF3F4F6),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: const Icon(
+          Icons.close,
+          size: 18,
+          color: Color(0xFF6B7280),
         ),
       ),
     );
