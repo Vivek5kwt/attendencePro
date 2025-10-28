@@ -1454,6 +1454,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     num? units;
     int? contractTypeId;
+    double? ratePerUnit;
     if (isContractEntryEnabled) {
       units = _parseNumberInput(_unitsController.text);
       contractTypeId = _resolveContractTypeId();
@@ -1468,6 +1469,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         );
         return;
       }
+
+      final selectedContractTypeId =
+          _selectedContractTypeId ?? contractTypeId.toString();
+      ContractType? selectedContractType;
+      if (selectedContractTypeId.isNotEmpty) {
+        try {
+          selectedContractType = _contractTypes.firstWhere(
+            (type) => type.id == selectedContractTypeId,
+          );
+        } catch (_) {
+          selectedContractType = null;
+        }
+      }
+      selectedContractType ??=
+          _contractTypes.isNotEmpty ? _contractTypes.first : null;
+      ratePerUnit = selectedContractType?.rate;
     }
 
     setState(() {
@@ -1489,7 +1506,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
         units: units,
-        ratePerUnit: null,
+        ratePerUnit: ratePerUnit,
       );
 
       previewFetched = true;
@@ -1537,7 +1554,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
         units: units,
-        ratePerUnit: null,
+        ratePerUnit: ratePerUnit,
       );
       if (!mounted) {
         return;
@@ -4530,6 +4547,7 @@ class _ContractEntryForm extends StatelessWidget {
                 value: dropdownValue,
                 onChanged: disableInteractions ? null : onTypeChanged,
                 isExpanded: true,
+                itemHeight: null,
                 decoration: InputDecoration(
                   labelText: l.contractWorkContractTypeLabel,
                   prefixIcon: const Icon(
