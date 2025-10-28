@@ -3834,91 +3834,99 @@ class _AttendanceSection extends StatelessWidget {
             const SizedBox(height: 20),
             LayoutBuilder(
               builder: (context, constraints) {
-                const spacing = 12.0;
                 final maxWidth = constraints.maxWidth;
-                final crossAxisCount = maxWidth < 420
-                    ? 1
-                    : maxWidth < 720
-                        ? 2
-                        : 3;
-                final itemWidth = crossAxisCount == 1
-                    ? maxWidth
-                    : (maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
+                final isCompact = maxWidth < 520;
+                final spacing = isCompact ? 8.0 : 12.0;
 
-                final inputCards = <Widget>[
-                  _AttendanceTimeCard(
-                    label: l.startTimeLabel,
-                    controller: startTimeController,
+                Widget buildCard({
+                  required String label,
+                  required TextEditingController controller,
+                  required TextInputType keyboardType,
+                  required TextInputAction textInputAction,
+                  required String? Function(String?) validator,
+                  required Widget customField,
+                }) {
+                  return _AttendanceTimeCard(
+                    label: label,
+                    controller: controller,
                     icon: Icons.access_time_rounded,
                     color: const Color(0xFF2563EB),
                     hintText: AppString.timeInputHint,
-                    keyboardType: TextInputType.datetime,
-                    textInputAction: TextInputAction.next,
-                    validator: startTimeValidator,
+                    keyboardType: keyboardType,
+                    textInputAction: textInputAction,
+                    validator: validator,
                     onChanged: (_) => onFieldChanged(),
                     enabled: !isSubmitting && !isWorkOff,
-                    customField: _buildSegmentedTimeField(
+                    customField: customField,
+                    isCompact: isCompact,
+                  );
+                }
+
+                final children = <Widget>[
+                  Expanded(
+                    child: buildCard(
+                      label: l.startTimeLabel,
                       controller: startTimeController,
+                      keyboardType: TextInputType.datetime,
+                      textInputAction: TextInputAction.next,
                       validator: startTimeValidator,
-                      enabled: !isSubmitting && !isWorkOff,
-                      onValueChanged: () {
-                        onFieldChanged();
-                      },
+                      customField: _buildSegmentedTimeField(
+                        controller: startTimeController,
+                        validator: startTimeValidator,
+                        enabled: !isSubmitting && !isWorkOff,
+                        onValueChanged: () {
+                          onFieldChanged();
+                        },
+                      ),
                     ),
                   ),
-                  _AttendanceTimeCard(
-                    label: l.endTimeLabel,
-                    controller: endTimeController,
-                    icon: Icons.access_time_rounded,
-                    color: const Color(0xFF2563EB),
-                    hintText: AppString.timeInputHint,
-                    keyboardType: TextInputType.datetime,
-                    textInputAction: TextInputAction.next,
-                    validator: endTimeValidator,
-                    onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting && !isWorkOff,
-                    customField: _buildSegmentedTimeField(
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: buildCard(
+                      label: l.endTimeLabel,
                       controller: endTimeController,
+                      keyboardType: TextInputType.datetime,
+                      textInputAction: TextInputAction.next,
                       validator: endTimeValidator,
-                      enabled: !isSubmitting && !isWorkOff,
-                      onValueChanged: () {
-                        onFieldChanged();
-                      },
+                      customField: _buildSegmentedTimeField(
+                        controller: endTimeController,
+                        validator: endTimeValidator,
+                        enabled: !isSubmitting && !isWorkOff,
+                        onValueChanged: () {
+                          onFieldChanged();
+                        },
+                      ),
                     ),
                   ),
-                  _AttendanceTimeCard(
-                    label: l.breakLabel,
-                    controller: breakMinutesController,
-                    icon: Icons.access_time_rounded,
-                    color: const Color(0xFF2563EB),
-                    hintText: AppString.zeroInputHint,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    validator: breakValidator,
-                    onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting && !isWorkOff,
-                    customField: _buildBreakDurationField(
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: _AttendanceTimeCard(
+                      label: l.breakLabel,
                       controller: breakMinutesController,
+                      icon: Icons.access_time_rounded,
+                      color: const Color(0xFF2563EB),
+                      hintText: AppString.zeroInputHint,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
                       validator: breakValidator,
+                      onChanged: (_) => onFieldChanged(),
                       enabled: !isSubmitting && !isWorkOff,
-                      onValueChanged: () {
-                        onFieldChanged();
-                      },
+                      customField: _buildBreakDurationField(
+                        controller: breakMinutesController,
+                        validator: breakValidator,
+                        enabled: !isSubmitting && !isWorkOff,
+                        onValueChanged: () {
+                          onFieldChanged();
+                        },
+                      ),
+                      isCompact: isCompact,
                     ),
                   ),
                 ];
 
-                final cards = inputCards
-                    .map((card) => SizedBox(
-                          width: itemWidth.clamp(0.0, maxWidth),
-                          child: card,
-                        ))
-                    .toList();
-
-                return Wrap(
-                  spacing: spacing,
-                  runSpacing: spacing,
-                  children: cards,
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: children,
                 );
               },
             ),
@@ -5247,6 +5255,7 @@ class _AttendanceTimeCard extends StatelessWidget {
     this.enabled = true,
     this.inputFormatters = const <TextInputFormatter>[],
     this.customField,
+    this.isCompact = false,
   });
 
   final String label;
@@ -5261,18 +5270,56 @@ class _AttendanceTimeCard extends StatelessWidget {
   final bool enabled;
   final List<TextInputFormatter> inputFormatters;
   final Widget? customField;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
+    final iconBadgeSize = isCompact ? 36.0 : 48.0;
+    final iconRadius = BorderRadius.circular(isCompact ? 14 : 18);
+    final iconSize = isCompact ? 18.0 : 22.0;
+    final labelStyle = TextStyle(
+      fontSize: isCompact ? 12 : 14,
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF1F2937),
+    );
+    final inputTextStyle = TextStyle(
+      fontSize: isCompact ? 15 : 18,
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF0F172A),
+    );
+    final hintTextStyle = TextStyle(
+      color: const Color(0xFF94A3B8),
+      fontSize: isCompact ? 13 : 16,
+      fontWeight: FontWeight.w600,
+    );
+    final cardPadding = EdgeInsets.symmetric(
+      horizontal: isCompact ? 12 : 20,
+      vertical: isCompact ? 14 : 20,
+    );
+    final fieldPadding = EdgeInsets.symmetric(
+      horizontal: isCompact ? 10 : 14,
+      vertical: isCompact ? 8 : 12,
+    );
+    final fieldRadius = BorderRadius.circular(isCompact ? 16 : 20);
+    final titleSpacing = SizedBox(height: isCompact ? 10 : 16);
+    final fieldSpacing = SizedBox(width: isCompact ? 8 : 12);
+    final boxShadow = [
+      BoxShadow(
+        color: const Color(0x0F1E293B),
+        blurRadius: isCompact ? 12 : 16,
+        offset: const Offset(0, 8),
+      ),
+    ];
+
     final iconBadge = Container(
-      width: 48,
-      height: 48,
+      width: iconBadgeSize,
+      height: iconBadgeSize,
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: iconRadius,
       ),
       alignment: Alignment.center,
-      child: Icon(icon, color: color, size: 22),
+      child: Icon(icon, color: color, size: iconSize),
     );
 
     final input = customField ??
@@ -5284,20 +5331,12 @@ class _AttendanceTimeCard extends StatelessWidget {
           onChanged: onChanged,
           enabled: enabled,
           inputFormatters: inputFormatters,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
-          ),
+          style: inputTextStyle,
           decoration: InputDecoration(
             hintText: hintText,
             border: InputBorder.none,
             isDense: true,
-            hintStyle: const TextStyle(
-              color: Color(0xFF94A3B8),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            hintStyle: hintTextStyle,
             contentPadding: EdgeInsets.zero,
           ),
         );
@@ -5305,41 +5344,31 @@ class _AttendanceTimeCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(isCompact ? 22 : 26),
         border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F1E293B),
-            blurRadius: 16,
-            offset: Offset(0, 8),
-          ),
-        ],
+        boxShadow: boxShadow,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: cardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
-            ),
+            style: labelStyle,
           ),
-          const SizedBox(height: 16),
+          titleSpacing,
           Container(
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: fieldRadius,
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: fieldPadding,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 iconBadge,
-                const SizedBox(width: 12),
+                fieldSpacing,
                 Expanded(child: input),
               ],
             ),
