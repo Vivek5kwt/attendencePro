@@ -349,7 +349,8 @@ class _DialogElevatedButton extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: textStyle,
+        style: textStyle.copyWith(color: Colors.white),
+        textAlign: TextAlign.center,
       ),
     );
   }
