@@ -234,6 +234,9 @@ class AttendanceApi {
 
     final dates = SplayTreeSet<DateTime>();
     for (final item in items) {
+      if (!_shouldIncludeDateItem(item)) {
+        continue;
+      }
       final date = _parseDateItem(item);
       if (date != null) {
         dates.add(date);
@@ -335,6 +338,83 @@ class AttendanceApi {
         if (parsed != null) {
           return parsed;
         }
+      }
+    }
+
+    return null;
+  }
+
+  bool _shouldIncludeDateItem(dynamic value) {
+    if (value is Map<String, dynamic>) {
+      const selectionKeys = <String>[
+        'selected',
+        'is_selected',
+        'isSelected',
+        'pending',
+        'is_pending',
+        'isPending',
+        'missed',
+        'is_missed',
+        'isMissed',
+        'status',
+        'state',
+      ];
+
+      for (final key in selectionKeys) {
+        if (!value.containsKey(key)) {
+          continue;
+        }
+        final resolved = _resolveSelectionValue(value[key]);
+        if (resolved != null) {
+          return resolved;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  bool? _resolveSelectionValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is bool) {
+      return value;
+    }
+
+    if (value is num) {
+      return value != 0;
+    }
+
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized.isEmpty) {
+        return null;
+      }
+      if (<String>{
+        'true',
+        '1',
+        'yes',
+        'y',
+        'selected',
+        'pending',
+        'missed',
+        'active',
+      }.contains(normalized)) {
+        return true;
+      }
+      if (<String>{
+        'false',
+        '0',
+        'no',
+        'n',
+        'unselected',
+        'completed',
+        'resolved',
+        'inactive',
+      }.contains(normalized)) {
+        return false;
       }
     }
 
