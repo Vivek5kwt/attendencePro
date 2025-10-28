@@ -1704,16 +1704,32 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
     return const <_ContractItem>[
       _ContractItem(
-        title: AppString.fallbackContractItemTitle,
-        price: AppString.fallbackContractItemPriceLow,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemTitle,
-        price: AppString.fallbackContractItemPriceHigh,
+        title: AppString.fallbackContractItemWatermelonTitle,
+        price: AppString.fallbackContractItemWatermelonPrice,
       ),
       _ContractItem(
         title: AppString.fallbackContractItemCarrotTitle,
         price: AppString.fallbackContractItemCarrotPrice,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemTitle,
+        price: AppString.fallbackContractItemRavanelloPrice,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemRavanello15Title,
+        price: AppString.fallbackContractItemRavanelloPrice,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemRavanello18Title,
+        price: AppString.fallbackContractItemRavanelloPrice,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemRavanello18AltTitle,
+        price: AppString.fallbackContractItemRavanelloPrice,
+      ),
+      _ContractItem(
+        title: AppString.fallbackContractItemOrangeTitle,
+        price: AppString.fallbackContractItemOrangePrice,
       ),
     ];
   }
