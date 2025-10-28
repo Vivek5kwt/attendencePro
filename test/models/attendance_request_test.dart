@@ -51,5 +51,22 @@ void main() {
       expect(json['units'], 120);
       expect(json['rate_per_unit'], 2.5);
     });
+
+    test('defaults contract type id to 1 for contract entries when missing', () {
+      final request = AttendanceRequest(
+        workId: 9,
+        date: DateTime(2025, 10, 27),
+        startTime: '10:25',
+        endTime: '14:35',
+        breakMinutes: 10,
+        isContractEntry: true,
+        units: 10,
+        ratePerUnit: 5,
+      );
+
+      final json = request.toJson();
+
+      expect(json['contract_type_id'], 1);
+    });
   });
 }
