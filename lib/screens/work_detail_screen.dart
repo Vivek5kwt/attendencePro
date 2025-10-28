@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
+import '../models/contract_type.dart';
 import '../models/dashboard_summary.dart';
 import '../models/missed_attendance_completion.dart';
 import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
+import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
 import 'contract_work_screen.dart';
 
@@ -334,6 +336,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final DashboardRepository _dashboardRepository = DashboardRepository();
   final AttendanceEntryRepository _attendanceRepository =
       AttendanceEntryRepository();
+  final ContractTypeRepository _contractTypeRepository =
+      ContractTypeRepository();
   final GlobalKey<FormState> _attendanceFormKey = GlobalKey<FormState>();
   final TextEditingController _startTimeController = TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
@@ -342,6 +346,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final TextEditingController _unitsController = TextEditingController();
   final TextEditingController _ratePerUnitController = TextEditingController();
 
+  List<ContractType> _contractTypes = const <ContractType>[];
+  bool _isLoadingContractTypes = false;
+  String? _contractTypesError;
+  String? _selectedContractTypeId;
   bool _contractFieldsEnabled = false;
   bool _markAsWorkOff = false;
   String? _previousStartTime;
@@ -364,7 +372,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   void initState() {
     super.initState();
     _initializeAttendanceControllers();
+    if (widget.work.isContract) {
+      final initialContractTypeId = _extractContractTypeIdFromAdditionalData();
+      if (initialContractTypeId != null) {
+        _selectedContractTypeId = initialContractTypeId.toString();
+      }
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      if (widget.work.isContract) {
+        _loadContractTypes();
+      }
       _loadSummary();
     });
   }
@@ -593,18 +613,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    final hasData =
-        _unitsController.text.trim().isNotEmpty ||
-            _ratePerUnitController.text.trim().isNotEmpty;
-    if (_contractFieldsEnabled == hasData) {
+    final hasData = _unitsController.text.trim().isNotEmpty;
+    if (!hasData || _contractFieldsEnabled) {
       return;
     }
     if (notify) {
       setState(() {
-        _contractFieldsEnabled = hasData;
+        _contractFieldsEnabled = true;
       });
     } else {
-      _contractFieldsEnabled = hasData;
+      _contractFieldsEnabled = true;
     }
   }
 
@@ -1019,8 +1037,31 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (!widget.work.isContract || (_markAsWorkOff && value)) {
       return;
     }
+    if (value && _contractTypes.isEmpty && !_isLoadingContractTypes) {
+      _loadContractTypes();
+    }
     setState(() {
       _contractFieldsEnabled = value;
+      if (value) {
+        if (_contractTypes.isNotEmpty) {
+          _resolveSelectedContractTypeIdAfterLoad();
+        }
+      } else {
+        _unitsController.clear();
+      }
+    });
+    _handleAttendanceFieldChanged();
+  }
+
+  void _handleContractTypeChanged(String? value) {
+    if (!widget.work.isContract) {
+      return;
+    }
+    if (_selectedContractTypeId == value) {
+      return;
+    }
+    setState(() {
+      _selectedContractTypeId = value;
     });
     _handleAttendanceFieldChanged();
   }
@@ -1069,6 +1110,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         builder: (context) => const ContractWorkScreen(),
       ),
     );
+    if (!mounted) {
+      return;
+    }
+    if (widget.work.isContract) {
+      await _loadContractTypes();
+    }
   }
 
   String? _validateStartTime(String? value) {
@@ -1211,6 +1258,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   int? _resolveContractTypeId() {
+    if (_selectedContractTypeId != null) {
+      final parsed = int.tryParse(_selectedContractTypeId!);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    return _extractContractTypeIdFromAdditionalData();
+  }
+
+  int? _extractContractTypeIdFromAdditionalData() {
     final data = widget.work.additionalData;
     const keys = ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType'];
     for (final key in keys) {
@@ -1383,13 +1440,34 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final bool isContractEntryEnabled =
         widget.work.isContract && _contractFieldsEnabled;
     final bool? contractEntryPayloadValue = isContractEntryEnabled;
+    if (isContractEntryEnabled && _contractTypes.isEmpty) {
+      final message = l.contractWorkLoadError;
+      setState(() {
+        _attendanceStatusMessage = message;
+        _attendanceStatusIsError = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      return;
+    }
+
     num? units;
-    num? ratePerUnit;
     int? contractTypeId;
     if (isContractEntryEnabled) {
       units = _parseNumberInput(_unitsController.text);
-      ratePerUnit = _parseNumberInput(_ratePerUnitController.text);
       contractTypeId = _resolveContractTypeId();
+      if (contractTypeId == null) {
+        final message = l.contractWorkLoadError;
+        setState(() {
+          _attendanceStatusMessage = message;
+          _attendanceStatusIsError = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -1411,7 +1489,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
         units: units,
-        ratePerUnit: ratePerUnit,
+        ratePerUnit: null,
       );
 
       previewFetched = true;
@@ -1459,7 +1537,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
         units: units,
-        ratePerUnit: ratePerUnit,
+        ratePerUnit: null,
       );
       if (!mounted) {
         return;
@@ -1800,6 +1878,94 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
   }
 
+  Future<void> _loadContractTypes() async {
+    if (!widget.work.isContract || _isLoadingContractTypes) {
+      return;
+    }
+
+    setState(() {
+      _isLoadingContractTypes = true;
+      _contractTypesError = null;
+    });
+
+    try {
+      final collection = await _contractTypeRepository.fetchContractTypes();
+      if (!mounted) {
+        return;
+      }
+      final merged = _mergeContractTypes(collection);
+      setState(() {
+        _contractTypes = merged;
+        _isLoadingContractTypes = false;
+        _contractTypesError = null;
+        _resolveSelectedContractTypeIdAfterLoad();
+      });
+    } on ContractTypeRepositoryException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final l = AppLocalizations.of(context);
+      final message =
+          e.message.trim().isNotEmpty ? e.message.trim() : l.contractWorkLoadError;
+      setState(() {
+        _isLoadingContractTypes = false;
+        _contractTypesError = message;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      final l = AppLocalizations.of(context);
+      setState(() {
+        _isLoadingContractTypes = false;
+        _contractTypesError = l.contractWorkLoadError;
+      });
+    }
+  }
+
+  List<ContractType> _mergeContractTypes(ContractTypeCollection collection) {
+    final merged = <ContractType>[];
+    final seen = <String>{};
+
+    void addTypes(List<ContractType> types) {
+      for (final type in types) {
+        if (seen.add(type.id)) {
+          merged.add(type);
+        }
+      }
+    }
+
+    addTypes(collection.userTypes);
+    addTypes(collection.globalTypes);
+    return merged;
+  }
+
+  void _resolveSelectedContractTypeIdAfterLoad() {
+    if (_contractTypes.isEmpty) {
+      _selectedContractTypeId = null;
+      return;
+    }
+
+    final currentId = _selectedContractTypeId;
+    if (currentId != null &&
+        _contractTypes.any((type) => type.id == currentId)) {
+      return;
+    }
+
+    final initialFromData = _extractContractTypeIdFromAdditionalData();
+    if (initialFromData != null) {
+      final initialId = initialFromData.toString();
+      final hasMatch =
+          _contractTypes.any((type) => type.id == initialId);
+      if (hasMatch) {
+        _selectedContractTypeId = initialId;
+        return;
+      }
+    }
+
+    _selectedContractTypeId = _contractTypes.first.id;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -1911,6 +2077,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 showContractWorkButton: widget.work.isContract,
                 onContractWorkTap:
                     widget.work.isContract ? _openContractWorkManager : null,
+                showContractFields: widget.work.isContract,
+                contractFieldsEnabled: _contractFieldsEnabled,
+                isContractFieldsLoading: _isLoadingContractTypes,
+                contractFieldsError: _contractTypesError,
+                contractTypes: _contractTypes,
+                selectedContractTypeId: _selectedContractTypeId,
+                onContractFieldsToggle: _handleContractFieldsToggle,
+                onContractTypeChanged: _handleContractTypeChanged,
+                onContractTypeRetry:
+                    widget.work.isContract ? () => _loadContractTypes() : null,
+                unitsController: _unitsController,
+                unitsValidator: _validateUnits,
+                onUnitsChanged: _handleAttendanceFieldChanged,
                 startTimeValidator: _validateStartTime,
                 endTimeValidator: _validateEndTime,
                 breakValidator: _validateBreakMinutes,
@@ -3081,9 +3260,26 @@ class _AttendanceSection extends StatelessWidget {
     required this.breakValidator,
     this.onContractWorkTap,
     this.showContractWorkButton = false,
+    this.showContractFields = false,
+    this.contractFieldsEnabled = false,
+    this.isContractFieldsLoading = false,
+    this.contractFieldsError,
+    this.contractTypes = const <ContractType>[],
+    this.selectedContractTypeId,
+    this.onContractFieldsToggle,
+    this.onContractTypeChanged,
+    this.onContractTypeRetry,
+    this.unitsController,
+    this.unitsValidator,
+    this.onUnitsChanged,
     this.statusMessage,
     this.isStatusError = false,
-  });
+  }) : assert(
+          !showContractFields ||
+              (unitsController != null &&
+                  unitsValidator != null &&
+                  onContractFieldsToggle != null),
+        );
 
   final String dateLabel;
   final VoidCallback onDateTap;
@@ -3101,6 +3297,18 @@ class _AttendanceSection extends StatelessWidget {
   final String? Function(String?) breakValidator;
   final VoidCallback? onContractWorkTap;
   final bool showContractWorkButton;
+  final bool showContractFields;
+  final bool contractFieldsEnabled;
+  final bool isContractFieldsLoading;
+  final String? contractFieldsError;
+  final List<ContractType> contractTypes;
+  final String? selectedContractTypeId;
+  final ValueChanged<bool>? onContractFieldsToggle;
+  final ValueChanged<String?>? onContractTypeChanged;
+  final VoidCallback? onContractTypeRetry;
+  final TextEditingController? unitsController;
+  final String? Function(String?)? unitsValidator;
+  final VoidCallback? onUnitsChanged;
   final String? statusMessage;
   final bool isStatusError;
 
@@ -3313,6 +3521,24 @@ class _AttendanceSection extends StatelessWidget {
                 );
               },
             ),
+            if (showContractFields) ...[
+              const SizedBox(height: 20),
+              _ContractEntryForm(
+                isActive: contractFieldsEnabled,
+                isLoading: isContractFieldsLoading,
+                errorMessage: contractFieldsError,
+                contractTypes: contractTypes,
+                selectedContractTypeId: selectedContractTypeId,
+                onToggle: onContractFieldsToggle!,
+                onTypeChanged: onContractTypeChanged,
+                onRetry: onContractTypeRetry,
+                unitsController: unitsController!,
+                unitsValidator: unitsValidator!,
+                onUnitsChanged: onUnitsChanged,
+                isSubmitting: isSubmitting,
+                isWorkOff: isWorkOff,
+              ),
+            ],
             const SizedBox(height: 24),
             _buildActionButtons(context, l),
             if (statusMessage != null)
@@ -4186,6 +4412,243 @@ class _SummaryStatusCard extends StatelessWidget {
                     ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractEntryForm extends StatelessWidget {
+  const _ContractEntryForm({
+    required this.isActive,
+    required this.isLoading,
+    required this.contractTypes,
+    required this.selectedContractTypeId,
+    required this.onToggle,
+    required this.unitsController,
+    required this.unitsValidator,
+    required this.isSubmitting,
+    required this.isWorkOff,
+    this.errorMessage,
+    this.onTypeChanged,
+    this.onRetry,
+    this.onUnitsChanged,
+  });
+
+  final bool isActive;
+  final bool isLoading;
+  final List<ContractType> contractTypes;
+  final String? selectedContractTypeId;
+  final ValueChanged<bool> onToggle;
+  final ValueChanged<String?>? onTypeChanged;
+  final VoidCallback? onRetry;
+  final TextEditingController unitsController;
+  final String? Function(String?) unitsValidator;
+  final VoidCallback? onUnitsChanged;
+  final bool isSubmitting;
+  final bool isWorkOff;
+  final String? errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final bool disableInteractions = isSubmitting || isWorkOff;
+    final bool hasSelectedType = contractTypes.any(
+      (type) => type.id == selectedContractTypeId,
+    );
+    final ContractType? selectedType = hasSelectedType
+        ? contractTypes.firstWhere(
+            (type) => type.id == selectedContractTypeId,
+            orElse: () => contractTypes.first,
+          )
+        : null;
+    final String? dropdownValue = hasSelectedType ? selectedContractTypeId : null;
+    final String unitLabel = (selectedType?.unitLabel.trim().isNotEmpty ?? false)
+        ? selectedType!.unitLabel.trim()
+        : l.contractWorkUnitFallback;
+    final String? rateHelperText = selectedType != null
+        ? '${l.contractWorkRateLabel}: '
+            '${selectedType.rate.toStringAsFixed(2)} / '
+            '${selectedType.unitLabel.trim().isNotEmpty ? selectedType.unitLabel : l.contractWorkUnitFallback}'
+        : null;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F9FF),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE0E7FF)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.contractWorkLabel,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                ),
+              ),
+              Switch.adaptive(
+                value: isActive,
+                activeColor: const Color(0xFF2563EB),
+                onChanged: disableInteractions ? null : onToggle,
+              ),
+            ],
+          ),
+          if (isActive) ...[
+            const SizedBox(height: 16),
+            if (isLoading) ...[
+              const SizedBox(
+                height: 4,
+                child: LinearProgressIndicator(
+                  backgroundColor: Color(0xFFE0E7FF),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                ),
+              ),
+            ] else if (errorMessage != null && errorMessage!.trim().isNotEmpty) ...[
+              _ContractFormMessage(
+                message: errorMessage!,
+                isError: true,
+                onRetry: onRetry,
+              ),
+            ] else if (contractTypes.isEmpty) ...[
+              _ContractFormMessage(
+                message: l.contractWorkNoCustomTypesLabel,
+                onRetry: onRetry,
+              ),
+            ] else ...[
+              DropdownButtonFormField<String>(
+                value: dropdownValue,
+                onChanged: disableInteractions ? null : onTypeChanged,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: l.contractWorkContractTypeLabel,
+                  prefixIcon: const Icon(
+                    Icons.assignment_rounded,
+                    color: Color(0xFF1D4ED8),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                items: contractTypes
+                    .map(
+                      (type) => DropdownMenuItem<String>(
+                        value: type.id,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              type.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '${type.rate.toStringAsFixed(2)} / '
+                              '${type.unitLabel.trim().isNotEmpty ? type.unitLabel : l.contractWorkUnitFallback}',
+                              style: TextStyle(
+                                color: const Color(0xFF64748B),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: unitsController,
+                enabled: !disableInteractions,
+                validator: unitsValidator,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: l.contractWorkUnitsLabel,
+                  prefixIcon: const Icon(
+                    Icons.inventory_2_outlined,
+                    color: Color(0xFF2563EB),
+                  ),
+                  suffixText: unitLabel,
+                  helperText: rateHelperText,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                onChanged: (_) => onUnitsChanged?.call(),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractFormMessage extends StatelessWidget {
+  const _ContractFormMessage({
+    required this.message,
+    this.isError = false,
+    this.onRetry,
+  });
+
+  final String message;
+  final bool isError;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color backgroundColor =
+        isError ? const Color(0xFFFFF1F2) : const Color(0xFFEFF6FF);
+    final Color foregroundColor =
+        isError ? const Color(0xFFB91C1C) : const Color(0xFF1D4ED8);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: foregroundColor.withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: TextStyle(
+              color: foregroundColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: Text(
+                AppLocalizations.of(context).retryButtonLabel,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
         ],
       ),
     );

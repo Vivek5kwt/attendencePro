@@ -43,14 +43,15 @@ class AttendanceRequest {
       if (isContractEntry != null) {
         payload['is_contract_entry'] = isContractEntry;
       }
-
-      final normalizedContractTypeId = contractTypeId ?? 1;
-      payload['contract_type_id'] = normalizedContractTypeId;
-      if (units != null) {
-        payload['units'] = units;
-      }
-      if (ratePerUnit != null) {
-        payload['rate_per_unit'] = ratePerUnit;
+      if (isContractEntry == true) {
+        final normalizedContractTypeId = contractTypeId ?? 1;
+        payload['contract_type_id'] = normalizedContractTypeId;
+        if (units != null) {
+          payload['units'] = units;
+        }
+        if (ratePerUnit != null) {
+          payload['rate_per_unit'] = ratePerUnit;
+        }
       }
     }
 
