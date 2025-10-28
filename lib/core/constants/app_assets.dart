@@ -29,4 +29,5 @@ class AppAssets {
   static const icClose = 'assets/images/ic_close.png';
   static const icShare = 'assets/images/ic_share.png';
   static const icDrawer = 'assets/images/ic_drawer.png';
+  static const icCalender = 'assets/images/ic_calender.png';
 }

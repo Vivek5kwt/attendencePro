@@ -858,10 +858,11 @@ class _MonthSelector extends StatelessWidget {
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.calendar_today,
-                  size: 20,
-                  color: Color(0xFF2563EB),
+                child: Image.asset(
+                  'assets/images/ic_calender.png',
+                  height: 20,
+                  width: 20,
+                  fit: BoxFit.contain,
                 ),
               ),
               const SizedBox(width: 12),
@@ -869,9 +870,9 @@ class _MonthSelector extends StatelessWidget {
                 child: Text(
                   selectedMonth,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF111827),
-                      ) ??
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF111827),
+                  ) ??
                       const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -906,10 +907,9 @@ class _MonthSelector extends StatelessWidget {
         final mediaQuery = MediaQuery.of(context);
         final screenHeight = mediaQuery.size.height;
         const baseHeaderExtent = 136.0;
-        final estimatedHeight =
-            baseHeaderExtent + (months.length * 56.0);
+        final estimatedHeight = baseHeaderExtent + (months.length * 56.0);
         final heightFactor =
-            (estimatedHeight / screenHeight).clamp(0.35, 0.85).toDouble();
+        (estimatedHeight / screenHeight).clamp(0.35, 0.85).toDouble();
         final sheetHeight = screenHeight * heightFactor;
         final showScrollbar = months.length > 6;
 
@@ -935,9 +935,9 @@ class _MonthSelector extends StatelessWidget {
                   Text(
                     label,
                     style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF111827),
-                        ) ??
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ) ??
                         const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 18,
@@ -959,11 +959,11 @@ class _MonthSelector extends StatelessWidget {
                             title: Text(
                               month,
                               style: textTheme.bodyLarge?.copyWith(
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.w500,
-                                    color: const Color(0xFF111827),
-                                  ) ??
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: const Color(0xFF111827),
+                              ) ??
                                   TextStyle(
                                     fontWeight: isSelected
                                         ? FontWeight.w600
@@ -974,9 +974,9 @@ class _MonthSelector extends StatelessWidget {
                             ),
                             trailing: isSelected
                                 ? const Icon(
-                                    Icons.check,
-                                    color: Color(0xFF2563EB),
-                                  )
+                              Icons.check,
+                              color: Color(0xFF2563EB),
+                            )
                                 : null,
                             onTap: () => Navigator.of(context).pop(month),
                           );
@@ -1000,6 +1000,7 @@ class _MonthSelector extends StatelessWidget {
     }
   }
 }
+
 
 class _CombinedSalaryCard extends StatelessWidget {
   const _CombinedSalaryCard({
