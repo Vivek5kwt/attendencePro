@@ -5137,8 +5137,6 @@ class _ContractTypeDropdownItem extends StatelessWidget {
           fontWeight: FontWeight.w500,
         );
 
-    final rateLabel = '${type.rate.toStringAsFixed(2)} / $unitLabel';
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -5147,7 +5145,6 @@ class _ContractTypeDropdownItem extends StatelessWidget {
           Expanded(
             child: _ContractTypeSummary(
               name: type.name,
-              rateLabel: rateLabel,
               nameStyle: titleStyle,
               rateStyle: subtitleStyle,
             ),
@@ -5197,8 +5194,6 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         );
-    final rateLabel = '${type.rate.toStringAsFixed(2)} / $unitLabel';
-
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
@@ -5209,7 +5204,6 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
             Expanded(
               child: _ContractTypeSummary(
                 name: type.name,
-                rateLabel: rateLabel,
                 nameStyle: labelStyle,
                 rateStyle: detailStyle,
               ),
@@ -5234,18 +5228,21 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
 class _ContractTypeSummary extends StatelessWidget {
   const _ContractTypeSummary({
     required this.name,
-    required this.rateLabel,
+    this.rateLabel,
     required this.nameStyle,
     required this.rateStyle,
   });
 
   final String name;
-  final String rateLabel;
+  final String? rateLabel;
   final TextStyle nameStyle;
   final TextStyle rateStyle;
 
   @override
   Widget build(BuildContext context) {
+    final sanitizedRateLabel = rateLabel?.trim();
+    final showRateLabel = sanitizedRateLabel != null && sanitizedRateLabel.isNotEmpty;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -5257,14 +5254,16 @@ class _ContractTypeSummary extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           softWrap: true,
         ),
-        const SizedBox(height: 4),
-        Text(
-          rateLabel,
-          style: rateStyle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          softWrap: true,
-        ),
+        if (showRateLabel) ...[
+          const SizedBox(height: 4),
+          Text(
+            sanitizedRateLabel!,
+            style: rateStyle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
+          ),
+        ],
       ],
     );
   }
