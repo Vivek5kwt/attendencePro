@@ -3849,8 +3849,8 @@ class _AttendanceSection extends StatelessWidget {
                   _AttendanceTimeCard(
                     label: l.startTimeLabel,
                     controller: startTimeController,
-                    icon: Icons.play_arrow_rounded,
-                    color: const Color(0xFF22C55E),
+                    icon: Icons.access_time_rounded,
+                    color: const Color(0xFF2563EB),
                     hintText: AppString.timeInputHint,
                     keyboardType: TextInputType.datetime,
                     textInputAction: TextInputAction.next,
@@ -3869,8 +3869,8 @@ class _AttendanceSection extends StatelessWidget {
                   _AttendanceTimeCard(
                     label: l.endTimeLabel,
                     controller: endTimeController,
-                    icon: Icons.stop_rounded,
-                    color: const Color(0xFFEF4444),
+                    icon: Icons.access_time_rounded,
+                    color: const Color(0xFF2563EB),
                     hintText: AppString.timeInputHint,
                     keyboardType: TextInputType.datetime,
                     textInputAction: TextInputAction.next,
@@ -3889,8 +3889,8 @@ class _AttendanceSection extends StatelessWidget {
                   _AttendanceTimeCard(
                     label: l.breakLabel,
                     controller: breakMinutesController,
-                    icon: Icons.local_cafe_rounded,
-                    color: const Color(0xFFF59E0B),
+                    icon: Icons.access_time_rounded,
+                    color: const Color(0xFF2563EB),
                     hintText: AppString.zeroInputHint,
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.done,
@@ -4405,7 +4405,7 @@ class _AttendanceSection extends StatelessWidget {
                       const SizedBox(width: 8),
                       const Text('hr', style: labelStyle),
                       const SizedBox(width: 14),
-                      _buildSegmentDivider(),
+                      _buildSegmentDivider(showColon: false),
                       const SizedBox(width: 14),
                       _buildSelectorSegment<int>(
                         width: 70,
@@ -4495,7 +4495,22 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSegmentDivider() {
+  Widget _buildSegmentDivider({bool showColon = true}) {
+    if (showColon) {
+      return SizedBox(
+        width: 14,
+        child: Center(
+          child: Text(
+            ':',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFCBD5F5),
+            ),
+          ),
+        ),
+      );
+    }
     return Container(
       width: 1,
       height: 38,
@@ -5250,12 +5265,14 @@ class _AttendanceTimeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconBadge = Container(
-      padding: const EdgeInsets.all(8),
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(14),
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Icon(icon, color: color, size: 20),
+      alignment: Alignment.center,
+      child: Icon(icon, color: color, size: 22),
     );
 
     final input = customField ??
