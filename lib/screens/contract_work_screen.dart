@@ -96,25 +96,45 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   void _syncAvailableSubtypes() {
-    final unique = <String>{};
-    for (final type in _defaultContractTypes) {
-      final value = type.subtype?.trim();
-      if (value != null && value.isNotEmpty) {
-        unique.add(value);
+    final unique = <String, String>{};
+
+    void addSubtype(String? rawValue) {
+      final value = rawValue?.trim();
+      if (value == null || value.isEmpty) {
+        return;
       }
-    }
-    for (final type in _userContractTypes) {
-      final value = type.subtype?.trim();
-      if (value != null && value.isNotEmpty) {
-        unique.add(value);
-      }
+      final key = value.toLowerCase();
+      unique.putIfAbsent(key, () => _formatSubtypeDisplay(value));
     }
 
-    final sorted = unique.toList()
+    for (final type in _defaultContractTypes) {
+      addSubtype(type.subtype);
+    }
+    for (final type in _userContractTypes) {
+      addSubtype(type.subtype);
+    }
+
+    final sorted = unique.values.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     _availableSubtypes
       ..clear()
       ..addAll(sorted);
+  }
+
+  String _formatSubtypeDisplay(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    switch (trimmed.toLowerCase()) {
+      case 'fixed':
+        return 'Fixed';
+      case 'bundle':
+        return 'Bundle';
+      default:
+        return trimmed;
+    }
   }
 
   void _removeContractType(_ContractType type) {
@@ -208,26 +228,56 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     final rateController =
         TextEditingController(text: type != null ? type.rate.toStringAsFixed(2) : '');
     final unitController =
-        TextEditingController(text: type?.unitLabel ?? l.contractWorkUnitFallback);
+        TextEditingController(text: type?.unitLabel ?? '');
     final isEditing = type != null;
     final isNameEditable = !(type?.isDefault ?? false);
 
-    final subtypeOptions = <String>[
-      ..._defaultSubtypeOptions,
-      ..._availableSubtypes.where(
-        (value) => !_defaultSubtypeOptions.contains(value),
-      ),
-    ];
+    final seenSubtypeOptions = <String>{};
+    final subtypeOptions = <String>[];
 
-    final existingSubtype = type?.subtype?.trim();
-    if (existingSubtype != null &&
-        existingSubtype.isNotEmpty &&
-        !subtypeOptions.contains(existingSubtype)) {
-      subtypeOptions.insert(0, existingSubtype);
+    void addSubtypeOption(String option, {bool prepend = false}) {
+      final formatted = _formatSubtypeDisplay(option);
+      if (formatted.isEmpty) {
+        return;
+      }
+      final key = formatted.toLowerCase();
+      if (seenSubtypeOptions.contains(key)) {
+        if (prepend) {
+          final existingIndex =
+              subtypeOptions.indexWhere((item) => item.toLowerCase() == key);
+          if (existingIndex > 0) {
+            final existingValue = subtypeOptions.removeAt(existingIndex);
+            subtypeOptions.insert(0, existingValue);
+          }
+        }
+        return;
+      }
+
+      seenSubtypeOptions.add(key);
+      if (prepend) {
+        subtypeOptions.insert(0, formatted);
+      } else {
+        subtypeOptions.add(formatted);
+      }
     }
 
-    String? selectedSubtypeValue =
-        existingSubtype?.isNotEmpty == true ? existingSubtype : null;
+    final existingSubtype = type?.subtype?.trim();
+    final existingSubtypeDisplay =
+        existingSubtype != null && existingSubtype.isNotEmpty
+            ? _formatSubtypeDisplay(existingSubtype)
+            : null;
+    if (existingSubtypeDisplay != null) {
+      addSubtypeOption(existingSubtypeDisplay, prepend: true);
+    }
+
+    for (final option in _defaultSubtypeOptions) {
+      addSubtypeOption(option);
+    }
+    for (final option in _availableSubtypes) {
+      addSubtypeOption(option);
+    }
+
+    String? selectedSubtypeValue = existingSubtypeDisplay;
     selectedSubtypeValue ??=
         subtypeOptions.isNotEmpty ? subtypeOptions.first : null;
 
