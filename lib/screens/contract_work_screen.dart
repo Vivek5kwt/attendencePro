@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
@@ -931,7 +932,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
               ElevatedButton(
                 onPressed: _loadContractTypes,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5856D6),
+                  elevation: 0,
+                  backgroundColor: const Color(0xFF4C6EF5),
                   foregroundColor: Colors.white,
                   padding:
                       responsive.scaledSymmetric(horizontal: 24, vertical: 12),
@@ -949,6 +951,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     } else {
       bodyContent = RefreshIndicator(
         key: const ValueKey('contract-types-content'),
+        color: const Color(0xFF4C6EF5),
+        backgroundColor: Colors.white,
         onRefresh: _loadContractTypes,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -966,7 +970,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  _SummaryHeader(
+                    SizedBox(height: responsive.scale(12)),
+                    _SummaryHeader(
                     title: l.contractWorkActiveRatesTitle,
                     totalTypes: totalTypes,
                     totalUnits: _totalUnits,
@@ -974,9 +979,16 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                     activeTypesLabel: l.contractWorkActiveTypesLabel,
                     totalUnitsLabel: l.contractWorkTotalUnitsLabel,
                     totalSalaryLabel: l.contractWorkTotalSalaryLabel,
+                    defaultCount: _defaultContractTypes.length,
+                    userDefinedCount: _userContractTypes.length,
+                    defaultTypesLabel: l.contractWorkDefaultTypesTitle,
+                    customTypesLabel: l.contractWorkCustomTypesTitle,
                   ),
                   SizedBox(height: responsive.scale(20)),
-                  _SectionTitle(text: l.contractWorkDefaultTypesTitle),
+                  _SectionTitle(
+                    text: l.contractWorkDefaultTypesTitle,
+                    itemCount: _defaultContractTypes.length,
+                  ),
                   SizedBox(height: responsive.scale(12)),
                   if (_defaultContractTypes.isEmpty)
                     _EmptyState(message: l.contractWorkNoEntriesLabel)
@@ -1004,24 +1016,36 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   SizedBox(height: responsive.scale(12)),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      style: TextButton.styleFrom(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xFF4C6EF5),
+                        foregroundColor: Colors.white,
                         padding: responsive.scaledSymmetric(
-                            horizontal: 20, vertical: 14),
-                        backgroundColor: const Color(0xFFEEF2FF),
-                        foregroundColor: const Color(0xFF4C1D95),
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(responsive.scale(16)),
+                              BorderRadius.circular(responsive.scale(18)),
                         ),
                       ),
                       onPressed: () => _showContractTypeDialog(),
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: Text(l.addContractWorkButton),
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(
+                        l.addContractWorkButton,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: responsive.scaleText(14),
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: responsive.scale(28)),
-                  _SectionTitle(text: l.contractWorkCustomTypesTitle),
+                  _SectionTitle(
+                    text: l.contractWorkCustomTypesTitle,
+                    itemCount: _userContractTypes.length,
+                  ),
                   SizedBox(height: responsive.scale(12)),
                   if (_userContractTypes.isEmpty)
                     _EmptyState(message: l.contractWorkNoCustomTypesLabel)
@@ -1085,7 +1109,10 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                           .toList(),
                     ),
                   SizedBox(height: responsive.scale(28)),
-                  _SectionTitle(text: l.contractWorkRecentEntriesTitle),
+                  _SectionTitle(
+                    text: l.contractWorkRecentEntriesTitle,
+                    itemCount: _recentEntries.length,
+                  ),
                   SizedBox(height: responsive.scale(12)),
                   if (_recentEntries.isEmpty)
                     _EmptyState(message: l.contractWorkNoEntriesLabel)
@@ -1118,53 +1145,120 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEDEBFF),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Image.asset(
-                AppAssets.contractWork,
-                width: 24,
-                height: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              l.contractWorkLabel,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: responsive.scaleText(20),
-                    color: const Color(0xFF111827),
-                  ) ??
-                  const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: Color(0xFF111827),
-                  ),
-            ),
-          ],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFF2F5FF), Color(0xFFFFFFFF)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ],
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: bodyContent,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        appBar: AppBar(
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          toolbarHeight: responsive.scale(72),
+          titleSpacing: 0,
+          title: Padding(
+            padding: EdgeInsets.symmetric(horizontal: responsive.scale(16)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(responsive.scale(12)),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(responsive.scale(18)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1A3C4BC8),
+                        blurRadius: 16,
+                        offset: Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    AppAssets.contractWork,
+                    width: responsive.scale(26),
+                    height: responsive.scale(26),
+                  ),
+                ),
+                SizedBox(width: responsive.scale(14)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l.contractWorkLabel,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: responsive.scaleText(20),
+                              color: const Color(0xFF0F172A),
+                            ) ??
+                            TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: responsive.scaleText(20),
+                              color: const Color(0xFF0F172A),
+                            ),
+                      ),
+                      SizedBox(height: responsive.scale(4)),
+                      Text(
+                        l.contractWorkSetupSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF475467),
+                              fontSize: responsive.scaleText(12),
+                            ) ??
+                            TextStyle(
+                              color: const Color(0xFF475467),
+                              fontSize: responsive.scaleText(12),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: responsive.scale(12)),
+                SizedBox(
+                  height: responsive.scale(44),
+                  width: responsive.scale(44),
+                  child: Material(
+                    color: Colors.white,
+                    elevation: 0,
+                    borderRadius: BorderRadius.circular(responsive.scale(14)),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: Center(
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: const Color(0xFF1F2937),
+                          size: responsive.scale(20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        body: SafeArea(
+          bottom: false,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: bodyContent,
+          ),
+        ),
       ),
     );
   }
@@ -1179,6 +1273,10 @@ class _SummaryHeader extends StatelessWidget {
     required this.activeTypesLabel,
     required this.totalUnitsLabel,
     required this.totalSalaryLabel,
+    required this.defaultCount,
+    required this.userDefinedCount,
+    required this.defaultTypesLabel,
+    required this.customTypesLabel,
   });
 
   final String title;
@@ -1188,13 +1286,17 @@ class _SummaryHeader extends StatelessWidget {
   final String activeTypesLabel;
   final String totalUnitsLabel;
   final String totalSalaryLabel;
+  final int defaultCount;
+  final int userDefinedCount;
+  final String defaultTypesLabel;
+  final String customTypesLabel;
 
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 360;
+        final isCompact = constraints.maxWidth < 380;
         final stats = [
           _SummaryItem(
             label: activeTypesLabel,
@@ -1209,64 +1311,207 @@ class _SummaryHeader extends StatelessWidget {
             value: '€${totalAmount.toStringAsFixed(2)}',
           ),
         ];
+        final progress = totalTypes == 0
+            ? 0.0
+            : (userDefinedCount / totalTypes).clamp(0.0, 1.0);
+        final ratioText = totalTypes == 0
+            ? customTypesLabel
+            : '$userDefinedCount / $totalTypes $customTypesLabel';
+
+        Widget statsLayout;
+        if (isCompact) {
+          statsLayout = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < stats.length; i++) ...[
+                stats[i],
+                if (i != stats.length - 1)
+                  SizedBox(height: responsive.scale(14)),
+              ],
+            ],
+          );
+        } else {
+          statsLayout = Row(
+            children: [
+              for (var i = 0; i < stats.length; i++) ...[
+                Expanded(child: stats[i]),
+                if (i != stats.length - 1)
+                  SizedBox(width: responsive.scale(20)),
+              ],
+            ],
+          );
+        }
 
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(responsive.scale(24)),
+            borderRadius: BorderRadius.circular(responsive.scale(26)),
             gradient: const LinearGradient(
-              colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+              colors: [Color(0xFF4C6EF5), Color(0xFF7C3AED)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A312E81),
+                blurRadius: 24,
+                offset: Offset(0, 18),
+              ),
+            ],
           ),
           padding: EdgeInsets.fromLTRB(
-            responsive.scale(24),
-            responsive.scale(24),
-            responsive.scale(24),
+            responsive.scale(26),
+            responsive.scale(26),
+            responsive.scale(26),
             responsive.scale(28),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: responsive.scaleText(18),
-                    ) ??
-                    TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: responsive.scaleText(18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: responsive.scale(52),
+                    height: responsive.scale(52),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius:
+                          BorderRadius.circular(responsive.scale(18)),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.24),
+                        width: 1.2,
+                      ),
                     ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.auto_graph_rounded,
+                      color: Colors.white,
+                      size: responsive.scale(26),
+                    ),
+                  ),
+                  SizedBox(width: responsive.scale(16)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: responsive.scaleText(18),
+                                  ) ??
+                                  TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: responsive.scaleText(18),
+                                  ),
+                        ),
+                        SizedBox(height: responsive.scale(6)),
+                        Text(
+                          '$totalTypes $activeTypesLabel',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                            fontSize: responsive.scaleText(13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: responsive.scale(22)),
+              statsLayout,
+              SizedBox(height: responsive.scale(24)),
+              Text(
+                ratioText,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.85),
+                  fontWeight: FontWeight.w600,
+                  fontSize: responsive.scaleText(13),
+                ),
+              ),
+              SizedBox(height: responsive.scale(10)),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(responsive.scale(12)),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: responsive.scale(6),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color(0xFF93C5FD),
+                  ),
+                  backgroundColor: Colors.white.withOpacity(0.25),
+                ),
               ),
               SizedBox(height: responsive.scale(18)),
-              if (isCompact)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < stats.length; i++) ...[
-                      stats[i],
-                      if (i != stats.length - 1)
-                        SizedBox(height: responsive.scale(14)),
-                    ],
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(child: stats[0]),
-                    SizedBox(width: responsive.scale(20)),
-                    Expanded(child: stats[1]),
-                    SizedBox(width: responsive.scale(20)),
-                    Expanded(child: stats[2]),
-                  ],
-                ),
+              Wrap(
+                spacing: responsive.scale(12),
+                runSpacing: responsive.scale(12),
+                children: [
+                  _SummaryCountChip(
+                    label: defaultTypesLabel,
+                    count: defaultCount,
+                  ),
+                  _SummaryCountChip(
+                    label: customTypesLabel,
+                    count: userDefinedCount,
+                  ),
+                ],
+              ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _SummaryCountChip extends StatelessWidget {
+  const _SummaryCountChip({
+    required this.label,
+    required this.count,
+  });
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(16),
+        vertical: responsive.scale(10),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(responsive.scale(40)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.28),
+        ),
+      ),
+      child: RichText(
+        text: TextSpan(
+          text: '$count ',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: responsive.scaleText(13),
+          ),
+          children: [
+            TextSpan(
+              text: label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontWeight: FontWeight.w500,
+                fontSize: responsive.scaleText(12),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1306,25 +1551,79 @@ class _SummaryItem extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.text});
+  const _SectionTitle({
+    required this.text,
+    this.itemCount,
+  });
 
   final String text;
+  final int? itemCount;
 
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF111827),
-            fontSize: responsive.scaleText(16),
-          ) ??
-          TextStyle(
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF111827),
-            fontSize: responsive.scaleText(16),
+    final count = itemCount;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: responsive.scale(5),
+          height: responsive.scale(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(responsive.scale(12)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4C6EF5), Color(0xFF7C3AED)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
+        ),
+        SizedBox(width: responsive.scale(12)),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                  fontSize: responsive.scaleText(16),
+                ) ??
+                TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                  fontSize: responsive.scaleText(16),
+                ),
+          ),
+        ),
+        if (count != null) ...[
+          SizedBox(width: responsive.scale(12)),
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.scale(12),
+              vertical: responsive.scale(6),
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(responsive.scale(40)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14313B5B),
+                  blurRadius: 12,
+                  offset: Offset(0, 8),
+                ),
+              ],
+              border: Border.all(color: const Color(0xFFE0E7FF)),
+            ),
+            child: Text(
+              count.toString(),
+              style: TextStyle(
+                color: const Color(0xFF312E81),
+                fontWeight: FontWeight.w700,
+                fontSize: responsive.scaleText(12),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1347,42 +1646,86 @@ class _ContractTypeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final l = AppLocalizations.of(context);
+    final List<Widget> chips = [
+      _InfoChip(
+        icon: Icons.euro_symbol_rounded,
+        label: l.contractWorkRateLabel,
+        value: type.displayRate,
+        backgroundColor: const Color(0xFFEFF6FF),
+        borderColor: const Color(0xFFD6DBFF),
+        labelColor: const Color(0xFF1E3A8A),
+        valueColor: const Color(0xFF0F172A),
+      ),
+      _InfoChip(
+        icon: Icons.speed_rounded,
+        label: l.contractWorkUnitsLabel,
+        value: type.unitLabel,
+        backgroundColor: const Color(0xFFEFF6FF),
+        borderColor: const Color(0xFFD6DBFF),
+        labelColor: const Color(0xFF1E3A8A),
+        valueColor: const Color(0xFF0F172A),
+      ),
+      if (type.displaySubtype != null)
+        _InfoChip(
+          icon: Icons.layers_outlined,
+          label: l.contractWorkContractTypeLabel,
+          value: type.displaySubtype!,
+          backgroundColor: const Color(0xFFEFF6FF),
+          borderColor: const Color(0xFFD6DBFF),
+          labelColor: const Color(0xFF1E3A8A),
+          valueColor: const Color(0xFF0F172A),
+        ),
+    ];
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFFFFF), Color(0xFFF5F9FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(responsive.scale(22)),
+        border: Border.all(color: const Color(0xFFE0E7FF)),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            color: Color(0x0F1E3A8A),
+            blurRadius: 18,
+            offset: Offset(0, 14),
           ),
         ],
       ),
       padding: EdgeInsets.fromLTRB(
-        responsive.scale(18),
         responsive.scale(20),
-        responsive.scale(18),
-        responsive.scale(18),
+        responsive.scale(22),
+        responsive.scale(20),
+        responsive.scale(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: EdgeInsets.all(responsive.scale(10)),
+                width: responsive.scale(48),
+                height: responsive.scale(48),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(responsive.scale(16)),
                 ),
-                child: const Icon(
+                alignment: Alignment.center,
+                child: Icon(
                   Icons.inventory_2_rounded,
-                  color: Color(0xFF1D4ED8),
+                  color: Colors.white,
+                  size: responsive.scale(22),
                 ),
               ),
-              SizedBox(width: responsive.scale(12)),
+              SizedBox(width: responsive.scale(14)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1391,16 +1734,16 @@ class _ContractTypeTile extends StatelessWidget {
                       type.name,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF111827),
+                            color: const Color(0xFF0F172A),
                             fontSize: responsive.scaleText(16),
                           ) ??
                           TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF111827),
+                            color: const Color(0xFF0F172A),
                             fontSize: responsive.scaleText(16),
                           ),
                     ),
-                    SizedBox(height: responsive.scale(4)),
+                    SizedBox(height: responsive.scale(6)),
                     Text(
                       '${type.displayRate} · ${type.unitLabel}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1408,24 +1751,10 @@ class _ContractTypeTile extends StatelessWidget {
                             fontSize: responsive.scaleText(13),
                           ) ??
                           TextStyle(
-                            color: Color(0xFF4B5563),
+                            color: const Color(0xFF4B5563),
                             fontSize: responsive.scaleText(13),
                           ),
                     ),
-                    if (type.displaySubtype != null) ...[
-                      SizedBox(height: responsive.scale(4)),
-                      Text(
-                        type.displaySubtype!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                              fontSize: responsive.scaleText(13),
-                            ) ??
-                            TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontSize: responsive.scaleText(13),
-                            ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -1436,24 +1765,39 @@ class _ContractTypeTile extends StatelessWidget {
                     vertical: responsive.scale(6),
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8FDF4),
-                    borderRadius: BorderRadius.circular(40),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(responsive.scale(40)),
                   ),
                   child: Text(
                     defaultTag,
                     style: TextStyle(
-                      color: Color(0xFF15803D),
-                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF166534),
+                      fontWeight: FontWeight.w700,
                       fontSize: responsive.scaleText(12),
                     ),
                   ),
                 ),
             ],
           ),
-          SizedBox(height: responsive.scale(16)),
+          SizedBox(height: responsive.scale(18)),
+          Wrap(
+            spacing: responsive.scale(10),
+            runSpacing: responsive.scale(10),
+            children: chips,
+          ),
+          SizedBox(height: responsive.scale(18)),
+          Divider(
+            height: 1,
+            color: const Color(0xFFE2E8F0),
+          ),
+          SizedBox(height: responsive.scale(18)),
           LayoutBuilder(
             builder: (context, constraints) {
-              final shouldStack = constraints.maxWidth < 340;
+              final shouldStack = constraints.maxWidth < 360;
               final dateColumn = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1473,27 +1817,36 @@ class _ContractTypeTile extends StatelessWidget {
                     type.formattedUpdatedDate,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF111827),
+                          color: const Color(0xFF0F172A),
                           fontSize: responsive.scaleText(14),
                         ) ??
                         TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF111827),
+                          color: const Color(0xFF0F172A),
                           fontSize: responsive.scaleText(14),
                         ),
                   ),
                 ],
               );
-              final editButton = TextButton(
+              final editButton = TextButton.icon(
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF4C1D95),
+                  backgroundColor: const Color(0xFFEFF6FF),
+                  foregroundColor: const Color(0xFF312E81),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.scale(18),
+                    vertical: responsive.scale(10),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(responsive.scale(16)),
+                  ),
                   textStyle: TextStyle(
                     fontSize: responsive.scaleText(14),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 onPressed: onEdit,
-                child: Text(editLabel),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(editLabel),
               );
 
               if (shouldStack) {
@@ -1546,9 +1899,20 @@ class _ContractEntryTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: Ink(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFFFFF), Color(0xFFF8F5FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(responsive.scale(20)),
+          border: Border.all(color: const Color(0xFFE0E7FF)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0F312E81),
+              blurRadius: 18,
+              offset: Offset(0, 14),
+            ),
+          ],
         ),
         padding: EdgeInsets.fromLTRB(
           responsive.scale(18),
@@ -1563,14 +1927,21 @@ class _ContractEntryTile extends StatelessWidget {
               builder: (context, constraints) {
                 final shouldWrap = constraints.maxWidth < 360;
                 final leading = Container(
-                  padding: EdgeInsets.all(responsive.scale(10)),
+                  width: responsive.scale(46),
+                  height: responsive.scale(46),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8FDF4),
-                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(responsive.scale(16)),
                   ),
-                  child: const Icon(
+                  alignment: Alignment.center,
+                  child: Icon(
                     Icons.assignment_outlined,
-                    color: Color(0xFF047857),
+                    color: Colors.white,
+                    size: responsive.scale(22),
                   ),
                 );
                 final titleColumn = Expanded(
@@ -1662,14 +2033,32 @@ class _ContractEntryTile extends StatelessWidget {
               spacing: responsive.scale(8),
               runSpacing: responsive.scale(8),
               children: [
-                _InfoChip(label: contractLabel, value: entry.contractName),
                 _InfoChip(
-                  label: unitsLabel,
-                  value: entry.unitsCompleted.toStringAsFixed(0),
+                  icon: Icons.assignment_turned_in_outlined,
+                  label: contractLabel,
+                  value: entry.contractName,
+                  backgroundColor: const Color(0xFFEFF6FF),
+                  borderColor: const Color(0xFFD6DBFF),
+                  labelColor: const Color(0xFF1E3A8A),
+                  valueColor: const Color(0xFF111827),
                 ),
                 _InfoChip(
+                  icon: Icons.stacked_line_chart_rounded,
+                  label: unitsLabel,
+                  value: entry.unitsCompleted.toStringAsFixed(0),
+                  backgroundColor: const Color(0xFFEFF6FF),
+                  borderColor: const Color(0xFFD6DBFF),
+                  labelColor: const Color(0xFF1E3A8A),
+                  valueColor: const Color(0xFF111827),
+                ),
+                _InfoChip(
+                  icon: Icons.payments_outlined,
                   label: rateLabel,
                   value: '€${entry.rate.toStringAsFixed(2)}',
+                  backgroundColor: const Color(0xFFEFF6FF),
+                  borderColor: const Color(0xFFD6DBFF),
+                  labelColor: const Color(0xFF1E3A8A),
+                  valueColor: const Color(0xFF111827),
                 ),
               ],
             ),
@@ -1681,30 +2070,64 @@ class _ContractEntryTile extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.label, required this.value});
+  const _InfoChip({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.backgroundColor,
+    this.labelColor,
+    this.valueColor,
+    this.borderColor,
+  });
 
   final String label;
   final String value;
+  final IconData? icon;
+  final Color? backgroundColor;
+  final Color? labelColor;
+  final Color? valueColor;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final resolvedBackground = backgroundColor ?? const Color(0xFFF3F4F6);
+    final resolvedLabelColor = labelColor ?? const Color(0xFF6B7280);
+    final resolvedValueColor = valueColor ?? const Color(0xFF111827);
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: responsive.scale(12),
         vertical: responsive.scale(8),
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(40),
+        color: resolvedBackground,
+        borderRadius: BorderRadius.circular(responsive.scale(16)),
+        border: borderColor != null ? Border.all(color: borderColor!) : null,
+        boxShadow: borderColor != null
+            ? const [
+                BoxShadow(
+                  color: Color(0x0F1E3A8A),
+                  blurRadius: 12,
+                  offset: Offset(0, 8),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: responsive.scale(16),
+              color: resolvedLabelColor,
+            ),
+            SizedBox(width: responsive.scale(6)),
+          ],
           Text(
             '$label: ',
             style: TextStyle(
-              color: Color(0xFF6B7280),
+              color: resolvedLabelColor,
               fontWeight: FontWeight.w600,
               fontSize: responsive.scaleText(12),
             ),
@@ -1712,7 +2135,7 @@ class _InfoChip extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: Color(0xFF111827),
+              color: resolvedValueColor,
               fontWeight: FontWeight.w700,
               fontSize: responsive.scaleText(12),
             ),
@@ -1730,32 +2153,75 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final l = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.shopping_basket_outlined,
-            size: 32,
-            color: Color(0xFF9CA3AF),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF8FAFF), Color(0xFFFFFFFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(responsive.scale(22)),
+        border: Border.all(color: const Color(0xFFE0E7FF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F1E3A8A),
+            blurRadius: 16,
+            offset: Offset(0, 12),
           ),
-          const SizedBox(height: 12),
+        ],
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(24),
+        vertical: responsive.scale(32),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: responsive.scale(64),
+            height: responsive.scale(64),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(responsive.scale(20)),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.inbox_outlined,
+              size: responsive.scale(28),
+              color: const Color(0xFF4C6EF5),
+            ),
+          ),
+          SizedBox(height: responsive.scale(16)),
           Text(
             message,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF6B7280),
-                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                  fontWeight: FontWeight.w700,
+                  fontSize: responsive.scaleText(14),
                 ) ??
-                const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontWeight: FontWeight.w600,
+                TextStyle(
+                  color: const Color(0xFF334155),
+                  fontWeight: FontWeight.w700,
+                  fontSize: responsive.scaleText(14),
+                ),
+          ),
+          SizedBox(height: responsive.scale(8)),
+          Text(
+            l.contractWorkSetupSubtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                  fontSize: responsive.scaleText(12),
+                ) ??
+                TextStyle(
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                  fontSize: responsive.scaleText(12),
                 ),
           ),
         ],
