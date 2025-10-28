@@ -22,7 +22,7 @@ void main() {
       expect(json['end_time'], '17:00');
       expect(json['break_minutes'], 45);
       expect(json['is_contract_entry'], isFalse);
-      expect(json.containsKey('contract_type_id'), isFalse);
+      expect(json['contract_type_id'], 1);
       expect(json.containsKey('units'), isFalse);
       expect(json.containsKey('rate_per_unit'), isFalse);
     });

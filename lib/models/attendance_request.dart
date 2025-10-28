@@ -44,11 +44,8 @@ class AttendanceRequest {
         payload['is_contract_entry'] = isContractEntry;
       }
 
-      final normalizedContractTypeId =
-          contractTypeId ?? (isContractEntry == true ? 1 : null);
-      if (normalizedContractTypeId != null) {
-        payload['contract_type_id'] = normalizedContractTypeId;
-      }
+      final normalizedContractTypeId = contractTypeId ?? 1;
+      payload['contract_type_id'] = normalizedContractTypeId;
       if (units != null) {
         payload['units'] = units;
       }
