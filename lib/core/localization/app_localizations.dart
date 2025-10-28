@@ -369,8 +369,12 @@ class AppLocalizations {
   String get workActivatedMessage => _value('workActivatedMessage');
   String get workNameLabel => _value('workNameLabel');
   String get workNameHint => _value('workNameHint');
+  String get workNameTooShortValidation =>
+      _value('workNameTooShortValidation');
   String get hourlySalaryLabel => _value('hourlySalaryLabel');
   String get hourlySalaryHint => _value('hourlySalaryHint');
+  String get hourlyRateNegativeValidation =>
+      _value('hourlyRateNegativeValidation');
   String get contractWorkHeader => _value('contractWorkHeader');
   String get addContractWorkButton => _value('addContractWorkButton');
   String get contractWorkDescription => _value('contractWorkDescription');
@@ -391,6 +395,8 @@ class AppLocalizations {
       _value('workDeleteConfirmationMessage');
   String get workDeleteConfirmButton => _value('workDeleteConfirmButton');
   String get workDeleteCancelButton => _value('workDeleteCancelButton');
+  String get workDeleteIrreversibleMessage =>
+      _value('workDeleteIrreversibleMessage');
   String get workDeleteSuccessMessage => _value('workDeleteSuccessMessage');
   String get workDeleteFailedMessage => _value('workDeleteFailedMessage');
   String get workSaveFailedMessage => _value('workSaveFailedMessage');
