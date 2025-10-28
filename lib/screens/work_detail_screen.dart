@@ -2925,116 +2925,6 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
-}
-
-class _ContractSummarySection extends StatefulWidget {
-  const _ContractSummarySection({
-    required this.items,
-  });
-
-  final List<_ContractItem> items;
-
-  @override
-  State<_ContractSummarySection> createState() => _ContractSummarySectionState();
-}
-
-class _ContractSummarySectionState extends State<_ContractSummarySection> {
-  bool _expanded = true;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final items = widget.items;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(28),
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l.contractWorkSummaryTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                          ) ??
-                          const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                          ),
-                    ),
-                  ),
-                  Text(
-                    l.summaryLabel,
-                    style: TextStyle(
-                      color: const Color(0xFF6B7280),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.0 : 0.5,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_up_rounded,
-                        color: Color(0xFF1F2937)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_expanded)
-            Column(
-              children: [
-                for (int i = 0; i < items.length; i++)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(24, i == 0 ? 0 : 12, 24,
-                        i == items.length - 1 ? 24 : 0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            items[i].title,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1F2937),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          items[i].price,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF22C55E),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSegmentedTimeField({
     required TextEditingController controller,
@@ -3424,6 +3314,117 @@ class _ContractSummarySectionState extends State<_ContractSummarySection> {
       color: const Color(0xFFE2E8F0),
     );
   }
+}
+
+class _ContractSummarySection extends StatefulWidget {
+  const _ContractSummarySection({
+    required this.items,
+  });
+
+  final List<_ContractItem> items;
+
+  @override
+  State<_ContractSummarySection> createState() => _ContractSummarySectionState();
+}
+
+class _ContractSummarySectionState extends State<_ContractSummarySection> {
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final items = widget.items;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l.contractWorkSummaryTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                          ) ??
+                          const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                          ),
+                    ),
+                  ),
+                  Text(
+                    l.summaryLabel,
+                    style: TextStyle(
+                      color: const Color(0xFF6B7280),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.0 : 0.5,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_up_rounded,
+                        color: Color(0xFF1F2937)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded)
+            Column(
+              children: [
+                for (int i = 0; i < items.length; i++)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(24, i == 0 ? 0 : 12, 24,
+                        i == items.length - 1 ? 24 : 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            items[i].title,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          items[i].price,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF22C55E),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
 }
 
 class _SummaryStatusCard extends StatelessWidget {
