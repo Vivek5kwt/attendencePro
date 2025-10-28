@@ -147,10 +147,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _showAddWorkDialog();
   }
 
-  Future<void> _openAttendanceHistory() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
+  Future<void> _openAttendanceHistory({bool fromDrawer = false}) async {
+    if (fromDrawer) {
+      Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const AttendanceHistoryScreen(),
@@ -158,10 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openContractWork() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
+  Future<void> _openContractWork({bool fromDrawer = false}) async {
+    if (fromDrawer) {
+      Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const ContractWorkScreen(),
@@ -179,10 +183,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openReportsSummary() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
+  Future<void> _openReportsSummary({bool fromDrawer = false}) async {
+    if (fromDrawer) {
+      Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+    }
     final workState = context.read<WorkBloc>().state;
     final works = workState.works;
     if (works.isEmpty) {
@@ -229,10 +235,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openHelpSupport() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
+  Future<void> _openHelpSupport({bool fromDrawer = false}) async {
+    if (fromDrawer) {
+      Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const HelpSupportScreen(),
@@ -1656,14 +1664,14 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.attendanceHistoryLabel,
               backgroundColor: const Color(0xFFFFF2F2),
               iconColor: const Color(0xFFFF3B30),
-              onTap: _openAttendanceHistory,
+              onTap: () => _openAttendanceHistory(fromDrawer: true),
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.contractWork,
               label: l.contractWorkLabel,
               backgroundColor: const Color(0xFFEDEBFF),
               iconColor: const Color(0xFF5856D6),
-              onTap: _openContractWork,
+              onTap: () => _openContractWork(fromDrawer: true),
             ),
             _DrawerMenuItem(
               icon: Icons.person_outline,
@@ -1686,7 +1694,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.reportsSummaryLabel,
               backgroundColor: const Color(0xFFE6F0FF),
               iconColor: const Color(0xFF2563EB),
-              onTap: _openReportsSummary,
+              onTap: () => _openReportsSummary(fromDrawer: true),
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.changeLanguage,
@@ -1705,7 +1713,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.helpSupportLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF007AFF),
-              onTap: _openHelpSupport,
+              onTap: () => _openHelpSupport(fromDrawer: true),
             ),
             _DrawerMenuItem(
               icon: Icons.delete_outline,
@@ -1809,77 +1817,336 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeBanner(AppLocalizations l) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Container(
-        height: 190,
+  Widget _buildHomeBanner(AppLocalizations l, WorkState state) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final works = state.works;
+    Work? activeWork;
+    for (final work in works) {
+      if (_isWorkActive(work)) {
+        activeWork = work;
+        break;
+      }
+    }
+    activeWork ??= works.isNotEmpty ? works.first : null;
 
-        width: double.infinity,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.centerRight,
-          children: [
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  AppAssets.bgBanner,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Positioned(
-              left: 24,
-              top: 28,
-              right: 150,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l.homeBannerTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
-                    ) ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l.homeBannerSubtitle,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      height: 1.4,
-                    ) ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          height: 1.4,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              right: -20,
-              top: -20,
-              bottom: 0,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Image.asset(
-                  AppAssets.homeBanner,
-                  fit: BoxFit.contain,
-                  height: 220,
-                ),
-              ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withOpacity(0.25),
+              blurRadius: 32,
+              offset: const Offset(0, 18),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primary.withOpacity(0.95),
+                  colorScheme.primaryContainer.withOpacity(0.85),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: -80,
+                right: -60,
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.25),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                      radius: 0.9,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -40,
+                left: -40,
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l.homeBannerTitle,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.2,
+                                    ) ??
+                                    const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l.homeBannerSubtitle,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white.withOpacity(0.85),
+                                      height: 1.45,
+                                    ) ??
+                                    TextStyle(
+                                      color: Colors.white.withOpacity(0.85),
+                                      fontSize: 14,
+                                      height: 1.45,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        SizedBox(
+                          height: 120,
+                          child: Image.asset(
+                            AppAssets.homeBanner,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildActiveWorkHighlight(l, activeWork),
+                    const SizedBox(height: 20),
+                    _buildBannerQuickActions(l),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveWorkHighlight(AppLocalizations l, Work? activeWork) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final hasActiveWork = activeWork != null;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: hasActiveWork ? () => _openWorkDetail(activeWork!) : _showAddWorkDialog,
+        borderRadius: BorderRadius.circular(24),
+        splashColor: Colors.white.withOpacity(0.12),
+        highlightColor: Colors.white.withOpacity(0.08),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.16),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                height: 44,
+                width: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l.activeWorkLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                            color: Colors.white.withOpacity(0.85),
+                            fontWeight: FontWeight.w600,
+                          ) ??
+                          TextStyle(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasActiveWork ? activeWork!.name : l.addYourFirstWork,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ) ??
+                          const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: hasActiveWork
+                    ? Icon(
+                        Icons.arrow_forward_rounded,
+                        key: const ValueKey('active-work-arrow'),
+                        color: Colors.white.withOpacity(0.85),
+                        size: 22,
+                      )
+                    : Container(
+                        key: const ValueKey('add-work-chip'),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add_rounded, color: colorScheme.primary, size: 18),
+                            const SizedBox(width: 6),
+                            Text(
+                              l.addNewWorkLabel,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ) ??
+                                  TextStyle(
+                                    color: colorScheme.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBannerQuickActions(AppLocalizations l) {
+    final children = <Widget>[
+      _buildQuickActionChip(
+        icon: Icons.add_circle_rounded,
+        label: l.addNewWorkLabel,
+        onTap: _showAddWorkDialog,
+        backgroundColor: Colors.white,
+        foregroundColor: Theme.of(context).colorScheme.primary,
+      ),
+      _buildQuickActionChip(
+        icon: Icons.history_toggle_off_rounded,
+        label: l.attendanceHistoryLabel,
+        onTap: () => _openAttendanceHistory(),
+      ),
+      _buildQuickActionChip(
+        icon: Icons.auto_graph_rounded,
+        label: l.reportsSummaryLabel,
+        onTap: () => _openReportsSummary(),
+      ),
+      _buildQuickActionChip(
+        icon: Icons.headset_mic_outlined,
+        label: l.helpSupportLabel,
+        onTap: () => _openHelpSupport(),
+      ),
+    ];
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      alignment: WrapAlignment.start,
+      children: children,
+    );
+  }
+
+  Widget _buildQuickActionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? backgroundColor,
+    Color? foregroundColor,
+  }) {
+    final theme = Theme.of(context);
+    final Color resolvedForeground = foregroundColor ?? Colors.white;
+    final Color resolvedBackground = backgroundColor ?? Colors.white.withOpacity(0.15);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        splashColor: Colors.white.withOpacity(0.12),
+        highlightColor: Colors.white.withOpacity(0.08),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: resolvedBackground,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(backgroundColor != null ? 0.18 : 0.25)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: resolvedForeground, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                      color: resolvedForeground,
+                      fontWeight: FontWeight.w600,
+                    ) ??
+                    TextStyle(
+                      color: resolvedForeground,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1944,7 +2211,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: works.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return _buildHomeBanner(l);
+            return _buildHomeBanner(l, state);
           }
           final work = works[index - 1];
           return Padding(
@@ -1977,7 +2244,7 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          _buildHomeBanner(l),
+          _buildHomeBanner(l, state),
           ...children,
         ],
       ),
