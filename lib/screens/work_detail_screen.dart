@@ -5006,7 +5006,7 @@ class _ContractEntryForm extends StatelessWidget {
                                   ? null
                                   : (value) => onTypeChanged?.call(entry, value),
                               isExpanded: true,
-                              itemHeight: 64,
+                              itemHeight: null,
                               selectedItemBuilder: (context) => contractTypes
                                   .map(
                                     (type) => _ContractTypeSelectedLabel(
@@ -5132,34 +5132,31 @@ class _ContractTypeDropdownItem extends StatelessWidget {
           fontWeight: FontWeight.w500,
         );
 
+    final rateLabel = '${type.rate.toStringAsFixed(2)} / $unitLabel';
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  type.name,
-                  style: titleStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${type.rate.toStringAsFixed(2)} / $unitLabel',
-                  style: subtitleStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            child: _ContractTypeSummary(
+              name: type.name,
+              rateLabel: rateLabel,
+              nameStyle: titleStyle,
+              rateStyle: subtitleStyle,
             ),
           ),
           const SizedBox(width: 12),
-          _ContractUnitBadge(label: unitLabel),
+          Flexible(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: _ContractUnitBadge(label: unitLabel),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -5186,43 +5183,84 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
         ) ??
         const TextStyle(fontWeight: FontWeight.w600);
 
+    final detailStyle = theme.textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF64748B),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF64748B),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        );
+    final rateLabel = '${type.rate.toStringAsFixed(2)} / $unitLabel';
+
     return Align(
       alignment: Alignment.centerLeft,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  type.name,
-                  style: labelStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${type.rate.toStringAsFixed(2)} / $unitLabel',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                      ) ??
-                      const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _ContractTypeSummary(
+                name: type.name,
+                rateLabel: rateLabel,
+                nameStyle: labelStyle,
+                rateStyle: detailStyle,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          _ContractUnitBadge(label: unitLabel),
-        ],
+            const SizedBox(width: 12),
+            Flexible(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _ContractUnitBadge(label: unitLabel),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _ContractTypeSummary extends StatelessWidget {
+  const _ContractTypeSummary({
+    required this.name,
+    required this.rateLabel,
+    required this.nameStyle,
+    required this.rateStyle,
+  });
+
+  final String name;
+  final String rateLabel;
+  final TextStyle nameStyle;
+  final TextStyle rateStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: nameStyle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          softWrap: true,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          rateLabel,
+          style: rateStyle,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          softWrap: true,
+        ),
+      ],
     );
   }
 }
@@ -5239,31 +5277,47 @@ class _ContractUnitBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final badgeColor = theme.colorScheme.primary.withOpacity(0.08);
     final textColor = theme.colorScheme.primary;
+    final borderColor = theme.colorScheme.primary.withOpacity(0.25);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: 6,
-        horizontal: 12,
-      ),
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: badgeColor,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: borderColor, width: 1),
       ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelSmall?.copyWith(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: 6,
+          horizontal: 12,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.schedule_rounded,
+              size: 14,
               color: textColor,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ) ??
-            TextStyle(
-              color: textColor,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
+              semanticLabel: label,
             ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ) ??
+                  TextStyle(
+                    color: textColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
