@@ -5006,7 +5006,15 @@ class _ContractEntryForm extends StatelessWidget {
                                   ? null
                                   : (value) => onTypeChanged?.call(entry, value),
                               isExpanded: true,
-                              itemHeight: null,
+                              itemHeight: 64,
+                              selectedItemBuilder: (context) => contractTypes
+                                  .map(
+                                    (type) => _ContractTypeSelectedLabel(
+                                      type: type,
+                                      fallbackUnitLabel: l.contractWorkUnitFallback,
+                                    ),
+                                  )
+                                  .toList(growable: false),
                               decoration: InputDecoration(
                                 labelText: l.contractWorkContractTypeLabel,
                                 prefixIcon: const Icon(
@@ -5027,30 +5035,10 @@ class _ContractEntryForm extends StatelessWidget {
                                   .map(
                                     (type) => DropdownMenuItem<String>(
                                       value: type.id,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            type.name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            '${type.rate.toStringAsFixed(2)} / '
-                                            '${type.unitLabel.trim().isNotEmpty ? type.unitLabel : l.contractWorkUnitFallback}',
-                                            style: const TextStyle(
-                                              color: Color(0xFF64748B),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                                      child: _ContractTypeDropdownItem(
+                                        type: type,
+                                        fallbackUnitLabel:
+                                            l.contractWorkUnitFallback,
                                       ),
                                     ),
                                   )
@@ -5109,6 +5097,173 @@ class _ContractEntryForm extends StatelessWidget {
             ],
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _ContractTypeDropdownItem extends StatelessWidget {
+  const _ContractTypeDropdownItem({
+    required this.type,
+    required this.fallbackUnitLabel,
+  });
+
+  final ContractType type;
+  final String fallbackUnitLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final unitLabel =
+        type.unitLabel.trim().isNotEmpty ? type.unitLabel.trim() : fallbackUnitLabel;
+
+    final titleStyle = theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(fontWeight: FontWeight.w600);
+
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF475569),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF475569),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  type.name,
+                  style: titleStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${type.rate.toStringAsFixed(2)} / $unitLabel',
+                  style: subtitleStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _ContractUnitBadge(label: unitLabel),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractTypeSelectedLabel extends StatelessWidget {
+  const _ContractTypeSelectedLabel({
+    required this.type,
+    required this.fallbackUnitLabel,
+  });
+
+  final ContractType type;
+  final String fallbackUnitLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final unitLabel =
+        type.unitLabel.trim().isNotEmpty ? type.unitLabel.trim() : fallbackUnitLabel;
+    final theme = Theme.of(context);
+
+    final labelStyle = theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(fontWeight: FontWeight.w600);
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  type.name,
+                  style: labelStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${type.rate.toStringAsFixed(2)} / $unitLabel',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
+                      ) ??
+                      const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _ContractUnitBadge(label: unitLabel),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractUnitBadge extends StatelessWidget {
+  const _ContractUnitBadge({
+    required this.label,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final badgeColor = theme.colorScheme.primary.withOpacity(0.08);
+    final textColor = theme.colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: 6,
+        horizontal: 12,
+      ),
+      decoration: BoxDecoration(
+        color: badgeColor,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ) ??
+            TextStyle(
+              color: textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.2,
+            ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
