@@ -1166,6 +1166,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return completer.future;
   }
 
+  Future<void> _handleDeleteWorkTap(Work work, AppLocalizations l) async {
+    await _handleWorkDismiss(work, l);
+  }
+
   Future<bool> _showWorkDeleteConfirmationDialog(AppLocalizations l) async {
     final result = await showDialog<bool>(
       context: context,
@@ -1734,15 +1738,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final disableActivateButton =
         isDeleting || (activationInProgress && !isActivating) || isActive;
 
+    final description = _resolveWorkDescription(work);
     final card = Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(24),
       elevation: 0,
       child: InkWell(
         onTap:
-        (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
+            (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
         onLongPress:
-        (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
+            (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: BoxDecoration(
@@ -1750,7 +1755,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color:
-              isActive ? const Color(0xFF34D399) : Colors.transparent,
+                  isActive ? const Color(0xFF34D399) : Colors.transparent,
               width: isActive ? 1.4 : 1,
             ),
             boxShadow: [
@@ -1762,183 +1767,292 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                height: 54,
-                width: 54,
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFFECFDF3)
-                      : const Color(0xFFE5F1FF),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  isActive ? Icons.workspace_premium_outlined : Icons.work_outline,
-                  color:
-                  isActive ? const Color(0xFF16A34A) : const Color(0xFF007BFF),
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 520;
+              final disableActions = isDeleting || isActivating;
+
+              Widget buildActionColumn({required bool alignStart}) {
+                final alignment =
+                    alignStart ? Alignment.centerLeft : Alignment.centerRight;
+                final wrapAlignment =
+                    alignStart ? WrapAlignment.start : WrapAlignment.end;
+
+                return Column(
+                  crossAxisAlignment: alignStart
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      work.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ) ??
-                          const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
+                    Align(
+                      alignment: alignment,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: work.isContract
+                              ? const Color(0xFFFFF5EC)
+                              : const Color(0xFFE5F6FE),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          work.isContract
+                              ? l.contractWorkLabel
+                              : l.hourlyWorkLabel,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0A0A0A),
                           ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatHourlyRate(work, l),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF4F5B67),
-                      ) ??
-                          const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF4F5B67),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: alignment,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: SizeTransition(
+                            sizeFactor: animation,
+                            axisAlignment: -1,
+                            child: child,
                           ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: work.isContract
-                          ? const Color(0xFFFFF5EC)
-                          : const Color(0xFFE5F6FE),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      work.isContract
-                          ? l.contractWorkLabel
-                          : l.hourlyWorkLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF0A0A0A),
+                        ),
+                        child: isActive
+                            ? Container(
+                                key: const ValueKey('active-badge'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFECFDF3),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.verified_rounded,
+                                      color: Color(0xFF22C55E),
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      l.activeWorkLabel,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF15803D),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : SizedBox(
+                                key: const ValueKey('activate-button'),
+                                height: 36,
+                                child: FilledButton.tonal(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14),
+                                    backgroundColor: const Color(0xFFEFF5FF),
+                                    foregroundColor: const Color(0xFF0052CC),
+                                    textStyle: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                  onPressed: disableActivateButton
+                                      ? null
+                                      : () => _handleSetActiveWork(work),
+                                  child: isActivating
+                                      ? Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(
+                                              height: 18,
+                                              width: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF0052CC),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(l.settingActiveWorkLabel),
+                                          ],
+                                        )
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.bolt_rounded, size: 18),
+                                            const SizedBox(width: 6),
+                                            Text(l.setActiveWorkButton),
+                                          ],
+                                        ),
+                                ),
+                              ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        axisAlignment: -1,
-                        child: child,
-                      ),
-                    ),
-                    child: isActive
-                        ? Container(
-                      key: const ValueKey('active-label'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF3),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: alignment,
+                      child: Wrap(
+                        alignment: wrapAlignment,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          const Icon(
-                            Icons.verified_rounded,
-                            color: Color(0xFF22C55E),
-                            size: 18,
+                          SizedBox(
+                            height: 36,
+                            child: FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFFEFF5FF),
+                                foregroundColor: const Color(0xFF0052CC),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16),
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              onPressed: disableActions
+                                  ? null
+                                  : () => _showEditWorkDialog(work),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: Text(l.editWorkTooltip),
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            l.activeWorkLabel,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF15803D),
+                          SizedBox(
+                            height: 36,
+                            child: FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16),
+                                backgroundColor: const Color(0xFFFFE8E6),
+                                foregroundColor: const Color(0xFFB42318),
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              onPressed: disableActions
+                                  ? null
+                                  : () => _handleDeleteWorkTap(work, l),
+                              icon: const Icon(Icons.delete_outline, size: 18),
+                              label: Text(l.workDeleteConfirmButton),
                             ),
                           ),
                         ],
                       ),
-                    )
-                        : SizedBox(
-                      key: const ValueKey('activate-button'),
-                      height: 36,
-                      child: FilledButton.tonal(
-                        style: FilledButton.styleFrom(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 14),
-                          backgroundColor: const Color(0xFFEFF5FF),
-                          foregroundColor: const Color(0xFF0052CC),
-                          textStyle: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                    ),
+                  ],
+                );
+              }
+
+              final Widget actionSection = isCompact
+                  ? buildActionColumn(alignStart: true)
+                  : SizedBox(width: 220, child: buildActionColumn(alignStart: false));
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 54,
+                        width: 54,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xFFECFDF3)
+                              : const Color(0xFFE5F1FF),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        onPressed: disableActivateButton
-                            ? null
-                            : () => _handleSetActiveWork(work),
-                        child: isActivating
-                            ? Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Icon(
+                          isActive
+                              ? Icons.workspace_premium_outlined
+                              : Icons.work_outline,
+                          color: isActive
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFF007BFF),
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF0052CC),
-                                ),
-                              ),
+                            Text(
+                              work.name,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ) ??
+                                  const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(l.settingActiveWorkLabel),
-                          ],
-                        )
-                            : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.bolt_rounded, size: 18),
-                            const SizedBox(width: 6),
-                            Text(l.setActiveWorkButton),
+                            const SizedBox(height: 6),
+                            Text(
+                              _formatHourlyRate(work, l),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF4F5B67),
+                                  ) ??
+                                  const TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF4F5B67),
+                                  ),
+                            ),
+                            if (description != null) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                description,
+                                maxLines: isCompact ? 3 : 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: const Color(0xFF6B7280),
+                                          height: 1.4,
+                                        ) ??
+                                    const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF6B7280),
+                                      height: 1.4,
+                                    ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
-                    ),
+                      if (!isCompact) ...[
+                        const SizedBox(width: 12),
+                        actionSection,
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  IconButton(
-                    onPressed: (isDeleting || isActivating)
-                        ? null
-                        : () => _showEditWorkDialog(work),
-                    icon: const Icon(Icons.edit, color: Color(0xFF007BFF)),
-                    splashRadius: 20,
-                    tooltip: l.editWorkTooltip,
-                  ),
+                  if (isCompact) ...[
+                    const SizedBox(height: 16),
+                    actionSection,
+                  ],
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -2050,6 +2164,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return false;
+  }
+
+  String? _resolveWorkDescription(Work work) {
+    final data = work.additionalData;
+    const possibleKeys = ['description', 'details', 'summary', 'note', 'notes'];
+
+    for (final key in possibleKeys) {
+      final value = data[key];
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isNotEmpty) {
+          return trimmed;
+        }
+      }
+    }
+
+    return null;
   }
 
   String _formatHourlyRate(Work work, AppLocalizations l) {
