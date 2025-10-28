@@ -3762,20 +3762,27 @@ class _AttendanceSection extends StatelessWidget {
                 final dateSelector = AbsorbPointer(
                   absorbing: !dateSelectionEnabled,
                   child: Opacity(
-                    opacity: dateSelectionEnabled ? 1 : 0.6,
+                    opacity: dateSelectionEnabled ? 1 : 0.7,
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         onTap: onDateTap,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: 14,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(16),
+                            color: const Color(0xFF2563EB),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x1A1D4ED8),
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -3783,15 +3790,15 @@ class _AttendanceSection extends StatelessWidget {
                               const Icon(
                                 Icons.calendar_month,
                                 size: 18,
-                                color: Color(0xFF2563EB),
+                                color: Colors.white,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
                                   dateLabel,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: Color(0xFF1D4ED8),
+                                    color: Colors.white,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -4123,7 +4130,7 @@ class _AttendanceSection extends StatelessWidget {
     required VoidCallback onValueChanged,
   }) {
     const placeholderStyle = TextStyle(
-      color: Color(0xFF9CA3AF),
+      color: Color(0xFF94A3B8),
       fontSize: 14,
       fontWeight: FontWeight.w600,
     );
@@ -4178,24 +4185,16 @@ class _AttendanceSection extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildSelectorSegment<int>(
-                          width: 72,
-                          value: selectedHour,
-                          placeholder: 'HH',
-                          items: _timeHourOptions
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSelectorSegment<int>(
+                        width: 70,
+                        value: selectedHour,
+                        placeholder: 'HH',
+                        items: _timeHourOptions
                             .map(
                               (hour) => DropdownMenuItem<int>(
                                 value: hour,
@@ -4206,8 +4205,8 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             )
                             .toList(),
-                          onChanged: enabled
-                              ? (value) {
+                        onChanged: enabled
+                            ? (value) {
                                 if (value == null) {
                                   controller.clear();
                                   field.didChange('');
@@ -4217,16 +4216,16 @@ class _AttendanceSection extends StatelessWidget {
                                 }
                               }
                             : null,
-                          placeholderStyle: placeholderStyle,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSegmentDivider(),
-                        const SizedBox(width: 8),
-                        _buildSelectorSegment<int>(
-                          width: 72,
-                          value: selectedMinute,
-                          placeholder: 'MM',
-                          items: minuteOptions
+                        placeholderStyle: placeholderStyle,
+                      ),
+                      const SizedBox(width: 10),
+                      _buildSegmentDivider(),
+                      const SizedBox(width: 10),
+                      _buildSelectorSegment<int>(
+                        width: 70,
+                        value: selectedMinute,
+                        placeholder: 'MM',
+                        items: minuteOptions
                             .map(
                               (minute) => DropdownMenuItem<int>(
                                 value: minute,
@@ -4237,8 +4236,8 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             )
                             .toList(),
-                          onChanged: enabled
-                              ? (value) {
+                        onChanged: enabled
+                            ? (value) {
                                 if (value == null) {
                                   controller.clear();
                                   field.didChange('');
@@ -4248,16 +4247,16 @@ class _AttendanceSection extends StatelessWidget {
                                 }
                               }
                             : null,
-                          placeholderStyle: placeholderStyle,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSegmentDivider(),
-                        const SizedBox(width: 8),
-                        _buildSelectorSegment<DayPeriod>(
-                          width: 84,
-                          value: selectedPeriod,
-                          placeholder: AppString.amLabel,
-                          items: DayPeriod.values
+                        placeholderStyle: placeholderStyle,
+                      ),
+                      const SizedBox(width: 10),
+                      _buildSegmentDivider(),
+                      const SizedBox(width: 10),
+                      _buildSelectorSegment<DayPeriod>(
+                        width: 82,
+                        value: selectedPeriod,
+                        placeholder: AppString.amLabel,
+                        items: DayPeriod.values
                             .map(
                               (period) => DropdownMenuItem<DayPeriod>(
                                 value: period,
@@ -4270,21 +4269,20 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             )
                             .toList(),
-                          onChanged: enabled
-                              ? (value) {
-                                  if (value == null) {
-                                    controller.clear();
-                                    field.didChange('');
-                                    onValueChanged();
-                                  } else {
-                                    updateValue(period: value);
-                                  }
+                        onChanged: enabled
+                            ? (value) {
+                                if (value == null) {
+                                  controller.clear();
+                                  field.didChange('');
+                                  onValueChanged();
+                                } else {
+                                  updateValue(period: value);
                                 }
-                              : null,
-                          placeholderStyle: placeholderStyle,
-                        ),
-                      ],
-                    ),
+                              }
+                            : null,
+                        placeholderStyle: placeholderStyle,
+                      ),
+                    ],
                   ),
                 ),
                 if (field.hasError)
@@ -4310,7 +4308,7 @@ class _AttendanceSection extends StatelessWidget {
     required VoidCallback onValueChanged,
   }) {
     const placeholderStyle = TextStyle(
-      color: Color(0xFF9CA3AF),
+      color: Color(0xFF94A3B8),
       fontSize: 14,
       fontWeight: FontWeight.w600,
     );
@@ -4380,77 +4378,68 @@ class _AttendanceSection extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFFBEB),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildSelectorSegment<int>(
-                          width: 72,
-                          value: resolvedHour,
-                          placeholder: '00',
-                          items: hourItems,
-                          onChanged: enabled
-                              ? (value) {
-                                  if (value == null) {
-                                    controller.clear();
-                                    field.didChange('');
-                                    onValueChanged();
-                                    return;
-                                  }
-                                  final minutes = _breakMinutesForHour(value).first;
-                                  updateBreakValue(value, minutes);
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSelectorSegment<int>(
+                        width: 70,
+                        value: resolvedHour,
+                        placeholder: '00',
+                        items: hourItems,
+                        onChanged: enabled
+                            ? (value) {
+                                if (value == null) {
+                                  controller.clear();
+                                  field.didChange('');
+                                  onValueChanged();
+                                  return;
                                 }
-                              : null,
-                          placeholderStyle: placeholderStyle,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text('hr', style: labelStyle),
-                        const SizedBox(width: 12),
-                        _buildSegmentDivider(),
-                        const SizedBox(width: 12),
-                        _buildSelectorSegment<int>(
-                          width: 72,
-                          value: resolvedMinute,
-                          placeholder: '00',
-                          items: minutesForHour
-                              .map(
-                                (minute) => DropdownMenuItem<int>(
-                                  value: minute,
-                                  child: Text(
-                                    minute.toString().padLeft(2, '0'),
-                                    style: valueStyle,
-                                  ),
+                                final minutes = _breakMinutesForHour(value).first;
+                                updateBreakValue(value, minutes);
+                              }
+                            : null,
+                        placeholderStyle: placeholderStyle,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('hr', style: labelStyle),
+                      const SizedBox(width: 14),
+                      _buildSegmentDivider(),
+                      const SizedBox(width: 14),
+                      _buildSelectorSegment<int>(
+                        width: 70,
+                        value: resolvedMinute,
+                        placeholder: '00',
+                        items: minutesForHour
+                            .map(
+                              (minute) => DropdownMenuItem<int>(
+                                value: minute,
+                                child: Text(
+                                  minute.toString().padLeft(2, '0'),
+                                  style: valueStyle,
                                 ),
-                              )
-                              .toList(),
-                          onChanged: enabled
-                              ? (value) {
-                                  if (value == null) {
-                                    controller.clear();
-                                    field.didChange('');
-                                    onValueChanged();
-                                    return;
-                                  }
-                                  final hour =
-                                      resolvedHour ?? _breakHourOptions.first;
-                                  updateBreakValue(hour, value);
+                              ),
+                            )
+                            .toList(),
+                        onChanged: enabled
+                            ? (value) {
+                                if (value == null) {
+                                  controller.clear();
+                                  field.didChange('');
+                                  onValueChanged();
+                                  return;
                                 }
-                              : null,
-                          placeholderStyle: placeholderStyle,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text('min', style: labelStyle),
-                      ],
-                    ),
+                                final hour =
+                                    resolvedHour ?? _breakHourOptions.first;
+                                updateBreakValue(hour, value);
+                              }
+                            : null,
+                        placeholderStyle: placeholderStyle,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('min', style: labelStyle),
+                    ],
                   ),
                 ),
                 if (field.hasError)
@@ -5252,67 +5241,84 @@ class _AttendanceTimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconBadge = Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(icon, color: color, size: 20),
+    );
+
+    final input = customField ??
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          validator: validator,
+          onChanged: onChanged,
+          enabled: enabled,
+          inputFormatters: inputFormatters,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            border: InputBorder.none,
+            isDense: true,
+            hintStyle: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+        );
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F1E293B),
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF6B7280),
-                  ),
-                  softWrap: true,
-                ),
-              ),
-            ],
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F2937),
+            ),
           ),
-          const SizedBox(height: 12),
-          customField ??
-              TextFormField(
-                controller: controller,
-                keyboardType: keyboardType,
-                textInputAction: textInputAction,
-                validator: validator,
-                onChanged: onChanged,
-                enabled: enabled,
-                inputFormatters: inputFormatters,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: hintText,
-                  hintStyle: const TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                iconBadge,
+                const SizedBox(width: 12),
+                Expanded(child: input),
+              ],
+            ),
+          ),
         ],
       ),
     );
