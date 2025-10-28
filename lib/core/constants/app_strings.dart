@@ -17,14 +17,29 @@ abstract final class AppString {
   static const String pmLabel = 'PM';
   static const String contractNameHint = 'Water melon, Orange';
   static const String contractRateHint = 'Price Per 100 Bunches';
-  static const String contractUnitHint = 'per crate';
+  static const String contractUnitHint = 'per beans';
   static const String euroPrefix = '€ ';
   static const String emDash = '—';
+  static const String fallbackContractItemWatermelonTitle = 'Watermelon';
+  static const String fallbackContractItemWatermelonPrice =
+      'Price per Crate (\$)';
   static const String fallbackContractItemTitle = 'Ravanello (10 qty)';
-  static const String fallbackContractItemPriceLow = '\$3 / 100 units';
-  static const String fallbackContractItemPriceHigh = '\$4 / 100 units';
+  static const String fallbackContractItemRavanello15Title =
+      'Ravanello (15 qty)';
+  static const String fallbackContractItemRavanello18Title =
+      'Ravanello (18 qty)';
+  static const String fallbackContractItemRavanello18AltTitle =
+      'Ravanello (18 qty)';
+  static const String fallbackContractItemRavanelloPrice =
+      'Price Per 100 Bunches';
+  static const String fallbackContractItemPriceLow = 'Price Per 100 Bunches';
+  static const String fallbackContractItemPriceHigh = 'Price Per 100 Bunches';
   static const String fallbackContractItemCarrotTitle = 'Carrot';
-  static const String fallbackContractItemCarrotPrice = '\$5 / crate';
+  static const String fallbackContractItemCarrotPrice =
+      'Price per Crate (\$)';
+  static const String fallbackContractItemOrangeTitle = 'Orange';
+  static const String fallbackContractItemOrangePrice =
+      'Price per Crate (\$)';
   static const String fallbackSummaryHours = '156.5h';
   static const String fallbackSummarySalary = '\$1950';
   static const String fallbackSummaryHourly = '\$956';

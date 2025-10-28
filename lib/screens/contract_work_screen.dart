@@ -535,7 +535,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                               ),
                                             const SizedBox(height: 20),
                                             Text(
-                                              '${l.contractWorkPricePerCrateLabel} (${AppString.euroPrefix.trim()})',
+                                              '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
                                               style: textTheme.bodyMedium?.copyWith(
                                                     fontWeight: FontWeight.w600,
                                                     color: const Color(0xFF1F2937),
