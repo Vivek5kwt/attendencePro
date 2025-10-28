@@ -3352,14 +3352,19 @@ class _MonthlySummarySection extends StatelessWidget {
               final maxWidth = constraints.maxWidth;
               final isCompact = maxWidth < 420;
               final crossAxisCount = isCompact ? 1 : 2;
-              final childAspectRatio = isCompact ? 3.2 : 2.4;
+              const crossAxisSpacing = 12.0;
+              final availableWidth =
+                  maxWidth - crossAxisSpacing * (crossAxisCount - 1);
+              final itemWidth = availableWidth / crossAxisCount;
+              final desiredHeight = isCompact ? 164.0 : 156.0;
+              final childAspectRatio = itemWidth / desiredHeight;
 
               return GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: crossAxisCount,
                 mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
+                crossAxisSpacing: crossAxisSpacing,
                 childAspectRatio: childAspectRatio,
                 children:
                     stats.map((stat) => _SummaryStatCard(stat: stat)).toList(),
@@ -3478,57 +3483,136 @@ class _SummaryStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = stat.color;
+    final secondaryColor = Color.lerp(baseColor, Colors.white, 0.2)!;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: const [
           BoxShadow(
             color: Color(0x14222C3A),
-            offset: Offset(0, 18),
-            blurRadius: 36,
+            offset: Offset(0, 16),
+            blurRadius: 32,
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: stat.color.withOpacity(0.18),
-              borderRadius: BorderRadius.circular(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [baseColor, secondaryColor],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const SizedBox.expand(),
             ),
-            child: Icon(
-              stat.icon,
-              color: stat.color,
-              size: 24,
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: 72,
+                  child: CustomPaint(
+                    painter: _SummaryStatWavePainter(
+                      color: Colors.white.withOpacity(0.38),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            stat.title,
-            style: TextStyle(
-              color: const Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.22),
+                    ),
+                    child: Icon(
+                      stat.icon,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          stat.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          stat.value,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 28,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            stat.value,
-            style: TextStyle(
-              color: stat.color,
-              fontWeight: FontWeight.w700,
-              fontSize: 22,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _SummaryStatWavePainter extends CustomPainter {
+  const _SummaryStatWavePainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    final startX = size.width * 0.7;
+
+    path.moveTo(startX, -size.height * 0.15);
+    path.quadraticBezierTo(
+      size.width * 0.95,
+      size.height * 0.25,
+      size.width * 0.5,
+      size.height * 0.5,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.05,
+      size.height * 0.75,
+      size.width * 0.8,
+      size.height * 1.15,
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SummaryStatWavePainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
 
