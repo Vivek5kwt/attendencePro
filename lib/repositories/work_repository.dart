@@ -72,6 +72,7 @@ class WorkRepository {
     required Work work,
     required String name,
     required num hourlyRate,
+    required bool isContract,
   }) async {
     final token = await _sessionManager.getToken();
     if (token == null || token.isEmpty) {
@@ -83,6 +84,7 @@ class WorkRepository {
         id: work.id,
         name: name,
         hourlyRate: hourlyRate,
+        isContract: isContract,
         token: token,
       );
       return WorkActionResult.from(response);

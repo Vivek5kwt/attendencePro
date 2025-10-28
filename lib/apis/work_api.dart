@@ -57,6 +57,7 @@ class WorkApi {
     required String id,
     required String name,
     required num hourlyRate,
+    required bool isContract,
     required String token,
   }) async {
     final uri = Uri.parse('$baseUrl/api/works/$id');
@@ -68,6 +69,7 @@ class WorkApi {
     final body = jsonEncode({
       'name': name,
       'hourly_rate': hourlyRate,
+      'is_contract': isContract,
     });
 
     try {

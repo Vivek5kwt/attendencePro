@@ -40,6 +40,7 @@ class AttendanceEntryRepository {
     int? contractTypeId,
     num? units,
     num? ratePerUnit,
+    List<AttendanceContractBundle>? bundles,
   }) async {
     final token = await _sessionManager.getToken();
     if (token == null || token.isEmpty) {
@@ -57,6 +58,7 @@ class AttendanceEntryRepository {
       contractTypeId: contractTypeId,
       units: units,
       ratePerUnit: ratePerUnit,
+      bundles: bundles,
     );
 
     try {
@@ -80,6 +82,7 @@ class AttendanceEntryRepository {
     int? contractTypeId,
     num? units,
     num? ratePerUnit,
+    List<AttendanceContractBundle>? bundles,
   }) async {
     final token = await _sessionManager.getToken();
     if (token == null || token.isEmpty) {
@@ -97,6 +100,7 @@ class AttendanceEntryRepository {
       contractTypeId: contractTypeId,
       units: units,
       ratePerUnit: ratePerUnit,
+      bundles: bundles,
     );
 
     try {
@@ -144,6 +148,7 @@ class AttendanceEntryRepository {
     int? contractTypeId,
     num? units,
     num? ratePerUnit,
+    List<AttendanceContractBundle>? bundles,
   }) {
     final payloadWorkId = int.tryParse(workId) ?? workId;
     return AttendanceRequest(
@@ -157,6 +162,7 @@ class AttendanceEntryRepository {
       contractTypeId: contractTypeId,
       units: units,
       ratePerUnit: ratePerUnit,
+      bundles: bundles,
     );
   }
 }

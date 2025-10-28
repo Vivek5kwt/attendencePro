@@ -9,6 +9,7 @@ class AttendanceRequest {
     this.contractTypeId,
     this.units,
     this.ratePerUnit,
+    this.bundles,
     this.isLeave = false,
   });
 
@@ -21,6 +22,7 @@ class AttendanceRequest {
   final int? contractTypeId;
   final num? units;
   final num? ratePerUnit;
+  final List<AttendanceContractBundle>? bundles;
   final bool isLeave;
 
   Map<String, dynamic> toJson() {
@@ -44,13 +46,30 @@ class AttendanceRequest {
         payload['is_contract_entry'] = isContractEntry;
       }
       if (isContractEntry == true) {
-        final normalizedContractTypeId = contractTypeId ?? 1;
-        payload['contract_type_id'] = normalizedContractTypeId;
-        if (units != null) {
-          payload['units'] = units;
+        final hasBundles = bundles != null && bundles!.isNotEmpty;
+        if (hasBundles) {
+          payload['bundles'] =
+              bundles!.map((bundle) => bundle.toJson()).toList(growable: false);
         }
-        if (ratePerUnit != null) {
-          payload['rate_per_unit'] = ratePerUnit;
+        if (!hasBundles) {
+          final normalizedContractTypeId = contractTypeId ?? 1;
+          payload['contract_type_id'] = normalizedContractTypeId;
+          if (units != null) {
+            payload['units'] = units;
+          }
+          if (ratePerUnit != null) {
+            payload['rate_per_unit'] = ratePerUnit;
+          }
+        } else {
+          if (contractTypeId != null) {
+            payload['contract_type_id'] = contractTypeId;
+          }
+          if (units != null) {
+            payload['units'] = units;
+          }
+          if (ratePerUnit != null) {
+            payload['rate_per_unit'] = ratePerUnit;
+          }
         }
       }
     }
@@ -77,5 +96,22 @@ class AttendanceRequest {
       return iso;
     }
     return iso.substring(0, separatorIndex);
+  }
+}
+
+class AttendanceContractBundle {
+  const AttendanceContractBundle({
+    required this.contractTypeId,
+    required this.count,
+  });
+
+  final int contractTypeId;
+  final int count;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'contract_type_id': contractTypeId,
+      'count': count,
+    };
   }
 }

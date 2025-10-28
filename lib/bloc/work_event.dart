@@ -43,11 +43,13 @@ class WorkUpdated extends WorkEvent {
     required this.work,
     required this.name,
     required this.hourlyRate,
+    required this.isContract,
   });
 
   final Work work;
   final String name;
   final num hourlyRate;
+  final bool isContract;
 }
 
 class WorkActivated extends WorkEvent {

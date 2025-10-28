@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
+import '../models/attendance_request.dart' show AttendanceContractBundle;
 import '../models/contract_type.dart';
 import '../models/dashboard_summary.dart';
 import '../models/missed_attendance_completion.dart';
@@ -343,13 +344,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final TextEditingController _endTimeController = TextEditingController();
   final TextEditingController _breakMinutesController =
       TextEditingController(text: '0');
-  final TextEditingController _unitsController = TextEditingController();
   final TextEditingController _ratePerUnitController = TextEditingController();
 
   List<ContractType> _contractTypes = const <ContractType>[];
   bool _isLoadingContractTypes = false;
   String? _contractTypesError;
-  String? _selectedContractTypeId;
+  final List<_ContractBundleFormEntry> _contractBundleEntries =
+      <_ContractBundleFormEntry>[];
+  int _bundleEntryCounter = 0;
   bool _contractFieldsEnabled = false;
   bool _markAsWorkOff = false;
   String? _previousStartTime;
@@ -373,10 +375,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     super.initState();
     _initializeAttendanceControllers();
     if (widget.work.isContract) {
-      final initialContractTypeId = _extractContractTypeIdFromAdditionalData();
-      if (initialContractTypeId != null) {
-        _selectedContractTypeId = initialContractTypeId.toString();
-      }
+      final initialContractTypeId =
+          _extractContractTypeIdFromAdditionalData()?.toString();
+      _ensurePrimaryBundleEntry(initialContractTypeId: initialContractTypeId);
+    } else {
+      _contractBundleEntries.clear();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -531,6 +534,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _selectedDate = DateTime.now();
     _dateLabelOverride = null;
 
+    if (!widget.work.isContract && _contractBundleEntries.isNotEmpty) {
+      for (final entry in _contractBundleEntries) {
+        entry.dispose();
+      }
+      _contractBundleEntries.clear();
+    }
+
     final additionalData = widget.work.additionalData;
     final initialDate = _extractDateFromMap(additionalData, const [
       'date',
@@ -567,14 +577,32 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _breakMinutesController.text = '0';
     }
 
-    final unitsText = _extractNumericText(additionalData, const [
-      'units',
-      'unit_count',
-      'unitCount',
-      'unitsCompleted',
-    ]);
-    if (unitsText != null) {
-      _unitsController.text = unitsText;
+    var bundlesApplied = false;
+    if (widget.work.isContract) {
+      bundlesApplied = _applyBundleDataFromMap(
+        additionalData,
+        replaceExisting: true,
+      );
+    }
+    if (widget.work.isContract && !bundlesApplied) {
+      final unitsText = _extractNumericText(additionalData, const [
+        'units',
+        'unit_count',
+        'unitCount',
+        'unitsCompleted',
+      ]);
+      if (unitsText != null && unitsText.trim().isNotEmpty) {
+        final primaryEntry = _ensurePrimaryBundleEntry();
+        primaryEntry.controller
+          ..text = unitsText.trim()
+          ..selection = TextSelection.collapsed(
+            offset: primaryEntry.controller.text.length,
+          );
+      }
+    }
+
+    if (widget.work.isContract) {
+      _ensurePrimaryBundleEntry();
     }
 
     final rateText = _extractNumericText(additionalData, const [
@@ -613,7 +641,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    final hasData = _unitsController.text.trim().isNotEmpty;
+    final hasData = _contractBundleEntries.any(
+      (entry) => entry.controller.text.trim().isNotEmpty,
+    );
     if (!hasData || _contractFieldsEnabled) {
       return;
     }
@@ -655,14 +685,32 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _breakMinutesController.text = breakMinutes.toString();
     }
 
-    final unitsText = _extractNumericText(entry.raw, const [
-      'units',
-      'unit_count',
-      'unitCount',
-      'unitsCompleted',
-    ]);
-    if (unitsText != null && unitsText.trim().isNotEmpty) {
-      _unitsController.text = unitsText.trim();
+    var bundlesApplied = false;
+    if (widget.work.isContract) {
+      bundlesApplied = _applyBundleDataFromMap(
+        entry.raw,
+        replaceExisting: true,
+      );
+    }
+    if (!bundlesApplied) {
+      final unitsText = _extractNumericText(entry.raw, const [
+        'units',
+        'unit_count',
+        'unitCount',
+        'unitsCompleted',
+      ]);
+      if (unitsText != null && unitsText.trim().isNotEmpty) {
+        final primaryEntry = _ensurePrimaryBundleEntry();
+        primaryEntry.controller
+          ..text = unitsText.trim()
+          ..selection = TextSelection.collapsed(
+            offset: primaryEntry.controller.text.length,
+          );
+      }
+    }
+
+    if (widget.work.isContract) {
+      _ensurePrimaryBundleEntry();
     }
 
     final rateText = _extractNumericText(entry.raw, const [
@@ -1063,27 +1111,318 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     setState(() {
       _contractFieldsEnabled = value;
       if (value) {
+        _ensurePrimaryBundleEntry();
         if (_contractTypes.isNotEmpty) {
-          _resolveSelectedContractTypeIdAfterLoad();
+          _resolveContractBundleSelectionAfterLoad();
         }
       } else {
-        _unitsController.clear();
+        for (final entry in _contractBundleEntries) {
+          entry.controller.clear();
+        }
       }
     });
     _handleAttendanceFieldChanged();
   }
 
-  void _handleContractTypeChanged(String? value) {
+  void _handleContractTypeChanged(String entryId, String? value) {
     if (!widget.work.isContract) {
       return;
     }
-    if (_selectedContractTypeId == value) {
+    _ContractBundleFormEntry? target;
+    for (final entry in _contractBundleEntries) {
+      if (entry.id == entryId) {
+        target = entry;
+        break;
+      }
+    }
+    if (target == null || target.contractTypeId == value) {
       return;
     }
     setState(() {
-      _selectedContractTypeId = value;
+      target!.contractTypeId = value;
     });
     _handleAttendanceFieldChanged();
+  }
+
+  void _handleAddContractBundle() {
+    if (!widget.work.isContract) {
+      return;
+    }
+    setState(() {
+      final defaultTypeId =
+          _contractTypes.isNotEmpty ? _contractTypes.first.id : null;
+      final entry = _ContractBundleFormEntry(
+        id: _generateBundleEntryId(),
+        contractTypeId: defaultTypeId,
+      );
+      _contractBundleEntries.add(entry);
+      if (_contractTypes.isNotEmpty) {
+        _resolveContractBundleSelectionAfterLoad();
+      }
+    });
+    _handleAttendanceFieldChanged();
+  }
+
+  void _handleRemoveContractBundle(_ContractBundleFormEntry entry) {
+    if (!widget.work.isContract) {
+      return;
+    }
+    if (_contractBundleEntries.length <= 1) {
+      return;
+    }
+    setState(() {
+      _contractBundleEntries.removeWhere((item) => item.id == entry.id);
+      if (_contractTypes.isNotEmpty) {
+        _resolveContractBundleSelectionAfterLoad();
+      }
+    });
+    entry.dispose();
+    _handleAttendanceFieldChanged();
+  }
+
+  void _handleContractBundleUnitsChanged(_ContractBundleFormEntry entry) {
+    if (!widget.work.isContract) {
+      return;
+    }
+    _handleAttendanceFieldChanged();
+  }
+
+  String _generateBundleEntryId() {
+    _bundleEntryCounter += 1;
+    return 'bundle_${DateTime.now().microsecondsSinceEpoch}_$_bundleEntryCounter';
+  }
+
+  _ContractBundleFormEntry _ensurePrimaryBundleEntry({String? initialContractTypeId}) {
+    if (_contractBundleEntries.isEmpty) {
+      final entry = _ContractBundleFormEntry(
+        id: _generateBundleEntryId(),
+        contractTypeId: initialContractTypeId,
+      );
+      _contractBundleEntries.add(entry);
+      return entry;
+    }
+    final primary = _contractBundleEntries.first;
+    if (initialContractTypeId != null &&
+        (primary.contractTypeId == null || primary.contractTypeId!.isEmpty)) {
+      primary.contractTypeId = initialContractTypeId;
+    }
+    return primary;
+  }
+
+  void _resolveContractBundleSelectionAfterLoad() {
+    if (_contractTypes.isEmpty) {
+      return;
+    }
+    if (_contractBundleEntries.isEmpty) {
+      _contractBundleEntries.add(
+        _ContractBundleFormEntry(
+          id: _generateBundleEntryId(),
+          contractTypeId: _contractTypes.first.id,
+        ),
+      );
+      return;
+    }
+
+    final initialFromData = _extractContractTypeIdFromAdditionalData()?.toString();
+    if (initialFromData != null &&
+        _contractTypes.any((type) => type.id == initialFromData)) {
+      final primary = _contractBundleEntries.first;
+      final hasValidSelection = primary.contractTypeId != null &&
+          _contractTypes.any((type) => type.id == primary.contractTypeId);
+      if (!hasValidSelection) {
+        primary.contractTypeId = initialFromData;
+      }
+    }
+
+    final fallbackId = _contractTypes.first.id;
+    for (final entry in _contractBundleEntries) {
+      final currentId = entry.contractTypeId;
+      if (currentId != null &&
+          _contractTypes.any((type) => type.id == currentId)) {
+        continue;
+      }
+      entry.contractTypeId = fallbackId;
+    }
+  }
+
+  bool _applyBundleDataFromMap(
+    Map<String, dynamic> data, {
+    bool replaceExisting = true,
+  }) {
+    if (!widget.work.isContract) {
+      return false;
+    }
+    final bundleList = _extractBundleList(data);
+    if (bundleList == null || bundleList.isEmpty) {
+      return false;
+    }
+
+    final parsedEntries = <_ContractBundleFormEntry>[];
+    for (final raw in bundleList) {
+      if (raw is Map) {
+        final map = raw.cast<dynamic, dynamic>();
+        final contractTypeId = _extractBundleContractTypeId(map);
+        final countText = _extractBundleCountText(map);
+        if (contractTypeId == null && (countText == null || countText.isEmpty)) {
+          continue;
+        }
+        parsedEntries.add(
+          _ContractBundleFormEntry(
+            id: _generateBundleEntryId(),
+            contractTypeId: contractTypeId,
+            initialCount: countText,
+          ),
+        );
+      }
+    }
+
+    if (parsedEntries.isEmpty) {
+      return false;
+    }
+
+    if (replaceExisting) {
+      for (final entry in _contractBundleEntries) {
+        entry.dispose();
+      }
+      _contractBundleEntries
+        ..clear()
+        ..addAll(parsedEntries);
+    } else {
+      _contractBundleEntries.addAll(parsedEntries);
+    }
+
+    if (_contractTypes.isNotEmpty) {
+      _resolveContractBundleSelectionAfterLoad();
+    }
+
+    return true;
+  }
+
+  List<dynamic>? _extractBundleList(Map<String, dynamic> data) {
+    const keys = ['bundles', 'contract_bundles', 'contractBundles'];
+    for (final key in keys) {
+      final value = data[key];
+      if (value is List) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  String? _extractBundleCountText(Map<dynamic, dynamic> data) {
+    const keys = ['count', 'units', 'quantity', 'value'];
+    for (final key in keys) {
+      if (!data.containsKey(key)) {
+        continue;
+      }
+      final value = data[key];
+      if (value is num) {
+        return value.toInt().toString();
+      }
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
+  }
+
+  String? _extractBundleContractTypeId(Map<dynamic, dynamic> data) {
+    const keys = ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType', 'id'];
+    for (final key in keys) {
+      if (!data.containsKey(key)) {
+        continue;
+      }
+      final value = data[key];
+      if (value == null) {
+        continue;
+      }
+      if (value is int || value is num) {
+        return value.toString();
+      }
+      if (value is String && value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return null;
+  }
+
+  _BundleCollectionResult _collectContractBundles() {
+    if (_contractBundleEntries.isEmpty) {
+      return const _BundleCollectionResult(
+        bundles: <AttendanceContractBundle>[],
+      );
+    }
+
+    final l = AppLocalizations.of(context);
+    final bundles = <AttendanceContractBundle>[];
+    for (final entry in _contractBundleEntries) {
+      final typeIdText = entry.contractTypeId?.trim() ?? '';
+      if (typeIdText.isEmpty) {
+        return _BundleCollectionResult(
+          bundles: const <AttendanceContractBundle>[],
+          errorMessage: l.contractWorkLoadError,
+        );
+      }
+      final parsedTypeId = int.tryParse(typeIdText);
+      if (parsedTypeId == null) {
+        return _BundleCollectionResult(
+          bundles: const <AttendanceContractBundle>[],
+          errorMessage: l.contractWorkLoadError,
+        );
+      }
+
+      final countText = entry.controller.text.trim();
+      if (countText.isEmpty) {
+        return _BundleCollectionResult(
+          bundles: const <AttendanceContractBundle>[],
+          errorMessage: l.attendanceUnitsRequired,
+        );
+      }
+      final parsedCount = int.tryParse(countText);
+      if (parsedCount == null || parsedCount <= 0) {
+        return _BundleCollectionResult(
+          bundles: const <AttendanceContractBundle>[],
+          errorMessage: l.attendanceUnitsInvalid,
+        );
+      }
+
+      bundles.add(
+        AttendanceContractBundle(
+          contractTypeId: parsedTypeId,
+          count: parsedCount,
+        ),
+      );
+    }
+
+    return _BundleCollectionResult(bundles: bundles);
+  }
+
+  List<_PreviewBundleInfo> _buildPreviewBundles(
+    List<AttendanceContractBundle> bundles,
+  ) {
+    if (bundles.isEmpty) {
+      return const <_PreviewBundleInfo>[];
+    }
+    final result = <_PreviewBundleInfo>[];
+    for (final bundle in bundles) {
+      final type = _findContractTypeById(bundle.contractTypeId);
+      final typeName = type?.name ?? 'Contract ${bundle.contractTypeId}';
+      result.add(_PreviewBundleInfo(typeName: typeName, count: bundle.count));
+    }
+    return result;
+  }
+
+  ContractType? _findContractTypeById(int? id) {
+    if (id == null) {
+      return null;
+    }
+    final target = id.toString();
+    for (final type in _contractTypes) {
+      if (type.id == target) {
+        return type;
+      }
+    }
+    return null;
   }
 
   void _handleWorkOffToggle(bool value) {
@@ -1098,6 +1437,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _previousBreakMinutes = _breakMinutesController.text;
         _markAsWorkOff = true;
         _contractFieldsEnabled = false;
+        for (final entry in _contractBundleEntries) {
+          entry.controller.clear();
+        }
         _setControllerValue(_startTimeController, '00:00');
         _setControllerValue(_endTimeController, '00:00');
         _setControllerValue(_breakMinutesController, '0');
@@ -1181,7 +1523,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return null;
   }
 
-  String? _validateUnits(String? value) {
+  String? _validateBundleUnits(
+    _ContractBundleFormEntry entry,
+    String? value,
+  ) {
     if (!widget.work.isContract || !_contractFieldsEnabled) {
       return null;
     }
@@ -1190,7 +1535,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (trimmed.isEmpty) {
       return l.attendanceUnitsRequired;
     }
-    final parsed = _parseNumberInput(trimmed);
+    final parsed = int.tryParse(trimmed);
     if (parsed == null || parsed <= 0) {
       return l.attendanceUnitsInvalid;
     }
@@ -1278,10 +1623,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   int? _resolveContractTypeId() {
-    if (_selectedContractTypeId != null) {
-      final parsed = int.tryParse(_selectedContractTypeId!);
-      if (parsed != null) {
-        return parsed;
+    if (_contractBundleEntries.isNotEmpty) {
+      final primaryId = _contractBundleEntries.first.contractTypeId;
+      if (primaryId != null) {
+        final parsed = int.tryParse(primaryId);
+        if (parsed != null) {
+          return parsed;
+        }
       }
     }
     return _extractContractTypeIdFromAdditionalData();
@@ -1472,14 +1820,15 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    num? units;
+    List<AttendanceContractBundle> bundles = const <AttendanceContractBundle>[];
     int? contractTypeId;
+    int? units;
     double? ratePerUnit;
+    List<_PreviewBundleInfo> previewBundles = const <_PreviewBundleInfo>[];
     if (isContractEntryEnabled) {
-      units = _parseNumberInput(_unitsController.text);
-      contractTypeId = _resolveContractTypeId();
-      if (contractTypeId == null) {
-        final message = l.contractWorkLoadError;
+      final collectionResult = _collectContractBundles();
+      if (collectionResult.errorMessage != null) {
+        final message = collectionResult.errorMessage!;
         setState(() {
           _attendanceStatusMessage = message;
           _attendanceStatusIsError = true;
@@ -1490,21 +1839,26 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         return;
       }
 
-      final selectedContractTypeId =
-          _selectedContractTypeId ?? contractTypeId.toString();
-      ContractType? selectedContractType;
-      if (selectedContractTypeId.isNotEmpty) {
-        try {
-          selectedContractType = _contractTypes.firstWhere(
-            (type) => type.id == selectedContractTypeId,
-          );
-        } catch (_) {
-          selectedContractType = null;
-        }
+      bundles = collectionResult.bundles;
+      if (bundles.isEmpty) {
+        final message = l.attendanceUnitsRequired;
+        setState(() {
+          _attendanceStatusMessage = message;
+          _attendanceStatusIsError = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
       }
-      selectedContractType ??=
-          _contractTypes.isNotEmpty ? _contractTypes.first : null;
-      ratePerUnit = selectedContractType?.rate;
+
+      previewBundles = _buildPreviewBundles(bundles);
+      if (bundles.length == 1) {
+        contractTypeId = bundles.first.contractTypeId;
+        units = bundles.first.count;
+        final selectedContractType = _findContractTypeById(contractTypeId);
+        ratePerUnit = selectedContractType?.rate;
+      }
     }
 
     setState(() {
@@ -1527,6 +1881,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         contractTypeId: contractTypeId,
         units: units,
         ratePerUnit: ratePerUnit,
+        bundles: bundles,
       );
 
       previewFetched = true;
@@ -1548,6 +1903,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isContractEntry: isContractEntryEnabled,
         units: units,
         ratePerUnit: ratePerUnit,
+        bundles: previewBundles,
       );
 
       if (!mounted) {
@@ -1575,6 +1931,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         contractTypeId: contractTypeId,
         units: units,
         ratePerUnit: ratePerUnit,
+        bundles: bundles,
       );
       if (!mounted) {
         return;
@@ -1649,8 +2006,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     required String endTime,
     required int breakMinutes,
     required bool isContractEntry,
-    num? units,
-    num? ratePerUnit,
+    int? units,
+    double? ratePerUnit,
+    List<_PreviewBundleInfo> bundles = const <_PreviewBundleInfo>[],
   }) async {
     final l = AppLocalizations.of(context);
     final previewData = _extractPreviewData(previewResponse);
@@ -1675,25 +2033,38 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     );
 
     if (isContractEntry) {
-      final unitsDisplay = units != null
-          ? _formatNumericValue(units)
-          : _resolvePreviewDisplayValue(previewData, const [
-              'units',
-              'unit_count',
-              'unitsCompleted',
-              'units_count',
-            ]);
-      _addPreviewEntry(infoEntries, l.contractWorkUnitsLabel, unitsDisplay);
+      if (bundles.isNotEmpty) {
+        final bundleText = bundles
+            .map((bundle) => '${bundle.typeName} × ${bundle.count}')
+            .join(', ');
+        _addPreviewEntry(
+          infoEntries,
+          l.contractWorkContractTypeLabel,
+          bundleText,
+        );
+      }
 
-      final rateDisplay = ratePerUnit != null
-          ? _formatNumericValue(ratePerUnit)
-          : _resolvePreviewDisplayValue(previewData, const [
-              'rate_per_unit',
-              'ratePerUnit',
-              'unit_rate',
-              'unitRate',
-            ]);
-      _addPreviewEntry(infoEntries, l.contractWorkRateLabel, rateDisplay);
+      if (bundles.length <= 1) {
+        final unitsDisplay = units != null
+            ? _formatNumericValue(units)
+            : _resolvePreviewDisplayValue(previewData, const [
+                'units',
+                'unit_count',
+                'unitsCompleted',
+                'units_count',
+              ]);
+        _addPreviewEntry(infoEntries, l.contractWorkUnitsLabel, unitsDisplay);
+
+        final rateDisplay = ratePerUnit != null
+            ? _formatNumericValue(ratePerUnit)
+            : _resolvePreviewDisplayValue(previewData, const [
+                'rate_per_unit',
+                'ratePerUnit',
+                'unit_rate',
+                'unitRate',
+              ]);
+        _addPreviewEntry(infoEntries, l.contractWorkRateLabel, rateDisplay);
+      }
     }
 
     final hoursDisplay = _resolvePreviewDisplayValue(previewData, const [
@@ -1858,7 +2229,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _startTimeController.dispose();
     _endTimeController.dispose();
     _breakMinutesController.dispose();
-    _unitsController.dispose();
+    for (final entry in _contractBundleEntries) {
+      entry.dispose();
+    }
     _ratePerUnitController.dispose();
     super.dispose();
   }
@@ -1935,7 +2308,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _contractTypes = merged;
         _isLoadingContractTypes = false;
         _contractTypesError = null;
-        _resolveSelectedContractTypeIdAfterLoad();
+        _resolveContractBundleSelectionAfterLoad();
       });
     } on ContractTypeRepositoryException catch (e) {
       if (!mounted) {
@@ -1975,32 +2348,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     addTypes(collection.userTypes);
     addTypes(collection.globalTypes);
     return merged;
-  }
-
-  void _resolveSelectedContractTypeIdAfterLoad() {
-    if (_contractTypes.isEmpty) {
-      _selectedContractTypeId = null;
-      return;
-    }
-
-    final currentId = _selectedContractTypeId;
-    if (currentId != null &&
-        _contractTypes.any((type) => type.id == currentId)) {
-      return;
-    }
-
-    final initialFromData = _extractContractTypeIdFromAdditionalData();
-    if (initialFromData != null) {
-      final initialId = initialFromData.toString();
-      final hasMatch =
-          _contractTypes.any((type) => type.id == initialId);
-      if (hasMatch) {
-        _selectedContractTypeId = initialId;
-        return;
-      }
-    }
-
-    _selectedContractTypeId = _contractTypes.first.id;
   }
 
   @override
@@ -2120,14 +2467,15 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 isContractFieldsLoading: _isLoadingContractTypes,
                 contractFieldsError: _contractTypesError,
                 contractTypes: _contractTypes,
-                selectedContractTypeId: _selectedContractTypeId,
+                contractBundleEntries: _contractBundleEntries,
                 onContractFieldsToggle: _handleContractFieldsToggle,
-                onContractTypeChanged: _handleContractTypeChanged,
+                onContractBundleTypeChanged: _handleContractTypeChanged,
                 onContractTypeRetry:
                     widget.work.isContract ? () => _loadContractTypes() : null,
-                unitsController: _unitsController,
-                unitsValidator: _validateUnits,
-                onUnitsChanged: _handleAttendanceFieldChanged,
+                onAddContractBundle: _handleAddContractBundle,
+                onRemoveContractBundle: _handleRemoveContractBundle,
+                onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
+                bundleUnitsValidator: _validateBundleUnits,
                 startTimeValidator: _validateStartTime,
                 endTimeValidator: _validateEndTime,
                 breakValidator: _validateBreakMinutes,
@@ -3304,20 +3652,19 @@ class _AttendanceSection extends StatelessWidget {
     this.isContractFieldsLoading = false,
     this.contractFieldsError,
     this.contractTypes = const <ContractType>[],
-    this.selectedContractTypeId,
+    this.contractBundleEntries = const <_ContractBundleFormEntry>[],
     this.onContractFieldsToggle,
-    this.onContractTypeChanged,
+    this.onContractBundleTypeChanged,
     this.onContractTypeRetry,
-    this.unitsController,
-    this.unitsValidator,
-    this.onUnitsChanged,
+    this.onAddContractBundle,
+    this.onRemoveContractBundle,
+    this.onContractBundleUnitsChanged,
+    required this.bundleUnitsValidator,
     this.statusMessage,
     this.isStatusError = false,
   }) : assert(
           !showContractFields ||
-              (unitsController != null &&
-                  unitsValidator != null &&
-                  onContractFieldsToggle != null),
+              onContractFieldsToggle != null,
         );
 
   final String dateLabel;
@@ -3342,13 +3689,14 @@ class _AttendanceSection extends StatelessWidget {
   final bool isContractFieldsLoading;
   final String? contractFieldsError;
   final List<ContractType> contractTypes;
-  final String? selectedContractTypeId;
+  final List<_ContractBundleFormEntry> contractBundleEntries;
   final ValueChanged<bool>? onContractFieldsToggle;
-  final ValueChanged<String?>? onContractTypeChanged;
+  final void Function(String, String?)? onContractBundleTypeChanged;
   final VoidCallback? onContractTypeRetry;
-  final TextEditingController? unitsController;
-  final String? Function(String?)? unitsValidator;
-  final VoidCallback? onUnitsChanged;
+  final VoidCallback? onAddContractBundle;
+  final void Function(_ContractBundleFormEntry)? onRemoveContractBundle;
+  final void Function(_ContractBundleFormEntry)? onContractBundleUnitsChanged;
+  final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final String? statusMessage;
   final bool isStatusError;
 
@@ -3574,13 +3922,17 @@ class _AttendanceSection extends StatelessWidget {
                 isLoading: isContractFieldsLoading,
                 errorMessage: contractFieldsError,
                 contractTypes: contractTypes,
-                selectedContractTypeId: selectedContractTypeId,
+                entries: contractBundleEntries,
                 onToggle: onContractFieldsToggle!,
-                onTypeChanged: onContractTypeChanged,
+                onTypeChanged: onContractBundleTypeChanged == null
+                    ? null
+                    : (entry, value) =>
+                        onContractBundleTypeChanged!(entry.id, value),
                 onRetry: onContractTypeRetry,
-                unitsController: unitsController!,
-                unitsValidator: unitsValidator!,
-                onUnitsChanged: onUnitsChanged,
+                onAddEntry: onAddContractBundle,
+                onRemoveEntry: onRemoveContractBundle,
+                onUnitsChanged: onContractBundleUnitsChanged,
+                bundleUnitsValidator: bundleUnitsValidator,
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
               ),
@@ -4464,33 +4816,71 @@ class _SummaryStatusCard extends StatelessWidget {
   }
 }
 
+class _ContractBundleFormEntry {
+  _ContractBundleFormEntry({
+    required this.id,
+    this.contractTypeId,
+    String? initialCount,
+  }) : controller = TextEditingController(text: initialCount ?? '');
+
+  final String id;
+  String? contractTypeId;
+  final TextEditingController controller;
+
+  void dispose() {
+    controller.dispose();
+  }
+}
+
+class _PreviewBundleInfo {
+  const _PreviewBundleInfo({
+    required this.typeName,
+    required this.count,
+  });
+
+  final String typeName;
+  final int count;
+}
+
+class _BundleCollectionResult {
+  const _BundleCollectionResult({
+    required this.bundles,
+    this.errorMessage,
+  });
+
+  final List<AttendanceContractBundle> bundles;
+  final String? errorMessage;
+}
+
 class _ContractEntryForm extends StatelessWidget {
   const _ContractEntryForm({
     required this.isActive,
     required this.isLoading,
     required this.contractTypes,
-    required this.selectedContractTypeId,
+    required this.entries,
     required this.onToggle,
-    required this.unitsController,
-    required this.unitsValidator,
+    required this.bundleUnitsValidator,
     required this.isSubmitting,
     required this.isWorkOff,
     this.errorMessage,
     this.onTypeChanged,
     this.onRetry,
+    this.onAddEntry,
+    this.onRemoveEntry,
     this.onUnitsChanged,
   });
 
   final bool isActive;
   final bool isLoading;
   final List<ContractType> contractTypes;
-  final String? selectedContractTypeId;
+  final List<_ContractBundleFormEntry> entries;
   final ValueChanged<bool> onToggle;
-  final ValueChanged<String?>? onTypeChanged;
+  final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
+  final void Function(_ContractBundleFormEntry, String?)? onTypeChanged;
   final VoidCallback? onRetry;
-  final TextEditingController unitsController;
-  final String? Function(String?) unitsValidator;
-  final VoidCallback? onUnitsChanged;
+  final VoidCallback? onAddEntry;
+  final void Function(_ContractBundleFormEntry)? onRemoveEntry;
+  final void Function(_ContractBundleFormEntry)? onUnitsChanged;
   final bool isSubmitting;
   final bool isWorkOff;
   final String? errorMessage;
@@ -4500,24 +4890,18 @@ class _ContractEntryForm extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final bool disableInteractions = isSubmitting || isWorkOff;
-    final bool hasSelectedType = contractTypes.any(
-      (type) => type.id == selectedContractTypeId,
-    );
-    final ContractType? selectedType = hasSelectedType
-        ? contractTypes.firstWhere(
-            (type) => type.id == selectedContractTypeId,
-            orElse: () => contractTypes.first,
-          )
-        : null;
-    final String? dropdownValue = hasSelectedType ? selectedContractTypeId : null;
-    final String unitLabel = (selectedType?.unitLabel.trim().isNotEmpty ?? false)
-        ? selectedType!.unitLabel.trim()
-        : l.contractWorkUnitFallback;
-    final String? rateHelperText = selectedType != null
-        ? '${l.contractWorkRateLabel}: '
-            '${selectedType.rate.toStringAsFixed(2)} / '
-            '${selectedType.unitLabel.trim().isNotEmpty ? selectedType.unitLabel : l.contractWorkUnitFallback}'
-        : null;
+
+    ContractType? resolveType(String? id) {
+      if (id == null) {
+        return null;
+      }
+      for (final type in contractTypes) {
+        if (type.id == id) {
+          return type;
+        }
+      }
+      return null;
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -4572,75 +4956,139 @@ class _ContractEntryForm extends StatelessWidget {
                 onRetry: onRetry,
               ),
             ] else ...[
-              DropdownButtonFormField<String>(
-                value: dropdownValue,
-                onChanged: disableInteractions ? null : onTypeChanged,
-                isExpanded: true,
-                itemHeight: null,
-                decoration: InputDecoration(
-                  labelText: l.contractWorkContractTypeLabel,
-                  prefixIcon: const Icon(
-                    Icons.assignment_rounded,
-                    color: Color(0xFF1D4ED8),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
+              if (entries.isEmpty)
+                Text(
+                  l.attendanceUnitsRequired,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                items: contractTypes
-                    .map(
-                      (type) => DropdownMenuItem<String>(
-                        value: type.id,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              type.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+              ...entries.asMap().entries.map((entryMap) {
+                final entry = entryMap.value;
+                final isLast = entryMap.key == entries.length - 1;
+                final selectedType = resolveType(entry.contractTypeId);
+                final dropdownValue = selectedType?.id;
+                final unitLabel = (selectedType?.unitLabel.trim().isNotEmpty ?? false)
+                    ? selectedType!.unitLabel.trim()
+                    : l.contractWorkUnitFallback;
+                final String? rateHelperText = selectedType != null
+                    ? '${l.contractWorkRateLabel}: '
+                        '${selectedType.rate.toStringAsFixed(2)} / '
+                        '${selectedType.unitLabel.trim().isNotEmpty ? selectedType.unitLabel : l.contractWorkUnitFallback}'
+                    : null;
+                final VoidCallback? removeCallback =
+                    entries.length > 1 && onRemoveEntry != null && !disableInteractions
+                        ? () => onRemoveEntry!(entry)
+                        : null;
+
+                return Padding(
+                  padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: dropdownValue,
+                              onChanged: disableInteractions
+                                  ? null
+                                  : (value) => onTypeChanged?.call(entry, value),
+                              isExpanded: true,
+                              itemHeight: null,
+                              decoration: InputDecoration(
+                                labelText: l.contractWorkContractTypeLabel,
+                                prefixIcon: const Icon(
+                                  Icons.assignment_rounded,
+                                  color: Color(0xFF1D4ED8),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
                               ),
+                              items: contractTypes
+                                  .map(
+                                    (type) => DropdownMenuItem<String>(
+                                      value: type.id,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            type.name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${type.rate.toStringAsFixed(2)} / '
+                                            '${type.unitLabel.trim().isNotEmpty ? type.unitLabel : l.contractWorkUnitFallback}',
+                                            style: const TextStyle(
+                                              color: Color(0xFF64748B),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .toList(growable: false),
                             ),
-                            Text(
-                              '${type.rate.toStringAsFixed(2)} / '
-                              '${type.unitLabel.trim().isNotEmpty ? type.unitLabel : l.contractWorkUnitFallback}',
-                              style: TextStyle(
-                                color: const Color(0xFF64748B),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          if (removeCallback != null) ...[
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: removeCallback,
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip:
+                                  MaterialLocalizations.of(context).deleteButtonTooltip,
+                              visualDensity: VisualDensity.compact,
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                    )
-                    .toList(growable: false),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: unitsController,
-                enabled: !disableInteractions,
-                validator: unitsValidator,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: l.contractWorkUnitsLabel,
-                  prefixIcon: const Icon(
-                    Icons.inventory_2_outlined,
-                    color: Color(0xFF2563EB),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: entry.controller,
+                        enabled: !disableInteractions,
+                        validator: (value) => bundleUnitsValidator(entry, value),
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: false),
+                        decoration: InputDecoration(
+                          labelText: l.contractWorkUnitsLabel,
+                          prefixIcon: const Icon(
+                            Icons.inventory_2_outlined,
+                            color: Color(0xFF2563EB),
+                          ),
+                          suffixText: unitLabel,
+                          helperText: rateHelperText,
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        onChanged: (_) => onUnitsChanged?.call(entry),
+                      ),
+                    ],
                   ),
-                  suffixText: unitLabel,
-                  helperText: rateHelperText,
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
+                );
+              }).toList(growable: false),
+              if (onAddEntry != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed:
+                        disableInteractions ? null : onAddEntry,
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: Text(l.contractWorkAddTypeTitle),
                   ),
                 ),
-                onChanged: (_) => onUnitsChanged?.call(),
-              ),
             ],
           ],
         ],
