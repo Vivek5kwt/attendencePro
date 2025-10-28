@@ -86,6 +86,8 @@ class AttendanceEntryRepository {
       throw const AttendanceAuthException();
     }
 
+    final defaultedContractTypeId = contractTypeId ?? 1;
+
     final request = _buildRequest(
       workId: workId,
       date: date,
@@ -94,7 +96,7 @@ class AttendanceEntryRepository {
       endTime: endTime,
       breakMinutes: breakMinutes,
       isContractEntry: isContractEntry,
-      contractTypeId: contractTypeId,
+      contractTypeId: defaultedContractTypeId,
       units: units,
       ratePerUnit: ratePerUnit,
     );
