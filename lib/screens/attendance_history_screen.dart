@@ -148,8 +148,10 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       _availableWorks = _buildWorkOptions(_workNames);
 
       final activeWork = _findActiveWork(works);
-      final defaultSelection = activeWork?.name ??
-          (_workNames.isNotEmpty ? _workNames.first : '');
+      final defaultSelection = _allWorksLabel.isNotEmpty
+          ? _allWorksLabel
+          : (activeWork?.name ??
+              (_workNames.isNotEmpty ? _workNames.first : ''));
 
       setState(() {
         _isLoadingWorks = false;
