@@ -300,8 +300,10 @@ abstract final class AppString {
       'workActivatedMessage': 'Work set as active successfully.',
       'workNameLabel': 'Work Name',
       'workNameHint': 'Ex Restaurant, Warehouse',
+      'workNameTooShortValidation': 'Work name must be at least 3 characters.',
       'hourlySalaryLabel': 'Hourly Salary',
       'hourlySalaryHint': '\$ 0.00',
+      'hourlyRateNegativeValidation': 'Hourly rate cannot be negative.',
       'contractWorkHeader': 'Contract Work (if have)',
       'addContractWorkButton': 'Add Contract Work',
       'contractWorkDescription':
@@ -325,6 +327,8 @@ abstract final class AppString {
           'Are you sure you want to delete this work?',
       'workDeleteConfirmButton': 'Delete',
       'workDeleteCancelButton': 'Cancel',
+      'workDeleteIrreversibleMessage':
+          'Deleting this work will permanently remove related attendance history.',
       'workDeleteSuccessMessage': 'Work deleted successfully.',
       'workDeleteFailedMessage': 'Failed to delete work. Please try again.',
       'workSaveFailedMessage': 'Failed to save work. Please try again.',
@@ -678,8 +682,10 @@ abstract final class AppString {
       'workActivatedMessage': 'कार्य सफलतापूर्वक सक्रिय किया गया।',
       'workNameLabel': 'कार्य का नाम',
       'workNameHint': 'उदाहरण: रेस्टोरेंट, गोदाम',
+      'workNameTooShortValidation': 'कार्य का नाम कम से कम 3 अक्षरों का होना चाहिए।',
       'hourlySalaryLabel': 'घंटे की मजदूरी',
       'hourlySalaryHint': '₹ 0.00',
+      'hourlyRateNegativeValidation': 'घंटे की दर नकारात्मक नहीं हो सकती।',
       'contractWorkHeader': 'ठेका कार्य (यदि हो)',
       'addContractWorkButton': 'ठेका कार्य जोड़ें',
       'contractWorkDescription':
@@ -700,6 +706,8 @@ abstract final class AppString {
           'क्या आप वाकई इस काम को हटाना चाहते हैं?',
       'workDeleteConfirmButton': 'हटाएं',
       'workDeleteCancelButton': 'रद्द करें',
+      'workDeleteIrreversibleMessage':
+          'इस कार्य को हटाने से संबंधित सभी उपस्थिति इतिहास स्थायी रूप से हट जाएगा।',
       'workDeleteSuccessMessage': 'काम सफलतापूर्वक हटाया गया।',
       'workDeleteFailedMessage': 'काम हटाने में विफल। कृपया पुनः प्रयास करें।',
       'workSaveFailedMessage': 'कार्य सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
@@ -1053,8 +1061,10 @@ abstract final class AppString {
       'workActivatedMessage': 'ਕੰਮ ਨੂੰ ਸਰਗਰਮ ਕੀਤਾ ਗਿਆ ਹੈ।',
       'workNameLabel': 'ਕੰਮ ਦਾ ਨਾਮ',
       'workNameHint': 'ਉਦਾਹਰਣ: ਰੈਸਟੋਰੈਂਟ, ਗੋਦਾਮ',
+      'workNameTooShortValidation': 'ਕੰਮ ਦਾ ਨਾਮ ਘੱਟੋ-ਘੱਟ 3 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
       'hourlySalaryLabel': 'ਘੰਟਾਵਾਰੀ ਮਜ਼ਦੂਰੀ',
       'hourlySalaryHint': '₹ 0.00',
+      'hourlyRateNegativeValidation': 'ਘੰਟੇ ਦੀ ਦਰ ਨਕਾਰਾਤਮਕ ਨਹੀਂ ਹੋ ਸਕਦੀ।',
       'contractWorkHeader': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ (ਜੇ ਹੋਵੇ)',
       'addContractWorkButton': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ',
       'contractWorkDescription':
@@ -1074,6 +1084,8 @@ abstract final class AppString {
       'workDeleteConfirmationMessage': 'ਕੀ ਤੁਸੀਂ ਇਹ ਕੰਮ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?',
       'workDeleteConfirmButton': 'ਮਿਟਾਓ',
       'workDeleteCancelButton': 'ਰੱਦ ਕਰੋ',
+      'workDeleteIrreversibleMessage':
+          'ਇਹ ਕੰਮ ਮਿਟਾਉਣ ਨਾਲ ਸੰਬੰਧਿਤ ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਸਥਾਈ ਤੌਰ 'ਤੇ ਹਟ ਜਾਵੇਗਾ।',
       'workDeleteSuccessMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਮਿਟਾਇਆ ਗਿਆ।',
       'workDeleteFailedMessage': 'ਕੰਮ ਮਿਟਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
@@ -1435,8 +1447,10 @@ abstract final class AppString {
       'workActivatedMessage': 'Lavoro impostato come attivo con successo.',
       'workNameLabel': 'Nome del Lavoro',
       'workNameHint': 'Es. Ristorante, Magazzino',
+      'workNameTooShortValidation': 'Il nome del lavoro deve contenere almeno 3 caratteri.',
       'hourlySalaryLabel': 'Paga Oraria',
       'hourlySalaryHint': '€ 0,00',
+      'hourlyRateNegativeValidation': 'La tariffa oraria non può essere negativa.',
       'contractWorkHeader': 'Lavoro a Contratto (se disponibile)',
       'addContractWorkButton': 'Aggiungi Lavoro a Contratto',
       'contractWorkDescription':
@@ -1457,6 +1471,8 @@ abstract final class AppString {
           'Sei sicuro di voler eliminare questo lavoro?',
       'workDeleteConfirmButton': 'Elimina',
       'workDeleteCancelButton': 'Annulla',
+      'workDeleteIrreversibleMessage':
+          'Eliminando questo lavoro rimuoverai in modo permanente tutte le presenze collegate.',
       'workDeleteSuccessMessage': 'Lavoro eliminato con successo.',
       'workDeleteFailedMessage':
           'Impossibile eliminare il lavoro. Riprova.',
