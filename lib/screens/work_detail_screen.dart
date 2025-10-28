@@ -2996,13 +2996,16 @@ class _AttendanceSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: Row(
-                    children: [
-                      _buildSelectorSegment<int>(
-                        width: 72,
-                        value: selectedHour,
-                        placeholder: 'HH',
-                        items: _timeHourOptions
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildSelectorSegment<int>(
+                          width: 72,
+                          value: selectedHour,
+                          placeholder: 'HH',
+                          items: _timeHourOptions
                             .map(
                               (hour) => DropdownMenuItem<int>(
                                 value: hour,
@@ -3013,8 +3016,8 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             )
                             .toList(),
-                        onChanged: enabled
-                            ? (value) {
+                          onChanged: enabled
+                              ? (value) {
                                 if (value == null) {
                                   controller.clear();
                                   field.didChange('');
@@ -3024,16 +3027,16 @@ class _AttendanceSection extends StatelessWidget {
                                 }
                               }
                             : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildSegmentDivider(),
-                      const SizedBox(width: 8),
-                      _buildSelectorSegment<int>(
-                        width: 72,
-                        value: selectedMinute,
-                        placeholder: 'MM',
-                        items: minuteOptions
+                          placeholderStyle: placeholderStyle,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSegmentDivider(),
+                        const SizedBox(width: 8),
+                        _buildSelectorSegment<int>(
+                          width: 72,
+                          value: selectedMinute,
+                          placeholder: 'MM',
+                          items: minuteOptions
                             .map(
                               (minute) => DropdownMenuItem<int>(
                                 value: minute,
@@ -3044,8 +3047,8 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             )
                             .toList(),
-                        onChanged: enabled
-                            ? (value) {
+                          onChanged: enabled
+                              ? (value) {
                                 if (value == null) {
                                   controller.clear();
                                   field.didChange('');
@@ -3055,16 +3058,16 @@ class _AttendanceSection extends StatelessWidget {
                                 }
                               }
                             : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildSegmentDivider(),
-                      const SizedBox(width: 8),
-                      _buildSelectorSegment<DayPeriod>(
-                        width: 84,
-                        value: selectedPeriod,
-                        placeholder: AppString.amLabel,
-                        items: DayPeriod.values
+                          placeholderStyle: placeholderStyle,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildSegmentDivider(),
+                        const SizedBox(width: 8),
+                        _buildSelectorSegment<DayPeriod>(
+                          width: 84,
+                          value: selectedPeriod,
+                          placeholder: AppString.amLabel,
+                          items: DayPeriod.values
                             .map(
                               (period) => DropdownMenuItem<DayPeriod>(
                                 value: period,
@@ -3077,20 +3080,21 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             )
                             .toList(),
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                } else {
-                                  updateValue(period: value);
+                          onChanged: enabled
+                              ? (value) {
+                                  if (value == null) {
+                                    controller.clear();
+                                    field.didChange('');
+                                    onValueChanged();
+                                  } else {
+                                    updateValue(period: value);
+                                  }
                                 }
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
-                    ],
+                              : null,
+                          placeholderStyle: placeholderStyle,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 if (field.hasError)
@@ -3194,64 +3198,69 @@ class _AttendanceSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
-                  child: Row(
-                    children: [
-                      _buildSelectorSegment<int>(
-                        width: 72,
-                        value: resolvedHour,
-                        placeholder: '00',
-                        items: hourItems,
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                  return;
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildSelectorSegment<int>(
+                          width: 72,
+                          value: resolvedHour,
+                          placeholder: '00',
+                          items: hourItems,
+                          onChanged: enabled
+                              ? (value) {
+                                  if (value == null) {
+                                    controller.clear();
+                                    field.didChange('');
+                                    onValueChanged();
+                                    return;
+                                  }
+                                  final minutes = _breakMinutesForHour(value).first;
+                                  updateBreakValue(value, minutes);
                                 }
-                                final minutes = _breakMinutesForHour(value).first;
-                                updateBreakValue(value, minutes);
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text('hr', style: labelStyle),
-                      const SizedBox(width: 12),
-                      _buildSegmentDivider(),
-                      const SizedBox(width: 12),
-                      _buildSelectorSegment<int>(
-                        width: 72,
-                        value: resolvedMinute,
-                        placeholder: '00',
-                        items: minutesForHour
-                            .map(
-                              (minute) => DropdownMenuItem<int>(
-                                value: minute,
-                                child: Text(
-                                  minute.toString().padLeft(2, '0'),
-                                  style: valueStyle,
+                              : null,
+                          placeholderStyle: placeholderStyle,
+                        ),
+                        const SizedBox(width: 6),
+                        const Text('hr', style: labelStyle),
+                        const SizedBox(width: 12),
+                        _buildSegmentDivider(),
+                        const SizedBox(width: 12),
+                        _buildSelectorSegment<int>(
+                          width: 72,
+                          value: resolvedMinute,
+                          placeholder: '00',
+                          items: minutesForHour
+                              .map(
+                                (minute) => DropdownMenuItem<int>(
+                                  value: minute,
+                                  child: Text(
+                                    minute.toString().padLeft(2, '0'),
+                                    style: valueStyle,
+                                  ),
                                 ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                  return;
+                              )
+                              .toList(),
+                          onChanged: enabled
+                              ? (value) {
+                                  if (value == null) {
+                                    controller.clear();
+                                    field.didChange('');
+                                    onValueChanged();
+                                    return;
+                                  }
+                                  final hour =
+                                      resolvedHour ?? _breakHourOptions.first;
+                                  updateBreakValue(hour, value);
                                 }
-                                final hour = resolvedHour ?? _breakHourOptions.first;
-                                updateBreakValue(hour, value);
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text('min', style: labelStyle),
-                    ],
+                              : null,
+                          placeholderStyle: placeholderStyle,
+                        ),
+                        const SizedBox(width: 6),
+                        const Text('min', style: labelStyle),
+                      ],
+                    ),
                   ),
                 ),
                 if (field.hasError)
