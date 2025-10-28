@@ -642,7 +642,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            OutlinedButton.icon(
+            /*                OutlinedButton.icon(
                               onPressed: () => _showComingSoonSnackBar(rootContext),
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(48),
@@ -654,7 +654,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               ),
                               icon: const Icon(Icons.add_circle_outline),
                               label: Text(l.addContractWorkButton),
-                            ),
+                            ),*/
                             const SizedBox(height: 24),
                             Row(
                               children: [
@@ -819,7 +819,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                               ),
                                             ),
                                           )
-                                        : Text(l.contractWorkSaveAllButton),
+                                        : Text(l.saveButtonLabel),
                                   ),
                                 ),
                               ],
