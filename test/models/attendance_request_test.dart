@@ -17,6 +17,7 @@ void main() {
 
       expect(json['work_id'], 42);
       expect(json['date'], '2025-10-23');
+      expect(json['is_leave'], isFalse);
       expect(json['start_time'], '09:00');
       expect(json['end_time'], '17:00');
       expect(json['break_minutes'], 45);
@@ -43,6 +44,7 @@ void main() {
 
       expect(json['work_id'], 7);
       expect(json['date'], '2024-06-01');
+      expect(json['is_leave'], isFalse);
       expect(json['start_time'], '08:00');
       expect(json['end_time'], '12:00');
       expect(json['break_minutes'], 15);
@@ -67,6 +69,28 @@ void main() {
       final json = request.toJson();
 
       expect(json['contract_type_id'], 1);
+      expect(json['is_leave'], isFalse);
+    });
+
+    test('serializes leave attendance with minimal payload', () {
+      final request = AttendanceRequest(
+        workId: 3,
+        date: DateTime(2025, 10, 26),
+        isLeave: true,
+      );
+
+      final json = request.toJson();
+
+      expect(json['work_id'], 3);
+      expect(json['date'], '2025-10-26');
+      expect(json['is_leave'], isTrue);
+      expect(json.containsKey('start_time'), isFalse);
+      expect(json.containsKey('end_time'), isFalse);
+      expect(json.containsKey('break_minutes'), isFalse);
+      expect(json.containsKey('is_contract_entry'), isFalse);
+      expect(json.containsKey('contract_type_id'), isFalse);
+      expect(json.containsKey('units'), isFalse);
+      expect(json.containsKey('rate_per_unit'), isFalse);
     });
   });
 }
