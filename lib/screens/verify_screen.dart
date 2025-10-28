@@ -243,13 +243,28 @@ class _VerifyScreenState extends State<VerifyScreen> {
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF007BFF),
                     ),
-                    child: Text(
-                      _start > 0
-                          ? l.resendCountdown(_start)
-                          : l.resendCode,
-                      style: TextStyle(
-                        fontSize: responsive.scaleText(15),
-                        color: const Color(0xFF007BFF),
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontSize: responsive.scaleText(15),
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '${l.resendPromptQuestion} ',
+                            style: const TextStyle(
+                              color: Colors.black,
+                            ),
+                          ),
+                          TextSpan(
+                            text: _start > 0
+                                ? l.resendCountdown(_start)
+                                : l.resendCode,
+                            style: const TextStyle(
+                              color: Color(0xFF007BFF),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
