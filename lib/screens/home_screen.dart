@@ -147,12 +147,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _showAddWorkDialog();
   }
 
-  Future<void> _openAttendanceHistory({bool fromDrawer = false}) async {
-    if (fromDrawer) {
-      Navigator.of(context).pop();
-      await Future.delayed(const Duration(milliseconds: 200));
-      if (!mounted) return;
-    }
+  Future<void> _openAttendanceHistory() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const AttendanceHistoryScreen(),
@@ -160,12 +158,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openContractWork({bool fromDrawer = false}) async {
-    if (fromDrawer) {
-      Navigator.of(context).pop();
-      await Future.delayed(const Duration(milliseconds: 200));
-      if (!mounted) return;
-    }
+  Future<void> _openContractWork() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const ContractWorkScreen(),
@@ -183,12 +179,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openReportsSummary({bool fromDrawer = false}) async {
-    if (fromDrawer) {
-      Navigator.of(context).pop();
-      await Future.delayed(const Duration(milliseconds: 200));
-      if (!mounted) return;
-    }
+  Future<void> _openReportsSummary() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
     final workState = context.read<WorkBloc>().state;
     final works = workState.works;
     if (works.isEmpty) {
@@ -235,12 +229,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openHelpSupport({bool fromDrawer = false}) async {
-    if (fromDrawer) {
-      Navigator.of(context).pop();
-      await Future.delayed(const Duration(milliseconds: 200));
-      if (!mounted) return;
-    }
+  Future<void> _openHelpSupport() async {
+    Navigator.of(context).pop();
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const HelpSupportScreen(),
@@ -339,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: LayoutBuilder(
                 builder: (layoutContext, constraints) {
                   final maxWidth =
-                      constraints.maxWidth.clamp(0.0, 420.0).toDouble();
+                  constraints.maxWidth.clamp(0.0, 420.0).toDouble();
                   return Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: maxWidth),
@@ -394,9 +386,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Text(
                                               l.editWorkTitle,
                                               style: theme.textTheme.titleLarge?.copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 20,
-                                                  ) ??
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 20,
+                                              ) ??
                                                   const TextStyle(
                                                     fontWeight: FontWeight.w700,
                                                     fontSize: 20,
@@ -406,9 +398,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Text(
                                               l.editWorkSubtitle,
                                               style: theme.textTheme.bodyMedium?.copyWith(
-                                                    color: const Color(0xFF4B5563),
-                                                    height: 1.4,
-                                                  ) ??
+                                                color: const Color(0xFF4B5563),
+                                                height: 1.4,
+                                              ) ??
                                                   const TextStyle(
                                                     color: Color(0xFF4B5563),
                                                     height: 1.4,
@@ -421,11 +413,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                         onPressed: isSaving
                                             ? null
                                             : () {
-                                                blocContext
-                                                    .read<WorkBloc>()
-                                                    .add(const WorkUpdateStatusCleared());
-                                                Navigator.of(dialogContext).pop();
-                                              },
+                                          blocContext
+                                              .read<WorkBloc>()
+                                              .add(const WorkUpdateStatusCleared());
+                                          Navigator.of(dialogContext).pop();
+                                        },
                                         icon: const Icon(Icons.close),
                                         splashRadius: 20,
                                       ),
@@ -440,8 +432,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Text(
                                           l.workNameLabel,
                                           style: theme.textTheme.labelLarge?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ) ??
+                                            fontWeight: FontWeight.w600,
+                                          ) ??
                                               const TextStyle(fontWeight: FontWeight.w600),
                                         ),
                                         const SizedBox(height: 8),
@@ -468,8 +460,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Text(
                                           l.hourlySalaryLabel,
                                           style: theme.textTheme.labelLarge?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ) ??
+                                            fontWeight: FontWeight.w600,
+                                          ) ??
                                               const TextStyle(fontWeight: FontWeight.w600),
                                         ),
                                         const SizedBox(height: 8),
@@ -508,11 +500,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                           onPressed: isSaving
                                               ? null
                                               : () {
-                                                  blocContext
-                                                      .read<WorkBloc>()
-                                                      .add(const WorkUpdateStatusCleared());
-                                                  Navigator.of(dialogContext).pop();
-                                                },
+                                            blocContext
+                                                .read<WorkBloc>()
+                                                .add(const WorkUpdateStatusCleared());
+                                            Navigator.of(dialogContext).pop();
+                                          },
                                           style: OutlinedButton.styleFrom(
                                             padding: const EdgeInsets.symmetric(vertical: 16),
                                             side: BorderSide(color: theme.colorScheme.primary),
@@ -535,18 +527,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                           onPressed: isSaving
                                               ? null
                                               : () {
-                                                  final isValid = _editWorkFormKey.currentState?.validate() ?? false;
-                                                  if (!isValid) {
-                                                    return;
-                                                  }
-                                                  _handleUpdateWork(
-                                                    dialogContext,
-                                                    l,
-                                                    work,
-                                                    nameController,
-                                                    hourlyController,
-                                                  );
-                                                },
+                                            final isValid = _editWorkFormKey.currentState?.validate() ?? false;
+                                            if (!isValid) {
+                                              return;
+                                            }
+                                            _handleUpdateWork(
+                                              dialogContext,
+                                              l,
+                                              work,
+                                              nameController,
+                                              hourlyController,
+                                            );
+                                          },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: theme.colorScheme.primary,
                                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -556,20 +548,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                           child: isSaving
                                               ? const SizedBox(
-                                                  height: 20,
-                                                  width: 20,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                                                  ),
-                                                )
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                                            ),
+                                          )
                                               : Text(
-                                                  l.updateWorkButton,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.3,
-                                                  ),
-                                                ),
+                                            l.updateWorkButton,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.3,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -695,14 +687,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     final availableWidth =
                         constraints.maxWidth - (horizontalPadding * 2);
                     final safeAvailableWidth =
-                        availableWidth > 0 ? availableWidth : 0.0;
+                    availableWidth > 0 ? availableWidth : 0.0;
                     final buttonWidth = isWide
                         ? math.max((safeAvailableWidth - spacing) / 2, 0.0)
                         : safeAvailableWidth;
 
                     final titleStyle = scaleTextStyle(
                       (theme.textTheme.titleMedium ??
-                              const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))
+                          const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))
                           .copyWith(fontWeight: FontWeight.w600),
                     );
 
@@ -762,10 +754,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: shareActions
                                 .map(
                                   (button) => SizedBox(
-                                    width: buttonWidth,
-                                    child: button,
-                                  ),
-                                )
+                                width: buttonWidth,
+                                child: button,
+                              ),
+                            )
                                 .toList(),
                           ),
                           SizedBox(height: responsive.scale(18)),
@@ -803,9 +795,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final responsive = context.responsive;
     final textScaler = MediaQuery.textScalerOf(context);
     final baseStyle = theme.textTheme.labelLarge?.copyWith(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-        ) ??
+      color: textColor,
+      fontWeight: FontWeight.w600,
+    ) ??
         TextStyle(
           color: textColor,
           fontSize: 16,
@@ -1434,8 +1426,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               l.workDeleteConfirmationTitle,
                               style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ) ??
+                                fontWeight: FontWeight.w700,
+                              ) ??
                                   const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 20,
@@ -1445,9 +1437,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               l.workDeleteConfirmationMessage,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF6B7280),
-                                    height: 1.5,
-                                  ) ??
+                                color: const Color(0xFF6B7280),
+                                height: 1.5,
+                              ) ??
                                   const TextStyle(
                                     color: Color(0xFF6B7280),
                                     height: 1.5,
@@ -1482,9 +1474,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             l.workDeleteIrreversibleMessage,
                             style: theme.textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFF9A3412),
-                                  height: 1.4,
-                                ) ??
+                              color: const Color(0xFF9A3412),
+                              height: 1.4,
+                            ) ??
                                 const TextStyle(
                                   color: Color(0xFF9A3412),
                                   height: 1.4,
@@ -1530,9 +1522,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             l.workDeleteConfirmButton,
                             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ) ??
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ) ??
                                 const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -1664,14 +1656,14 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.attendanceHistoryLabel,
               backgroundColor: const Color(0xFFFFF2F2),
               iconColor: const Color(0xFFFF3B30),
-              onTap: () => _openAttendanceHistory(fromDrawer: true),
+              onTap: _openAttendanceHistory,
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.contractWork,
               label: l.contractWorkLabel,
               backgroundColor: const Color(0xFFEDEBFF),
               iconColor: const Color(0xFF5856D6),
-              onTap: () => _openContractWork(fromDrawer: true),
+              onTap: _openContractWork,
             ),
             _DrawerMenuItem(
               icon: Icons.person_outline,
@@ -1694,7 +1686,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.reportsSummaryLabel,
               backgroundColor: const Color(0xFFE6F0FF),
               iconColor: const Color(0xFF2563EB),
-              onTap: () => _openReportsSummary(fromDrawer: true),
+              onTap: _openReportsSummary,
             ),
             _DrawerMenuItem(
               assetPath: AppAssets.changeLanguage,
@@ -1713,7 +1705,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: l.helpSupportLabel,
               backgroundColor: const Color(0xFFE6F3FF),
               iconColor: const Color(0xFF007AFF),
-              onTap: () => _openHelpSupport(fromDrawer: true),
+              onTap: _openHelpSupport,
             ),
             _DrawerMenuItem(
               icon: Icons.delete_outline,
@@ -1817,336 +1809,77 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeBanner(AppLocalizations l, WorkState state) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final works = state.works;
-    Work? activeWork;
-    for (final work in works) {
-      if (_isWorkActive(work)) {
-        activeWork = work;
-        break;
-      }
-    }
-    activeWork ??= works.isNotEmpty ? works.first : null;
-
+  Widget _buildHomeBanner(AppLocalizations l) {
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withOpacity(0.25),
-              blurRadius: 32,
-              offset: const Offset(0, 18),
+        height: 190,
+
+        width: double.infinity,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.centerRight,
+          children: [
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  AppAssets.bgBanner,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 24,
+              top: 28,
+              right: 150,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.homeBannerTitle,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                    ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l.homeBannerSubtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      height: 1.4,
+                    ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              right: -20,
+              top: -20,
+              bottom: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  AppAssets.homeBanner,
+                  fit: BoxFit.contain,
+                  height: 220,
+                ),
+              ),
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary.withOpacity(0.95),
-                  colorScheme.primaryContainer.withOpacity(0.85),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                top: -80,
-                right: -60,
-                child: Container(
-                  width: 220,
-                  height: 220,
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.25),
-                        Colors.white.withOpacity(0.05),
-                      ],
-                      radius: 0.9,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -40,
-                left: -40,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l.homeBannerTitle,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.2,
-                                    ) ??
-                                    const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                l.homeBannerSubtitle,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withOpacity(0.85),
-                                      height: 1.45,
-                                    ) ??
-                                    TextStyle(
-                                      color: Colors.white.withOpacity(0.85),
-                                      fontSize: 14,
-                                      height: 1.45,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        SizedBox(
-                          height: 120,
-                          child: Image.asset(
-                            AppAssets.homeBanner,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildActiveWorkHighlight(l, activeWork),
-                    const SizedBox(height: 20),
-                    _buildBannerQuickActions(l),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActiveWorkHighlight(AppLocalizations l, Work? activeWork) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final hasActiveWork = activeWork != null;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: hasActiveWork ? () => _openWorkDetail(activeWork!) : _showAddWorkDialog,
-        borderRadius: BorderRadius.circular(24),
-        splashColor: Colors.white.withOpacity(0.12),
-        highlightColor: Colors.white.withOpacity(0.08),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.16),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.22)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                height: 44,
-                width: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.workspace_premium_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l.activeWorkLabel,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.85),
-                            fontWeight: FontWeight.w600,
-                          ) ??
-                          TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      hasActiveWork ? activeWork!.name : l.addYourFirstWork,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ) ??
-                          const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: hasActiveWork
-                    ? Icon(
-                        Icons.arrow_forward_rounded,
-                        key: const ValueKey('active-work-arrow'),
-                        color: Colors.white.withOpacity(0.85),
-                        size: 22,
-                      )
-                    : Container(
-                        key: const ValueKey('add-work-chip'),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_rounded, color: colorScheme.primary, size: 18),
-                            const SizedBox(width: 6),
-                            Text(
-                              l.addNewWorkLabel,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.w700,
-                                  ) ??
-                                  TextStyle(
-                                    color: colorScheme.primary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBannerQuickActions(AppLocalizations l) {
-    final children = <Widget>[
-      _buildQuickActionChip(
-        icon: Icons.add_circle_rounded,
-        label: l.addNewWorkLabel,
-        onTap: _showAddWorkDialog,
-        backgroundColor: Colors.white,
-        foregroundColor: Theme.of(context).colorScheme.primary,
-      ),
-      _buildQuickActionChip(
-        icon: Icons.history_toggle_off_rounded,
-        label: l.attendanceHistoryLabel,
-        onTap: () => _openAttendanceHistory(),
-      ),
-      _buildQuickActionChip(
-        icon: Icons.auto_graph_rounded,
-        label: l.reportsSummaryLabel,
-        onTap: () => _openReportsSummary(),
-      ),
-      _buildQuickActionChip(
-        icon: Icons.headset_mic_outlined,
-        label: l.helpSupportLabel,
-        onTap: () => _openHelpSupport(),
-      ),
-    ];
-
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      alignment: WrapAlignment.start,
-      children: children,
-    );
-  }
-
-  Widget _buildQuickActionChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? backgroundColor,
-    Color? foregroundColor,
-  }) {
-    final theme = Theme.of(context);
-    final Color resolvedForeground = foregroundColor ?? Colors.white;
-    final Color resolvedBackground = backgroundColor ?? Colors.white.withOpacity(0.15);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        splashColor: Colors.white.withOpacity(0.12),
-        highlightColor: Colors.white.withOpacity(0.08),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: resolvedBackground,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(backgroundColor != null ? 0.18 : 0.25)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: resolvedForeground, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                      color: resolvedForeground,
-                      fontWeight: FontWeight.w600,
-                    ) ??
-                    TextStyle(
-                      color: resolvedForeground,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -2211,7 +1944,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: works.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return _buildHomeBanner(l, state);
+            return _buildHomeBanner(l);
           }
           final work = works[index - 1];
           return Padding(
@@ -2244,7 +1977,7 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          _buildHomeBanner(l, state),
+          _buildHomeBanner(l),
           ...children,
         ],
       ),
@@ -2378,149 +2111,208 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     final card = Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(28),
-      elevation: 0,
-      child: InkWell(
-        onTap:
-            (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
-        onLongPress:
-            (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(28),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          padding: const EdgeInsets.all(2.4),
+        elevation: 0,
+        child: InkWell(
+          onTap:
+          (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
+          onLongPress:
+          (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
+          borderRadius: BorderRadius.circular(28),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isActive
-                    ? const Color(0xFF34D399)
-                    : accentColor.withOpacity(0.18),
-                width: isActive ? 1.5 : 1.1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor.withOpacity(0.08),
-                  blurRadius: 22,
-                  offset: const Offset(0, 12),
-                ),
-              ],
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(28),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 520;
-              final disableActions = isDeleting || isActivating;
+            padding: const EdgeInsets.all(2.4),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isActive
+                      ? const Color(0xFF34D399)
+                      : accentColor.withOpacity(0.18),
+                  width: isActive ? 1.5 : 1.1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withOpacity(0.08),
+                    blurRadius: 22,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 520;
+                  final disableActions = isDeleting || isActivating;
 
-              Widget buildActionColumn({required bool alignStart}) {
-                final alignment =
+                  Widget buildActionColumn({required bool alignStart}) {
+                    final alignment =
                     alignStart ? Alignment.centerLeft : Alignment.centerRight;
-                final wrapAlignment =
+                    final wrapAlignment =
                     alignStart ? WrapAlignment.start : WrapAlignment.end;
 
-                return Column(
-                  crossAxisAlignment: alignStart
-                      ? CrossAxisAlignment.start
-                      : CrossAxisAlignment.end,
-                  children: [
-                    Align(
-                      alignment: alignment,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: work.isContract
-                              ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFFEDD5),
-                                    Color(0xFFFFF7ED),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : const LinearGradient(
-                                  colors: [
-                                    Color(0xFFDCEBFF),
-                                    Color(0xFFEFF6FF),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: accentColor.withOpacity(0.16),
+                    return Column(
+                      crossAxisAlignment: alignStart
+                          ? CrossAxisAlignment.start
+                          : CrossAxisAlignment.end,
+                      children: [
+                        Align(
+                          alignment: alignment,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: work.isContract
+                                  ? const LinearGradient(
+                                colors: [
+                                  Color(0xFFFFEDD5),
+                                  Color(0xFFFFF7ED),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                                  : const LinearGradient(
+                                colors: [
+                                  Color(0xFFDCEBFF),
+                                  Color(0xFFEFF6FF),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: accentColor.withOpacity(0.16),
+                              ),
+                            ),
+                            child: Text(
+                              work.isContract
+                                  ? l.contractWorkLabel
+                                  : l.hourlyWorkLabel,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0A0A0A),
+                              ),
+                            ),
                           ),
                         ),
-                        child: Text(
-                          work.isContract
-                              ? l.contractWorkLabel
-                              : l.hourlyWorkLabel,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF0A0A0A),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: alignment,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: SizeTransition(
-                            sizeFactor: animation,
-                            axisAlignment: -1,
-                            child: child,
-                          ),
-                        ),
-                        child: isActive
-                            ? Container(
-                                key: const ValueKey('active-badge'),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: alignment,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            transitionBuilder: (child, animation) => FadeTransition(
+                              opacity: animation,
+                              child: SizeTransition(
+                                sizeFactor: animation,
+                                axisAlignment: -1,
+                                child: child,
+                              ),
+                            ),
+                            child: isActive
+                                ? Container(
+                              key: const ValueKey('active-badge'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFECFDF3),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.verified_rounded,
+                                    color: Color(0xFF22C55E),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    l.activeWorkLabel,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF15803D),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                                : SizedBox(
+                              key: const ValueKey('activate-button'),
+                              height: 36,
+                              child: FilledButton.tonal(
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14),
+                                  backgroundColor: accentColor.withOpacity(0.08),
+                                  foregroundColor: accentColor,
+                                  textStyle: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFECFDF3),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
+                                onPressed: disableActivateButton
+                                    ? null
+                                    : () => _handleSetActiveWork(work),
+                                child: isActivating
+                                    ? Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
-                                      Icons.verified_rounded,
-                                      color: Color(0xFF22C55E),
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      l.activeWorkLabel,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF15803D),
+                                    SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                        AlwaysStoppedAnimation<Color>(
+                                          accentColor,
+                                        ),
                                       ),
                                     ),
+                                    const SizedBox(width: 8),
+                                    Text(l.settingActiveWorkLabel),
+                                  ],
+                                )
+                                    : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.bolt_rounded,
+                                        size: 18, color: accentColor),
+                                    const SizedBox(width: 6),
+                                    Text(l.setActiveWorkButton),
                                   ],
                                 ),
-                              )
-                            : SizedBox(
-                                key: const ValueKey('activate-button'),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: alignment,
+                          child: Wrap(
+                            alignment: wrapAlignment,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              SizedBox(
                                 height: 36,
-                                child: FilledButton.tonal(
+                                child: FilledButton.tonalIcon(
                                   style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 14),
                                     backgroundColor: accentColor.withOpacity(0.08),
                                     foregroundColor: accentColor,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
                                     textStyle: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -2529,258 +2321,199 @@ class _HomeScreenState extends State<HomeScreen> {
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
-                                  onPressed: disableActivateButton
+                                  onPressed: disableActions
                                       ? null
-                                      : () => _handleSetActiveWork(work),
-                                  child: isActivating
-                                      ? Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SizedBox(
-                                              height: 18,
-                                              width: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<Color>(
-                                                  accentColor,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(l.settingActiveWorkLabel),
-                                          ],
-                                        )
-                                      : Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.bolt_rounded,
-                                                size: 18, color: accentColor),
-                                            const SizedBox(width: 6),
-                                            Text(l.setActiveWorkButton),
-                                          ],
-                                        ),
+                                      : () => _showEditWorkDialog(work),
+                                  icon: const Icon(Icons.edit_outlined, size: 18),
+                                  label: Text(l.editWorkTooltip),
                                 ),
                               ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: alignment,
-                      child: Wrap(
-                        alignment: wrapAlignment,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          SizedBox(
-                            height: 36,
-                            child: FilledButton.tonalIcon(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: accentColor.withOpacity(0.08),
-                                foregroundColor: accentColor,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16),
-                                textStyle: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
+                              SizedBox(
+                                height: 36,
+                                child: FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    backgroundColor: const Color(0xFFFFE8E6),
+                                    foregroundColor: const Color(0xFFB42318),
+                                    textStyle: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                  onPressed: disableActions
+                                      ? null
+                                      : () => _handleDeleteWorkTap(work, l),
+                                  icon: const Icon(Icons.delete_outline, size: 18),
+                                  label: Text(l.workDeleteConfirmButton),
                                 ),
                               ),
-                              onPressed: disableActions
-                                  ? null
-                                  : () => _showEditWorkDialog(work),
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: Text(l.editWorkTooltip),
-                            ),
+                            ],
                           ),
-                          SizedBox(
-                            height: 36,
-                            child: FilledButton.icon(
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16),
-                                backgroundColor: const Color(0xFFFFE8E6),
-                                foregroundColor: const Color(0xFFB42318),
-                                textStyle: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              onPressed: disableActions
-                                  ? null
-                                  : () => _handleDeleteWorkTap(work, l),
-                              icon: const Icon(Icons.delete_outline, size: 18),
-                              label: Text(l.workDeleteConfirmButton),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }
+                        ),
+                      ],
+                    );
+                  }
 
-              final Widget actionSection = isCompact
-                  ? buildActionColumn(alignStart: true)
-                  : SizedBox(width: 220, child: buildActionColumn(alignStart: false));
+                  final Widget actionSection = isCompact
+                      ? buildActionColumn(alignStart: true)
+                      : SizedBox(width: 220, child: buildActionColumn(alignStart: false));
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        height: 54,
-                        width: 54,
-                        decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Icon(
-                          isActive
-                              ? Icons.workspace_premium_outlined
-                              : Icons.work_outline,
-                          color: isActive
-                              ? const Color(0xFF16A34A)
-                              : accentColor,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              work.name,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 54,
+                            width: 54,
+                            decoration: BoxDecoration(
+                              color: accentColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Icon(
+                              isActive
+                                  ? Icons.workspace_premium_outlined
+                                  : Icons.work_outline,
+                              color: isActive
+                                  ? const Color(0xFF16A34A)
+                                  : accentColor,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  work.name,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 20,
                                   ) ??
-                                  const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Color.alphaBlend(
-                                  accentContainerColor.withOpacity(0.18),
-                                  colorScheme.surface,
-                                ),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
-                                  color: accentColor.withOpacity(0.14),
-                                ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    height: 36,
-                                    width: 36,
-                                    decoration: BoxDecoration(
-                                      color: accentContainerColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: accentColor.withOpacity(0.2),
+                                      const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
                                       ),
+                                ),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color.alphaBlend(
+                                      accentContainerColor.withOpacity(0.18),
+                                      colorScheme.surface,
                                     ),
-                                    child: Icon(
-                                      Icons.payments_outlined,
-                                      color: accentOnContainerColor,
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: accentColor.withOpacity(0.14),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l.hourlySalaryLabel,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.labelLarge?.copyWith(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        height: 36,
+                                        width: 36,
+                                        decoration: BoxDecoration(
+                                          color: accentContainerColor,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: accentColor.withOpacity(0.2),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.payments_outlined,
+                                          color: accentOnContainerColor,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              l.hourlySalaryLabel,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: theme.textTheme.labelLarge?.copyWith(
                                                 color: colorScheme.onSurfaceVariant,
                                                 fontWeight: FontWeight.w600,
                                               ) ??
-                                              TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                                color: colorScheme.onSurfaceVariant,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _formatHourlyRate(work, l),
-                                          style: theme.textTheme.titleMedium?.copyWith(
+                                                  TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: colorScheme.onSurfaceVariant,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              _formatHourlyRate(work, l),
+                                              style: theme.textTheme.titleMedium?.copyWith(
                                                 color: accentColor,
                                                 fontWeight: FontWeight.w700,
                                               ) ??
-                                              TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w700,
-                                                color: accentColor,
-                                              ),
+                                                  TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: accentColor,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                            if (description != null) ...[
-                              const SizedBox(height: 12),
-                              Text(
-                                description,
-                                maxLines: isCompact ? 3 : 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
+                                ),
+                                if (description != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    description,
+                                    maxLines: isCompact ? 3 : 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
                                         ?.copyWith(
-                                          color: const Color(0xFF6B7280),
-                                          height: 1.4,
-                                        ) ??
-                                    const TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF6B7280),
+                                      color: const Color(0xFF6B7280),
                                       height: 1.4,
-                                    ),
-                              ),
-                            ],
+                                    ) ??
+                                        const TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF6B7280),
+                                          height: 1.4,
+                                        ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (!isCompact) ...[
+                            const SizedBox(width: 12),
+                            actionSection,
                           ],
-                        ),
+                        ],
                       ),
-                      if (!isCompact) ...[
-                        const SizedBox(width: 12),
+                      if (isCompact) ...[
+                        const SizedBox(height: 16),
                         actionSection,
                       ],
                     ],
-                  ),
-                  if (isCompact) ...[
-                    const SizedBox(height: 16),
-                    actionSection,
-                  ],
-                ],
-              );
-            },
+                  );
+                },
+              ),
+            ),
           ),
-        ),
-      ),
-    ));
+        ));
 
     return Dismissible(
       key: ValueKey(work.id),
