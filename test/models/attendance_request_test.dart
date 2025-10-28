@@ -72,6 +72,38 @@ void main() {
       expect(json['is_leave'], isFalse);
     });
 
+    test('serializes contract attendance with bundles only payload', () {
+      final request = AttendanceRequest(
+        workId: 3,
+        date: DateTime(2025, 10, 28),
+        startTime: '07:25',
+        endTime: '20:45',
+        breakMinutes: 35,
+        isContractEntry: true,
+        bundles: const [
+          AttendanceContractBundle(contractTypeId: 4, count: 2),
+          AttendanceContractBundle(contractTypeId: 5, count: 1),
+        ],
+      );
+
+      final json = request.toJson();
+
+      expect(json['work_id'], 3);
+      expect(json['date'], '2025-10-28');
+      expect(json['is_leave'], isFalse);
+      expect(json['is_contract_entry'], isTrue);
+      expect(json['bundles'], [
+        {'contract_type_id': 4, 'count': 2},
+        {'contract_type_id': 5, 'count': 1},
+      ]);
+      expect(json.containsKey('start_time'), isFalse);
+      expect(json.containsKey('end_time'), isFalse);
+      expect(json.containsKey('break_minutes'), isFalse);
+      expect(json.containsKey('contract_type_id'), isFalse);
+      expect(json.containsKey('units'), isFalse);
+      expect(json.containsKey('rate_per_unit'), isFalse);
+    });
+
     test('serializes leave attendance with minimal payload', () {
       final request = AttendanceRequest(
         workId: 3,
