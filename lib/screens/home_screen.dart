@@ -11,7 +11,6 @@ import '../bloc/app_cubit.dart';
 import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
-import '../core/constants/app_strings.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
@@ -62,21 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _shouldOpenDashboard = true;
       _hasOpenedDashboard = false;
     }
-  }
-
-  TextStyle _fallbackTextStyle({
-    double? fontSize,
-    FontWeight? fontWeight,
-    Color? color,
-    double? height,
-  }) {
-    return TextStyle(
-      fontSize: fontSize,
-      fontWeight: fontWeight,
-      color: color,
-      height: height,
-      fontFamily: AppString.fontFamily,
-    );
   }
 
   Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
@@ -290,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final Work targetWork = works.firstWhere(
-      (work) => _isWorkActive(work),
+          (work) => _isWorkActive(work),
       orElse: () => works.first,
     );
 
@@ -414,11 +398,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: Text(
                                     l.editWorkSubtitle,
                                     style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                            ) ??
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ) ??
                                         const TextStyle(
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -856,13 +840,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               children: [
                                 Container(
-                                  height: 35,
-                                  width: 35,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFFE5F1FF),
-                                  ),
-                                  child:  Image.asset(AppAssets.clock)
+                                    height: 35,
+                                    width: 35,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFFE5F1FF),
+                                    ),
+                                    child:  Image.asset(AppAssets.clock)
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
@@ -955,13 +939,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             Row(
                               children: [
                                 Container(
-                                  height: 35,
-                                  width: 35,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFFFFE8D6),
-                                  ),
-                                  child: Image.asset(AppAssets.contract)
+                                    height: 35,
+                                    width: 35,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFFFFE8D6),
+                                    ),
+                                    child: Image.asset(AppAssets.contract)
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -1387,15 +1371,10 @@ class _HomeScreenState extends State<HomeScreen> {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              titleSpacing: 5,
               leading: Builder(
                 builder: (context) {
                   return IconButton(
-                    icon: Image.asset(
-                      AppAssets.icDrawer,
-                      width: 24,
-                      height: 24,
-                    ),
+                    icon: const Icon(Icons.menu, color: Colors.grey),
                     onPressed: () => Scaffold.of(context).openDrawer(),
                   );
                 },
@@ -1406,21 +1385,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: [
                 IconButton(
-                  icon: Image.asset(
-                    AppAssets.language,
-                    width: 24,
-                    height: 24,
-                  ),
+                  icon: const Icon(Icons.language, color: Colors.grey),
                   onPressed: () {
                     _showLanguageDialog(context, languageOptions, l);
                   },
                 ),
                 IconButton(
-                  icon: Image.asset(
-                    AppAssets.icShare,
-                    width: 24,
-                    height: 24,
-                  ),
+                  icon: const Icon(Icons.share, color: Colors.grey),
                   onPressed: _showShareOptions,
                 ),
               ],
@@ -1474,112 +1445,73 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(AppAssets.bgBanner),
-              fit: BoxFit.cover,
+      child: Container(
+        height: 190,
+
+        width: double.infinity,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.centerRight,
+          children: [
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  AppAssets.bgBanner,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 360;
-              final num rawImageWidth =
-                  (constraints.maxWidth * 0.35).clamp(120.0, 220.0);
-              final double imageWidth = rawImageWidth.toDouble();
-              final num rawImageHeight =
-                  (imageWidth * 1.1).clamp(140.0, 240.0);
-              final double imageHeight = rawImageHeight.toDouble();
-
-              final titleStyle = textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                  ) ??
-                  _fallbackTextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                  );
-              final subtitleStyle = textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
-                    height: 1.4,
-                  ) ??
-                  _fallbackTextStyle(
-                    color: Colors.white,
-                    height: 1.4,
-                  );
-
-              Widget buildImage(Alignment alignment) {
-                return Align(
-                  alignment: alignment,
-                  child: SizedBox(
-                    width: imageWidth,
-                    height: imageHeight,
-                    child: Image.asset(
-                      AppAssets.homeBanner,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                );
-              }
-
-              final textColumn = Column(
-                mainAxisSize: MainAxisSize.min,
+            Positioned(
+              left: 24,
+              top: 28,
+              right: 150,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l.homeBannerTitle,
-                    style: titleStyle,
-                    softWrap: true,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                    ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     l.homeBannerSubtitle,
-                    style: subtitleStyle,
-                    softWrap: true,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      height: 1.4,
+                    ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
                   ),
                 ],
-              );
-
-              final padding = EdgeInsets.symmetric(
-                horizontal: isCompact ? 20 : 24,
-                vertical: isCompact ? 20 : 24,
-              );
-
-              final content = isCompact
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        textColumn,
-                        const SizedBox(height: 16),
-                        buildImage(Alignment.centerRight),
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(child: textColumn),
-                        const SizedBox(width: 16),
-                        Flexible(
-                          flex: 4,
-                          child: buildImage(Alignment.bottomRight),
-                        ),
-                      ],
-                    );
-
-              return ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 190),
-                child: Padding(
-                  padding: padding,
-                  child: content,
+              ),
+            ),
+            Positioned(
+              right: -20,
+              top: -20,
+              bottom: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  AppAssets.homeBanner,
+                  fit: BoxFit.contain,
+                  height: 220,
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1608,9 +1540,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final message = state.requiresAuthentication
           ? l.authenticationRequiredMessage
           : (state.lastErrorMessage != null &&
-                  state.lastErrorMessage!.isNotEmpty
-              ? state.lastErrorMessage!
-              : l.worksLoadFailedMessage);
+          state.lastErrorMessage!.isNotEmpty
+          ? state.lastErrorMessage!
+          : l.worksLoadFailedMessage);
       return _buildRefreshableList(
         l,
         state,
@@ -1654,7 +1586,7 @@ class _HomeScreenState extends State<HomeScreen> {
               l,
               isDeleting: state.deletingWorkId == work.id,
               isActivating:
-                  activatingWorkId == work.id && isActivationInProgress,
+              activatingWorkId == work.id && isActivationInProgress,
               activationInProgress: isActivationInProgress,
             ),
           );
@@ -1666,11 +1598,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRefreshableList(
-    AppLocalizations l,
-    WorkState state, {
-    required List<Widget> children,
-    Future<void> Function()? onRefresh,
-  }) {
+      AppLocalizations l,
+      WorkState state, {
+        required List<Widget> children,
+        Future<void> Function()? onRefresh,
+      }) {
     return RefreshIndicator(
       onRefresh: onRefresh ?? () => _handleRefresh(state),
       child: ListView(
@@ -1846,7 +1778,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ) ??
-                          _fallbackTextStyle(
+                          const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1857,9 +1789,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFF4F5B67),
                       ) ??
-                          _fallbackTextStyle(
+                          const TextStyle(
                             fontSize: 14,
-                            color: const Color(0xFF4F5B67),
+                            color: Color(0xFF4F5B67),
                           ),
                     ),
                   ],
@@ -1871,10 +1803,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: work.isContract
                           ? const Color(0xFFFFF5EC)
@@ -1885,16 +1815,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       work.isContract
                           ? l.contractWorkLabel
                           : l.hourlyWorkLabel,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF0A0A0A),
-                      ) ??
-                          _fallbackTextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0A0A0A),
-                          ),
+                        color: Color(0xFF0A0A0A),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1930,19 +1855,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 6),
                           Text(
                             l.activeWorkLabel,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF15803D),
-                                ) ??
-                                _fallbackTextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF15803D),
-                                ),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF15803D),
+                            ),
                           ),
                         ],
                       ),
@@ -1953,20 +1870,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: FilledButton.tonal(
                         style: FilledButton.styleFrom(
                           padding:
-                              const EdgeInsets.symmetric(horizontal: 14),
+                          const EdgeInsets.symmetric(horizontal: 14),
                           backgroundColor: const Color(0xFFEFF5FF),
                           foregroundColor: const Color(0xFF0052CC),
-                          textStyle: Theme.of(context)
-                                  .textTheme
-                                  .labelLarge
-                                  ?.copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ) ??
-                              _fallbackTextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          textStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
@@ -2177,15 +2087,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(
                 child: item.assetPath != null
                     ? Image.asset(
-                        item.assetPath!,
-                        width: 24,
-                        height: 24,
-                      )
+                  item.assetPath!,
+                  width: 24,
+                  height: 24,
+                )
                     : Icon(
-                        item.icon!,
-                        color: item.iconColor,
-                        size: 24,
-                      ),
+                  item.icon!,
+                  color: item.iconColor,
+                  size: 24,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -2425,9 +2335,9 @@ class _DrawerMenuItem {
     this.iconColor,
     required this.onTap,
   }) : assert(icon != null || assetPath != null,
-            'Either icon or assetPath must be provided.'),
+  'Either icon or assetPath must be provided.'),
         assert(icon == null || assetPath == null,
-            'Provide only one of icon or assetPath.');
+        'Provide only one of icon or assetPath.');
 
   final IconData? icon;
   final String? assetPath;
