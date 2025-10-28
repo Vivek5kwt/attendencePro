@@ -163,69 +163,77 @@ Future<Work?> showWorkSelectionDialog({
                                 if (onAddNewWork != null) ...[
                                   SizedBox(
                                     width: double.infinity,
-                                    child: OutlinedButton(
-                                      onPressed: () {
-                                        Navigator.of(dialogContext)
-                                            .pop(_kAddNewWorkResult);
-                                      },
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 16),
-                                        side: const BorderSide(
-                                            color: Color(0xFFD1D5DB)),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                          BorderRadius.circular(18),
-                                        ),
-                                        foregroundColor:
-                                        const Color(0xFF2563EB),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 32,
-                                            width: 32,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border: Border.all(
-                                                color:
-                                                const Color(0xFFD1D5DB),
-                                              ),
-                                              color: Colors.white,
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(22),
+                                        onTap: () {
+                                          Navigator.of(dialogContext)
+                                              .pop(_kAddNewWorkResult);
+                                        },
+                                        child: _DashedBorder(
+                                          borderRadius: 22,
+                                          color: const Color(0xFF2563EB),
+                                          strokeWidth: 1.6,
+                                          dashLength: 8,
+                                          dashGap: 5,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                              horizontal: 18,
                                             ),
-                                            alignment: Alignment.center,
-                                            child: const Icon(
-                                              Icons.add,
-                                              size: 18,
-                                              color: Color(0xFF2563EB),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Flexible(
-                                            child: Text(
-                                              localization.addNewWorkLabel,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .labelLarge
-                                                  ?.copyWith(
-                                                fontWeight:
-                                                FontWeight.w600,
-                                                color: const Color(
-                                                    0xFF2563EB),
-                                              ) ??
-                                                  const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color:
-                                                    Color(0xFF2563EB),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  height: 32,
+                                                  width: 32,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                      color: const Color(
+                                                          0xFF2563EB),
+                                                      width: 1.4,
+                                                    ),
+                                                    color: Colors.white,
                                                   ),
-                                              overflow: TextOverflow.ellipsis,
+                                                  alignment: Alignment.center,
+                                                  child: const Icon(
+                                                    Icons.add,
+                                                    size: 18,
+                                                    color: Color(0xFF2563EB),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Flexible(
+                                                  child: Text(
+                                                    localization.addNewWorkLabel,
+                                                    style: Theme.of(context)
+                                                            .textTheme
+                                                            .labelLarge
+                                                            ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color: const Color(
+                                                              0xFF2563EB),
+                                                        ) ??
+                                                        const TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Color(0xFF2563EB),
+                                                        ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -416,23 +424,31 @@ class _WorkSelectionTile extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             height: 28,
             width: 28,
-
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: isSelected
                   ? ClipOval(
-                key: const ValueKey('selected'),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Image.asset(
-                    AppAssets.icTick,
-                    width: 22,
-                    height: 22,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              )
-                  : const SizedBox.shrink(key: ValueKey('unselected')),
+                      key: const ValueKey('selected'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Image.asset(
+                          AppAssets.icTick,
+                          width: 22,
+                          height: 22,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      key: const ValueKey('unselected'),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFFD1D5DB),
+                          width: 2,
+                        ),
+                      ),
+                    ),
             ),
           ),
         ],
@@ -466,6 +482,87 @@ class _WorkSelectionTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DashedBorder extends StatelessWidget {
+  const _DashedBorder({
+    required this.child,
+    required this.borderRadius,
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.dashGap,
+  });
+
+  final Widget child;
+  final double borderRadius;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double dashGap;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedRRectPainter(
+        borderRadius: borderRadius,
+        color: color,
+        strokeWidth: strokeWidth,
+        dashLength: dashLength,
+        dashGap: dashGap,
+      ),
+      child: child,
+    );
+  }
+}
+
+class _DashedRRectPainter extends CustomPainter {
+  const _DashedRRectPainter({
+    required this.borderRadius,
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.dashGap,
+  });
+
+  final double borderRadius;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double dashGap;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) {
+      return;
+    }
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(
+      rect,
+      Radius.circular(borderRadius),
+    );
+    final path = Path()..addRRect(rrect);
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final double nextDistance = math.min(distance + dashLength, metric.length);
+        final extractPath = metric.extractPath(distance, nextDistance);
+        canvas.drawPath(extractPath, paint);
+        distance += dashLength + dashGap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _DialogCloseButton extends StatelessWidget {
