@@ -2089,14 +2089,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final disableActivateButton =
         isDeleting || (activationInProgress && !isActivating) || isActive;
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final description = _resolveWorkDescription(work);
     final accentColor = work.isContract
-        ? const Color(0xFFFB923C)
-        : const Color(0xFF2563EB);
+        ? colorScheme.tertiary
+        : colorScheme.primary;
+    final accentContainerColor = work.isContract
+        ? colorScheme.tertiaryContainer
+        : colorScheme.primaryContainer;
+    final accentOnContainerColor = work.isContract
+        ? colorScheme.onTertiaryContainer
+        : colorScheme.onPrimaryContainer;
     final gradient = LinearGradient(
-      colors: work.isContract
-          ? const [Color(0xFFFFF4E5), Color(0xFFFFE8D7)]
-          : const [Color(0xFFE6F0FF), Color(0xFFDCE7FF)],
+      colors: [
+        Color.alphaBlend(accentContainerColor.withOpacity(0.8), colorScheme.surface),
+        accentContainerColor.withOpacity(0.4),
+      ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
@@ -2399,66 +2408,68 @@ class _HomeScreenState extends State<HomeScreen> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: accentColor.withOpacity(0.08),
+                                color: Color.alphaBlend(
+                                  accentContainerColor.withOpacity(0.18),
+                                  colorScheme.surface,
+                                ),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: accentColor.withOpacity(0.16),
+                                  color: accentColor.withOpacity(0.14),
                                 ),
                               ),
                               child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Container(
                                     height: 36,
                                     width: 36,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: accentContainerColor,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: accentColor.withOpacity(0.16),
+                                        color: accentColor.withOpacity(0.2),
                                       ),
                                     ),
                                     child: Icon(
                                       Icons.payments_outlined,
-                                      color: accentColor,
+                                      color: accentOnContainerColor,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        l.hourlySalaryLabel,
-                                        style: Theme.of(context)
-                                                .textTheme
-                                                .labelLarge
-                                                ?.copyWith(
-                                                  color: const Color(0xFF334155),
-                                                  fontWeight: FontWeight.w600,
-                                                ) ??
-                                            const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: Color(0xFF334155),
-                                            ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _formatHourlyRate(work, l),
-                                        style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  color: accentColor,
-                                                  fontWeight: FontWeight.w700,
-                                                ) ??
-                                            TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w700,
-                                              color: accentColor,
-                                            ),
-                                      ),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l.hourlySalaryLabel,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.labelLarge?.copyWith(
+                                                color: colorScheme.onSurfaceVariant,
+                                                fontWeight: FontWeight.w600,
+                                              ) ??
+                                              TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: colorScheme.onSurfaceVariant,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _formatHourlyRate(work, l),
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                                color: accentColor,
+                                                fontWeight: FontWeight.w700,
+                                              ) ??
+                                              TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w700,
+                                                color: accentColor,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -2632,7 +2643,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _formatHourlyRate(Work work, AppLocalizations l) {
     final rate = work.hourlyRate;
     if (rate == null) {
-      return '${l.hourlySalaryLabel}: ${l.notAvailableLabel}';
+      return l.notAvailableLabel;
     }
 
     final double doubleValue = rate.toDouble();
@@ -2641,7 +2652,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? doubleValue.toStringAsFixed(0)
         : doubleValue.toStringAsFixed(2);
 
-    return '${l.hourlySalaryLabel}: $formatted';
+    return formatted;
   }
 
   String? _successFallback(WorkFeedbackKind? kind, AppLocalizations l) {
