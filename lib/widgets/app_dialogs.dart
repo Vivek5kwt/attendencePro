@@ -5,140 +5,272 @@ import 'package:flutter/material.dart';
 import '../core/localization/app_localizations.dart';
 import '../utils/responsive.dart';
 
+class _CreativeDialogConfig {
+  const _CreativeDialogConfig({
+    required this.gradientColors,
+    required this.primaryColor,
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.confirmLabel,
+    required this.cancelLabel,
+  });
+
+  final List<Color> gradientColors;
+  final Color primaryColor;
+  final IconData icon;
+  final String title;
+  final String message;
+  final String confirmLabel;
+  final String cancelLabel;
+}
+
 Future<bool> showCreativeLogoutDialog(
   BuildContext context,
   AppLocalizations localizations,
 ) async {
-  final theme = Theme.of(context);
-  final responsive = context.responsive;
+  return _showCreativeConfirmationDialog(
+    context,
+    _CreativeDialogConfig(
+      gradientColors: const [Color(0xFF0F87FF), Color(0xFF5A60FF)],
+      primaryColor: const Color(0xFF0F87FF),
+      icon: Icons.logout,
+      title: localizations.logoutConfirmationTitle,
+      message: localizations.logoutConfirmationMessage,
+      confirmLabel: localizations.logoutConfirmButton,
+      cancelLabel: localizations.logoutCancelButton,
+    ),
+  );
+}
+
+Future<bool> showCreativeDeleteAccountDialog(
+  BuildContext context,
+  AppLocalizations localizations,
+) async {
+  return _showCreativeConfirmationDialog(
+    context,
+    _CreativeDialogConfig(
+      gradientColors: const [Color(0xFFFF5F6D), Color(0xFFFF1A1A)],
+      primaryColor: const Color(0xFFFF1A1A),
+      icon: Icons.delete_forever,
+      title: localizations.deleteAccountConfirmationTitle,
+      message: localizations.deleteAccountConfirmationMessage,
+      confirmLabel: localizations.deleteAccountConfirmButton,
+      cancelLabel: localizations.deleteAccountCancelButton,
+    ),
+  );
+}
+
+Future<bool> _showCreativeConfirmationDialog(
+  BuildContext context,
+  _CreativeDialogConfig config,
+) async {
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: true,
     builder: (dialogContext) {
+      final theme = Theme.of(dialogContext);
+      final responsive = dialogContext.responsive;
+      final mediaQuery = MediaQuery.of(dialogContext);
+      final textScaler = MediaQuery.textScalerOf(dialogContext);
+
+      TextStyle _scaledTextStyle(TextStyle? base, double fallback) {
+        final baseFontSize = base?.fontSize ?? fallback;
+        final scaledFontSize = textScaler.scale(
+          responsive.scaleText(baseFontSize),
+        );
+        return (base ?? TextStyle(fontSize: fallback)).copyWith(
+          fontSize: scaledFontSize,
+        );
+      }
+
       return Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.symmetric(
-          horizontal: responsive.scale(24),
-          vertical: responsive.scale(24),
+          horizontal: responsive.scale(16),
+          vertical: responsive.scale(16),
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F87FF), Color(0xFF5A60FF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(responsive.scale(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: responsive.scale(24),
-                offset: Offset(0, responsive.scale(16)),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: responsive.scale(28)),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.12),
+        child: Align(
+          alignment: Alignment.center,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = math.min(
+                mediaQuery.size.width *
+                    (mediaQuery.orientation == Orientation.portrait ? 0.92 : 0.65),
+                responsive.scaleWidth(420),
+              );
+              final minWidth = math.min(maxWidth, responsive.scaleWidth(260));
+
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: minWidth,
+                  maxWidth: maxWidth,
                 ),
-                padding: EdgeInsets.all(responsive.scale(16)),
-                child: CircleAvatar(
-                  radius: responsive.scale(38),
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.logout,
-                    size: responsive.scale(34),
-                    color: Color(0xFF0F87FF),
-                  ),
-                ),
-              ),
-              SizedBox(height: responsive.scale(24)),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: responsive.scale(28),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      localizations.logoutConfirmationTitle,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: responsive.scale(12)),
-                    Text(
-                      localizations.logoutConfirmationMessage,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: responsive.scale(28)),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(responsive.scale(28)),
-                  ),
-                ),
-                padding: EdgeInsets.fromLTRB(
-                  responsive.scale(24),
-                  responsive.scale(20),
-                  responsive.scale(24),
-                  responsive.scale(24),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF0F87FF),
-                          side: const BorderSide(color: Color(0xFFB4CDFF)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(responsive.scale(18)),
+                child: LayoutBuilder(
+                  builder: (context, innerConstraints) {
+                    final shouldStackActions =
+                        innerConstraints.maxWidth < responsive.scaleWidth(340);
+
+                    return Material(
+                      color: Colors.transparent,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: config.gradientColors,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: responsive.scale(14),
-                          ),
+                          borderRadius:
+                              BorderRadius.circular(responsive.scale(30)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.18),
+                              blurRadius: responsive.scale(28),
+                              offset: Offset(0, responsive.scale(18)),
+                            ),
+                          ],
                         ),
-                        child: Text(localizations.logoutCancelButton),
-                      ),
-                    ),
-                    SizedBox(width: responsive.scale(16)),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F87FF),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(responsive.scale(18)),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: responsive.scale(14),
-                          ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                responsive.scale(28),
+                                responsive.scale(32),
+                                responsive.scale(28),
+                                responsive.scale(4),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.16),
+                                    ),
+                                    padding:
+                                        EdgeInsets.all(responsive.scale(18)),
+                                    child: CircleAvatar(
+                                      radius: responsive.scale(36),
+                                      backgroundColor: Colors.white,
+                                      child: Icon(
+                                        config.icon,
+                                        size: responsive.scale(32),
+                                        color: config.primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: responsive.scale(20)),
+                                  Text(
+                                    config.title,
+                                    textAlign: TextAlign.center,
+                                    style: _scaledTextStyle(
+                                      theme.textTheme.headlineSmall?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      24,
+                                    ),
+                                  ),
+                                  SizedBox(height: responsive.scale(12)),
+                                  Text(
+                                    config.message,
+                                    textAlign: TextAlign.center,
+                                    style: _scaledTextStyle(
+                                      theme.textTheme.bodyLarge?.copyWith(
+                                        color: Colors.white.withOpacity(0.92),
+                                        height: 1.4,
+                                      ),
+                                      16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: responsive.scale(20)),
+                            Container(
+                              width: double.infinity,
+                              color: Colors.white,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: responsive.scale(22),
+                                vertical: responsive.scale(22),
+                              ),
+                              child: shouldStackActions
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        _DialogOutlinedButton(
+                                          label: config.cancelLabel,
+                                          color: config.primaryColor,
+                                          onTap: () =>
+                                              Navigator.of(dialogContext)
+                                                  .pop(false),
+                                          responsive: responsive,
+                                          textStyle: _scaledTextStyle(
+                                            theme.textTheme.labelLarge,
+                                            15,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                            height: responsive.scale(12)),
+                                        _DialogElevatedButton(
+                                          label: config.confirmLabel,
+                                          color: config.primaryColor,
+                                          onTap: () =>
+                                              Navigator.of(dialogContext)
+                                                  .pop(true),
+                                          responsive: responsive,
+                                          textStyle: _scaledTextStyle(
+                                            theme.textTheme.labelLarge,
+                                            15,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        Expanded(
+                                          child: _DialogOutlinedButton(
+                                            label: config.cancelLabel,
+                                            color: config.primaryColor,
+                                            onTap: () =>
+                                                Navigator.of(dialogContext)
+                                                    .pop(false),
+                                            responsive: responsive,
+                                            textStyle: _scaledTextStyle(
+                                              theme.textTheme.labelLarge,
+                                              15,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                            width: responsive.scale(16)),
+                                        Expanded(
+                                          child: _DialogElevatedButton(
+                                            label: config.confirmLabel,
+                                            color: config.primaryColor,
+                                            onTap: () =>
+                                                Navigator.of(dialogContext)
+                                                    .pop(true),
+                                            responsive: responsive,
+                                            textStyle: _scaledTextStyle(
+                                              theme.textTheme.labelLarge,
+                                              15,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ],
                         ),
-                        child: Text(localizations.logoutConfirmButton),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       );
@@ -148,147 +280,79 @@ Future<bool> showCreativeLogoutDialog(
   return result ?? false;
 }
 
-Future<bool> showCreativeDeleteAccountDialog(
-  BuildContext context,
-  AppLocalizations localizations,
-) async {
-  final theme = Theme.of(context);
-  final responsive = context.responsive;
-  final result = await showDialog<bool>(
-    context: context,
-    barrierDismissible: true,
-    builder: (dialogContext) {
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.symmetric(
-          horizontal: responsive.scale(24),
-          vertical: responsive.scale(24),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF5F6D), Color(0xFFFF1A1A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(responsive.scale(28)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: responsive.scale(24),
-                offset: Offset(0, responsive.scale(16)),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(height: responsive.scale(28)),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.12),
-                ),
-                padding: EdgeInsets.all(responsive.scale(16)),
-                child: CircleAvatar(
-                  radius: responsive.scale(38),
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.delete_forever,
-                    size: responsive.scale(34),
-                    color: Color(0xFFFF1A1A),
-                  ),
-                ),
-              ),
-              SizedBox(height: responsive.scale(24)),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: responsive.scale(28),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      localizations.deleteAccountConfirmationTitle,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: responsive.scale(12)),
-                    Text(
-                      localizations.deleteAccountConfirmationMessage,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: responsive.scale(28)),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(responsive.scale(28)),
-                  ),
-                ),
-                padding: EdgeInsets.fromLTRB(
-                  responsive.scale(24),
-                  responsive.scale(20),
-                  responsive.scale(24),
-                  responsive.scale(24),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFFF1A1A),
-                          side: const BorderSide(color: Color(0xFFFFB3B8)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(responsive.scale(18)),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: responsive.scale(14),
-                          ),
-                        ),
-                        child: Text(localizations.deleteAccountCancelButton),
-                      ),
-                    ),
-                    SizedBox(width: responsive.scale(16)),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF1A1A),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(responsive.scale(18)),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: responsive.scale(14),
-                          ),
-                        ),
-                        child: Text(localizations.deleteAccountConfirmButton),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
+class _DialogOutlinedButton extends StatelessWidget {
+  const _DialogOutlinedButton({
+    required this.label,
+    required this.color,
+    required this.onTap,
+    required this.responsive,
+    required this.textStyle,
+  });
 
-  return result ?? false;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final Responsive responsive;
+  final TextStyle textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(color: color.withOpacity(0.35)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(responsive.scale(18)),
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: responsive.scale(14),
+        ),
+      ),
+      child: Text(
+        label,
+        style: textStyle,
+      ),
+    );
+  }
+}
+
+class _DialogElevatedButton extends StatelessWidget {
+  const _DialogElevatedButton({
+    required this.label,
+    required this.color,
+    required this.onTap,
+    required this.responsive,
+    required this.textStyle,
+  });
+
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final Responsive responsive;
+  final TextStyle textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(responsive.scale(18)),
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: responsive.scale(14),
+        ),
+      ),
+      child: Text(
+        label,
+        style: textStyle,
+      ),
+    );
+  }
 }
 
 Future<String?> showCreativeLanguageDialog(
