@@ -2502,7 +2502,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
+    ));
 
     return Dismissible(
       key: ValueKey(work.id),

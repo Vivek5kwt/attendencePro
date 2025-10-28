@@ -1085,7 +1085,7 @@ abstract final class AppString {
       'workDeleteConfirmButton': 'ਮਿਟਾਓ',
       'workDeleteCancelButton': 'ਰੱਦ ਕਰੋ',
       'workDeleteIrreversibleMessage':
-          'ਇਹ ਕੰਮ ਮਿਟਾਉਣ ਨਾਲ ਸੰਬੰਧਿਤ ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਸਥਾਈ ਤੌਰ 'ਤੇ ਹਟ ਜਾਵੇਗਾ।',
+          'ਇਹ ਕੰਮ ਮਿਟਾਉਣ ਨਾਲ ਸੰਬੰਧਿਤ ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਸਥਾਈ ਤੌਰ \'ਤੇ ਹਟ ਜਾਵੇਗਾ।',
       'workDeleteSuccessMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਮਿਟਾਇਆ ਗਿਆ।',
       'workDeleteFailedMessage': 'ਕੰਮ ਮਿਟਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
