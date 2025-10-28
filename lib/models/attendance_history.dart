@@ -458,6 +458,9 @@ bool _hasAny(Map<String, dynamic> json, List<String> keys) {
       if (value is String && value.trim().isEmpty) {
         continue;
       }
+      if (value is bool && !value) {
+        continue;
+      }
       return true;
     }
   }
