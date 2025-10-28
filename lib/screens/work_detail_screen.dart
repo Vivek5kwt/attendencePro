@@ -489,11 +489,44 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       ..selection = TextSelection.collapsed(offset: value.length);
   }
 
+  DateTime? _extractDateFromMap(Map<String, dynamic> data, List<String> keys) {
+    final value = _findPreviewValue(data, keys);
+    return _parseDateInput(value);
+  }
+
+  DateTime? _parseDateInput(dynamic value) {
+    if (value is DateTime) {
+      return DateTime(value.year, value.month, value.day);
+    }
+    if (value is String) {
+      final parsed = _parseDateText(value);
+      if (parsed != null) {
+        return DateTime(parsed.year, parsed.month, parsed.day);
+      }
+    }
+    return null;
+  }
+
   void _initializeAttendanceControllers() {
     _selectedDate = DateTime.now();
     _dateLabelOverride = null;
 
     final additionalData = widget.work.additionalData;
+    final initialDate = _extractDateFromMap(additionalData, const [
+      'date',
+      'entry_date',
+      'attendance_date',
+      'attendanceDate',
+      'filter_date',
+      'filterDate',
+      'selected_date',
+      'selectedDate',
+    ]);
+    if (initialDate != null) {
+      _selectedDate = initialDate;
+      _dateLabelOverride = _formatDate(initialDate);
+    }
+
     final startTime =
         _extractTimeFromMap(additionalData, const ['start_time', 'startTime', 'in_time']);
     if (startTime != null) {
@@ -626,10 +659,26 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final dateText = entry.dateText?.trim();
-    if (dateText != null && dateText.isNotEmpty && mounted) {
-      setState(() {
+    if (dateText != null && dateText.isNotEmpty) {
+      final parsedDate = _parseDateText(dateText);
+      if (parsedDate != null) {
+        final normalized = _normalizeDateOnly(parsedDate);
+        if (mounted) {
+          setState(() {
+            _selectedDate = normalized;
+            _dateLabelOverride = _formatDate(normalized);
+          });
+        } else {
+          _selectedDate = normalized;
+          _dateLabelOverride = _formatDate(normalized);
+        }
+      } else if (mounted) {
+        setState(() {
+          _dateLabelOverride = _normalizeDateLabel(dateText);
+        });
+      } else {
         _dateLabelOverride = _normalizeDateLabel(dateText);
-      });
+      }
     }
 
     _syncContractFieldsVisibility(notify: true);
@@ -1772,6 +1821,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             ? _normalizeDateLabel(todayEntry!.dateText!.trim())
             : _formatDate(_selectedDate));
     final summarySection = _buildSummarySection(l, summaryStats);
+    final hasSummaryContent =
+        _isSummaryLoading || _summaryError != null || summaryStats.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6FB),
@@ -1869,8 +1920,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
          /*     _ContractSummarySection(
                 items: contractItems,
               ),*/
-              const SizedBox(height: 24),
-              summarySection,
+              if (hasSummaryContent) ...[
+                const SizedBox(height: 24),
+                summarySection,
+              ],
             ],
           ),
         ),
@@ -1925,36 +1978,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           .where((item) => item.title.isNotEmpty && item.price.isNotEmpty)
           .toList();
     }
-    return const <_ContractItem>[
-      _ContractItem(
-        title: AppString.fallbackContractItemWatermelonTitle,
-        price: AppString.fallbackContractItemWatermelonPrice,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemCarrotTitle,
-        price: AppString.fallbackContractItemCarrotPrice,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemTitle,
-        price: AppString.fallbackContractItemRavanelloPrice,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemRavanello15Title,
-        price: AppString.fallbackContractItemRavanelloPrice,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemRavanello18Title,
-        price: AppString.fallbackContractItemRavanelloPrice,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemRavanello18AltTitle,
-        price: AppString.fallbackContractItemRavanelloPrice,
-      ),
-      _ContractItem(
-        title: AppString.fallbackContractItemOrangeTitle,
-        price: AppString.fallbackContractItemOrangePrice,
-      ),
-    ];
+    return const <_ContractItem>[];
   }
 
   List<_SummaryStat> _buildSummaryStats(AppLocalizations l) {
@@ -1962,6 +1986,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (summary != null) {
       final totalHours = summary.totalHours;
       final totalSalary = summary.totalSalary;
+      final currencyPrefix = _resolveCurrencyPrefix(summary.raw);
       return <_SummaryStat>[
         _SummaryStat(
           title: l.totalHoursLabel,
@@ -1971,7 +1996,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ),
         _SummaryStat(
           title: l.totalSalaryLabel,
-          value: '€${totalSalary.toStringAsFixed(2)}',
+          value: _formatCurrencyValue(totalSalary.toStringAsFixed(2), currencyPrefix),
           color: const Color(0xFF22C55E),
           icon: Icons.payments_rounded,
         ),
@@ -1993,70 +2018,185 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onRetry: _loadSummary,
       );
     }
+    if (stats.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return _MonthlySummarySection(stats: stats);
   }
 
   List<_SummaryStat> _resolveSummaryStats(AppLocalizations l) {
     final summary = widget.work.additionalData['summary'];
     if (summary is Map) {
-      final totalHours = summary['totalHours']?.toString();
-      final totalSalary = summary['totalSalary']?.toString();
-      final hourlyWork = summary['hourlyWork']?.toString();
-      final contractWork = summary['contractWork']?.toString();
-      return <_SummaryStat>[
-        _SummaryStat(
-          title: l.totalHoursLabel,
-          value: totalHours ?? '0h',
-          color: const Color(0xFF2563EB),
-          icon: Icons.access_time_filled,
-        ),
-        _SummaryStat(
-          title: l.totalSalaryLabel,
-          value: totalSalary ?? '${String.fromCharCode(36)}0',
-          color: const Color(0xFF22C55E),
-          icon: Icons.payments_rounded,
-        ),
-        _SummaryStat(
-          title: l.hourlyWorkLabel,
-          value: hourlyWork ?? '${String.fromCharCode(36)}0',
-          color: const Color(0xFF2563EB),
-          icon: Icons.timelapse_rounded,
-        ),
-        _SummaryStat(
-          title: l.contractWorkLabel,
-          value: contractWork ?? '${String.fromCharCode(36)}0',
-          color: const Color(0xFF22C55E),
-          icon: Icons.assignment_turned_in_rounded,
-        ),
-      ];
-    }
+      final summaryMap = Map<String, dynamic>.from(summary);
+      final currencyPrefix = _resolveCurrencyPrefix(summaryMap);
+      final stats = <_SummaryStat>[];
 
-    return <_SummaryStat>[
-      _SummaryStat(
-        title: l.totalHoursLabel,
-        value: AppString.fallbackSummaryHours,
-        color: const Color(0xFF2563EB),
-        icon: Icons.access_time_filled,
-      ),
-      _SummaryStat(
-        title: l.totalSalaryLabel,
-        value: AppString.fallbackSummarySalary,
-        color: const Color(0xFF22C55E),
-        icon: Icons.payments_rounded,
-      ),
-      _SummaryStat(
-        title: l.hourlyWorkLabel,
-        value: AppString.fallbackSummaryHourly,
-        color: const Color(0xFF2563EB),
-        icon: Icons.timelapse_rounded,
-      ),
-      _SummaryStat(
-        title: l.contractWorkLabel,
-        value: AppString.fallbackSummaryContract,
-        color: const Color(0xFF22C55E),
-        icon: Icons.assignment_turned_in_rounded,
-      ),
-    ];
+      final totalHours = _formatSummaryMetric(
+        summaryMap,
+        const ['total_hours', 'totalHours', 'hours'],
+        numericSuffix: ' h',
+      );
+      if (totalHours != null) {
+        stats.add(
+          _SummaryStat(
+            title: l.totalHoursLabel,
+            value: totalHours,
+            color: const Color(0xFF2563EB),
+            icon: Icons.access_time_filled,
+          ),
+        );
+      }
+
+      final totalSalary = _formatSummaryMetric(
+        summaryMap,
+        const ['total_salary', 'totalSalary', 'salary'],
+        isCurrency: true,
+        currencyPrefix: currencyPrefix,
+      );
+      if (totalSalary != null) {
+        stats.add(
+          _SummaryStat(
+            title: l.totalSalaryLabel,
+            value: totalSalary,
+            color: const Color(0xFF22C55E),
+            icon: Icons.payments_rounded,
+          ),
+        );
+      }
+
+      final hourlyWork = _formatSummaryMetric(
+        summaryMap,
+        const ['hourlyWork', 'hourly_work'],
+        isCurrency: true,
+        currencyPrefix: currencyPrefix,
+      );
+      if (hourlyWork != null) {
+        stats.add(
+          _SummaryStat(
+            title: l.hourlyWorkLabel,
+            value: hourlyWork,
+            color: const Color(0xFF2563EB),
+            icon: Icons.timelapse_rounded,
+          ),
+        );
+      }
+
+      final contractWork = _formatSummaryMetric(
+        summaryMap,
+        const ['contractWork', 'contract_work'],
+        isCurrency: true,
+        currencyPrefix: currencyPrefix,
+      );
+      if (contractWork != null) {
+        stats.add(
+          _SummaryStat(
+            title: l.contractWorkLabel,
+            value: contractWork,
+            color: const Color(0xFF22C55E),
+            icon: Icons.assignment_turned_in_rounded,
+          ),
+        );
+      }
+
+      return stats;
+    }
+    return const <_SummaryStat>[];
+  }
+
+  String _resolveCurrencyPrefix([Map<String, dynamic>? override]) {
+    const fallback = '₹';
+    final summarySymbol = _extractCurrencySymbol(override ?? _dashboardSummary?.raw);
+    if (summarySymbol != null) {
+      return summarySymbol;
+    }
+    final workSymbol = _extractCurrencySymbol(widget.work.additionalData);
+    return workSymbol ?? fallback;
+  }
+
+  String? _extractCurrencySymbol(Map<String, dynamic>? data) {
+    if (data == null || data.isEmpty) {
+      return null;
+    }
+    const keys = ['currency_symbol', 'currencySymbol', 'currency', 'currencyCode', 'currencyPrefix'];
+    final value = _findPreviewValue(data, keys);
+    final text = _stringifyPreviewValue(value);
+    if (text == null) {
+      return null;
+    }
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final isAlphabetic = trimmed.length == 3 &&
+        trimmed.codeUnits.every(
+          (unit) => (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
+        );
+    if (isAlphabetic) {
+      return '$trimmed ';
+    }
+    return trimmed;
+  }
+
+  String? _formatSummaryMetric(
+    Map<String, dynamic> summary,
+    List<String> keys, {
+    String? numericSuffix,
+    bool isCurrency = false,
+    String? currencyPrefix,
+  }) {
+    final value = _findPreviewValue(summary, keys);
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      final formatted = value.toDouble().toStringAsFixed(2);
+      if (isCurrency && currencyPrefix != null) {
+        return _formatCurrencyValue(formatted, currencyPrefix);
+      }
+      if (numericSuffix != null && numericSuffix.isNotEmpty) {
+        return '$formatted$numericSuffix';
+      }
+      return formatted;
+    }
+    final textValue = _stringifyPreviewValue(value);
+    if (textValue == null) {
+      return null;
+    }
+    final trimmed = textValue.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    if (isCurrency && currencyPrefix != null) {
+      final normalizedPrefix = currencyPrefix.trim();
+      if (normalizedPrefix.isNotEmpty) {
+        final normalizedValue = trimmed.replaceAll(RegExp(r'\s+'), '');
+        final normalizedPrefixValue = normalizedPrefix.replaceAll(RegExp(r'\s+'), '');
+        if (normalizedValue.startsWith(normalizedPrefixValue)) {
+          return trimmed;
+        }
+      }
+      return _formatCurrencyValue(trimmed, currencyPrefix);
+    }
+    if (numericSuffix != null && numericSuffix.isNotEmpty) {
+      final normalizedSuffix = numericSuffix.trim().toLowerCase();
+      if (!trimmed.toLowerCase().contains(normalizedSuffix)) {
+        return '$trimmed$numericSuffix';
+      }
+    }
+    return trimmed;
+  }
+
+  String _formatCurrencyValue(String value, String prefix) {
+    final trimmedValue = value.trim();
+    final trimmedPrefix = prefix.trim();
+    if (trimmedValue.isEmpty) {
+      return trimmedPrefix.isEmpty ? value : trimmedPrefix;
+    }
+    if (trimmedPrefix.isEmpty) {
+      return trimmedValue;
+    }
+    final addSpace = prefix.trimRight() != prefix || trimmedPrefix.length > 1;
+    return addSpace ? '$trimmedPrefix $trimmedValue' : '$trimmedPrefix$trimmedValue';
   }
 
   DateTime _normalizeDateOnly(DateTime date) {
@@ -2069,6 +2209,100 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final month = monthNames[date.month - 1];
     final day = date.day.toString().padLeft(2, '0');
     return '$month $day, ${date.year}';
+  }
+
+  DateTime? _parseDateText(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final direct = _tryParseDate(trimmed);
+    if (direct != null) {
+      return direct;
+    }
+
+    final embedded = _extractEmbeddedIsoDate(trimmed);
+    if (embedded != null) {
+      return embedded;
+    }
+
+    final numericMatch =
+        RegExp(r'(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})').firstMatch(trimmed);
+    if (numericMatch != null) {
+      final part1 = int.tryParse(numericMatch.group(1)!);
+      final part2 = int.tryParse(numericMatch.group(2)!);
+      final year = int.tryParse(numericMatch.group(3)!);
+      if (part1 != null && part2 != null && year != null) {
+        final monthDay = _resolveMonthDayFromNumbers(part1, part2);
+        if (monthDay != null &&
+            _isValidDate(year, monthDay[0], monthDay[1])) {
+          return DateTime(year, monthDay[0], monthDay[1]);
+        }
+      }
+    }
+
+    final monthNameMatch =
+        RegExp(r'([A-Za-z]+)\s+(\d{1,2})(?:,)?\s+(\d{4})').firstMatch(trimmed);
+    if (monthNameMatch != null) {
+      final monthName = monthNameMatch.group(1)!;
+      final day = int.tryParse(monthNameMatch.group(2)!);
+      final year = int.tryParse(monthNameMatch.group(3)!);
+      final month = _resolveMonthIndex(monthName);
+      if (month != null && day != null && year != null &&
+          _isValidDate(year, month, day)) {
+        return DateTime(year, month, day);
+      }
+    }
+
+    return null;
+  }
+
+  List<int>? _resolveMonthDayFromNumbers(int first, int second) {
+    if (first < 1 || second < 1) {
+      return null;
+    }
+    if (first > 12 && second <= 12) {
+      return <int>[second, first];
+    }
+    if (second > 12 && first <= 12) {
+      return <int>[first, second];
+    }
+    if (first <= 12 && second <= 31) {
+      return <int>[first, second];
+    }
+    if (second <= 12 && first <= 31) {
+      return <int>[second, first];
+    }
+    return null;
+  }
+
+  int? _resolveMonthIndex(String name) {
+    final normalized = name.trim().toLowerCase();
+    if (normalized.isEmpty) {
+      return null;
+    }
+    final fullIndex = AppString.fullMonthNames
+        .indexWhere((month) => month.toLowerCase() == normalized);
+    if (fullIndex != -1) {
+      return fullIndex + 1;
+    }
+    final shortIndex = AppString.shortMonthAbbreviations
+        .indexWhere((month) => month.toLowerCase() == normalized);
+    if (shortIndex != -1) {
+      return shortIndex + 1;
+    }
+    return null;
+  }
+
+  bool _isValidDate(int year, int month, int day) {
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return false;
+    }
+    final candidate = DateTime(year, month, day);
+    return candidate.year == year &&
+        candidate.month == month &&
+        candidate.day == day;
   }
 
   String _normalizeDateLabel(String value) {
