@@ -1222,10 +1222,17 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Future<void> _submitWorkOffAttendance() async {
-    if (!_markAsWorkOff) {
+    final wasWorkOff = _markAsWorkOff;
+    if (!wasWorkOff) {
       _handleWorkOffToggle(true);
     }
-    await _submitAttendance();
+    try {
+      await _submitAttendance();
+    } finally {
+      if (!wasWorkOff && mounted) {
+        _handleWorkOffToggle(false);
+      }
+    }
   }
 
   Future<void> _submitAttendance() async {
@@ -1850,7 +1857,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 onFieldChanged: _handleAttendanceFieldChanged,
                 isSubmitting: _isSubmittingAttendance,
                 isWorkOff: _markAsWorkOff,
-                onWorkOffChanged: _handleWorkOffToggle,
                 showContractWorkButton: widget.work.isContract,
                 onContractWorkTap:
                     widget.work.isContract ? _openContractWorkManager : null,
@@ -2836,7 +2842,6 @@ class _AttendanceSection extends StatelessWidget {
     required this.onFieldChanged,
     required this.isSubmitting,
     required this.isWorkOff,
-    required this.onWorkOffChanged,
     required this.startTimeValidator,
     required this.endTimeValidator,
     required this.breakValidator,
@@ -2857,7 +2862,6 @@ class _AttendanceSection extends StatelessWidget {
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
   final bool isWorkOff;
-  final ValueChanged<bool> onWorkOffChanged;
   final String? Function(String?) startTimeValidator;
   final String? Function(String?) endTimeValidator;
   final String? Function(String?) breakValidator;
@@ -3075,8 +3079,6 @@ class _AttendanceSection extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: 16),
-            _buildWorkOffToggle(context, l),
             const SizedBox(height: 24),
             _buildActionButtons(context, l),
             if (statusMessage != null)
@@ -3187,73 +3189,40 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildWorkOffToggle(BuildContext context, AppLocalizations l) {
-    final borderColor = const Color(0xFF2563EB);
-    final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
+  Widget _buildWorkOffButton(BuildContext context, AppLocalizations l) {
+    final baseColor = const Color(0xFF2563EB);
+    final isEnabled = !isSubmitting && onWorkOffSubmit != null;
+    final textStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF1F2937),
+          color: isEnabled ? baseColor : baseColor.withOpacity(0.4),
         ) ??
-        const TextStyle(
+        TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF1F2937),
+          color: isEnabled ? baseColor : baseColor.withOpacity(0.4),
         );
 
-    return _DashedBorderCard(
-      borderColor: borderColor.withOpacity(0.45),
-      backgroundColor: const Color(0xFFF5F9FF),
-      radius: 24,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-       /*     Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0F2FE),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(
-                Icons.beach_access_rounded,
-                color: Color(0xFF2563EB),
-                size: 20,
-              ),
-            ),*/
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l.markAsWorkOffButton,
-                style: titleStyle,
-              ),
-            ),
-            Switch.adaptive(
-              value: isWorkOff,
-              onChanged: isSubmitting ? null : onWorkOffChanged,
-              activeColor: const Color(0xFF2563EB),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWorkOffButton(BuildContext context, AppLocalizations l) {
     return SizedBox(
       height: 52,
-      child: OutlinedButton(
-        onPressed: isSubmitting ? null : onWorkOffSubmit,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+      child: _DashedBorderCard(
+        borderColor: baseColor.withOpacity(isEnabled ? 0.6 : 0.25),
+        backgroundColor:
+            isEnabled ? const Color(0xFFF5F9FF) : const Color(0xFFF8FAFC),
+        radius: 24,
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(24),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: isEnabled ? onWorkOffSubmit : null,
+            child: Center(
+              child: Text(
+                l.markAsWorkOffButton,
+                style: textStyle,
+              ),
+            ),
           ),
         ),
-        child: Text(l.markAsWorkOffButton),
       ),
     );
   }
