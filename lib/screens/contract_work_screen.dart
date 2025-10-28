@@ -326,12 +326,26 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Center(
-                              child: Container(
-                                width: 44,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD1D5DB),
-                                  borderRadius: BorderRadius.circular(12),
+                              child: Semantics(
+                                button: true,
+                                label: l.contractWorkCloseSheetLabel,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    Navigator.of(context).maybePop();
+                                  },
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
+                                    child: Container(
+                                      width: 44,
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD1D5DB),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
