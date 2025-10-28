@@ -1324,136 +1324,24 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       'totalAmount',
     ]);
 
-    return await showDialog<bool>(
+    return await showModalBottomSheet<bool>(
           context: context,
-          barrierDismissible: false,
-          builder: (dialogContext) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-              ),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              titlePadding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-              title: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: 84,
-                    width: 84,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE0F2FE),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.access_time_filled,
-                      size: 44,
-                      color: Color(0xFF1D4ED8),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l.attendancePreviewTitle,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0F172A),
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    description,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF4B5563),
-                        ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _AttendancePreviewSummaryCard(
-                      hoursLabel: l.attendancePreviewHoursLabel,
-                      hoursValue: hoursDisplay ?? '--',
-                      salaryLabel: l.attendancePreviewSalaryLabel,
-                      salaryValue: salaryDisplay,
-                      entries: infoEntries,
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBEB),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Color(0xFFFACC15),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              l.attendancePreviewValidationPrompt,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF78350F),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(false),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF1D4ED8),
-                              side: const BorderSide(color: Color(0xFFBFDBFE)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: Text(l.attendancePreviewCancelButton),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(true),
-                            style: ElevatedButton.styleFrom(
-                              elevation: 0,
-                              backgroundColor: const Color(0xFF2563EB),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: Text(l.attendancePreviewConfirmButton),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (sheetContext) {
+            return _AttendancePreviewSheet(
+              title: l.attendancePreviewTitle,
+              description: description,
+              validationMessage: l.attendancePreviewValidationPrompt,
+              cancelLabel: l.attendancePreviewCancelButton,
+              confirmLabel: l.attendancePreviewConfirmButton,
+              hoursLabel: l.attendancePreviewHoursLabel,
+              hoursValue: hoursDisplay ?? '--',
+              salaryLabel: l.attendancePreviewSalaryLabel,
+              salaryValue: salaryDisplay,
+              entries: infoEntries,
+              onEdit: () => Navigator.of(sheetContext).pop(false),
+              onConfirm: () => Navigator.of(sheetContext).pop(true),
             );
           },
         ) ??
@@ -3644,6 +3532,224 @@ class _SummaryStatCard extends StatelessWidget {
   }
 }
 
+class _AttendancePreviewSheet extends StatelessWidget {
+  const _AttendancePreviewSheet({
+    required this.title,
+    required this.description,
+    required this.validationMessage,
+    required this.cancelLabel,
+    required this.confirmLabel,
+    required this.hoursLabel,
+    required this.hoursValue,
+    required this.salaryLabel,
+    required this.salaryValue,
+    required this.entries,
+    required this.onEdit,
+    required this.onConfirm,
+  });
+
+  final String title;
+  final String description;
+  final String validationMessage;
+  final String cancelLabel;
+  final String confirmLabel;
+  final String hoursLabel;
+  final String hoursValue;
+  final String salaryLabel;
+  final String? salaryValue;
+  final List<_PreviewInfoEntry> entries;
+  final VoidCallback onEdit;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final maxHeight = MediaQuery.of(context).size.height * 0.82;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 32,
+                offset: Offset(0, 18),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 48,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE0F2FE),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Icon(
+                              Icons.fact_check_rounded,
+                              color: Color(0xFF2563EB),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF0F172A),
+                                      ) ??
+                                      const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  description,
+                                  style: textTheme.bodyMedium?.copyWith(
+                                        color: const Color(0xFF475569),
+                                        height: 1.4,
+                                      ) ??
+                                      const TextStyle(
+                                        color: Color(0xFF475569),
+                                        height: 1.4,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _AttendancePreviewSummaryCard(
+                        hoursLabel: hoursLabel,
+                        hoursValue: hoursValue,
+                        salaryLabel: salaryLabel,
+                        salaryValue: salaryValue,
+                        entries: entries,
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              color: Color(0xFFEAB308),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                validationMessage,
+                                style: textTheme.bodyMedium?.copyWith(
+                                      color: const Color(0xFF854D0E),
+                                      fontWeight: FontWeight.w600,
+                                    ) ??
+                                    const TextStyle(
+                                      color: Color(0xFF854D0E),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(
+                height: 1,
+                thickness: 1,
+                color: Color(0xFFE2E8F0),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    OutlinedButton(
+                      onPressed: onEdit,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF2563EB),
+                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(cancelLabel),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: onConfirm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(confirmLabel),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AttendancePreviewSummaryCard extends StatelessWidget {
   const _AttendancePreviewSummaryCard({
     required this.hoursLabel,
@@ -3661,119 +3767,152 @@ class _AttendancePreviewSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSalary = salaryValue != null && salaryValue!.trim().isNotEmpty;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x14343C4D),
-            offset: Offset(0, 24),
-            blurRadius: 48,
+            offset: Offset(0, 16),
+            blurRadius: 32,
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              hoursLabel,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: const Color(0xFF1F2937),
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              hoursValue,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: const Color(0xFF1D4ED8),
-                    fontWeight: FontWeight.w800,
-                  ) ??
-                  const TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1D4ED8),
-                  ),
-            ),
-            if (entries.isNotEmpty) const SizedBox(height: 20),
-            if (entries.isNotEmpty)
-              ...List.generate(entries.length, (index) {
-                final entry = entries[index];
-                final isLast = index == entries.length - 1;
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            entry.label,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1F2937),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          entry.value,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1D4ED8),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (!isLast)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Divider(
-                          color: Color(0xFFE5E7EB),
-                          height: 1,
-                          thickness: 1,
-                        ),
-                      ),
-                  ],
-                );
-              }),
-            if (salaryValue != null) ...[
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        salaryLabel,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF166534),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      salaryValue!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF16A34A),
-                      ),
-                    ),
-                  ],
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _PreviewHighlightCard(
+                  label: hoursLabel,
+                  value: hoursValue,
+                  color: const Color(0xFF2563EB),
                 ),
               ),
+              if (hasSalary) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _PreviewHighlightCard(
+                    label: salaryLabel,
+                    value: salaryValue!.trim(),
+                    color: const Color(0xFF16A34A),
+                  ),
+                ),
+              ],
             ],
+          ),
+          if (entries.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const Divider(
+              height: 1,
+              color: Color(0xFFE5E7EB),
+            ),
+            const SizedBox(height: 12),
+            ...entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: _PreviewInfoTile(entry: entry),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
+    );
+  }
+}
+
+class _PreviewHighlightCard extends StatelessWidget {
+  const _PreviewHighlightCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF475569),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviewInfoTile extends StatelessWidget {
+  const _PreviewInfoTile({required this.entry});
+
+  final _PreviewInfoEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          margin: const EdgeInsets.only(top: 10),
+          decoration: const BoxDecoration(
+            color: Color(0xFF2563EB),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            entry.label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF334155),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            entry.value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2563EB),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
