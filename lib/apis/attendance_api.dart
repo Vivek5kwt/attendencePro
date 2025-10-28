@@ -106,6 +106,7 @@ class AttendanceApi {
     };
 
     final body = jsonEncode(request.toJson());
+    print('getete the dd $body');
 
     try {
       final response = await _client.post(uri, headers: headers, body: body);

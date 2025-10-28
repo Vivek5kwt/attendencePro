@@ -1371,10 +1371,15 @@ class _HomeScreenState extends State<HomeScreen> {
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
+              titleSpacing: 5,
               leading: Builder(
                 builder: (context) {
                   return IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.grey),
+                    icon: Image.asset(
+                      AppAssets.icDrawer,
+                      width: 24,
+                      height: 24,
+                    ),
                     onPressed: () => Scaffold.of(context).openDrawer(),
                   );
                 },
@@ -1385,13 +1390,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.language, color: Colors.grey),
+                  icon: Image.asset(
+                    AppAssets.language,
+                    width: 24,
+                    height: 24,
+                  ),
                   onPressed: () {
                     _showLanguageDialog(context, languageOptions, l);
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.share, color: Colors.grey),
+                  icon: Image.asset(
+                    AppAssets.icShare,
+                    width: 24,
+                    height: 24,
+                  ),
                   onPressed: _showShareOptions,
                 ),
               ],
