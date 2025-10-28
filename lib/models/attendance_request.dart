@@ -33,37 +33,32 @@ class AttendanceRequest {
     };
 
     if (!isLeave) {
-      if (startTime != null) {
-        payload['start_time'] = startTime;
+      final hasBundles = bundles != null && bundles!.isNotEmpty;
+      final isBundleContractEntry = isContractEntry == true && hasBundles;
+
+      if (!isBundleContractEntry) {
+        if (startTime != null) {
+          payload['start_time'] = startTime;
+        }
+        if (endTime != null) {
+          payload['end_time'] = endTime;
+        }
+        if (breakMinutes != null) {
+          payload['break_minutes'] = breakMinutes;
+        }
       }
-      if (endTime != null) {
-        payload['end_time'] = endTime;
-      }
-      if (breakMinutes != null) {
-        payload['break_minutes'] = breakMinutes;
-      }
+
       if (isContractEntry != null) {
         payload['is_contract_entry'] = isContractEntry;
       }
+
       if (isContractEntry == true) {
-        final hasBundles = bundles != null && bundles!.isNotEmpty;
         if (hasBundles) {
           payload['bundles'] =
               bundles!.map((bundle) => bundle.toJson()).toList(growable: false);
-        }
-        if (!hasBundles) {
+        } else {
           final normalizedContractTypeId = contractTypeId ?? 1;
           payload['contract_type_id'] = normalizedContractTypeId;
-          if (units != null) {
-            payload['units'] = units;
-          }
-          if (ratePerUnit != null) {
-            payload['rate_per_unit'] = ratePerUnit;
-          }
-        } else {
-          if (contractTypeId != null) {
-            payload['contract_type_id'] = contractTypeId;
-          }
           if (units != null) {
             payload['units'] = units;
           }
