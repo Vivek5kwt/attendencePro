@@ -1004,12 +1004,32 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   Future<void> _handleDateTap() async {
     FocusScope.of(context).unfocus();
-    final now = DateTime.now();
+    final normalizedPendingDates = _pendingMissedDates
+        .map(_normalizeDateOnly)
+        .toSet()
+        .toList(growable: false)
+      ..sort((a, b) => a.compareTo(b));
+    if (normalizedPendingDates.isEmpty) {
+      return;
+    }
+
+    final allowedDates = normalizedPendingDates.toSet();
+    final normalizedSelected = _normalizeDateOnly(_selectedDate);
+    final initialDate =
+        allowedDates.contains(normalizedSelected)
+            ? normalizedSelected
+            : normalizedPendingDates.first;
+    final firstDate = normalizedPendingDates.first;
+    final lastDate = normalizedPendingDates.last;
+
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(now.year - 1, 1, 1),
-      lastDate: DateTime(now.year + 1, 12, 31),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      selectableDayPredicate: (date) {
+        return allowedDates.contains(_normalizeDateOnly(date));
+      },
     );
     if (pickedDate == null) {
       return;
@@ -2082,6 +2102,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               _AttendanceSection(
                 dateLabel: dateLabel,
                 onDateTap: _handleDateTap,
+                dateSelectionEnabled: _pendingMissedDates.isNotEmpty,
                 formKey: _attendanceFormKey,
                 startTimeController: _startTimeController,
                 endTimeController: _endTimeController,
@@ -3263,6 +3284,7 @@ class _AttendanceSection extends StatelessWidget {
   const _AttendanceSection({
     required this.dateLabel,
     required this.onDateTap,
+    this.dateSelectionEnabled = true,
     required this.formKey,
     required this.startTimeController,
     required this.endTimeController,
@@ -3300,6 +3322,7 @@ class _AttendanceSection extends StatelessWidget {
 
   final String dateLabel;
   final VoidCallback onDateTap;
+  final bool dateSelectionEnabled;
   final GlobalKey<FormState> formKey;
   final TextEditingController startTimeController;
   final TextEditingController endTimeController;
@@ -3388,40 +3411,46 @@ class _AttendanceSection extends StatelessWidget {
                   ],
                 );
 
-                final dateSelector = Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: onDateTap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                final dateSelector = AbsorbPointer(
+                  absorbing: !dateSelectionEnabled,
+                  child: Opacity(
+                    opacity: dateSelectionEnabled ? 1 : 0.6,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
                         borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_month,
-                            size: 18,
-                            color: Color(0xFF2563EB),
+                        onTap: onDateTap,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              dateLabel,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Color(0xFF1D4ED8),
-                                fontWeight: FontWeight.w600,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.calendar_month,
+                                size: 18,
+                                color: Color(0xFF2563EB),
                               ),
-                            ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  dateLabel,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Color(0xFF1D4ED8),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
