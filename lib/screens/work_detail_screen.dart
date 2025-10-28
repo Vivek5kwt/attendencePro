@@ -4993,6 +4993,10 @@ class _ContractEntryForm extends StatelessWidget {
                                   Icons.assignment_rounded,
                                   color: Color(0xFF1D4ED8),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                  horizontal: 12,
+                                ),
                                 filled: true,
                                 fillColor: Colors.white,
                                 border: OutlineInputBorder(
@@ -5012,6 +5016,8 @@ class _ContractEntryForm extends StatelessWidget {
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                             ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                           Text(
                                             '${type.rate.toStringAsFixed(2)} / '
@@ -5021,6 +5027,8 @@ class _ContractEntryForm extends StatelessWidget {
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
                                             ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ],
                                       ),
