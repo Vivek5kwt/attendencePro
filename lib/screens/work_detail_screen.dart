@@ -5007,6 +5007,9 @@ class _ContractEntryForm extends StatelessWidget {
                                   : (value) => onTypeChanged?.call(entry, value),
                               isExpanded: true,
                               itemHeight: null,
+                              menuMaxHeight: 360,
+                              dropdownColor: const Color(0xFFF8FAFF),
+                              borderRadius: BorderRadius.circular(18),
                               selectedItemBuilder: (context) => contractTypes
                                   .map(
                                     (type) => _ContractTypeSelectedLabel(
@@ -5035,6 +5038,8 @@ class _ContractEntryForm extends StatelessWidget {
                                   .map(
                                     (type) => DropdownMenuItem<String>(
                                       value: type.id,
+                                      height: null,
+                                      alignment: AlignmentDirectional.topStart,
                                       child: _ContractTypeDropdownItem(
                                         type: type,
                                         fallbackUnitLabel:
