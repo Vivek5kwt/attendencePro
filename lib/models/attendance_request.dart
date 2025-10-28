@@ -2,45 +2,59 @@ class AttendanceRequest {
   const AttendanceRequest({
     required this.workId,
     required this.date,
-    required this.startTime,
-    required this.endTime,
-    required this.breakMinutes,
-    required this.isContractEntry,
+    this.startTime,
+    this.endTime,
+    this.breakMinutes,
+    this.isContractEntry,
     this.contractTypeId,
     this.units,
     this.ratePerUnit,
+    this.isLeave = false,
   });
 
   final Object workId;
   final DateTime date;
-  final String startTime;
-  final String endTime;
-  final int breakMinutes;
-  final bool isContractEntry;
+  final String? startTime;
+  final String? endTime;
+  final int? breakMinutes;
+  final bool? isContractEntry;
   final int? contractTypeId;
   final num? units;
   final num? ratePerUnit;
+  final bool isLeave;
 
   Map<String, dynamic> toJson() {
     final payload = <String, dynamic>{
       'work_id': _normalizeWorkId(workId),
       'date': _formatDate(date),
-      'start_time': startTime,
-      'end_time': endTime,
-      'break_minutes': breakMinutes,
-      'is_contract_entry': isContractEntry,
+      'is_leave': isLeave,
     };
 
-    final normalizedContractTypeId =
-        contractTypeId ?? (isContractEntry ? 1 : null);
-    if (normalizedContractTypeId != null) {
-      payload['contract_type_id'] = normalizedContractTypeId;
-    }
-    if (units != null) {
-      payload['units'] = units;
-    }
-    if (ratePerUnit != null) {
-      payload['rate_per_unit'] = ratePerUnit;
+    if (!isLeave) {
+      if (startTime != null) {
+        payload['start_time'] = startTime;
+      }
+      if (endTime != null) {
+        payload['end_time'] = endTime;
+      }
+      if (breakMinutes != null) {
+        payload['break_minutes'] = breakMinutes;
+      }
+      if (isContractEntry != null) {
+        payload['is_contract_entry'] = isContractEntry;
+      }
+
+      final normalizedContractTypeId =
+          contractTypeId ?? (isContractEntry == true ? 1 : null);
+      if (normalizedContractTypeId != null) {
+        payload['contract_type_id'] = normalizedContractTypeId;
+      }
+      if (units != null) {
+        payload['units'] = units;
+      }
+      if (ratePerUnit != null) {
+        payload['rate_per_unit'] = ratePerUnit;
+      }
     }
 
     return payload;

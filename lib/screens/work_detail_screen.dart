@@ -1221,6 +1221,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return null;
   }
 
+  Future<void> _submitWorkOffAttendance() async {
+    if (!_markAsWorkOff) {
+      _handleWorkOffToggle(true);
+    }
+    await _submitAttendance();
+  }
+
   Future<void> _submitAttendance() async {
     FocusScope.of(context).unfocus();
     final formState = _attendanceFormKey.currentState;
@@ -1233,26 +1240,100 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final l = AppLocalizations.of(context);
     final isWorkOff = _markAsWorkOff;
-    final startTime =
-        isWorkOff ? '00:00' : _startTimeController.text.trim();
-    final endTime = isWorkOff ? '00:00' : _endTimeController.text.trim();
-    final breakMinutes = isWorkOff
-        ? 0
-        : _resolveBreakMinutes(_breakMinutesController.text);
-    final bool isContractEntry =
-        !isWorkOff && widget.work.isContract && _contractFieldsEnabled;
-    num? units;
-    num? ratePerUnit;
-    int? contractTypeId;
-    if (isContractEntry) {
-      units = _parseNumberInput(_unitsController.text);
-      ratePerUnit = _parseNumberInput(_ratePerUnitController.text);
-      contractTypeId = _resolveContractTypeId();
-    }
 
     final canSubmit = await _ensureNoBlockingMissedEntries();
     if (!mounted || !canSubmit) {
       return;
+    }
+
+    if (isWorkOff) {
+      setState(() {
+        _isSubmittingAttendance = true;
+        _attendanceStatusMessage = null;
+        _attendanceStatusIsError = false;
+      });
+
+      try {
+        final response = await _attendanceRepository.submitAttendance(
+          workId: widget.work.id,
+          date: _selectedDate,
+          isLeave: true,
+        );
+        if (!mounted) {
+          return;
+        }
+        final message =
+            _extractResponseMessage(response) ?? l.attendanceSubmitSuccess;
+        setState(() {
+          _attendanceStatusMessage = message;
+          _attendanceStatusIsError = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        await _loadSummary();
+        await _refreshMissedAttendance(showDialog: false);
+      } on AttendanceAuthException {
+        if (!mounted) {
+          return;
+        }
+        final message = l.authenticationRequiredMessage;
+        setState(() {
+          _attendanceStatusMessage = message;
+          _attendanceStatusIsError = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } on AttendanceRepositoryException catch (e) {
+        if (!mounted) {
+          return;
+        }
+        final message = e.message.trim().isNotEmpty
+            ? e.message.trim()
+            : l.attendanceSubmitFailed;
+        setState(() {
+          _attendanceStatusMessage = message;
+          _attendanceStatusIsError = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } catch (_) {
+        if (!mounted) {
+          return;
+        }
+        final message = l.attendanceSubmitFailed;
+        setState(() {
+          _attendanceStatusMessage = message;
+          _attendanceStatusIsError = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmittingAttendance = false;
+          });
+        }
+      }
+      return;
+    }
+
+    final startTime = _startTimeController.text.trim();
+    final endTime = _endTimeController.text.trim();
+    final breakMinutes = _resolveBreakMinutes(_breakMinutesController.text);
+    final bool isContractEntryEnabled =
+        widget.work.isContract && _contractFieldsEnabled;
+    final bool? contractEntryPayloadValue = isContractEntryEnabled;
+    num? units;
+    num? ratePerUnit;
+    int? contractTypeId;
+    if (isContractEntryEnabled) {
+      units = _parseNumberInput(_unitsController.text);
+      ratePerUnit = _parseNumberInput(_ratePerUnitController.text);
+      contractTypeId = _resolveContractTypeId();
     }
 
     setState(() {
@@ -1267,10 +1348,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final previewResponse = await _attendanceRepository.previewAttendance(
         workId: widget.work.id,
         date: _selectedDate,
+        isLeave: false,
         startTime: startTime,
         endTime: endTime,
         breakMinutes: breakMinutes,
-        isContractEntry: isContractEntry,
+        isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
         units: units,
         ratePerUnit: ratePerUnit,
@@ -1292,7 +1374,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         startTime: startTime,
         endTime: endTime,
         breakMinutes: breakMinutes,
-        isContractEntry: isContractEntry,
+        isContractEntry: isContractEntryEnabled,
         units: units,
         ratePerUnit: ratePerUnit,
       );
@@ -1314,10 +1396,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final response = await _attendanceRepository.submitAttendance(
         workId: widget.work.id,
         date: _selectedDate,
+        isLeave: false,
         startTime: startTime,
         endTime: endTime,
         breakMinutes: breakMinutes,
-        isContractEntry: isContractEntry,
+        isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
         units: units,
         ratePerUnit: ratePerUnit,
@@ -1763,6 +1846,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 endTimeController: _endTimeController,
                 breakMinutesController: _breakMinutesController,
                 onSubmit: _submitAttendance,
+                onWorkOffSubmit: _submitWorkOffAttendance,
                 onFieldChanged: _handleAttendanceFieldChanged,
                 isSubmitting: _isSubmittingAttendance,
                 isWorkOff: _markAsWorkOff,
@@ -2748,6 +2832,7 @@ class _AttendanceSection extends StatelessWidget {
     required this.endTimeController,
     required this.breakMinutesController,
     required this.onSubmit,
+    this.onWorkOffSubmit,
     required this.onFieldChanged,
     required this.isSubmitting,
     required this.isWorkOff,
@@ -2768,6 +2853,7 @@ class _AttendanceSection extends StatelessWidget {
   final TextEditingController endTimeController;
   final TextEditingController breakMinutesController;
   final VoidCallback onSubmit;
+  final VoidCallback? onWorkOffSubmit;
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
   final bool isWorkOff;
@@ -3022,8 +3108,20 @@ class _AttendanceSection extends StatelessWidget {
 
   Widget _buildActionButtons(BuildContext context, AppLocalizations l) {
     final hasContractButton = showContractWorkButton && onContractWorkTap != null;
+    final hasWorkOffButton = onWorkOffSubmit != null;
+
     if (!hasContractButton) {
-      return _buildSubmitButton(context, l);
+      if (!hasWorkOffButton) {
+        return _buildSubmitButton(context, l);
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildWorkOffButton(context, l),
+          const SizedBox(height: 12),
+          _buildSubmitButton(context, l),
+        ],
+      );
     }
 
     return LayoutBuilder(
@@ -3034,6 +3132,10 @@ class _AttendanceSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildContractWorkButton(context, l),
+              if (hasWorkOffButton) ...[
+                const SizedBox(height: 12),
+                _buildWorkOffButton(context, l),
+              ],
               const SizedBox(height: 12),
               _buildSubmitButton(context, l),
             ],
@@ -3043,6 +3145,10 @@ class _AttendanceSection extends StatelessWidget {
         return Row(
           children: [
             Expanded(child: _buildContractWorkButton(context, l)),
+            if (hasWorkOffButton) ...[
+              const SizedBox(width: 12),
+              Expanded(child: _buildWorkOffButton(context, l)),
+            ],
             const SizedBox(width: 12),
             Expanded(child: _buildSubmitButton(context, l)),
           ],
@@ -3127,6 +3233,27 @@ class _AttendanceSection extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWorkOffButton(BuildContext context, AppLocalizations l) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: isSubmitting ? null : onWorkOffSubmit,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF2563EB),
+          side: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        child: Text(l.markAsWorkOffButton),
       ),
     );
   }
