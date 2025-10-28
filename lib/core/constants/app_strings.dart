@@ -269,7 +269,7 @@ abstract final class AppString {
       'startTimeLabel': 'Start Time',
       'endTimeLabel': 'End Time',
       'breakLabel': 'Break',
-      'attendanceSubmitButton': 'Save Attendance',
+      'attendanceSubmitButton': 'Submit',
       'attendanceStartTimeRequired': 'Start time is required',
       'attendanceEndTimeRequired': 'End time is required',
       'attendanceInvalidTimeFormat': 'Please enter time in HH:MM format',

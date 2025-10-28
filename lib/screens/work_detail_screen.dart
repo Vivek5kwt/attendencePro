@@ -9,6 +9,7 @@ import '../models/missed_attendance_completion.dart';
 import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
 import '../repositories/dashboard_repository.dart';
+import 'contract_work_screen.dart';
 
 const List<int> _timeHourOptions = <int>[
   1,
@@ -342,6 +343,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final TextEditingController _ratePerUnitController = TextEditingController();
 
   bool _contractFieldsEnabled = false;
+  bool _markAsWorkOff = false;
+  String? _previousStartTime;
+  String? _previousEndTime;
+  String? _previousBreakMinutes;
 
   DashboardSummary? _dashboardSummary;
   bool _isSummaryLoading = true;
@@ -459,6 +464,31 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return null;
   }
 
+  bool _shouldMarkWorkOffFromValues({
+    required String startTime,
+    required String endTime,
+    required String breakMinutes,
+  }) {
+    final startMinutes = _parseMinutesFromText(startTime) ?? -1;
+    final endMinutes = _parseMinutesFromText(endTime) ?? -1;
+    final normalizedBreak = breakMinutes.trim();
+    final breakValue = normalizedBreak.isEmpty
+        ? 0
+        : int.tryParse(normalizedBreak) ?? -1;
+
+    final isStartZero = startMinutes == 0;
+    final isEndZero = endMinutes == 0;
+    final isBreakZero = breakValue <= 0;
+
+    return isStartZero && isEndZero && isBreakZero;
+  }
+
+  void _setControllerValue(TextEditingController controller, String value) {
+    controller
+      ..text = value
+      ..selection = TextSelection.collapsed(offset: value.length);
+  }
+
   void _initializeAttendanceControllers() {
     _selectedDate = DateTime.now();
     _dateLabelOverride = null;
@@ -506,6 +536,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     _syncContractFieldsVisibility();
+    _markAsWorkOff = _shouldMarkWorkOffFromValues(
+      startTime: _startTimeController.text,
+      endTime: _endTimeController.text,
+      breakMinutes: _breakMinutesController.text,
+    );
+    if (_markAsWorkOff) {
+      _contractFieldsEnabled = false;
+    }
   }
 
   void _syncContractFieldsVisibility({bool notify = false}) {
@@ -595,6 +633,21 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     _syncContractFieldsVisibility(notify: true);
+
+    final shouldWorkOff = _shouldMarkWorkOffFromValues(
+      startTime: _startTimeController.text,
+      endTime: _endTimeController.text,
+      breakMinutes: _breakMinutesController.text,
+    );
+    if (shouldWorkOff != _markAsWorkOff) {
+      if (mounted) {
+        setState(() {
+          _markAsWorkOff = shouldWorkOff;
+        });
+      } else {
+        _markAsWorkOff = shouldWorkOff;
+      }
+    }
   }
 
   Future<void> _refreshMissedAttendance({bool showDialog = false}) async {
@@ -914,7 +967,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleContractFieldsToggle(bool value) {
-    if (!widget.work.isContract) {
+    if (!widget.work.isContract || (_markAsWorkOff && value)) {
       return;
     }
     setState(() {
@@ -923,7 +976,56 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _handleAttendanceFieldChanged();
   }
 
+  void _handleWorkOffToggle(bool value) {
+    if (_markAsWorkOff == value) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      if (value) {
+        _previousStartTime = _startTimeController.text;
+        _previousEndTime = _endTimeController.text;
+        _previousBreakMinutes = _breakMinutesController.text;
+        _markAsWorkOff = true;
+        _contractFieldsEnabled = false;
+        _setControllerValue(_startTimeController, '00:00');
+        _setControllerValue(_endTimeController, '00:00');
+        _setControllerValue(_breakMinutesController, '0');
+      } else {
+        _markAsWorkOff = false;
+        final restoredStart =
+            _previousStartTime?.trim().isNotEmpty == true ? _previousStartTime! : '';
+        final restoredEnd =
+            _previousEndTime?.trim().isNotEmpty == true ? _previousEndTime! : '';
+        final restoredBreak = _previousBreakMinutes?.trim().isNotEmpty == true
+            ? _previousBreakMinutes!
+            : '0';
+        _setControllerValue(_startTimeController, restoredStart);
+        _setControllerValue(_endTimeController, restoredEnd);
+        _setControllerValue(_breakMinutesController, restoredBreak);
+        _previousStartTime = null;
+        _previousEndTime = null;
+        _previousBreakMinutes = null;
+      }
+    });
+    _handleAttendanceFieldChanged();
+  }
+
+  Future<void> _openContractWorkManager() async {
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const ContractWorkScreen(),
+      ),
+    );
+  }
+
   String? _validateStartTime(String? value) {
+    if (_markAsWorkOff) {
+      return null;
+    }
     final l = AppLocalizations.of(context);
     if (value == null || value.trim().isEmpty) {
       return l.attendanceStartTimeRequired;
@@ -935,6 +1037,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String? _validateEndTime(String? value) {
+    if (_markAsWorkOff) {
+      return null;
+    }
     final l = AppLocalizations.of(context);
     if (value == null || value.trim().isEmpty) {
       return l.attendanceEndTimeRequired;
@@ -946,6 +1051,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String? _validateBreakMinutes(String? value) {
+    if (_markAsWorkOff) {
+      return null;
+    }
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) {
       return null;
@@ -1124,11 +1232,15 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final l = AppLocalizations.of(context);
-    final startTime = _startTimeController.text.trim();
-    final endTime = _endTimeController.text.trim();
-    final breakMinutes = _resolveBreakMinutes(_breakMinutesController.text);
+    final isWorkOff = _markAsWorkOff;
+    final startTime =
+        isWorkOff ? '00:00' : _startTimeController.text.trim();
+    final endTime = isWorkOff ? '00:00' : _endTimeController.text.trim();
+    final breakMinutes = isWorkOff
+        ? 0
+        : _resolveBreakMinutes(_breakMinutesController.text);
     final bool isContractEntry =
-        widget.work.isContract && _contractFieldsEnabled;
+        !isWorkOff && widget.work.isContract && _contractFieldsEnabled;
     num? units;
     num? ratePerUnit;
     int? contractTypeId;
@@ -1653,6 +1765,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 onSubmit: _submitAttendance,
                 onFieldChanged: _handleAttendanceFieldChanged,
                 isSubmitting: _isSubmittingAttendance,
+                isWorkOff: _markAsWorkOff,
+                onWorkOffChanged: _handleWorkOffToggle,
+                showContractWorkButton: widget.work.isContract,
+                onContractWorkTap:
+                    widget.work.isContract ? _openContractWorkManager : null,
                 startTimeValidator: _validateStartTime,
                 endTimeValidator: _validateEndTime,
                 breakValidator: _validateBreakMinutes,
@@ -2634,9 +2751,13 @@ class _AttendanceSection extends StatelessWidget {
     required this.onSubmit,
     required this.onFieldChanged,
     required this.isSubmitting,
+    required this.isWorkOff,
+    required this.onWorkOffChanged,
     required this.startTimeValidator,
     required this.endTimeValidator,
     required this.breakValidator,
+    this.onContractWorkTap,
+    this.showContractWorkButton = false,
     this.statusMessage,
     this.isStatusError = false,
   });
@@ -2650,9 +2771,13 @@ class _AttendanceSection extends StatelessWidget {
   final VoidCallback onSubmit;
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
+  final bool isWorkOff;
+  final ValueChanged<bool> onWorkOffChanged;
   final String? Function(String?) startTimeValidator;
   final String? Function(String?) endTimeValidator;
   final String? Function(String?) breakValidator;
+  final VoidCallback? onContractWorkTap;
+  final bool showContractWorkButton;
   final String? statusMessage;
   final bool isStatusError;
 
@@ -2799,11 +2924,11 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: TextInputAction.next,
                     validator: startTimeValidator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting,
+                    enabled: !isSubmitting && !isWorkOff,
                     customField: _buildSegmentedTimeField(
                       controller: startTimeController,
                       validator: startTimeValidator,
-                      enabled: !isSubmitting,
+                      enabled: !isSubmitting && !isWorkOff,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -2819,11 +2944,11 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: TextInputAction.next,
                     validator: endTimeValidator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting,
+                    enabled: !isSubmitting && !isWorkOff,
                     customField: _buildSegmentedTimeField(
                       controller: endTimeController,
                       validator: endTimeValidator,
-                      enabled: !isSubmitting,
+                      enabled: !isSubmitting && !isWorkOff,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -2839,11 +2964,11 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: TextInputAction.done,
                     validator: breakValidator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting,
+                    enabled: !isSubmitting && !isWorkOff,
                     customField: _buildBreakDurationField(
                       controller: breakMinutesController,
                       validator: breakValidator,
-                      enabled: !isSubmitting,
+                      enabled: !isSubmitting && !isWorkOff,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -2865,8 +2990,10 @@ class _AttendanceSection extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 16),
+            _buildWorkOffToggle(context, l),
             const SizedBox(height: 24),
-            _buildSubmitButton(context, l),
+            _buildActionButtons(context, l),
             if (statusMessage != null)
               Container(
                 margin: const EdgeInsets.only(top: 16),
@@ -2894,9 +3021,119 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
+  Widget _buildActionButtons(BuildContext context, AppLocalizations l) {
+    final hasContractButton = showContractWorkButton && onContractWorkTap != null;
+    if (!hasContractButton) {
+      return _buildSubmitButton(context, l);
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isStacked = constraints.maxWidth < 420;
+        if (isStacked) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildContractWorkButton(context, l),
+              const SizedBox(height: 12),
+              _buildSubmitButton(context, l),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: _buildContractWorkButton(context, l)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildSubmitButton(context, l)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildContractWorkButton(BuildContext context, AppLocalizations l) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: isSubmitting ? null : onContractWorkTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFEFF6FF),
+          foregroundColor: const Color(0xFF1D4ED8),
+          side: const BorderSide(color: Color(0xFF2563EB)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            const Icon(Icons.work_outline_rounded, size: 20),
+            const SizedBox(width: 8),
+            Text(l.contractWorkLabel),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkOffToggle(BuildContext context, AppLocalizations l) {
+    final borderColor = const Color(0xFF2563EB);
+    final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF1F2937),
+        ) ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF1F2937),
+        );
+
+    return _DashedBorderCard(
+      borderColor: borderColor.withOpacity(0.45),
+      backgroundColor: const Color(0xFFF5F9FF),
+      radius: 24,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0F2FE),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.beach_access_rounded,
+                color: Color(0xFF2563EB),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l.markAsWorkOffButton,
+                style: titleStyle,
+              ),
+            ),
+            Switch.adaptive(
+              value: isWorkOff,
+              onChanged: isSubmitting ? null : onWorkOffChanged,
+              activeColor: const Color(0xFF2563EB),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSubmitButton(BuildContext context, AppLocalizations l) {
     return SizedBox(
-      width: double.infinity,
       height: 52,
       child: ElevatedButton(
         onPressed: isSubmitting ? null : onSubmit,
@@ -3322,6 +3559,113 @@ class _AttendanceSection extends StatelessWidget {
       height: 38,
       color: const Color(0xFFE2E8F0),
     );
+  }
+}
+
+class _DashedBorderCard extends StatelessWidget {
+  const _DashedBorderCard({
+    required this.child,
+    required this.borderColor,
+    required this.backgroundColor,
+    this.radius = 20,
+    this.strokeWidth = 1.4,
+    this.dashLength = 6,
+    this.gapLength = 4,
+  });
+
+  final Widget child;
+  final Color borderColor;
+  final Color backgroundColor;
+  final double radius;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedBorderPainter(
+        color: borderColor,
+        radius: radius,
+        strokeWidth: strokeWidth,
+        dashLength: dashLength,
+        gapLength: gapLength,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(radius),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) {
+      return;
+    }
+
+    final rect = Offset.zero & size;
+    final double effectiveRadius =
+        radius.clamp(0.0, size.shortestSide / 2) as double;
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(strokeWidth / 2),
+      Radius.circular(effectiveRadius),
+    );
+    final path = Path()..addRRect(rrect);
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    final double dashValue = dashLength <= 0 ? 4 : dashLength;
+    final double gapValue = gapLength <= 0 ? 4 : gapLength;
+    final pattern = <double>[dashValue, gapValue];
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      int index = 0;
+      while (distance < metric.length) {
+        final double segmentLength = pattern[index % pattern.length];
+        final double next = distance + segmentLength;
+        final double clampedNext =
+            next < metric.length ? next : metric.length;
+        if (index.isEven) {
+          final segment = metric.extractPath(distance, clampedNext);
+          canvas.drawPath(segment, paint);
+        }
+        distance = clampedNext;
+        index++;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
+    return color != oldDelegate.color ||
+        radius != oldDelegate.radius ||
+        strokeWidth != oldDelegate.strokeWidth ||
+        dashLength != oldDelegate.dashLength ||
+        gapLength != oldDelegate.gapLength;
   }
 }
 
