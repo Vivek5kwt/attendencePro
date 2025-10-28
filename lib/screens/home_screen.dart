@@ -1972,35 +1972,53 @@ class _HomeScreenState extends State<HomeScreen> {
         isDeleting || (activationInProgress && !isActivating) || isActive;
 
     final description = _resolveWorkDescription(work);
+    final accentColor = work.isContract
+        ? const Color(0xFFFB923C)
+        : const Color(0xFF2563EB);
+    final gradient = LinearGradient(
+      colors: work.isContract
+          ? const [Color(0xFFFFF4E5), Color(0xFFFFE8D7)]
+          : const [Color(0xFFE6F0FF), Color(0xFFDCE7FF)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
     final card = Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(28),
       elevation: 0,
       child: InkWell(
         onTap:
             (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
         onLongPress:
             (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color:
-                  isActive ? const Color(0xFF34D399) : Colors.transparent,
-              width: isActive ? 1.4 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(28),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          child: LayoutBuilder(
+          padding: const EdgeInsets.all(2.4),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isActive
+                    ? const Color(0xFF34D399)
+                    : accentColor.withOpacity(0.18),
+                width: isActive ? 1.5 : 1.1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withOpacity(0.08),
+                  blurRadius: 22,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: LayoutBuilder(
             builder: (context, constraints) {
               final isCompact = constraints.maxWidth < 520;
               final disableActions = isDeleting || isActivating;
@@ -2020,12 +2038,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       alignment: alignment,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 6),
+                            horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: work.isContract
-                              ? const Color(0xFFFFF5EC)
-                              : const Color(0xFFE5F6FE),
-                          borderRadius: BorderRadius.circular(20),
+                          gradient: work.isContract
+                              ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFEDD5),
+                                    Color(0xFFFFF7ED),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : const LinearGradient(
+                                  colors: [
+                                    Color(0xFFDCEBFF),
+                                    Color(0xFFEFF6FF),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: accentColor.withOpacity(0.16),
+                          ),
                         ),
                         child: Text(
                           work.isContract
@@ -2090,8 +2125,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   style: FilledButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 14),
-                                    backgroundColor: const Color(0xFFEFF5FF),
-                                    foregroundColor: const Color(0xFF0052CC),
+                                    backgroundColor: accentColor.withOpacity(0.08),
+                                    foregroundColor: accentColor,
                                     textStyle: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -2114,7 +2149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 strokeWidth: 2,
                                                 valueColor:
                                                     AlwaysStoppedAnimation<Color>(
-                                                  Color(0xFF0052CC),
+                                                  accentColor,
                                                 ),
                                               ),
                                             ),
@@ -2125,7 +2160,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       : Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(Icons.bolt_rounded, size: 18),
+                                            Icon(Icons.bolt_rounded,
+                                                size: 18, color: accentColor),
                                             const SizedBox(width: 6),
                                             Text(l.setActiveWorkButton),
                                           ],
@@ -2146,8 +2182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 36,
                             child: FilledButton.tonalIcon(
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFFEFF5FF),
-                                foregroundColor: const Color(0xFF0052CC),
+                                backgroundColor: accentColor.withOpacity(0.08),
+                                foregroundColor: accentColor,
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16),
                                 textStyle: const TextStyle(
@@ -2209,10 +2245,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 54,
                         width: 54,
                         decoration: BoxDecoration(
-                          color: isActive
-                              ? const Color(0xFFECFDF3)
-                              : const Color(0xFFE5F1FF),
-                          borderRadius: BorderRadius.circular(16),
+                          color: accentColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(18),
                         ),
                         child: Icon(
                           isActive
@@ -2220,7 +2254,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               : Icons.work_outline,
                           color: isActive
                               ? const Color(0xFF16A34A)
-                              : const Color(0xFF007BFF),
+                              : accentColor,
                           size: 28,
                         ),
                       ),
@@ -2233,25 +2267,86 @@ class _HomeScreenState extends State<HomeScreen> {
                               work.name,
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
+                                    fontSize: 20,
                                   ) ??
                                   const TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.w700,
                                   ),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _formatHourlyRate(work, l),
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF4F5B67),
-                                  ) ??
-                                  const TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF4F5B67),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: accentColor.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: accentColor.withOpacity(0.16),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    height: 36,
+                                    width: 36,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: accentColor.withOpacity(0.16),
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.payments_outlined,
+                                      color: accentColor,
+                                    ),
                                   ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l.hourlySalaryLabel,
+                                        style: Theme.of(context)
+                                                .textTheme
+                                                .labelLarge
+                                                ?.copyWith(
+                                                  color: const Color(0xFF334155),
+                                                  fontWeight: FontWeight.w600,
+                                                ) ??
+                                            const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF334155),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatHourlyRate(work, l),
+                                        style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  color: accentColor,
+                                                  fontWeight: FontWeight.w700,
+                                                ) ??
+                                            TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w700,
+                                              color: accentColor,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                             if (description != null) ...[
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 12),
                               Text(
                                 description,
                                 maxLines: isCompact ? 3 : 2,
