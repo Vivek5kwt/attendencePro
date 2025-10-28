@@ -5302,7 +5302,10 @@ class _AttendanceTimeCard extends StatelessWidget {
     );
     final fieldRadius = BorderRadius.circular(isCompact ? 16 : 20);
     final titleSpacing = SizedBox(height: isCompact ? 10 : 16);
-    final fieldSpacing = SizedBox(width: isCompact ? 8 : 12);
+    final fieldSpacing = SizedBox(
+      width: isCompact ? 0 : 12,
+      height: isCompact ? 8 : 0,
+    );
     final boxShadow = [
       BoxShadow(
         color: const Color(0x0F1E293B),
@@ -5364,12 +5367,16 @@ class _AttendanceTimeCard extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             padding: fieldPadding,
-            child: Row(
+            child: Flex(
+              direction: isCompact ? Axis.vertical : Axis.horizontal,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 iconBadge,
                 fieldSpacing,
-                Expanded(child: input),
+                if (isCompact)
+                  SizedBox(width: double.infinity, child: input)
+                else
+                  Expanded(child: input),
               ],
             ),
           ),
