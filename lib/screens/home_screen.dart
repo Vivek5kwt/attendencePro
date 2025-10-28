@@ -689,7 +689,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     final safeAvailableWidth =
                         availableWidth > 0 ? availableWidth : 0.0;
                     final buttonWidth = isWide
-                        ? math.max((safeAvailableWidth - spacing) / 2, 0)
+                        ? math.max((safeAvailableWidth - spacing) / 2, 0.0)
                         : safeAvailableWidth;
 
                     final titleStyle = scaleTextStyle(
