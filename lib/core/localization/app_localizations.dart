@@ -491,6 +491,7 @@ class AppLocalizations {
   String get verifyCodeDescription => _value('verifyCodeDescription');
   String get enterCodeLabel => _value('enterCodeLabel');
   String get verifyOtpButton => _value('verifyOtpButton');
+  String get resendPromptQuestion => _value('resendPromptQuestion');
   String get resendCode => _value('resendCode');
   String get operationSuccessful => _value('operationSuccessful');
 
