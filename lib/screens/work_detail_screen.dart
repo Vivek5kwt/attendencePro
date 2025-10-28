@@ -1776,10 +1776,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 statusMessage: _attendanceStatusMessage,
                 isStatusError: _attendanceStatusIsError,
               ),
-              const SizedBox(height: 24),
-              _ContractSummarySection(
+         /*     _ContractSummarySection(
                 items: contractItems,
-              ),
+              ),*/
               const SizedBox(height: 24),
               summarySection,
             ],
@@ -3102,7 +3101,7 @@ class _AttendanceSection extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Container(
+       /*     Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: const Color(0xFFE0F2FE),
@@ -3113,7 +3112,7 @@ class _AttendanceSection extends StatelessWidget {
                 color: Color(0xFF2563EB),
                 size: 20,
               ),
-            ),
+            ),*/
             const SizedBox(width: 12),
             Expanded(
               child: Text(
