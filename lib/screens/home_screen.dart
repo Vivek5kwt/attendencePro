@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<FormState> _editWorkFormKey = GlobalKey<FormState>();
   final TextEditingController _editWorkNameController = TextEditingController();
   final TextEditingController _editHourlySalaryController = TextEditingController();
+  final ValueNotifier<bool> _editIsContractNotifier = ValueNotifier<bool>(false);
   static const String _shareLink = 'https://attendancepro.app';
   final WorkApi _workApi = WorkApi();
   final SessionManager _sessionManager = const SessionManager();
@@ -300,10 +301,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ..text = work.name
       ..selection = TextSelection.collapsed(offset: work.name.length);
     final hourlyRateText =
-    work.hourlyRate != null ? work.hourlyRate!.toString() : '';
+        work.hourlyRate != null ? work.hourlyRate!.toString() : '';
     hourlyController
       ..text = hourlyRateText
       ..selection = TextSelection.collapsed(offset: hourlyRateText.length);
+    _editIsContractNotifier.value = work.isContract;
 
     await showDialog<void>(
       context: context,
@@ -489,6 +491,48 @@ class _HomeScreenState extends State<HomeScreen> {
                                             return null;
                                           },
                                         ),
+                                        const SizedBox(height: 20),
+                                        ValueListenableBuilder<bool>(
+                                          valueListenable: _editIsContractNotifier,
+                                          builder: (context, isContract, _) {
+                                            return Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        l.contractWorkLabel,
+                                                        style: theme.textTheme.labelLarge?.copyWith(
+                                                              fontWeight: FontWeight.w600,
+                                                            ) ??
+                                                            const TextStyle(fontWeight: FontWeight.w600),
+                                                      ),
+                                                    ),
+                                                    Switch.adaptive(
+                                                      value: isContract,
+                                                      onChanged: isSaving
+                                                          ? null
+                                                          : (value) => _editIsContractNotifier.value = value,
+                                                      activeColor: theme.colorScheme.primary,
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Text(
+                                                  l.contractWorkDescription,
+                                                  style: theme.textTheme.bodySmall?.copyWith(
+                                                        color: const Color(0xFF6B7280),
+                                                      ) ??
+                                                      const TextStyle(
+                                                        color: Color(0xFF6B7280),
+                                                        height: 1.3,
+                                                      ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -537,6 +581,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               work,
                                               nameController,
                                               hourlyController,
+                                              _editIsContractNotifier.value,
                                             );
                                           },
                                           style: ElevatedButton.styleFrom(
@@ -1310,6 +1355,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Work work,
       TextEditingController nameController,
       TextEditingController hourlyController,
+      bool isContract,
       ) async {
     final messenger = ScaffoldMessenger.of(context);
     final workName = nameController.text.trim();
@@ -1340,6 +1386,7 @@ class _HomeScreenState extends State<HomeScreen> {
         work: work,
         name: workName,
         hourlyRate: hourlyRate,
+        isContract: isContract,
       ),
     );
   }
@@ -2747,6 +2794,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _hourlySalaryController.dispose();
     _editWorkNameController.dispose();
     _editHourlySalaryController.dispose();
+    _editIsContractNotifier.dispose();
     super.dispose();
   }
 }

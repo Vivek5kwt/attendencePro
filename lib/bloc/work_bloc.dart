@@ -231,6 +231,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         work: event.work,
         name: event.name,
         hourlyRate: event.hourlyRate,
+        isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
       final works = await _repository.fetchWorks();
