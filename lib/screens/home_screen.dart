@@ -2260,7 +2260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ? Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const SizedBox(
+                                            SizedBox(
                                               height: 18,
                                               width: 18,
                                               child: CircularProgressIndicator(
