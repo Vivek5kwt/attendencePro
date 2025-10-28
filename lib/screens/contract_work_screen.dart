@@ -852,8 +852,24 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final responsive = context.responsive;
+    final deviceType = responsive.deviceType;
     final totalTypes = _allContractTypes.length;
     final theme = Theme.of(context);
+    double maxContentWidth;
+    switch (deviceType) {
+      case DeviceType.small:
+        maxContentWidth = 520;
+        break;
+      case DeviceType.medium:
+        maxContentWidth = 580;
+        break;
+      case DeviceType.large:
+        maxContentWidth = 700;
+        break;
+      case DeviceType.tablet:
+        maxContentWidth = 820;
+        break;
+    }
 
     final Widget bodyContent;
     if (_isLoading) {
@@ -922,152 +938,167 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         onRefresh: _loadContractTypes,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            responsive.scale(16),
-            responsive.scale(16),
-            responsive.scale(16),
-            responsive.scale(32),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SummaryHeader(
-                title: l.contractWorkActiveRatesTitle,
-                totalTypes: totalTypes,
-                totalUnits: _totalUnits,
-                totalAmount: _totalContractSalary,
-                activeTypesLabel: l.contractWorkActiveTypesLabel,
-                totalUnitsLabel: l.contractWorkTotalUnitsLabel,
-                totalSalaryLabel: l.contractWorkTotalSalaryLabel,
-              ),
-              SizedBox(height: responsive.scale(20)),
-              _SectionTitle(text: l.contractWorkDefaultTypesTitle),
-              SizedBox(height: responsive.scale(12)),
-              if (_defaultContractTypes.isEmpty)
-                _EmptyState(message: l.contractWorkNoEntriesLabel)
-              else
-                Column(
-                  children: _defaultContractTypes
-                      .map(
-                        (type) => Padding(
-                          padding: EdgeInsets.only(
-                            bottom: responsive.scale(12),
-                          ),
-                          child: _ContractTypeTile(
-                            type: type,
-                            lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
-                            onEdit: () => _showContractTypeDialog(type: type),
-                            editLabel: l.contractWorkEditRateButton,
-                            defaultTag: l.contractWorkDefaultTag,
-                          ),
-                        ),
-                      )
-                      .toList(),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxContentWidth),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  responsive.scale(16),
+                  responsive.scale(16),
+                  responsive.scale(16),
+                  responsive.scale(32),
                 ),
-              SizedBox(height: responsive.scale(12)),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  style: TextButton.styleFrom(
-                    padding: responsive.scaledSymmetric(
-                        horizontal: 20, vertical: 14),
-                    backgroundColor: const Color(0xFFEEF2FF),
-                    foregroundColor: const Color(0xFF4C1D95),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(responsive.scale(16)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  _SummaryHeader(
+                    title: l.contractWorkActiveRatesTitle,
+                    totalTypes: totalTypes,
+                    totalUnits: _totalUnits,
+                    totalAmount: _totalContractSalary,
+                    activeTypesLabel: l.contractWorkActiveTypesLabel,
+                    totalUnitsLabel: l.contractWorkTotalUnitsLabel,
+                    totalSalaryLabel: l.contractWorkTotalSalaryLabel,
+                  ),
+                  SizedBox(height: responsive.scale(20)),
+                  _SectionTitle(text: l.contractWorkDefaultTypesTitle),
+                  SizedBox(height: responsive.scale(12)),
+                  if (_defaultContractTypes.isEmpty)
+                    _EmptyState(message: l.contractWorkNoEntriesLabel)
+                  else
+                    Column(
+                      children: _defaultContractTypes
+                          .map(
+                            (type) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: responsive.scale(12),
+                              ),
+                              child: _ContractTypeTile(
+                                type: type,
+                                lastUpdatedLabel:
+                                    l.contractWorkLastUpdatedLabel,
+                                onEdit: () =>
+                                    _showContractTypeDialog(type: type),
+                                editLabel: l.contractWorkEditRateButton,
+                                defaultTag: l.contractWorkDefaultTag,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  SizedBox(height: responsive.scale(12)),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: responsive.scaledSymmetric(
+                            horizontal: 20, vertical: 14),
+                        backgroundColor: const Color(0xFFEEF2FF),
+                        foregroundColor: const Color(0xFF4C1D95),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(responsive.scale(16)),
+                        ),
+                      ),
+                      onPressed: () => _showContractTypeDialog(),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(l.addContractWorkButton),
                     ),
                   ),
-                  onPressed: () => _showContractTypeDialog(),
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: Text(l.addContractWorkButton),
-                ),
-              ),
-              SizedBox(height: responsive.scale(28)),
-              _SectionTitle(text: l.contractWorkCustomTypesTitle),
-              SizedBox(height: responsive.scale(12)),
-              if (_userContractTypes.isEmpty)
-                _EmptyState(message: l.contractWorkNoCustomTypesLabel)
-              else
-                Column(
-                  children: _userContractTypes
-                      .map(
-                        (type) => Padding(
-                          padding: EdgeInsets.only(
-                            bottom: responsive.scale(12),
-                          ),
-                          child: Dismissible(
-                            key: ValueKey('contract-type-${type.id}'),
-                            direction: DismissDirection.endToStart,
-                            confirmDismiss: (_) =>
-                                _confirmDeleteContractType(type),
-                            onDismissed: (_) => _removeContractType(type),
-                            background: const SizedBox.shrink(),
-                            secondaryBackground: ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(responsive.scale(20)),
-                              child: Container(
-                                alignment: Alignment.centerRight,
-                                padding: responsive.scaledSymmetric(
-                                  horizontal: 24,
+                  SizedBox(height: responsive.scale(28)),
+                  _SectionTitle(text: l.contractWorkCustomTypesTitle),
+                  SizedBox(height: responsive.scale(12)),
+                  if (_userContractTypes.isEmpty)
+                    _EmptyState(message: l.contractWorkNoCustomTypesLabel)
+                  else
+                    Column(
+                      children: _userContractTypes
+                          .map(
+                            (type) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: responsive.scale(12),
+                              ),
+                              child: Dismissible(
+                                key: ValueKey('contract-type-${type.id}'),
+                                direction: DismissDirection.endToStart,
+                                confirmDismiss: (_) =>
+                                    _confirmDeleteContractType(type),
+                                onDismissed: (_) => _removeContractType(type),
+                                background: const SizedBox.shrink(),
+                                secondaryBackground: ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    responsive.scale(20),
+                                  ),
+                                  child: Container(
+                                    alignment: Alignment.centerRight,
+                                    padding: responsive.scaledSymmetric(
+                                      horizontal: 24,
+                                    ),
+                                    color: const Color(0xFFFEE2E2),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.delete_outline,
+                                          color: Color(0xFFB91C1C),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          l.contractWorkDeleteButton,
+                                          style: const TextStyle(
+                                            color: Color(0xFFB91C1C),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                color: const Color(0xFFFEE2E2),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.delete_outline,
-                                      color: Color(0xFFB91C1C),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l.contractWorkDeleteButton,
-                                      style: const TextStyle(
-                                        color: Color(0xFFB91C1C),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                                child: _ContractTypeTile(
+                                  type: type,
+                                  lastUpdatedLabel:
+                                      l.contractWorkLastUpdatedLabel,
+                                  onEdit: () =>
+                                      _showContractTypeDialog(type: type),
+                                  editLabel: l.contractWorkEditRateButton,
+                                  defaultTag: l.contractWorkDefaultTag,
                                 ),
                               ),
                             ),
-                            child: _ContractTypeTile(
-                              type: type,
-                              lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
-                              onEdit: () =>
-                                  _showContractTypeDialog(type: type),
-                              editLabel: l.contractWorkEditRateButton,
-                              defaultTag: l.contractWorkDefaultTag,
+                          )
+                          .toList(),
+                    ),
+                  SizedBox(height: responsive.scale(28)),
+                  _SectionTitle(text: l.contractWorkRecentEntriesTitle),
+                  SizedBox(height: responsive.scale(12)),
+                  if (_recentEntries.isEmpty)
+                    _EmptyState(message: l.contractWorkNoEntriesLabel)
+                  else
+                    Column(
+                      children: _recentEntries
+                          .map(
+                            (entry) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: responsive.scale(12),
+                              ),
+                              child: _ContractEntryTile(
+                                entry: entry,
+                                contractLabel: l.contractWorkLabel,
+                                unitsLabel: l.contractWorkUnitsLabel,
+                                rateLabel: l.contractWorkRateLabel,
+                                onTap: () =>
+                                    _showComingSoonSnackBar(context),
+                              ),
                             ),
-                          ),
-                        ),
-                      )
-                      .toList(),
+                          )
+                          .toList(),
+                    ),
+                  ],
                 ),
-              const SizedBox(height: 28),
-              _SectionTitle(text: l.contractWorkRecentEntriesTitle),
-              const SizedBox(height: 12),
-              if (_recentEntries.isEmpty)
-                _EmptyState(message: l.contractWorkNoEntriesLabel)
-              else
-                Column(
-                  children: _recentEntries
-                      .map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _ContractEntryTile(
-                            entry: entry,
-                            contractLabel: l.contractWorkLabel,
-                            unitsLabel: l.contractWorkUnitsLabel,
-                            rateLabel: l.contractWorkRateLabel,
-                            onTap: () => _showComingSoonSnackBar(context),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-            ],
+              ),
+            ),
           ),
         ),
       );
@@ -1099,7 +1130,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
               l.contractWorkLabel,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 20,
+                    fontSize: responsive.scaleText(20),
                     color: const Color(0xFF111827),
                   ) ??
                   const TextStyle(
@@ -1146,53 +1177,82 @@ class _SummaryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ) ??
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
+    final responsive = context.responsive;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 360;
+        final stats = [
+          _SummaryItem(
+            label: activeTypesLabel,
+            value: totalTypes.toString(),
           ),
-          const SizedBox(height: 18),
-          Row(
+          _SummaryItem(
+            label: totalUnitsLabel,
+            value: totalUnits.toStringAsFixed(0),
+          ),
+          _SummaryItem(
+            label: totalSalaryLabel,
+            value: '€${totalAmount.toStringAsFixed(2)}',
+          ),
+        ];
+
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(responsive.scale(24)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            responsive.scale(24),
+            responsive.scale(24),
+            responsive.scale(24),
+            responsive.scale(28),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SummaryItem(
-                label: activeTypesLabel,
-                value: totalTypes.toString(),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: responsive.scaleText(18),
+                    ) ??
+                    TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: responsive.scaleText(18),
+                    ),
               ),
-              const SizedBox(width: 24),
-              _SummaryItem(
-                label: totalUnitsLabel,
-                value: totalUnits.toStringAsFixed(0),
-              ),
-              const SizedBox(width: 24),
-              _SummaryItem(
-                label: totalSalaryLabel,
-                value: '€${totalAmount.toStringAsFixed(2)}',
-              ),
+              SizedBox(height: responsive.scale(18)),
+              if (isCompact)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < stats.length; i++) ...[
+                      stats[i],
+                      if (i != stats.length - 1)
+                        SizedBox(height: responsive.scale(14)),
+                    ],
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(child: stats[0]),
+                    SizedBox(width: responsive.scale(20)),
+                    Expanded(child: stats[1]),
+                    SizedBox(width: responsive.scale(20)),
+                    Expanded(child: stats[2]),
+                  ],
+                ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -1205,28 +1265,28 @@ class _SummaryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
-            ),
+    final responsive = context.responsive;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontWeight: FontWeight.w500,
+            fontSize: responsive.scaleText(12),
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-            ),
+        ),
+        SizedBox(height: responsive.scale(6)),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: responsive.scaleText(18),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1238,15 +1298,18 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Text(
       text,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: const Color(0xFF111827),
+            fontSize: responsive.scaleText(16),
           ) ??
-          const TextStyle(
+          TextStyle(
             fontWeight: FontWeight.w700,
             color: Color(0xFF111827),
+            fontSize: responsive.scaleText(16),
           ),
     );
   }
@@ -1269,6 +1332,7 @@ class _ContractTypeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1282,14 +1346,19 @@ class _ContractTypeTile extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+      padding: EdgeInsets.fromLTRB(
+        responsive.scale(18),
+        responsive.scale(20),
+        responsive.scale(18),
+        responsive.scale(18),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(responsive.scale(10)),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(16),
@@ -1299,7 +1368,7 @@ class _ContractTypeTile extends StatelessWidget {
                   color: Color(0xFF1D4ED8),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: responsive.scale(12)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1309,31 +1378,37 @@ class _ContractTypeTile extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF111827),
+                            fontSize: responsive.scaleText(16),
                           ) ??
-                          const TextStyle(
+                          TextStyle(
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF111827),
+                            fontSize: responsive.scaleText(16),
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: responsive.scale(4)),
                     Text(
                       '${type.displayRate} · ${type.unitLabel}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: const Color(0xFF4B5563),
+                            fontSize: responsive.scaleText(13),
                           ) ??
-                          const TextStyle(
+                          TextStyle(
                             color: Color(0xFF4B5563),
+                            fontSize: responsive.scaleText(13),
                           ),
                     ),
                     if (type.displaySubtype != null) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: responsive.scale(4)),
                       Text(
                         type.displaySubtype!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: const Color(0xFF6B7280),
+                              fontSize: responsive.scaleText(13),
                             ) ??
-                            const TextStyle(
+                            TextStyle(
                               color: Color(0xFF6B7280),
+                              fontSize: responsive.scaleText(13),
                             ),
                       ),
                     ],
@@ -1342,60 +1417,91 @@ class _ContractTypeTile extends StatelessWidget {
               ),
               if (type.isDefault)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.scale(12),
+                    vertical: responsive.scale(6),
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8FDF4),
                     borderRadius: BorderRadius.circular(40),
                   ),
                   child: Text(
                     defaultTag,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Color(0xFF15803D),
                       fontWeight: FontWeight.w600,
+                      fontSize: responsive.scaleText(12),
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          SizedBox(height: responsive.scale(16)),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final shouldStack = constraints.maxWidth < 340;
+              final dateColumn = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     lastUpdatedLabel,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: const Color(0xFF6B7280),
+                          fontSize: responsive.scaleText(12),
                         ) ??
-                        const TextStyle(
-                          color: Color(0xFF6B7280),
+                        TextStyle(
+                          color: const Color(0xFF6B7280),
+                          fontSize: responsive.scaleText(12),
                         ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: responsive.scale(4)),
                   Text(
                     type.formattedUpdatedDate,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF111827),
+                          fontSize: responsive.scaleText(14),
                         ) ??
-                        const TextStyle(
+                        TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF111827),
+                          color: const Color(0xFF111827),
+                          fontSize: responsive.scaleText(14),
                         ),
                   ),
                 ],
-              ),
-              TextButton(
+              );
+              final editButton = TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF4C1D95),
+                  textStyle: TextStyle(
+                    fontSize: responsive.scaleText(14),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 onPressed: onEdit,
                 child: Text(editLabel),
-              ),
-            ],
+              );
+
+              if (shouldStack) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    dateColumn,
+                    SizedBox(height: responsive.scale(12)),
+                    editButton,
+                  ],
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: dateColumn),
+                  editButton,
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -1420,6 +1526,7 @@ class _ContractEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -1429,14 +1536,20 @@ class _ContractEntryTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+        padding: EdgeInsets.fromLTRB(
+          responsive.scale(18),
+          responsive.scale(18),
+          responsive.scale(18),
+          responsive.scale(18),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final shouldWrap = constraints.maxWidth < 360;
+                final leading = Container(
+                  padding: EdgeInsets.all(responsive.scale(10)),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8FDF4),
                     borderRadius: BorderRadius.circular(16),
@@ -1445,59 +1558,101 @@ class _ContractEntryTile extends StatelessWidget {
                     Icons.assignment_outlined,
                     color: Color(0xFF047857),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.workName,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                            ) ??
-                            const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF111827),
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.formattedDate,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                            ) ??
-                            const TextStyle(
-                              color: Color(0xFF6B7280),
-                            ),
-                      ),
-                    ],
+                );
+                final titleColumn = Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: responsive.scale(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.workName,
+                          style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF111827),
+                                    fontSize: responsive.scaleText(16),
+                                  ) ??
+                              TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF111827),
+                                fontSize: responsive.scaleText(16),
+                              ),
+                        ),
+                        SizedBox(height: responsive.scale(4)),
+                        Text(
+                          entry.formattedDate,
+                          style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: const Color(0xFF6B7280),
+                                    fontSize: responsive.scaleText(12),
+                                  ) ??
+                              TextStyle(
+                                color: const Color(0xFF6B7280),
+                                fontSize: responsive.scaleText(12),
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
+                );
+                final amountText = Text(
                   '€${entry.totalAmount.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF111827),
+                        fontSize: responsive.scaleText(16),
                       ) ??
-                      const TextStyle(
+                      TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
+                        color: const Color(0xFF111827),
+                        fontSize: responsive.scaleText(16),
                       ),
-                ),
-              ],
+                );
+
+                if (shouldWrap) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          leading,
+                          titleColumn,
+                        ],
+                      ),
+                      SizedBox(height: responsive.scale(12)),
+                      amountText,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    leading,
+                    titleColumn,
+                    amountText,
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 16),
-            Row(
+            SizedBox(height: responsive.scale(16)),
+            Wrap(
+              spacing: responsive.scale(8),
+              runSpacing: responsive.scale(8),
               children: [
                 _InfoChip(label: contractLabel, value: entry.contractName),
-                const SizedBox(width: 8),
                 _InfoChip(
                   label: unitsLabel,
                   value: entry.unitsCompleted.toStringAsFixed(0),
                 ),
-                const SizedBox(width: 8),
                 _InfoChip(
                   label: rateLabel,
                   value: '€${entry.rate.toStringAsFixed(2)}',
@@ -1519,8 +1674,12 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(12),
+        vertical: responsive.scale(8),
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(40),
@@ -1530,16 +1689,18 @@ class _InfoChip extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(
+            style: TextStyle(
               color: Color(0xFF6B7280),
               fontWeight: FontWeight.w600,
+              fontSize: responsive.scaleText(12),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Color(0xFF111827),
               fontWeight: FontWeight.w700,
+              fontSize: responsive.scaleText(12),
             ),
           ),
         ],
