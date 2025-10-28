@@ -11,6 +11,7 @@ import '../bloc/app_cubit.dart';
 import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
@@ -61,6 +62,21 @@ class _HomeScreenState extends State<HomeScreen> {
       _shouldOpenDashboard = true;
       _hasOpenedDashboard = false;
     }
+  }
+
+  TextStyle _fallbackTextStyle({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+      fontFamily: AppString.fontFamily,
+    );
   }
 
   Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
@@ -1458,73 +1474,112 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Container(
-        height: 190,
-
-        width: double.infinity,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.centerRight,
-          children: [
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  AppAssets.bgBanner,
-                  fit: BoxFit.cover,
-                ),
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.bgBanner),
+              fit: BoxFit.cover,
             ),
-            Positioned(
-              left: 24,
-              top: 28,
-              right: 150,
-              child: Column(
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 360;
+              final num rawImageWidth =
+                  (constraints.maxWidth * 0.35).clamp(120.0, 220.0);
+              final double imageWidth = rawImageWidth.toDouble();
+              final num rawImageHeight =
+                  (imageWidth * 1.1).clamp(140.0, 240.0);
+              final double imageHeight = rawImageHeight.toDouble();
+
+              final titleStyle = textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                  ) ??
+                  _fallbackTextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                  );
+              final subtitleStyle = textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    height: 1.4,
+                  ) ??
+                  _fallbackTextStyle(
+                    color: Colors.white,
+                    height: 1.4,
+                  );
+
+              Widget buildImage(Alignment alignment) {
+                return Align(
+                  alignment: alignment,
+                  child: SizedBox(
+                    width: imageWidth,
+                    height: imageHeight,
+                    child: Image.asset(
+                      AppAssets.homeBanner,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                );
+              }
+
+              final textColumn = Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l.homeBannerTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
-                    ) ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                        ),
+                    style: titleStyle,
+                    softWrap: true,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     l.homeBannerSubtitle,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      height: 1.4,
-                    ) ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          height: 1.4,
-                        ),
+                    style: subtitleStyle,
+                    softWrap: true,
                   ),
                 ],
-              ),
-            ),
-            Positioned(
-              right: -20,
-              top: -20,
-              bottom: 0,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Image.asset(
-                  AppAssets.homeBanner,
-                  fit: BoxFit.contain,
-                  height: 220,
+              );
+
+              final padding = EdgeInsets.symmetric(
+                horizontal: isCompact ? 20 : 24,
+                vertical: isCompact ? 20 : 24,
+              );
+
+              final content = isCompact
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        textColumn,
+                        const SizedBox(height: 16),
+                        buildImage(Alignment.centerRight),
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(child: textColumn),
+                        const SizedBox(width: 16),
+                        Flexible(
+                          flex: 4,
+                          child: buildImage(Alignment.bottomRight),
+                        ),
+                      ],
+                    );
+
+              return ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 190),
+                child: Padding(
+                  padding: padding,
+                  child: content,
                 ),
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1791,7 +1846,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ) ??
-                          const TextStyle(
+                          _fallbackTextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1802,9 +1857,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFF4F5B67),
                       ) ??
-                          const TextStyle(
+                          _fallbackTextStyle(
                             fontSize: 14,
-                            color: Color(0xFF4F5B67),
+                            color: const Color(0xFF4F5B67),
                           ),
                     ),
                   ],
@@ -1816,8 +1871,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: work.isContract
                           ? const Color(0xFFFFF5EC)
@@ -1828,11 +1885,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       work.isContract
                           ? l.contractWorkLabel
                           : l.hourlyWorkLabel,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0A0A0A),
-                      ),
+                        color: const Color(0xFF0A0A0A),
+                      ) ??
+                          _fallbackTextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0A0A0A),
+                          ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1868,11 +1930,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 6),
                           Text(
                             l.activeWorkLabel,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF15803D),
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF15803D),
+                                ) ??
+                                _fallbackTextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF15803D),
+                                ),
                           ),
                         ],
                       ),
@@ -1883,13 +1953,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: FilledButton.tonal(
                         style: FilledButton.styleFrom(
                           padding:
-                          const EdgeInsets.symmetric(horizontal: 14),
+                              const EdgeInsets.symmetric(horizontal: 14),
                           backgroundColor: const Color(0xFFEFF5FF),
                           foregroundColor: const Color(0xFF0052CC),
-                          textStyle: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          textStyle: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ) ??
+                              _fallbackTextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18),
                           ),
