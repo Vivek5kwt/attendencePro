@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/session_manager.dart';
+import '../utils/responsive.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/work_selection_dialog.dart';
 import 'help_support_screen.dart';
@@ -626,61 +628,153 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final responsive = dialogContext.responsive;
+        final mediaQuery = MediaQuery.of(dialogContext);
+        final textScaler = MediaQuery.textScalerOf(dialogContext);
+
+        TextStyle scaleTextStyle(TextStyle base, {FontWeight? fontWeight}) {
+          final scaledFontSize = textScaler.scale(
+            responsive.scaleText(base.fontSize ?? 16),
+          );
+          return base.copyWith(
+            fontSize: scaledFontSize,
+            fontWeight: fontWeight ?? base.fontWeight,
+          );
+        }
+
+        final maxWidth = math.min(
+          mediaQuery.size.width *
+              (mediaQuery.orientation == Orientation.portrait ? 0.92 : 0.6),
+          responsive.scaleWidth(420),
+        );
+        final minWidth = math.min(maxWidth, responsive.scaleWidth(280));
+        final borderRadius = BorderRadius.circular(responsive.scale(26));
+        final horizontalPadding = responsive.scale(24);
+        final verticalPadding = responsive.scale(24);
+        final spacing = responsive.scale(12);
+
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: responsive.scale(16),
+            vertical: responsive.scale(24),
           ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l.shareAppTitle,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      icon: const Icon(Icons.close),
-                      splashRadius: 20,
+          child: Align(
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: minWidth,
+                maxWidth: maxWidth,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: borderRadius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: responsive.scale(28),
+                      offset: Offset(0, responsive.scale(18)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _buildShareButton(
-                  backgroundColor: const Color(0xFF25D366),
-                  icon: Icons.ac_unit_outlined,
-                  label: l.shareViaWhatsApp,
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    _shareViaWhatsApp();
+                clipBehavior: Clip.antiAlias,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide =
+                        constraints.maxWidth >= responsive.scaleWidth(360);
+                    final availableWidth =
+                        constraints.maxWidth - (horizontalPadding * 2);
+                    final safeAvailableWidth =
+                        availableWidth > 0 ? availableWidth : 0.0;
+                    final buttonWidth = isWide
+                        ? math.max((safeAvailableWidth - spacing) / 2, 0)
+                        : safeAvailableWidth;
+
+                    final titleStyle = scaleTextStyle(
+                      (theme.textTheme.titleMedium ??
+                              const TextStyle(fontSize: 20, fontWeight: FontWeight.w600))
+                          .copyWith(fontWeight: FontWeight.w600),
+                    );
+
+                    final shareActions = <Widget>[
+                      _buildShareButton(
+                        backgroundColor: const Color(0xFF25D366),
+                        icon: Icons.ios_share,
+                        label: l.shareViaWhatsApp,
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          _shareViaWhatsApp();
+                        },
+                      ),
+                      _buildShareButton(
+                        backgroundColor: const Color(0xFF007AFF),
+                        icon: Icons.copy,
+                        label: l.copyLink,
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          _copyShareLink();
+                        },
+                      ),
+                    ];
+
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        verticalPadding,
+                        horizontalPadding,
+                        responsive.scale(28),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  l.shareAppTitle,
+                                  style: titleStyle,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                icon: const Icon(Icons.close),
+                                splashRadius: responsive.scale(20),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: responsive.scale(20)),
+                          Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            alignment: WrapAlignment.center,
+                            children: shareActions
+                                .map(
+                                  (button) => SizedBox(
+                                    width: buttonWidth,
+                                    child: button,
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          SizedBox(height: responsive.scale(18)),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildShareButton(
+                              backgroundColor: Colors.black,
+                              label: l.shareCancelButton,
+                              onTap: () => Navigator.of(dialogContext).pop(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   },
                 ),
-                const SizedBox(height: 12),
-                _buildShareButton(
-                  backgroundColor: const Color(0xFF007AFF),
-                  icon: Icons.copy,
-                  label: l.copyLink,
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    _copyShareLink();
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildShareButton(
-                  backgroundColor: Colors.black,
-                  label: l.shareCancelButton,
-                  onTap: () => Navigator.of(dialogContext).pop(),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -694,36 +788,55 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
     IconData? icon,
     Color textColor = Colors.white,
+    EdgeInsetsGeometry? padding,
+    double? iconSize,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
+    final theme = Theme.of(context);
+    final responsive = context.responsive;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final baseStyle = theme.textTheme.labelLarge?.copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+        ) ??
+        TextStyle(
+          color: textColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        );
+    final scaledFontSize = textScaler.scale(
+      responsive.scaleText(baseStyle.fontSize ?? 16),
+    );
+    final textStyle = baseStyle.copyWith(fontSize: scaledFontSize);
+
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        padding: padding ?? EdgeInsets.symmetric(vertical: responsive.scale(14)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(responsive.scale(18)),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: textColor),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w600,
-              ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              color: textColor,
+              size: iconSize ?? responsive.scale(20),
             ),
+            SizedBox(width: responsive.scale(8)),
           ],
-        ),
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: textStyle,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1408,9 +1521,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: Text(
                             l.workDeleteConfirmButton,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ) ??
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                         ),
                       ),
