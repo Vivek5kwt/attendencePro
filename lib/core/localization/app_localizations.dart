@@ -153,6 +153,8 @@ class AppLocalizations {
       _value('contractWorkTotalSalaryLabel');
   String get contractWorkDefaultTag => _value('contractWorkDefaultTag');
   String get contractWorkUnitFallback => _value('contractWorkUnitFallback');
+  String get contractWorkCloseSheetLabel =>
+      _value('contractWorkCloseSheetLabel');
   String get profileLabel => _value('profileLabel');
   String get profileTitle => _value('profileTitle');
   String get profileNameLabel => _value('profileNameLabel');
