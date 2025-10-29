@@ -5622,9 +5622,9 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
               children: [
                 Text(
                   name,
@@ -5632,11 +5632,10 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
                 Text(
                   rateLabel,
                   style: detailStyle,
-                  maxLines: 1,
+                  softWrap: true,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
