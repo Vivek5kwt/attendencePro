@@ -1440,13 +1440,6 @@ class _AttendanceEntryTile extends StatelessWidget {
             label: localization.contractWorkUnitsLabel,
             value: entry.unitsCompleted?.toString() ?? '0',
           ),
-          const SizedBox(height: 8),
-          _EntryRow(
-            label: localization.contractWorkRateLabel,
-            value: entry.ratePerUnit != null
-                ? _formatCurrency(entry.ratePerUnit!)
-                : '--',
-          ),
           if (entry.hoursWorked > 0) ...[
             const SizedBox(height: 12),
             _EntryRow(

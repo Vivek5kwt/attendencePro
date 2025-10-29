@@ -1102,7 +1102,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                 entry: entry,
                                 contractLabel: l.contractWorkLabel,
                                 unitsLabel: l.contractWorkUnitsLabel,
-                                rateLabel: l.contractWorkRateLabel,
                                 onTap: () =>
                                     _showComingSoonSnackBar(context),
                               ),
@@ -1855,14 +1854,12 @@ class _ContractEntryTile extends StatelessWidget {
     required this.entry,
     required this.contractLabel,
     required this.unitsLabel,
-    required this.rateLabel,
     required this.onTap,
   });
 
   final _ContractEntry entry;
   final String contractLabel;
   final String unitsLabel;
-  final String rateLabel;
   final VoidCallback onTap;
 
   @override
@@ -2020,15 +2017,6 @@ class _ContractEntryTile extends StatelessWidget {
                   icon: Icons.stacked_line_chart_rounded,
                   label: unitsLabel,
                   value: entry.unitsCompleted.toStringAsFixed(0),
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  borderColor: const Color(0xFFD6DBFF),
-                  labelColor: const Color(0xFF1E3A8A),
-                  valueColor: const Color(0xFF111827),
-                ),
-                _InfoChip(
-                  icon: Icons.payments_outlined,
-                  label: rateLabel,
-                  value: '€${entry.rate.toStringAsFixed(2)}',
                   backgroundColor: const Color(0xFFEFF6FF),
                   borderColor: const Color(0xFFD6DBFF),
                   labelColor: const Color(0xFF1E3A8A),
