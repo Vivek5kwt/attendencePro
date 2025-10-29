@@ -107,6 +107,8 @@ class AppLocalizations {
       _value('contractWorkSetupSubtitle');
   String get contractWorkContractTypeLabel =>
       _value('contractWorkContractTypeLabel');
+  String get contractWorkContractTypeHint =>
+      _value('contractWorkContractTypeHint');
   String get contractWorkNameLabel => _value('contractWorkNameLabel');
   String get contractWorkRateLabel => _value('contractWorkRateLabel');
   String get contractWorkPricePerCrateLabel =>
@@ -121,6 +123,7 @@ class AppLocalizations {
   String get contractWorkSubtypeRequiredMessage =>
       _value('contractWorkSubtypeRequiredMessage');
   String get contractWorkUnitsLabel => _value('contractWorkUnitsLabel');
+  String get contractWorkUnitsHint => _value('contractWorkUnitsHint');
   String get contractWorkRateRequiredMessage =>
       _value('contractWorkRateRequiredMessage');
   String get contractWorkNameRequiredMessage =>

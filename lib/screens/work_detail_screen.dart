@@ -5400,87 +5400,201 @@ class _ContractEntryForm extends StatelessWidget {
                           .toList(growable: false);
                     }
 
+                    final labelStyle = theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ) ??
+                        const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E293B),
+                          fontSize: 14,
+                        );
+
+                    final hintStyle = theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w500,
+                        ) ??
+                        const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w500,
+                        );
+
                     return Padding(
                       padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x140F172A),
+                              blurRadius: 14,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  value: dropdownValue,
-                                  onChanged: disableInteractions
-                                      ? null
-                                      : (value) => onTypeChanged?.call(entry, value),
-                                  isExpanded: true,
-                                  itemHeight: null,
-                                  menuMaxHeight: 360,
-                                  dropdownColor: const Color(0xFFF8FAFF),
-                                  borderRadius: BorderRadius.circular(18),
-                                  selectedItemBuilder: (context) => buildSelectedItems(),
-                                  decoration: InputDecoration(
-                                    labelText: l.contractWorkContractTypeLabel,
-                                    prefixIcon: const Icon(
-                                      Icons.assignment_rounded,
-                                      color: Color(0xFF1D4ED8),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 18,
-                                      horizontal: 12,
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(18),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l.contractWorkContractTypeLabel,
+                                          style: labelStyle,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        DropdownButtonFormField<String>(
+                                          value: dropdownValue,
+                                          onChanged: disableInteractions
+                                              ? null
+                                              : (value) =>
+                                                  onTypeChanged?.call(entry, value),
+                                          isExpanded: true,
+                                          itemHeight: null,
+                                          menuMaxHeight: 360,
+                                          dropdownColor: const Color(0xFFF8FAFF),
+                                          borderRadius: BorderRadius.circular(18),
+                                          selectedItemBuilder: (context) =>
+                                              buildSelectedItems(),
+                                          hint: Text(
+                                            l.contractWorkContractTypeHint,
+                                            style: hintStyle,
+                                          ),
+                                          decoration: InputDecoration(
+                                            prefixIcon: const Icon(
+                                              Icons.assignment_rounded,
+                                              color: Color(0xFF1D4ED8),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              vertical: 18,
+                                              horizontal: 12,
+                                            ),
+                                            filled: true,
+                                            fillColor: const Color(0xFFF8FAFF),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE0E7FF),
+                                              ),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE0E7FF),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF2563EB),
+                                                width: 1.4,
+                                              ),
+                                            ),
+                                            disabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE2E8F0),
+                                              ),
+                                            ),
+                                          ),
+                                          items: buildDropdownItems(),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  items: buildDropdownItems(),
-                                ),
+                                  if (removeCallback != null) ...[
+                                    const SizedBox(width: 12),
+                                    IconButton(
+                                      onPressed: removeCallback,
+                                      icon: const Icon(Icons.close_rounded),
+                                      tooltip: MaterialLocalizations.of(context)
+                                          .deleteButtonTooltip,
+                                      visualDensity: VisualDensity.compact,
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: const Color(0xFFE2E8F0),
+                                        foregroundColor: const Color(0xFF1F2937),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                              if (removeCallback != null) ...[
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  onPressed: removeCallback,
-                                  icon: const Icon(Icons.close_rounded),
-                                  tooltip: MaterialLocalizations.of(context)
-                                      .deleteButtonTooltip,
-                                  visualDensity: VisualDensity.compact,
+                              const SizedBox(height: 16),
+                              Text(
+                                l.contractWorkUnitsLabel,
+                                style: labelStyle,
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: entry.controller,
+                                enabled: !disableInteractions,
+                                validator: (value) =>
+                                    bundleUnitsValidator(entry, value),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: false),
+                                decoration: InputDecoration(
+                                  hintText: l.contractWorkUnitsHint,
+                                  hintStyle: hintStyle,
+                                  prefixIcon: const Icon(
+                                    Icons.inventory_2_outlined,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                  suffixIcon: Padding(
+                                    padding: const EdgeInsets.only(
+                                        right: 12, top: 12, bottom: 12),
+                                    child: _ContractUnitBadge(label: unitLabel),
+                                  ),
+                                  suffixIconConstraints: const BoxConstraints(
+                                    minHeight: 0,
+                                    minWidth: 0,
+                                  ),
+                                  helperText: rateHelperText,
+                                  filled: true,
+                                  fillColor: const Color(0xFFF8FAFF),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                    horizontal: 12,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE0E7FF),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE0E7FF),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2563EB),
+                                      width: 1.4,
+                                    ),
+                                  ),
+                                  disabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE2E8F0),
+                                    ),
+                                  ),
                                 ),
-                              ],
+                                onChanged: (_) => onUnitsChanged?.call(entry),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: entry.controller,
-                            enabled: !disableInteractions,
-                            validator: (value) => bundleUnitsValidator(entry, value),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: false),
-                            decoration: InputDecoration(
-                              labelText: l.contractWorkUnitsLabel,
-                              prefixIcon: const Icon(
-                                Icons.inventory_2_outlined,
-                                color: Color(0xFF2563EB),
-                              ),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.only(
-                                    right: 12, top: 12, bottom: 12),
-                                child: _ContractUnitBadge(label: unitLabel),
-                              ),
-                              suffixIconConstraints:
-                                  const BoxConstraints(minHeight: 0, minWidth: 0),
-                              helperText: rateHelperText,
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                            onChanged: (_) => onUnitsChanged?.call(entry),
-                          ),
-                        ],
+                        ),
                       ),
                     );
                   }).toList(growable: false),
