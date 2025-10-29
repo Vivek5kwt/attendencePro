@@ -22,7 +22,7 @@ abstract final class AppString {
   static const String emDash = '—';
   static const String fallbackContractItemWatermelonTitle = 'Watermelon';
   static const String fallbackContractItemWatermelonPrice =
-      'Price per Crate (\$)';
+      'Price per Crate (€)';
   static const String fallbackContractItemTitle = 'Ravanello (10 qty)';
   static const String fallbackContractItemRavanello15Title =
       'Ravanello (15 qty)';
@@ -36,14 +36,14 @@ abstract final class AppString {
   static const String fallbackContractItemPriceHigh = 'Price Per 100 Bunches';
   static const String fallbackContractItemCarrotTitle = 'Carrot';
   static const String fallbackContractItemCarrotPrice =
-      'Price per Crate (\$)';
+      'Price per Crate (€)';
   static const String fallbackContractItemOrangeTitle = 'Orange';
   static const String fallbackContractItemOrangePrice =
-      'Price per Crate (\$)';
+      'Price per Crate (€)';
   static const String fallbackSummaryHours = '156.5h';
-  static const String fallbackSummarySalary = '\$1950';
-  static const String fallbackSummaryHourly = '\$956';
-  static const String fallbackSummaryContract = '\$994';
+  static const String fallbackSummarySalary = '€1950';
+  static const String fallbackSummaryHourly = '€956';
+  static const String fallbackSummaryContract = '€994';
   static const List<String> shortMonthAbbreviations = <String>[
     'Jan',
     'Feb',
@@ -318,7 +318,7 @@ abstract final class AppString {
       'workNameHint': 'Ex Restaurant, Warehouse',
       'workNameTooShortValidation': 'Work name must be at least 3 characters.',
       'hourlySalaryLabel': 'Hourly Salary',
-      'hourlySalaryHint': '\$ 0.00',
+      'hourlySalaryHint': '€ 0.00',
       'hourlyRateNegativeValidation': 'Hourly rate cannot be negative.',
       'contractWorkHeader': 'Contract Work (if have)',
       'addContractWorkButton': 'Add Contract Work',

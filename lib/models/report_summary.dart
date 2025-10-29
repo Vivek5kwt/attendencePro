@@ -40,7 +40,7 @@ class ReportSummary {
           combinedJson,
           contractJson,
         ) ??
-        '\$';
+        '€';
 
     return ReportSummary(
       combinedSalary: CombinedSalaryData.fromJson(
