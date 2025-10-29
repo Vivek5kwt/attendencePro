@@ -1220,17 +1220,24 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (!widget.work.isContract) {
       return;
     }
+    if (_contractTypes.isEmpty) {
+      return;
+    }
+    final nextTypeId = _findNextAvailableContractTypeId();
+    if (nextTypeId == null) {
+      final l = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.contractWorkAllTypesAddedMessage)),
+      );
+      return;
+    }
     setState(() {
-      final defaultTypeId =
-          _contractTypes.isNotEmpty ? _contractTypes.first.id : null;
       final entry = _ContractBundleFormEntry(
         id: _generateBundleEntryId(),
-        contractTypeId: defaultTypeId,
+        contractTypeId: nextTypeId,
       );
       _contractBundleEntries.add(entry);
-      if (_contractTypes.isNotEmpty) {
-        _resolveContractBundleSelectionAfterLoad();
-      }
+      _resolveContractBundleSelectionAfterLoad();
     });
     _handleAttendanceFieldChanged();
   }
@@ -1262,6 +1269,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   String _generateBundleEntryId() {
     _bundleEntryCounter += 1;
     return 'bundle_${DateTime.now().microsecondsSinceEpoch}_$_bundleEntryCounter';
+  }
+
+  String? _findNextAvailableContractTypeId() {
+    if (_contractTypes.isEmpty) {
+      return null;
+    }
+    final selectedIds = _contractBundleEntries
+        .map((entry) => entry.contractTypeId)
+        .whereType<String>()
+        .toSet();
+    for (final type in _contractTypes) {
+      if (!selectedIds.contains(type.id)) {
+        return type.id;
+      }
+    }
+    return null;
   }
 
   _ContractBundleFormEntry _ensurePrimaryBundleEntry({String? initialContractTypeId}) {
@@ -5265,6 +5288,12 @@ class _ContractEntryForm extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+              final selectedTypeIds = entries
+                  .map((entry) => entry.contractTypeId)
+                  .whereType<String>()
+                  .toSet();
+              final canAddMoreEntries =
+                  contractTypes.length > selectedTypeIds.length;
               ...entries.asMap().entries.map((entryMap) {
                 final entry = entryMap.value;
                 final isLast = entryMap.key == entries.length - 1;
@@ -5275,13 +5304,61 @@ class _ContractEntryForm extends StatelessWidget {
                     : l.contractWorkUnitFallback;
                 final String? rateHelperText = selectedType != null
                     ? '${l.contractWorkRateLabel}: '
-                        '${selectedType.rate.toStringAsFixed(2)} / '
-                        '${selectedType.unitLabel.trim().isNotEmpty ? selectedType.unitLabel : l.contractWorkUnitFallback}'
+                        '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
                     : null;
                 final VoidCallback? removeCallback =
                     entries.length > 1 && onRemoveEntry != null && !disableInteractions
                         ? () => onRemoveEntry!(entry)
                         : null;
+                final takenTypeIds = entries
+                    .where((other) =>
+                        other != entry && other.contractTypeId != null)
+                    .map((other) => other.contractTypeId!)
+                    .toSet();
+                List<Widget> buildSelectedItems() {
+                  return contractTypes
+                      .map((type) {
+                        final resolvedUnitLabel = type.unitLabel.trim().isNotEmpty
+                            ? type.unitLabel.trim()
+                            : l.contractWorkUnitFallback;
+                        final rateLabelText =
+                            '${l.contractWorkRateLabel}: '
+                            '${type.rate.toStringAsFixed(2)} / '
+                            '$resolvedUnitLabel';
+                        return _ContractTypeSelectedLabel(
+                          name: type.name,
+                          unitLabel: resolvedUnitLabel,
+                          rateLabel: rateLabelText,
+                        );
+                      })
+                      .toList(growable: false);
+                }
+                List<DropdownMenuItem<String>> buildDropdownItems() {
+                  return contractTypes
+                      .map((type) {
+                        final resolvedUnitLabel = type.unitLabel.trim().isNotEmpty
+                            ? type.unitLabel.trim()
+                            : l.contractWorkUnitFallback;
+                        final rateLabelText =
+                            '${l.contractWorkRateLabel}: '
+                            '${type.rate.toStringAsFixed(2)} / '
+                            '$resolvedUnitLabel';
+                        final isTypeTaken =
+                            takenTypeIds.contains(type.id) && type.id != dropdownValue;
+                        return DropdownMenuItem<String>(
+                          value: type.id,
+                          enabled: !isTypeTaken,
+                          alignment: AlignmentDirectional.topStart,
+                          child: _ContractTypeDropdownItem(
+                            name: type.name,
+                            unitLabel: resolvedUnitLabel,
+                            rateLabel: rateLabelText,
+                            isDisabled: isTypeTaken,
+                          ),
+                        );
+                      })
+                      .toList(growable: false);
+                }
 
                 return Padding(
                   padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
@@ -5302,14 +5379,7 @@ class _ContractEntryForm extends StatelessWidget {
                               menuMaxHeight: 360,
                               dropdownColor: const Color(0xFFF8FAFF),
                               borderRadius: BorderRadius.circular(18),
-                              selectedItemBuilder: (context) => contractTypes
-                                  .map(
-                                    (type) => _ContractTypeSelectedLabel(
-                                      type: type,
-                                      fallbackUnitLabel: l.contractWorkUnitFallback,
-                                    ),
-                                  )
-                                  .toList(growable: false),
+                              selectedItemBuilder: (context) => buildSelectedItems(),
                               decoration: InputDecoration(
                                 labelText: l.contractWorkContractTypeLabel,
                                 prefixIcon: const Icon(
@@ -5326,19 +5396,7 @@ class _ContractEntryForm extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(18),
                                 ),
                               ),
-                              items: contractTypes
-                                  .map(
-                                    (type) => DropdownMenuItem<String>(
-                                      value: type.id,
-                                      alignment: AlignmentDirectional.topStart,
-                                      child: _ContractTypeDropdownItem(
-                                        type: type,
-                                        fallbackUnitLabel:
-                                            l.contractWorkUnitFallback,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(growable: false),
+                              items: buildDropdownItems(),
                             ),
                           ),
                           if (removeCallback != null) ...[
@@ -5366,7 +5424,12 @@ class _ContractEntryForm extends StatelessWidget {
                             Icons.inventory_2_outlined,
                             color: Color(0xFF2563EB),
                           ),
-                          suffixText: unitLabel,
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
+                            child: _ContractUnitBadge(label: unitLabel),
+                          ),
+                          suffixIconConstraints:
+                              const BoxConstraints(minHeight: 0, minWidth: 0),
                           helperText: rateHelperText,
                           filled: true,
                           fillColor: Colors.white,
@@ -5384,10 +5447,27 @@ class _ContractEntryForm extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
-                    onPressed:
-                        disableInteractions ? null : onAddEntry,
+                    onPressed: disableInteractions || !canAddMoreEntries
+                        ? null
+                        : onAddEntry,
                     icon: const Icon(Icons.add_circle_outline),
                     label: Text(l.contractWorkAddTypeTitle),
+                  ),
+                ),
+              if (!canAddMoreEntries)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    l.contractWorkAllTypesAddedMessage,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ) ??
+                        const TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ),
             ],
@@ -5400,25 +5480,25 @@ class _ContractEntryForm extends StatelessWidget {
 
 class _ContractTypeDropdownItem extends StatelessWidget {
   const _ContractTypeDropdownItem({
-    required this.type,
-    required this.fallbackUnitLabel,
+    required this.name,
+    required this.unitLabel,
+    required this.rateLabel,
+    this.isDisabled = false,
   });
 
-  final ContractType type;
-  final String fallbackUnitLabel;
+  final String name;
+  final String unitLabel;
+  final String rateLabel;
+  final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final unitLabel =
-        type.unitLabel.trim().isNotEmpty ? type.unitLabel.trim() : fallbackUnitLabel;
-
-    final titleStyle = theme.textTheme.bodyMedium?.copyWith(
+    final nameStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
         ) ??
         const TextStyle(fontWeight: FontWeight.w600);
-
-    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+    final rateStyle = theme.textTheme.bodySmall?.copyWith(
           color: const Color(0xFF475569),
           fontWeight: FontWeight.w500,
         ) ??
@@ -5428,29 +5508,38 @@ class _ContractTypeDropdownItem extends StatelessWidget {
           fontWeight: FontWeight.w500,
         );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _ContractTypeSummary(
-              name: type.name,
-              nameStyle: titleStyle,
-              rateStyle: subtitleStyle,
+    return Opacity(
+      opacity: isDisabled ? 0.45 : 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              name,
+              style: nameStyle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Align(
-              alignment: Alignment.topRight,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: _ContractUnitBadge(label: unitLabel),
-              ),
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    rateLabel,
+                    style: rateStyle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _ContractUnitBadge(label: unitLabel),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -5458,24 +5547,22 @@ class _ContractTypeDropdownItem extends StatelessWidget {
 
 class _ContractTypeSelectedLabel extends StatelessWidget {
   const _ContractTypeSelectedLabel({
-    required this.type,
-    required this.fallbackUnitLabel,
+    required this.name,
+    required this.unitLabel,
+    required this.rateLabel,
   });
 
-  final ContractType type;
-  final String fallbackUnitLabel;
+  final String name;
+  final String unitLabel;
+  final String rateLabel;
 
   @override
   Widget build(BuildContext context) {
-    final unitLabel =
-        type.unitLabel.trim().isNotEmpty ? type.unitLabel.trim() : fallbackUnitLabel;
     final theme = Theme.of(context);
-
     final labelStyle = theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
         ) ??
         const TextStyle(fontWeight: FontWeight.w600);
-
     final detailStyle = theme.textTheme.bodySmall?.copyWith(
           color: const Color(0xFF64748B),
           fontWeight: FontWeight.w500,
@@ -5485,77 +5572,37 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         );
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _ContractTypeSummary(
-                name: type.name,
-                nameStyle: labelStyle,
-                rateStyle: detailStyle,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Align(
-                alignment: Alignment.topRight,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: _ContractUnitBadge(label: unitLabel),
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: labelStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  rateLabel,
+                  style: detailStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ContractTypeSummary extends StatelessWidget {
-  const _ContractTypeSummary({
-    required this.name,
-    this.rateLabel,
-    required this.nameStyle,
-    required this.rateStyle,
-  });
-
-  final String name;
-  final String? rateLabel;
-  final TextStyle nameStyle;
-  final TextStyle rateStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final sanitizedRateLabel = rateLabel?.trim();
-    final showRateLabel = sanitizedRateLabel != null && sanitizedRateLabel.isNotEmpty;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          name,
-          style: nameStyle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          softWrap: true,
-        ),
-        if (showRateLabel) ...[
-          const SizedBox(height: 4),
-          Text(
-            sanitizedRateLabel!,
-            style: rateStyle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            softWrap: true,
           ),
+          const SizedBox(width: 12),
+          _ContractUnitBadge(label: unitLabel),
         ],
-      ],
+      ),
     );
   }
 }

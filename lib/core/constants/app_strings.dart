@@ -143,6 +143,8 @@ abstract final class AppString {
       'contractWorkTypeDeleteFailedMessage':
           'Unable to delete contract type. Please try again.',
       'contractWorkNoEntriesLabel': 'No contract entries recorded yet.',
+      'contractWorkAllTypesAddedMessage':
+          'All contract work types are already added.',
       'contractWorkLastUpdatedLabel': 'Last updated',
       'contractWorkEditRateButton': 'Update rate',
       'contractWorkActiveTypesLabel': 'Active types',
@@ -525,6 +527,8 @@ abstract final class AppString {
       'contractWorkTypeDeleteFailedMessage':
           'कॉन्ट्रैक्ट प्रकार हटाया नहीं जा सका। कृपया पुनः प्रयास करें।',
       'contractWorkNoEntriesLabel': 'कोई कॉन्ट्रैक्ट प्रविष्टि दर्ज नहीं है।',
+      'contractWorkAllTypesAddedMessage':
+          'सभी कॉन्ट्रैक्ट कार्य प्रकार पहले से जोड़े जा चुके हैं।',
       'contractWorkLastUpdatedLabel': 'आखिरी अपडेट',
       'contractWorkEditRateButton': 'दर अपडेट करें',
       'contractWorkActiveTypesLabel': 'सक्रिय प्रकार',
@@ -907,6 +911,8 @@ abstract final class AppString {
       'contractWorkTypeDeleteFailedMessage':
           'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਈ ਨਹੀਂ ਜਾ ਸਕੀ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'contractWorkNoEntriesLabel': 'ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਐਂਟਰੀ ਰਿਕਾਰਡ ਨਹੀਂ ਹੈ।',
+      'contractWorkAllTypesAddedMessage':
+          'ਸਾਰੇ ਕਰਾਰ ਕੰਮ ਕਿਸਮਾਂ ਪਹਿਲਾਂ ਹੀ ਜੋੜੀਆਂ ਜਾ ਚੁੱਕੀਆਂ ਹਨ।',
       'contractWorkLastUpdatedLabel': 'ਆਖਰੀ ਅਪਡੇਟ',
       'contractWorkEditRateButton': 'ਦਰ ਅਪਡੇਟ ਕਰੋ',
       'contractWorkActiveTypesLabel': 'ਸਰਗਰਮ ਕਿਸਮਾਂ',
@@ -1293,6 +1299,8 @@ abstract final class AppString {
       'contractWorkTypeDeleteFailedMessage':
           'Impossibile eliminare il tipo di contratto. Riprova.',
       'contractWorkNoEntriesLabel': 'Nessuna registrazione contratto.',
+      'contractWorkAllTypesAddedMessage':
+          'Tutti i tipi di lavoro a contratto sono già stati aggiunti.',
       'contractWorkLastUpdatedLabel': 'Ultimo aggiornamento',
       'contractWorkEditRateButton': 'Aggiorna tariffa',
       'contractWorkActiveTypesLabel': 'Tipi attivi',
