@@ -1563,6 +1563,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().logout();
     if (!mounted) return;
+    context.read<WorkBloc>().add(const WorkCleared());
     final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
@@ -1583,6 +1584,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().deleteAccount();
     if (!mounted) return;
+    if (success) {
+      context.read<WorkBloc>().add(const WorkCleared());
+    }
     final message = success
         ? l.deleteAccountSuccessMessage
         : l.deleteAccountFailedMessage;
