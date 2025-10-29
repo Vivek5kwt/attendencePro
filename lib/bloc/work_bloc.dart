@@ -21,6 +21,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     on<WorkAddStatusCleared>(_onAddStatusCleared);
     on<WorkUpdateStatusCleared>(_onUpdateStatusCleared);
     on<WorkProfileRefreshed>(_onProfileRefreshed);
+    on<WorkCleared>(_onCleared);
   }
 
   final WorkRepository _repository;
@@ -446,5 +447,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         userLanguage: profile.language,
       ),
     );
+  }
+
+  void _onCleared(WorkCleared event, Emitter<WorkState> emit) {
+    emit(const WorkState());
   }
 }
