@@ -2515,7 +2515,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (rate == null) {
       return l.notAvailableLabel;
     }
-    return '${String.fromCharCode(36)}${rate.toStringAsFixed(2)}/hour';
+    return '€${rate.toStringAsFixed(2)}/hour';
   }
 
   String _resolveWorkTypeLabel(AppLocalizations l) {

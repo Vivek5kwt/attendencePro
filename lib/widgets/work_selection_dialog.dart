@@ -616,7 +616,7 @@ String _formatHourlyRate(Work work, AppLocalizations l) {
 }
 
 String _resolveCurrencySymbol(Map<String, dynamic> data) {
-  const defaultCurrency = r'$';
+  const defaultCurrency = '€';
   final dynamic value = data['currency_symbol'] ??
       data['currencySymbol'] ??
       data['currency'] ??
