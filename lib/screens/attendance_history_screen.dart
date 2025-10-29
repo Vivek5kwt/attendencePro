@@ -54,7 +54,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   bool _missingWork = false;
   bool _requiresAuthentication = false;
   String? _errorMessage;
-  String _currencySymbol = '₹';
+  String _currencySymbol = '€';
 
   int _entriesRequestId = 0;
 
@@ -168,7 +168,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       } else {
         setState(() {
           _entries.clear();
-          _currencySymbol = '₹';
+          _currencySymbol = '€';
         });
       }
     } on WorkAuthException {
@@ -185,7 +185,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _availableWorks = _buildWorkOptions(_workNames);
         _selectedWork =
             _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
       });
     } on WorkRepositoryException catch (e) {
       final l = AppLocalizations.of(context);
@@ -205,7 +205,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _availableWorks = _buildWorkOptions(_workNames);
         _selectedWork =
             _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
       });
     } catch (_) {
       final l = AppLocalizations.of(context);
@@ -222,7 +222,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _availableWorks = _buildWorkOptions(_workNames);
         _selectedWork =
             _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
       });
     }
   }
@@ -241,7 +241,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     if (_selectedWork.isEmpty) {
       setState(() {
         _entries.clear();
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
       });
       return;
     }
@@ -298,7 +298,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       }
       setState(() {
         _entries.clear();
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
         _isLoadingEntries = false;
         _requiresAuthentication = true;
       });
@@ -312,7 +312,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       }
       setState(() {
         _entries.clear();
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
         _isLoadingEntries = false;
         _errorMessage = message;
       });
@@ -323,7 +323,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       }
       setState(() {
         _entries.clear();
-        _currencySymbol = '₹';
+        _currencySymbol = '€';
         _isLoadingEntries = false;
         _errorMessage = l.attendanceHistoryLoadFailedMessage;
       });
@@ -353,7 +353,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     return AttendanceHistoryData(
       entries: entries,
       currencySymbol:
-          resolvedCurrency.trim().isNotEmpty ? resolvedCurrency : '₹',
+          resolvedCurrency.trim().isNotEmpty ? resolvedCurrency : '€',
     );
   }
 
@@ -1180,7 +1180,7 @@ class _SummaryCard extends StatelessWidget {
   }
 
   String _formatCurrency(double value) {
-    final symbol = currencySymbol.trim().isEmpty ? '₹' : currencySymbol.trim();
+    final symbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol.trim();
     return '$symbol${value.toStringAsFixed(2)}';
   }
 }
@@ -1466,7 +1466,7 @@ class _AttendanceEntryTile extends StatelessWidget {
   }
 
   String _formatCurrency(double value) {
-    final symbol = currencySymbol.trim().isEmpty ? '₹' : currencySymbol.trim();
+    final symbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol.trim();
     return '$symbol${value.toStringAsFixed(2)}';
   }
 }
