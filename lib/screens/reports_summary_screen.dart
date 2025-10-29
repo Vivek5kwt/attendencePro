@@ -2286,6 +2286,11 @@ class _MonthlyDetailValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final entriesSection = _buildEntriesSection(context);
+    if (entriesSection != null) {
+      return entriesSection;
+    }
+
     final structured = _buildFromRaw(detail.rawValue);
     if (structured != null) {
       return structured;
@@ -2297,6 +2302,374 @@ class _MonthlyDetailValue extends StatelessWidget {
     }
     return Text(fallback, style: style);
   }
+
+  Widget? _buildEntriesSection(BuildContext context) {
+    final normalizedLabel = detail.label.trim().toLowerCase();
+    if (normalizedLabel.isEmpty ||
+        (!normalizedLabel.contains('entries') &&
+            !normalizedLabel.contains('entry'))) {
+      return null;
+    }
+
+    final rawEntries = _extractEntryMaps(detail.rawValue);
+    if (rawEntries.isEmpty) {
+      return null;
+    }
+
+    final theme = Theme.of(context);
+    final headingStyle = theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        style.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        );
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF6B7280),
+        ) ??
+        style.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF6B7280),
+        );
+    final labelStyle = style.copyWith(
+      fontWeight: FontWeight.w600,
+      color: const Color(0xFF6B7280),
+    );
+    final valueStyle = style.copyWith(
+      fontWeight: FontWeight.w600,
+      color: const Color(0xFF111827),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var index = 0; index < rawEntries.length; index++)
+          _buildEntryCard(
+            entry: rawEntries[index],
+            index: index,
+            headingStyle: headingStyle,
+            subtitleStyle: subtitleStyle,
+            labelStyle: labelStyle,
+            valueStyle: valueStyle,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEntryCard({
+    required Map<String, dynamic> entry,
+    required int index,
+    required TextStyle headingStyle,
+    required TextStyle subtitleStyle,
+    required TextStyle labelStyle,
+    required TextStyle valueStyle,
+  }) {
+    final sanitized = Map<String, dynamic>.from(entry);
+
+    final headingKey = _takeMatchingKey(sanitized, _headingKeys);
+    final headingValue = headingKey != null
+        ? _stringifyPrimitive(entry[headingKey])
+        : null;
+
+    final statusKey = _takeMatchingKey(sanitized, _entryStatusKeys);
+    String? statusLabel;
+    if (statusKey != null) {
+      statusLabel = _stringifyPrimitive(entry[statusKey]);
+    }
+    statusLabel ??= _resolvePendingStatus(entry, sanitized);
+
+    for (final key in sanitized.keys.toList()) {
+      final normalized = key.toLowerCase();
+      if (_entryHiddenKeys.contains(normalized)) {
+        sanitized.remove(key);
+      }
+    }
+
+    final entryHeading = (headingValue != null && headingValue.trim().isNotEmpty)
+        ? headingValue.trim()
+        : 'Entry ${index + 1}';
+
+    final cards = <Widget>[];
+    sanitized.forEach((key, value) {
+      final indicatorColor = _resolveMetricColor(key);
+      final widget = _buildEntryValue(
+        key: key,
+        value: value,
+        labelStyle: labelStyle,
+        valueStyle: valueStyle,
+        indicatorColor: indicatorColor,
+      );
+      if (widget != null) {
+        cards.add(widget);
+      }
+    });
+
+    return Container(
+      margin: EdgeInsets.only(top: index == 0 ? 0 : 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F111827),
+            blurRadius: 16,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(entryHeading, style: headingStyle),
+              ),
+              if (statusLabel != null && statusLabel.trim().isNotEmpty)
+                _buildStatusChip(statusLabel.trim(), subtitleStyle),
+            ],
+          ),
+          if (cards.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _intersperse(cards, 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String status, TextStyle textStyle) {
+    final normalized = status.toLowerCase();
+    final color = _resolveStatusColor(normalized);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(_formatStatusLabel(status), style: textStyle.copyWith(color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget? _buildEntryValue({
+    required String key,
+    required dynamic value,
+    required TextStyle labelStyle,
+    required TextStyle valueStyle,
+    Color? indicatorColor,
+  }) {
+    if (value is Map) {
+      final nested = _buildMap(value);
+      if (nested == null) {
+        return null;
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_formatKey(key), style: labelStyle),
+          const SizedBox(height: 6),
+          nested,
+        ],
+      );
+    }
+
+    if (value is List) {
+      final nested = _buildList(value);
+      if (nested == null) {
+        return null;
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_formatKey(key), style: labelStyle),
+          const SizedBox(height: 6),
+          nested,
+        ],
+      );
+    }
+
+    final text = _stringifyPrimitive(value);
+    if (text == null || text.isEmpty) {
+      return null;
+    }
+
+    if (indicatorColor != null) {
+      return _BreakdownRow(
+        label: _formatKey(key),
+        value: text,
+        labelStyle: labelStyle,
+        valueStyle: valueStyle,
+        indicatorColor: indicatorColor,
+      );
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: valueStyle,
+        children: [
+          TextSpan(
+            text: '${_formatKey(key)}: ',
+            style: labelStyle,
+          ),
+          TextSpan(text: text),
+        ],
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _extractEntryMaps(Object? rawValue) {
+    final result = <Map<String, dynamic>>[];
+
+    void addMap(dynamic value) {
+      if (value is Map) {
+        result.add(value.map((key, dynamic v) => MapEntry(key.toString(), v)));
+      }
+    }
+
+    if (rawValue is List) {
+      for (final item in rawValue) {
+        addMap(item);
+      }
+      return result;
+    }
+
+    if (rawValue is Map) {
+      var added = false;
+      rawValue.forEach((key, value) {
+        final normalizedKey = key.toString().toLowerCase();
+        if (normalizedKey == 'entries' && value is List) {
+          for (final item in value) {
+            addMap(item);
+          }
+          added = true;
+        }
+      });
+
+      if (!added) {
+        addMap(rawValue);
+      }
+    }
+
+    return result;
+  }
+
+  String? _takeMatchingKey(Map<String, dynamic> values, Set<String> keys) {
+    for (final key in values.keys.toList()) {
+      if (keys.contains(key.toLowerCase())) {
+        values.remove(key);
+        return key;
+      }
+    }
+    return null;
+  }
+
+  String? _resolvePendingStatus(
+    Map<String, dynamic> entry,
+    Map<String, dynamic> sanitized,
+  ) {
+    for (final key in entry.keys) {
+      final normalized = key.toLowerCase();
+      if (normalized == 'is_pending' || normalized == 'pending') {
+        final value = entry[key];
+        _removeKeyIgnoreCase(sanitized, normalized);
+        if (value is bool) {
+          return value ? 'Pending' : 'Completed';
+        }
+        final text = _stringifyPrimitive(value);
+        if (text != null && text.isNotEmpty) {
+          return text;
+        }
+      }
+    }
+    return null;
+  }
+
+  void _removeKeyIgnoreCase(Map<String, dynamic> values, String target) {
+    for (final key in values.keys.toList()) {
+      if (key.toLowerCase() == target.toLowerCase()) {
+        values.remove(key);
+        break;
+      }
+    }
+  }
+
+  Color _resolveStatusColor(String status) {
+    if (status.contains('pending')) {
+      return const Color(0xFFF97316);
+    }
+    if (status.contains('approved') || status.contains('completed') || status.contains('paid')) {
+      return const Color(0xFF059669);
+    }
+    if (status.contains('rejected') || status.contains('declined')) {
+      return const Color(0xFFDC2626);
+    }
+    return const Color(0xFF2563EB);
+  }
+
+  String _formatStatusLabel(String status) {
+    if (status.trim().isEmpty) {
+      return status;
+    }
+    final words = status
+        .replaceAll(RegExp(r'[\-_]+'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((element) => element.isNotEmpty)
+        .map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .toList();
+    return words.join(' ');
+  }
+
+  Color? _resolveMetricColor(String key) {
+    final normalized = key.toLowerCase();
+    if (normalized.contains('pending')) {
+      return const Color(0xFFF97316);
+    }
+    if (normalized.contains('approved') || normalized.contains('completed') || normalized.contains('paid')) {
+      return const Color(0xFF059669);
+    }
+    if (normalized.contains('rejected') || normalized.contains('declined') || normalized.contains('failed')) {
+      return const Color(0xFFDC2626);
+    }
+    return null;
+  }
+
+  static const Set<String> _entryHiddenKeys = {
+    'id',
+    'entry_id',
+    'entryid',
+    'record_id',
+    'recordid',
+    'work_id',
+    'workid',
+  };
+
+  static const Set<String> _entryStatusKeys = {
+    'status',
+    'state',
+    'result',
+  };
 
   Widget? _buildFromRaw(Object? rawValue) {
     if (rawValue == null) {
