@@ -170,16 +170,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openContractWorkManagerFromAddDialog(
-      BuildContext dialogContext) async {
-    FocusScope.of(dialogContext).unfocus();
-    await Navigator.of(dialogContext, rootNavigator: true).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const ContractWorkScreen(),
-      ),
-    );
-  }
-
   Future<void> _openReportsSummary() async {
     Navigator.of(context).pop();
     await Future.delayed(const Duration(milliseconds: 200));
@@ -1164,79 +1154,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                   borderSide: const BorderSide(color: Color(0xFF007BFF)),
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF5EC),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                    height: 35,
-                                    width: 35,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFFFFE8D6),
-                                    ),
-                                    child: Image.asset(AppAssets.contract)
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    l.contractWorkHeader,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            GestureDetector(
-                              onTap: () =>
-                                  _openContractWorkManagerFromAddDialog(
-                                      dialogContext),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF00C6FB), Color(0xFF005BEA)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.add, color: Colors.white),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l.addContractWorkButton,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              l.contractWorkDescription,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFF784600),
                               ),
                             ),
                           ],
