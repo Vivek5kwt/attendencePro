@@ -279,6 +279,8 @@ abstract final class AppString {
       'attendanceRateRequired': 'Rate per unit is required',
       'attendanceRateInvalid': 'Enter a valid rate per unit',
       'attendanceSubmitSuccess': 'Attendance saved successfully',
+      'attendanceAlreadyMarkedMessage':
+          'Attendance already marked for today. To make changes, please use the Edit option.',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
       'attendanceMissedEntriesTitle': 'Complete pending attendance',
       'attendanceMissedEntriesDescription':
@@ -662,6 +664,8 @@ abstract final class AppString {
       'attendanceRateRequired': 'प्रति इकाई दर आवश्यक है',
       'attendanceRateInvalid': 'कृपया मान्य प्रति इकाई दर दर्ज करें',
       'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
+      'attendanceAlreadyMarkedMessage':
+          'आज की उपस्थिति पहले ही दर्ज की जा चुकी है। बदलाव करने के लिए कृपया संपादन विकल्प का उपयोग करें।',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
       'attendanceMissedEntriesTitle': 'लंबित उपस्थिति पूरी करें',
       'attendanceMissedEntriesDescription':
@@ -1042,6 +1046,8 @@ abstract final class AppString {
       'attendanceRateRequired': 'ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਲਾਜ਼ਮੀ ਹੈ',
       'attendanceRateInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਦਰਜ ਕਰੋ',
       'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
+      'attendanceAlreadyMarkedMessage':
+          'ਅੱਜ ਦੀ ਹਾਜ਼ਰੀ ਪਹਿਲਾਂ ਹੀ ਦਰਜ ਕੀਤੀ ਜਾ ਚੁੱਕੀ ਹੈ। ਤਬਦੀਲੀਆਂ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਐਡਿਟ ਵਿਕਲਪ ਵਰਤੋਂ।',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendanceMissedEntriesTitle': 'ਬਕਾਇਆ ਹਾਜ਼ਰੀ ਪੂਰੀ ਕਰੋ',
       'attendanceMissedEntriesDescription':
@@ -1429,6 +1435,8 @@ abstract final class AppString {
       'attendanceRateRequired': 'Inserisci la tariffa per unità',
       'attendanceRateInvalid': 'Inserisci una tariffa per unità valida',
       'attendanceSubmitSuccess': 'Presenza salvata con successo',
+      'attendanceAlreadyMarkedMessage':
+          'Presenza già registrata per oggi. Per apportare modifiche, usa l\'opzione Modifica.',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
       'attendanceMissedEntriesTitle': 'Completa le presenze in sospeso',
       'attendanceMissedEntriesDescription':

@@ -322,6 +322,8 @@ class AppLocalizations {
   String get attendanceRateRequired => _value('attendanceRateRequired');
   String get attendanceRateInvalid => _value('attendanceRateInvalid');
   String get attendanceSubmitSuccess => _value('attendanceSubmitSuccess');
+  String get attendanceAlreadyMarkedMessage =>
+      _value('attendanceAlreadyMarkedMessage');
   String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
   String get attendanceMissedEntriesTitle =>
       _value('attendanceMissedEntriesTitle');
