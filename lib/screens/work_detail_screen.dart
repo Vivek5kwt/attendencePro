@@ -33,36 +33,30 @@ const List<int> _timeHourOptions = <int>[
 
 const List<int> _timeMinuteOptions = <int>[
   0,
-  5,
-  10,
   15,
-  20,
-  25,
   30,
-  35,
-  40,
   45,
-  50,
-  55,
 ];
 
-const List<int> _breakDurationOptions = <int>[
-  0,
-  5,
-  10,
-  15,
-  20,
-  25,
-  30,
-  35,
-  40,
-  45,
-  50,
-  55,
-  60,
-];
+const List<int> _breakHourOptions = <int>[0, 1, 2, 3, 4, 5, 6, 7, 8];
 
-const List<int> _breakHourOptions = <int>[0, 1];
+const List<int> _breakMinuteOptions = <int>[0, 30, 40, 50, 20, 10];
+
+List<int> _generateBreakDurationOptions() {
+  final values = <int>[];
+  final seen = <int>{};
+  for (final hour in _breakHourOptions) {
+    for (final minute in _breakMinuteOptions) {
+      final totalMinutes = (hour * 60) + minute;
+      if (seen.add(totalMinutes)) {
+        values.add(totalMinutes);
+      }
+    }
+  }
+  return values;
+}
+
+final List<int> _breakDurationOptions = _generateBreakDurationOptions();
 
 List<_TimeDropdownOption> _generateTimeDropdownOptions() {
   final options = <_TimeDropdownOption>[];
@@ -124,12 +118,13 @@ List<int> _buildMinuteOptions(int selectedMinute) {
 }
 
 List<int> _breakMinutesForHour(int hour) {
-  final minutes = _breakDurationOptions
-      .where((value) => value ~/ 60 == hour)
-      .map((value) => value % 60)
-      .toSet()
-      .toList()
-    ..sort();
+  final minutes = <int>[];
+  for (final minute in _breakMinuteOptions) {
+    final totalMinutes = (hour * 60) + minute;
+    if (_breakDurationOptions.contains(totalMinutes)) {
+      minutes.add(minute);
+    }
+  }
   return minutes.isEmpty ? <int>[0] : minutes;
 }
 
