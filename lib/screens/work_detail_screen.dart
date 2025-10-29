@@ -5039,7 +5039,6 @@ class _ContractEntryForm extends StatelessWidget {
                                   .map(
                                     (type) => DropdownMenuItem<String>(
                                       value: type.id,
-                                      height: null,
                                       alignment: AlignmentDirectional.topStart,
                                       child: _ContractTypeDropdownItem(
                                         type: type,
