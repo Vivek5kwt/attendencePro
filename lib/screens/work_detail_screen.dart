@@ -272,7 +272,7 @@ Widget _buildTimeDropdownField({
     decoration: InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
       prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
@@ -315,7 +315,7 @@ Widget _buildBreakDropdownField({
     decoration: InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
       prefixIcon: Icon(icon, color: const Color(0xFFF59E0B)),
@@ -3280,26 +3280,48 @@ class _MissedAttendanceCompletionSheetState
               return null;
             },
           ),
-          const SizedBox(height: 8),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              l.markAsWorkOffButton,
-              style: Theme.of(context).textTheme.bodyMedium,
+          const SizedBox(height: 16),
+          _DashedBorderCard(
+            borderColor: const Color(0xFF2563EB),
+            backgroundColor: const Color(0xFFF5F9FF),
+            radius: 18,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l.markAsWorkOffButton,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1D4ED8),
+                          ) ??
+                          const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: Color(0xFF1D4ED8),
+                          ),
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: data.isLeave,
+                    activeColor: const Color(0xFF2563EB),
+                    onChanged: _isSubmitting
+                        ? null
+                        : (value) {
+                            setState(() {
+                              data.isLeave = value;
+                              if (value) {
+                                data.startTimeController.clear();
+                                data.endTimeController.clear();
+                                data.breakMinutesController.text = '0';
+                              }
+                            });
+                          },
+                  ),
+                ],
+              ),
             ),
-            value: data.isLeave,
-            onChanged: _isSubmitting
-                ? null
-                : (value) {
-                    setState(() {
-                      data.isLeave = value;
-                      if (value) {
-                        data.startTimeController.clear();
-                        data.endTimeController.clear();
-                        data.breakMinutesController.text = '0';
-                      }
-                    });
-                  },
           ),
         ],
       ),
@@ -4378,7 +4400,7 @@ class _AttendanceSection extends StatelessWidget {
                       const SizedBox(width: 10),
                       _buildSegmentDivider(),
                       const SizedBox(width: 10),
-                      SizedBox(width: 82, child: periodSegment),
+                      SizedBox(width: 70, child: periodSegment),
                     ],
                   );
                 }
@@ -4397,9 +4419,11 @@ class _AttendanceSection extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: periodSegment,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 70, child: periodSegment),
+                        ],
                       ),
                     ],
                   );
