@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../models/contract_type.dart';
+import '../utils/contract_type_normalizer.dart';
 import 'auth_api.dart';
 import 'logging_client.dart';
 
@@ -55,9 +56,10 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
+    final normalizedSubtype = normalizeContractSubtype(subtype);
     final payload = jsonEncode({
       'name': name,
-      'type': subtype,
+      'type': normalizedSubtype,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
@@ -95,9 +97,10 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
+    final normalizedSubtype = normalizeContractSubtype(subtype);
     final payload = jsonEncode({
       'name': name,
-      'type': subtype,
+      'type': normalizedSubtype,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
