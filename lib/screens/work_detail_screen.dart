@@ -359,6 +359,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   int _bundleEntryCounter = 0;
   bool _contractFieldsEnabled = false;
   bool _markAsWorkOff = false;
+  bool _isTodayAttendanceMarked = false;
   String? _previousStartTime;
   String? _previousEndTime;
   String? _previousBreakMinutes;
@@ -769,6 +770,37 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _markAsWorkOff = shouldWorkOff;
       }
     }
+  }
+
+  bool _hasMarkedAttendanceForToday(DashboardAttendanceEntry? entry) {
+    if (entry == null) {
+      return false;
+    }
+    final today = _normalizeDateOnly(DateTime.now());
+    final candidates = <String?>[
+      entry.dateText,
+      entry.raw['date']?.toString(),
+      entry.raw['entry_date']?.toString(),
+      entry.raw['entryDate']?.toString(),
+      entry.raw['attendance_date']?.toString(),
+      entry.raw['attendanceDate']?.toString(),
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate == null) {
+        continue;
+      }
+      final trimmed = candidate.trim();
+      if (trimmed.isEmpty) {
+        continue;
+      }
+      final parsed = _parseDateText(trimmed);
+      if (parsed != null) {
+        return _normalizeDateOnly(parsed) == today;
+      }
+    }
+
+    return true;
   }
 
   Future<void> _refreshMissedAttendance({bool showDialog = false}) async {
@@ -1503,6 +1535,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _handleAttendanceFieldChanged();
   }
 
+  void _handleWorkOffLockedTap() {
+    if (!mounted) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(content: Text(l.attendanceAlreadyMarkedMessage)),
+    );
+  }
+
   Future<void> _openContractWorkManager() async {
     if (!mounted) {
       return;
@@ -1792,6 +1836,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
+        if (mounted) {
+          setState(() {
+            _isTodayAttendanceMarked = true;
+          });
+        } else {
+          _isTodayAttendanceMarked = true;
+        }
         await _loadSummary();
         await _refreshMissedAttendance(showDialog: false);
       } on AttendanceAuthException {
@@ -1966,6 +2017,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
+      if (mounted) {
+        setState(() {
+          _isTodayAttendanceMarked = true;
+        });
+      } else {
+        _isTodayAttendanceMarked = true;
+      }
       await _loadSummary();
       await _refreshMissedAttendance(showDialog: false);
     } on AttendanceAuthException {
@@ -2263,6 +2321,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       setState(() {
         _dashboardSummary = summary;
         _isSummaryLoading = false;
+        _isTodayAttendanceMarked =
+            _hasMarkedAttendanceForToday(summary.todayEntry);
       });
       _applyAttendanceDetailsFromSummary(summary.todayEntry);
       await _refreshMissedAttendance(showDialog: true);
@@ -2470,6 +2530,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 breakMinutesController: _breakMinutesController,
                 onSubmit: _submitAttendance,
                 onWorkOffSubmit: _submitWorkOffAttendance,
+                isWorkOffLocked: _isTodayAttendanceMarked,
+                onWorkOffLockedTap: _handleWorkOffLockedTap,
                 onFieldChanged: _handleAttendanceFieldChanged,
                 isSubmitting: _isSubmittingAttendance,
                 isWorkOff: _markAsWorkOff,
@@ -3653,6 +3715,8 @@ class _AttendanceSection extends StatelessWidget {
     required this.breakMinutesController,
     required this.onSubmit,
     this.onWorkOffSubmit,
+    this.isWorkOffLocked = false,
+    this.onWorkOffLockedTap,
     required this.onFieldChanged,
     required this.isSubmitting,
     required this.isWorkOff,
@@ -3690,6 +3754,8 @@ class _AttendanceSection extends StatelessWidget {
   final TextEditingController breakMinutesController;
   final VoidCallback onSubmit;
   final VoidCallback? onWorkOffSubmit;
+  final bool isWorkOffLocked;
+  final VoidCallback? onWorkOffLockedTap;
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
   final bool isWorkOff;
@@ -4014,7 +4080,12 @@ class _AttendanceSection extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildWorkOffButton(context, l),
+          _buildWorkOffButton(
+            context,
+            l,
+            isLocked: isWorkOffLocked,
+            onLockedTap: onWorkOffLockedTap,
+          ),
           if (submitButton != null) ...[
             const SizedBox(height: 12),
             submitButton,
@@ -4033,7 +4104,12 @@ class _AttendanceSection extends StatelessWidget {
               _buildContractWorkButton(context, l),
               if (hasWorkOffButton) ...[
                 const SizedBox(height: 12),
-                _buildWorkOffButton(context, l),
+                _buildWorkOffButton(
+                  context,
+                  l,
+                  isLocked: isWorkOffLocked,
+                  onLockedTap: onWorkOffLockedTap,
+                ),
               ],
               if (submitButton != null) ...[
                 const SizedBox(height: 12),
@@ -4048,7 +4124,14 @@ class _AttendanceSection extends StatelessWidget {
             Expanded(child: _buildContractWorkButton(context, l)),
             if (hasWorkOffButton) ...[
               const SizedBox(width: 12),
-              Expanded(child: _buildWorkOffButton(context, l)),
+              Expanded(
+                child: _buildWorkOffButton(
+                  context,
+                  l,
+                  isLocked: isWorkOffLocked,
+                  onLockedTap: onWorkOffLockedTap,
+                ),
+              ),
             ],
             if (submitButton != null) ...[
               const SizedBox(width: 12),
@@ -4090,9 +4173,14 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildWorkOffButton(BuildContext context, AppLocalizations l) {
+  Widget _buildWorkOffButton(
+    BuildContext context,
+    AppLocalizations l, {
+    required bool isLocked,
+    VoidCallback? onLockedTap,
+  }) {
     final baseColor = const Color(0xFF2563EB);
-    final isEnabled = !isSubmitting && onWorkOffSubmit != null;
+    final isEnabled = !isSubmitting && onWorkOffSubmit != null && !isLocked;
     final textStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w700,
           color: isEnabled ? baseColor : baseColor.withOpacity(0.4),
@@ -4115,7 +4203,9 @@ class _AttendanceSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: isEnabled ? onWorkOffSubmit : null,
+            onTap: isEnabled
+                ? onWorkOffSubmit
+                : (isLocked ? onLockedTap : null),
             child: Center(
               child: Text(
                 l.markAsWorkOffButton,
