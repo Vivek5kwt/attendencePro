@@ -4288,16 +4288,6 @@ class _AttendanceSection extends StatelessWidget {
     required bool enabled,
     required VoidCallback onValueChanged,
   }) {
-    const placeholderStyle = TextStyle(
-      color: Color(0xFF94A3B8),
-      fontSize: 14,
-      fontWeight: FontWeight.w600,
-    );
-    const valueStyle = TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w700,
-      color: Color(0xFF0F172A),
-    );
     const errorStyle = TextStyle(
       color: Color(0xFFDC2626),
       fontSize: 12,
@@ -4343,7 +4333,28 @@ class _AttendanceSection extends StatelessWidget {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                final spacing = constraints.maxWidth < 360 ? 8.0 : 10.0;
+                final isNarrow = constraints.maxWidth < 360;
+                final isVeryNarrow = constraints.maxWidth < 320;
+                final spacing = isVeryNarrow ? 6.0 : (isNarrow ? 8.0 : 10.0);
+                final placeholderStyle = TextStyle(
+                  color: const Color(0xFF94A3B8),
+                  fontSize: isVeryNarrow ? 12 : (isNarrow ? 13 : 14),
+                  fontWeight: FontWeight.w600,
+                );
+                final valueStyle = TextStyle(
+                  fontSize: isVeryNarrow ? 14 : (isNarrow ? 15 : 16),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                );
+                final segmentPadding = EdgeInsets.symmetric(
+                  horizontal: isVeryNarrow ? 8 : (isNarrow ? 10 : 12),
+                  vertical: isVeryNarrow ? 6 : 8,
+                );
+                final borderRadius = isVeryNarrow ? 12.0 : 14.0;
+                final iconSize = isVeryNarrow ? 18.0 : (isNarrow ? 20.0 : 24.0);
+                final dividerHeight = isVeryNarrow ? 32.0 : 38.0;
+                final colonFontSize = isVeryNarrow ? 16.0 : 20.0;
+
                 final hourSegment = _buildSelectorSegment<int>(
                   value: selectedHour,
                   placeholder: 'HH',
@@ -4370,6 +4381,10 @@ class _AttendanceSection extends StatelessWidget {
                         }
                       : null,
                   placeholderStyle: placeholderStyle,
+                  valueStyle: valueStyle,
+                  padding: segmentPadding,
+                  borderRadius: borderRadius,
+                  iconSize: iconSize,
                   dropdownKey: ValueKey('hour-${selectedHour ?? 'null'}'),
                 );
 
@@ -4399,6 +4414,10 @@ class _AttendanceSection extends StatelessWidget {
                         }
                       : null,
                   placeholderStyle: placeholderStyle,
+                  valueStyle: valueStyle,
+                  padding: segmentPadding,
+                  borderRadius: borderRadius,
+                  iconSize: iconSize,
                   dropdownKey: ValueKey(
                     'minute-${parsedTime?.hour ?? 'null'}-${minuteOptions.length}',
                   ),
@@ -4432,6 +4451,10 @@ class _AttendanceSection extends StatelessWidget {
                         }
                       : null,
                   placeholderStyle: placeholderStyle,
+                  valueStyle: valueStyle,
+                  padding: segmentPadding,
+                  borderRadius: borderRadius,
+                  iconSize: iconSize,
                   dropdownKey: ValueKey('period-${selectedPeriod ?? 'null'}'),
                 );
 
@@ -4441,15 +4464,21 @@ class _AttendanceSection extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(child: periodSegment),
-                        SizedBox(width: spacing),
-                        _buildSegmentDivider(showColon: false),
-                        SizedBox(width: spacing),
                         Expanded(child: hourSegment),
                         SizedBox(width: spacing),
-                        _buildSegmentDivider(),
+                        _buildSegmentDivider(
+                          height: dividerHeight,
+                          colonFontSize: colonFontSize,
+                        ),
                         SizedBox(width: spacing),
                         Expanded(child: minuteSegment),
+                        SizedBox(width: spacing),
+                        _buildSegmentDivider(
+                          showColon: false,
+                          height: dividerHeight,
+                        ),
+                        SizedBox(width: spacing),
+                        Expanded(child: periodSegment),
                       ],
                     ),
                     if (field.hasError)
@@ -4476,16 +4505,6 @@ class _AttendanceSection extends StatelessWidget {
     required bool enabled,
     required VoidCallback onValueChanged,
   }) {
-    const placeholderStyle = TextStyle(
-      color: Color(0xFF94A3B8),
-      fontSize: 14,
-      fontWeight: FontWeight.w600,
-    );
-    const valueStyle = TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w700,
-      color: Color(0xFF0F172A),
-    );
     const labelStyle = TextStyle(
       color: Color(0xFF64748B),
       fontWeight: FontWeight.w600,
@@ -4508,18 +4527,6 @@ class _AttendanceSection extends StatelessWidget {
             final parsed = int.tryParse(trimmed);
             final selectedHour = parsed != null ? parsed ~/ 60 : null;
             final selectedMinute = parsed != null ? parsed % 60 : null;
-
-            final hourItems = _breakHourOptions
-                .map(
-                  (hour) => DropdownMenuItem<int>(
-                    value: hour,
-                    child: Text(
-                      hour.toString().padLeft(2, '0'),
-                      style: valueStyle,
-                    ),
-                  ),
-                )
-                .toList();
 
             final resolvedHour = (selectedHour != null &&
                     _breakHourOptions.contains(selectedHour))
@@ -4547,6 +4554,35 @@ class _AttendanceSection extends StatelessWidget {
             return LayoutBuilder(
               builder: (context, constraints) {
                 final isNarrow = constraints.maxWidth < 320;
+                final placeholderStyle = TextStyle(
+                  color: const Color(0xFF94A3B8),
+                  fontSize: isNarrow ? 12 : 14,
+                  fontWeight: FontWeight.w600,
+                );
+                final valueStyle = TextStyle(
+                  fontSize: isNarrow ? 14 : 16,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                );
+                final segmentPadding = EdgeInsets.symmetric(
+                  horizontal: isNarrow ? 8 : 12,
+                  vertical: isNarrow ? 6 : 8,
+                );
+                final borderRadius = isNarrow ? 12.0 : 14.0;
+                final iconSize = isNarrow ? 18.0 : 24.0;
+                final dividerHeight = isNarrow ? 32.0 : 38.0;
+
+                final hourItems = _breakHourOptions
+                    .map(
+                      (hour) => DropdownMenuItem<int>(
+                        value: hour,
+                        child: Text(
+                          hour.toString().padLeft(2, '0'),
+                          style: valueStyle,
+                        ),
+                      ),
+                    )
+                    .toList();
 
                 final hourSegment = _buildSelectorSegment<int>(
                   value: resolvedHour,
@@ -4565,6 +4601,10 @@ class _AttendanceSection extends StatelessWidget {
                         }
                       : null,
                   placeholderStyle: placeholderStyle,
+                  valueStyle: valueStyle,
+                  padding: segmentPadding,
+                  borderRadius: borderRadius,
+                  iconSize: iconSize,
                   dropdownKey: const ValueKey('break-hour'),
                 );
 
@@ -4596,6 +4636,10 @@ class _AttendanceSection extends StatelessWidget {
                         }
                       : null,
                   placeholderStyle: placeholderStyle,
+                  valueStyle: valueStyle,
+                  padding: segmentPadding,
+                  borderRadius: borderRadius,
+                  iconSize: iconSize,
                   dropdownKey: ValueKey(
                     'break-minute-${resolvedHour ?? 'null'}-${minutesForHour.length}',
                   ),
@@ -4609,7 +4653,10 @@ class _AttendanceSection extends StatelessWidget {
                       const SizedBox(width: 8),
                       const Text('hr', style: labelStyle),
                       const SizedBox(width: 14),
-                      _buildSegmentDivider(showColon: false),
+                      _buildSegmentDivider(
+                        showColon: false,
+                        height: dividerHeight,
+                      ),
                       const SizedBox(width: 14),
                       SizedBox(width: 70, child: minuteSegment),
                       const SizedBox(width: 8),
@@ -4669,13 +4716,20 @@ class _AttendanceSection extends StatelessWidget {
     required String placeholder,
     required ValueChanged<T?>? onChanged,
     required TextStyle placeholderStyle,
+    required TextStyle valueStyle,
+    EdgeInsetsGeometry? padding,
+    double? borderRadius,
+    double? iconSize,
     Key? dropdownKey,
   }) {
+    final resolvedPadding = padding ?? const EdgeInsets.symmetric(horizontal: 12);
+    final resolvedRadius = borderRadius ?? 14.0;
+    final resolvedIconSize = iconSize ?? 24.0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: resolvedPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(resolvedRadius),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: DropdownButtonHideUnderline(
@@ -4683,34 +4737,35 @@ class _AttendanceSection extends StatelessWidget {
           key: dropdownKey,
           value: value,
           isExpanded: true,
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: Color(0xFF2563EB),
+            color: const Color(0xFF2563EB),
+            size: resolvedIconSize,
           ),
           hint: Text(placeholder, style: placeholderStyle),
           items: items,
           onChanged: onChanged,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
-          ),
+          style: valueStyle,
         ),
       ),
     );
   }
 
-  Widget _buildSegmentDivider({bool showColon = true}) {
+  Widget _buildSegmentDivider({
+    bool showColon = true,
+    double height = 38,
+    double colonFontSize = 20,
+  }) {
     if (showColon) {
       return SizedBox(
         width: 14,
         child: Center(
           child: Text(
             ':',
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: colonFontSize,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFCBD5F5),
+              color: const Color(0xFFCBD5F5),
             ),
           ),
         ),
@@ -4718,7 +4773,7 @@ class _AttendanceSection extends StatelessWidget {
     }
     return Container(
       width: 1,
-      height: 38,
+      height: height,
       color: const Color(0xFFE2E8F0),
     );
   }
@@ -5743,31 +5798,35 @@ class _AttendanceTimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final fontScale = (screenWidth / 375).clamp(1.0, 1.08).toDouble();
+    final paddingScale = (screenWidth / 375).clamp(0.9, 1.1).toDouble();
+
     final labelStyle = TextStyle(
-      fontSize: isCompact ? 12 : 14,
+      fontSize: (isCompact ? 13.0 : 16.0) * fontScale,
       fontWeight: FontWeight.w700,
       color: const Color(0xFF1F2937),
     );
     final inputTextStyle = TextStyle(
-      fontSize: isCompact ? 15 : 18,
+      fontSize: (isCompact ? 16.0 : 19.0) * fontScale,
       fontWeight: FontWeight.w700,
       color: const Color(0xFF0F172A),
     );
     final hintTextStyle = TextStyle(
       color: const Color(0xFF94A3B8),
-      fontSize: isCompact ? 13 : 16,
+      fontSize: (isCompact ? 14.0 : 17.0) * fontScale,
       fontWeight: FontWeight.w600,
     );
     final cardPadding = EdgeInsets.symmetric(
-      horizontal: isCompact ? 12 : 20,
-      vertical: isCompact ? 14 : 20,
+      horizontal: (isCompact ? 12.0 : 20.0) * paddingScale,
+      vertical: (isCompact ? 14.0 : 20.0) * paddingScale,
     );
     final fieldPadding = EdgeInsets.symmetric(
-      horizontal: isCompact ? 10 : 14,
-      vertical: isCompact ? 8 : 12,
+      horizontal: (isCompact ? 10.0 : 14.0) * paddingScale,
+      vertical: (isCompact ? 8.0 : 12.0) * paddingScale,
     );
-    final fieldRadius = BorderRadius.circular(isCompact ? 16 : 20);
-    final titleSpacing = SizedBox(height: isCompact ? 10 : 16);
+    final fieldRadius = BorderRadius.circular((isCompact ? 16.0 : 20.0) * paddingScale);
+    final titleSpacing = SizedBox(height: (isCompact ? 10.0 : 16.0) * paddingScale);
     final boxShadow = [
       BoxShadow(
         color: accentColor.withOpacity(0.08),
