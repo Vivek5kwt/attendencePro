@@ -2116,41 +2116,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     final card = Material(
-        color: Colors.transparent,
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(28),
+      elevation: 0,
+      child: InkWell(
+        onTap: (isDeleting || isActivating)
+            ? null
+            : () => _openWorkDetail(work),
+        onLongPress: (isDeleting || isActivating)
+            ? null
+            : () => _showEditWorkDialog(work),
         borderRadius: BorderRadius.circular(28),
-        elevation: 0,
-        child: InkWell(
-          onTap:
-          (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
-          onLongPress:
-          (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
-          borderRadius: BorderRadius.circular(28),
+        splashFactory: NoSplash.splashFactory,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        overlayColor: MaterialStateProperty.resolveWith<Color?>(
+          (states) {
+            if (states.contains(MaterialState.pressed)) {
+              return accentColor.withOpacity(0.12);
+            }
+            return Colors.transparent;
+          },
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          padding: const EdgeInsets.all(2.4),
           child: Container(
             decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(28),
-            ),
-            padding: const EdgeInsets.all(2.4),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isActive
-                      ? const Color(0xFF34D399)
-                      : accentColor.withOpacity(0.18),
-                  width: isActive ? 1.5 : 1.1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withOpacity(0.08),
-                    blurRadius: 22,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isActive
+                    ? const Color(0xFF34D399)
+                    : accentColor.withOpacity(0.18),
+                width: isActive ? 1.5 : 1.1,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: LayoutBuilder(
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withOpacity(0.08),
+                  blurRadius: 22,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isCompact = constraints.maxWidth < 520;
                   final disableActions = isDeleting || isActivating;
@@ -2798,6 +2812,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: item.onTap,
+      splashFactory: NoSplash.splashFactory,
+      hoverColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      overlayColor: MaterialStateProperty.resolveWith<Color?>(
+        (states) {
+          if (states.contains(MaterialState.pressed)) {
+            return item.backgroundColor.withOpacity(0.16);
+          }
+          return Colors.transparent;
+        },
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
@@ -2812,15 +2838,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(
                 child: item.assetPath != null
                     ? Image.asset(
-                  item.assetPath!,
-                  width: 24,
-                  height: 24,
-                )
+                        item.assetPath!,
+                        width: 24,
+                        height: 24,
+                      )
                     : Icon(
-                  item.icon!,
-                  color: item.iconColor,
-                  size: 24,
-                ),
+                        item.icon!,
+                        color: item.iconColor,
+                        size: 24,
+                      ),
               ),
             ),
             const SizedBox(width: 16),
