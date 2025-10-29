@@ -7,6 +7,7 @@ import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
 import '../bloc/work_state.dart';
+import '../models/monthly_report.dart';
 import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/reports_repository.dart';
@@ -54,6 +55,12 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   int _summaryRequestId = 0;
   bool _missingWork = false;
   String? _selectedWorkId;
+  MonthlyReportType _selectedMonthlyType = MonthlyReportType.hourly;
+  MonthlyReport? _monthlyReport;
+  bool _isLoadingMonthlyReport = false;
+  String? _monthlyReportError;
+  int _monthlyRequestId = 0;
+  bool _hasAttemptedMonthlyReportLoad = false;
 
   @override
   void initState() {
@@ -130,6 +137,10 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         _missingWork = true;
         _isLoadingSummary = false;
         _selectedWorkId = null;
+        _monthlyReport = null;
+        _monthlyReportError = null;
+        _isLoadingMonthlyReport = false;
+        _hasAttemptedMonthlyReportLoad = false;
       });
       return;
     }
@@ -141,6 +152,8 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       _missingWork = false;
       _selectedWorkId = selectedWork.id;
     });
+
+    _loadMonthlyReport(targetDate: targetDate, work: selectedWork);
 
     try {
       final repository = context.read<ReportsRepository>();
@@ -182,6 +195,86 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         _isLoadingSummary = false;
       });
     }
+  }
+
+  Future<void> _loadMonthlyReport({
+    required DateTime targetDate,
+    required Work work,
+  }) async {
+    final l = AppLocalizations.of(context);
+    final requestId = ++_monthlyRequestId;
+    final fallbackUserId = _resolveUserIdFromWork(work);
+
+    setState(() {
+      _isLoadingMonthlyReport = true;
+      _monthlyReportError = null;
+      _hasAttemptedMonthlyReportLoad = true;
+    });
+
+    try {
+      final repository = context.read<ReportsRepository>();
+      final report = await repository.fetchMonthlyReport(
+        month: targetDate.month,
+        year: targetDate.year,
+        type: _selectedMonthlyType,
+        fallbackUserId: fallbackUserId,
+      );
+      if (!mounted || requestId != _monthlyRequestId) {
+        return;
+      }
+      setState(() {
+        _monthlyReport = report;
+        _monthlyReportError = null;
+        _isLoadingMonthlyReport = false;
+      });
+    } on ReportsRepositoryException catch (e) {
+      if (!mounted || requestId != _monthlyRequestId) {
+        return;
+      }
+      final trimmed = e.message.trim();
+      final message = (trimmed.isEmpty ||
+              trimmed == 'Unable to determine user for monthly report.')
+          ? l.reportsLoadFailedMessage
+          : trimmed;
+      setState(() {
+        _monthlyReport = null;
+        _monthlyReportError = message;
+        _isLoadingMonthlyReport = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _monthlyRequestId) {
+        return;
+      }
+      setState(() {
+        _monthlyReport = null;
+        _monthlyReportError = l.reportsLoadFailedMessage;
+        _isLoadingMonthlyReport = false;
+      });
+    }
+  }
+
+  void _retryMonthlyReport() {
+    final targetDate = _parseMonth(_selectedMonth) ?? DateTime.now();
+    final selectedWork = _resolveSelectedWork(context.read<WorkBloc>().state);
+    if (selectedWork == null) {
+      return;
+    }
+    _loadMonthlyReport(targetDate: targetDate, work: selectedWork);
+  }
+
+  void _onMonthlyTypeSelected(MonthlyReportType type) {
+    if (type == _selectedMonthlyType) {
+      return;
+    }
+    setState(() {
+      _selectedMonthlyType = type;
+    });
+    final targetDate = _parseMonth(_selectedMonth) ?? DateTime.now();
+    final selectedWork = _resolveSelectedWork(context.read<WorkBloc>().state);
+    if (selectedWork == null) {
+      return;
+    }
+    _loadMonthlyReport(targetDate: targetDate, work: selectedWork);
   }
 
   Future<void> _handleChangeWork(List<Work> works) async {
@@ -235,6 +328,86 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     }
 
     return _findActiveWorkFromState(state);
+  }
+
+  String? _resolveUserIdFromWork(Work work) {
+    final data = work.additionalData;
+    const candidateKeys = [
+      'user_id',
+      'userId',
+      'owner_id',
+      'ownerId',
+      'employee_id',
+      'employeeId',
+    ];
+
+    for (final key in candidateKeys) {
+      final value = data[key];
+      if (value == null) {
+        continue;
+      }
+      if (value is int) {
+        return value.toString();
+      }
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isNotEmpty) {
+          return trimmed;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  Widget _buildMonthlyReportSection({
+    required AppLocalizations localization,
+    required String selectedMonthLabel,
+    required String currencySymbol,
+  }) {
+    if (_missingWork || !_hasAttemptedMonthlyReportLoad) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+    final typeLabel = _selectedMonthlyType == MonthlyReportType.fixed
+        ? localization.reportsMonthlyTypeFixed
+        : localization.reportsMonthlyTypeHourly;
+    final subtitleStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        _SectionTitle(text: localization.reportsMonthlySectionTitle),
+        const SizedBox(height: 6),
+        Text('$selectedMonthLabel • $typeLabel', style: subtitleStyle),
+        const SizedBox(height: 12),
+        _MonthlyTypeSelector(
+          selectedType: _selectedMonthlyType,
+          hourlyLabel: localization.reportsMonthlyTypeHourly,
+          fixedLabel: localization.reportsMonthlyTypeFixed,
+          onSelected: _onMonthlyTypeSelected,
+        ),
+        const SizedBox(height: 16),
+        _MonthlyReportContainer(
+          isLoading: _isLoadingMonthlyReport,
+          error: _monthlyReportError,
+          report: _monthlyReport,
+          currencySymbol: currencySymbol,
+          localization: localization,
+          emptyMessage: localization.reportsMonthlyEmptyMessage,
+          onRetry: _retryMonthlyReport,
+        ),
+      ],
+    );
   }
 
   bool _isWorkActive(Work work) {
@@ -340,6 +513,8 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     final summary = _summary;
     final error = _summaryError;
     final isLoading = _isLoadingSummary;
+    final currencySymbol =
+        summary?.currencySymbol ?? _monthlyReport?.currencySymbol ?? '€';
 
     Widget summaryBody;
     if (isLoading) {
@@ -373,6 +548,12 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         message: l.notAvailableLabel,
       );
     }
+
+    final monthlySection = _buildMonthlyReportSection(
+      localization: l,
+      selectedMonthLabel: selectedMonth,
+      currencySymbol: currencySymbol,
+    );
 
     return BlocListener<WorkBloc, WorkState>(
       listenWhen: (previous, current) {
@@ -504,6 +685,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 duration: const Duration(milliseconds: 250),
                 child: summaryBody,
               ),
+              monthlySection,
             ],
           ),
         ),
@@ -1598,6 +1780,538 @@ class _ContractWorkTile extends StatelessWidget {
                 color: item.indicatorColor,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyTypeSelector extends StatelessWidget {
+  const _MonthlyTypeSelector({
+    required this.selectedType,
+    required this.hourlyLabel,
+    required this.fixedLabel,
+    required this.onSelected,
+  });
+
+  final MonthlyReportType selectedType;
+  final String hourlyLabel;
+  final String fixedLabel;
+  final ValueChanged<MonthlyReportType> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        _MonthlyTypeChip(
+          label: hourlyLabel,
+          type: MonthlyReportType.hourly,
+          selected: selectedType == MonthlyReportType.hourly,
+          onSelected: onSelected,
+        ),
+        _MonthlyTypeChip(
+          label: fixedLabel,
+          type: MonthlyReportType.fixed,
+          selected: selectedType == MonthlyReportType.fixed,
+          onSelected: onSelected,
+        ),
+      ],
+    );
+  }
+}
+
+class _MonthlyTypeChip extends StatelessWidget {
+  const _MonthlyTypeChip({
+    required this.label,
+    required this.type,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final MonthlyReportType type;
+  final bool selected;
+  final ValueChanged<MonthlyReportType> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selectedColor = const Color(0xFF2563EB);
+    final textColor = selected ? Colors.white : const Color(0xFF1F2937);
+
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ) ??
+            TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+      showCheckmark: false,
+      selected: selected,
+      onSelected: (_) => onSelected(type),
+      selectedColor: selectedColor,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: selected ? selectedColor : const Color(0xFFE5E7EB),
+        ),
+      ),
+      pressElevation: 0,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+}
+
+class _MonthlyReportContainer extends StatelessWidget {
+  const _MonthlyReportContainer({
+    required this.isLoading,
+    required this.error,
+    required this.report,
+    required this.currencySymbol,
+    required this.localization,
+    required this.emptyMessage,
+    required this.onRetry,
+  });
+
+  final bool isLoading;
+  final String? error;
+  final MonthlyReport? report;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final String emptyMessage;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return _MonthlyReportLoadingView(message: localization.reportsLoadingMessage);
+    }
+
+    if (error != null && error!.trim().isNotEmpty) {
+      return _MonthlyReportMessageCard(
+        icon: Icons.error_outline,
+        message: error!,
+        actionLabel: localization.retryButtonLabel,
+        onAction: onRetry,
+        isError: true,
+      );
+    }
+
+    final resolvedReport = report;
+    if (resolvedReport == null || resolvedReport.days.isEmpty) {
+      return _MonthlyReportMessageCard(
+        icon: Icons.calendar_today_outlined,
+        message: emptyMessage,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var index = 0; index < resolvedReport.days.length; index++)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: index == resolvedReport.days.length - 1 ? 0 : 12,
+            ),
+            child: _MonthlyReportDayCard(
+              day: resolvedReport.days[index],
+              currencySymbol: resolvedReport.days[index].currencySymbol ??
+                  resolvedReport.currencySymbol ??
+                  currencySymbol,
+              localization: localization,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _MonthlyReportMessageCard extends StatelessWidget {
+  const _MonthlyReportMessageCard({
+    required this.icon,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+    this.isError = false,
+  });
+
+  final IconData icon;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accentColor = isError ? const Color(0xFFDC2626) : const Color(0xFF2563EB);
+    final backgroundColor = isError ? const Color(0xFFFFF5F5) : const Color(0xFFEFF6FF);
+    final messageStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14111827),
+            blurRadius: 16,
+            offset: Offset(0, 10),
+          ),
+        ],
+        border: Border.all(color: backgroundColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: accentColor, size: 24),
+          ),
+          const SizedBox(height: 12),
+          Text(message, style: messageStyle),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: onAction,
+              style: TextButton.styleFrom(
+                backgroundColor: accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Text(
+                actionLabel!,
+                style: theme.textTheme.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ) ??
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyReportLoadingView extends StatelessWidget {
+  const _MonthlyReportLoadingView({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final messageStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14111827),
+            blurRadius: 16,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 38,
+            height: 38,
+            child: CircularProgressIndicator(strokeWidth: 3),
+          ),
+          const SizedBox(height: 16),
+          Text(message, style: messageStyle, textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyReportDayCard extends StatelessWidget {
+  const _MonthlyReportDayCard({
+    required this.day,
+    required this.currencySymbol,
+    required this.localization,
+  });
+
+  final MonthlyReportDay day;
+  final String currencySymbol;
+  final AppLocalizations localization;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+          color: Color(0xFF111827),
+        );
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        );
+
+    final subtitleParts = <String>[];
+    if (day.status != null && day.status!.trim().isNotEmpty) {
+      subtitleParts.add(day.status!.trim());
+    }
+    final typeLabel = _resolveTypeLabel(localization);
+    if (typeLabel.isNotEmpty) {
+      subtitleParts.add(typeLabel);
+    }
+    final subtitle = subtitleParts.join(' • ');
+
+    final chips = <Widget>[];
+    final hoursLabel = day.resolveHoursLabel();
+    if (hoursLabel != null && hoursLabel.isNotEmpty) {
+      chips.add(
+        _MonthlyInfoChip(
+          icon: Icons.access_time,
+          label: hoursLabel,
+          color: const Color(0xFF2563EB),
+        ),
+      );
+    }
+    if (day.overtimeHours != null && day.overtimeHours! > 0) {
+      final value = day.overtimeHours!;
+      final decimals = value == value.roundToDouble() ? 0 : 2;
+      chips.add(
+        _MonthlyInfoChip(
+          icon: Icons.timer_outlined,
+          label: 'OT ${value.toStringAsFixed(decimals)} h',
+          color: const Color(0xFF7C3AED),
+        ),
+      );
+    }
+    final salaryLabel = day.resolveSalaryLabel(currencySymbol);
+    if (salaryLabel.isNotEmpty) {
+      chips.add(
+        _MonthlyInfoChip(
+          icon: Icons.payments_outlined,
+          label: salaryLabel,
+          color: const Color(0xFF059669),
+        ),
+      );
+    }
+    if (day.unitsCompleted != null) {
+      chips.add(
+        _MonthlyInfoChip(
+          icon: Icons.check_circle_outline,
+          label:
+              '${day.unitsCompleted} ${localization.reportsUnitsCompletedSuffix}',
+          color: const Color(0xFFF97316),
+        ),
+      );
+    }
+
+    final detailStyle = theme.textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        );
+    final valueStyle = theme.textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF111827),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF111827),
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        );
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12111827),
+            blurRadius: 18,
+            offset: Offset(0, 12),
+          ),
+        ],
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(day.label, style: titleStyle),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(subtitle, style: subtitleStyle),
+          ],
+          if (chips.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: chips,
+            ),
+          ],
+          if (day.details.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            for (final detail in day.details)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(detail.label, style: detailStyle),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        detail.value,
+                        style: valueStyle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+          if (day.notes.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            for (final note in day.notes)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '• $note',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ) ??
+                      const TextStyle(
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _resolveTypeLabel(AppLocalizations localization) {
+    final raw = day.type;
+    if (raw == null) {
+      return '';
+    }
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+    final normalized = trimmed.toLowerCase();
+    if (normalized == 'hourly' || normalized == 'hourly_work') {
+      return localization.reportsMonthlyTypeHourly;
+    }
+    if (normalized == 'fixed' ||
+        normalized == 'fixed_salary' ||
+        normalized == 'salary' ||
+        normalized == 'contract') {
+      return localization.reportsMonthlyTypeFixed;
+    }
+    return trimmed[0].toUpperCase() + trimmed.substring(1);
+  }
+}
+
+class _MonthlyInfoChip extends StatelessWidget {
+  const _MonthlyInfoChip({
+    required this.icon,
+    required this.label,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final resolvedColor = color ?? const Color(0xFF2563EB);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: resolvedColor.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: resolvedColor),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+                  color: resolvedColor,
+                  fontWeight: FontWeight.w600,
+                ) ??
+                TextStyle(
+                  color: resolvedColor,
+                  fontWeight: FontWeight.w600,
+                ),
           ),
         ],
       ),

@@ -248,6 +248,14 @@ class AppLocalizations {
   String get reportsContractSalaryLabel =>
       _value('reportsContractSalaryLabel');
   String get reportsBreakdownSuffix => _value('reportsBreakdownSuffix');
+  String get reportsMonthlySectionTitle =>
+      _value('reportsMonthlySectionTitle');
+  String get reportsMonthlyTypeHourly =>
+      _value('reportsMonthlyTypeHourly');
+  String get reportsMonthlyTypeFixed =>
+      _value('reportsMonthlyTypeFixed');
+  String get reportsMonthlyEmptyMessage =>
+      _value('reportsMonthlyEmptyMessage');
   String get reportsGrandTotalLabel => _value('reportsGrandTotalLabel');
   String get reportsLoadingMessage => _value('reportsLoadingMessage');
   String get dashboardSummaryLoadFailedMessage =>
