@@ -5743,7 +5743,6 @@ class _ContractTypeDropdownItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                _ContractUnitBadge(label: unitLabel),
               ],
             ),
           ],
@@ -5797,17 +5796,15 @@ class _ContractTypeSelectedLabel extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
+              /*  Text(
                   rateLabel,
                   style: detailStyle,
                   softWrap: true,
                   overflow: TextOverflow.ellipsis,
-                ),
+                ),*/
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          _ContractUnitBadge(label: unitLabel),
         ],
       ),
     );
