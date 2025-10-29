@@ -309,8 +309,6 @@ class _WorkSelectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = _formatHourlyRate(work, localization);
-
     // Inner core card (white) used in both states
     final Widget _innerCard = Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
@@ -349,17 +347,6 @@ class _WorkSelectionTile extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF111827),
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF6B7280),
-                  ) ??
-                      const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF6B7280),
                       ),
                 ),
               ],
@@ -615,60 +602,6 @@ class _DialogCloseButton extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatHourlyRate(Work work, AppLocalizations l) {
-  final rate = work.hourlyRate;
-  if (rate == null) {
-    return '${l.hourlySalaryLabel}: ${l.notAvailableLabel}';
-  }
-
-  final double doubleValue = rate.toDouble();
-  final bool isWhole = doubleValue.roundToDouble() == doubleValue;
-  final formattedNumber = isWhole
-      ? doubleValue.toStringAsFixed(0)
-      : doubleValue.toStringAsFixed(2);
-
-  String sanitized = formattedNumber;
-  if (sanitized.contains('.')) {
-    while (sanitized.endsWith('0')) {
-      sanitized = sanitized.substring(0, sanitized.length - 1);
-    }
-    if (sanitized.endsWith('.')) {
-      sanitized = sanitized.substring(0, sanitized.length - 1);
-    }
-  }
-
-  final currency = _resolveCurrencySymbol(work.additionalData);
-  return '$currency$sanitized${l.workSelectionHourSuffix}';
-}
-
-String _resolveCurrencySymbol(Map<String, dynamic> data) {
-  const defaultCurrency = '€';
-  final dynamic value = data['currency_symbol'] ??
-      data['currencySymbol'] ??
-      data['currency'] ??
-      data['currencyCode'] ??
-      data['currencyPrefix'];
-
-  if (value is! String) {
-    return defaultCurrency;
-  }
-
-  final trimmed = value.trim();
-  if (trimmed.isEmpty) {
-    return defaultCurrency;
-  }
-
-  final bool isAlphabeticCode = trimmed.length == 3 &&
-      trimmed.codeUnits.every(
-            (unit) => (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
-      );
-  if (isAlphabeticCode) {
-    return '$trimmed ';
-  }
-
-  return trimmed;
 }
 
 class _WorkTileIcon extends StatelessWidget {
