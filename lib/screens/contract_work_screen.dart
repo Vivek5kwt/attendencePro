@@ -614,18 +614,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                               ),
                                             ),
                                             const SizedBox(height: 20),
-                                            Text(
-                                              l.contractWorkUnitLabel,
-                                              style: textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF1F2937),
-                                                  ) ??
-                                                  const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF1F2937),
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 10),
                                             TextField(
                                               controller: unitController,
                                               decoration: InputDecoration(
