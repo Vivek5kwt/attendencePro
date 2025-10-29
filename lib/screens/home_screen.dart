@@ -277,7 +277,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final bool hasActiveWork = activeWork != null;
 
     if (!hasActiveWork) {
-      if (!hasSingleWork) {
+      final targetWork = _findMostRecentWork(works);
+      if (targetWork == null) {
         _hasTriggeredAutoActivation = false;
         return;
       }
@@ -293,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       _hasTriggeredAutoActivation = true;
-      context.read<WorkBloc>().add(WorkActivated(work: works.first));
+      context.read<WorkBloc>().add(WorkActivated(work: targetWork));
       return;
     }
 
@@ -2621,6 +2622,125 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return false;
+  }
+
+  Work? _findMostRecentWork(List<Work> works) {
+    if (works.isEmpty) {
+      return null;
+    }
+
+    Work? candidate;
+    DateTime? candidateTimestamp;
+
+    for (final work in works) {
+      final timestamp = _extractWorkTimestamp(work);
+      if (timestamp == null) {
+        continue;
+      }
+
+      if (candidateTimestamp == null || timestamp.isAfter(candidateTimestamp)) {
+        candidate = work;
+        candidateTimestamp = timestamp;
+      }
+    }
+
+    return candidate ?? works.last;
+  }
+
+  DateTime? _extractWorkTimestamp(Work work) {
+    final data = work.additionalData;
+    const creationKeys = [
+      'created_at',
+      'createdAt',
+      'created_on',
+      'createdOn',
+      'created_date',
+      'createdDate',
+      'created',
+    ];
+    const updateKeys = [
+      'updated_at',
+      'updatedAt',
+      'updated_on',
+      'updatedOn',
+      'updated',
+      'last_modified',
+      'lastModified',
+    ];
+
+    for (final key in creationKeys) {
+      final parsed = _parseWorkTimestamp(data[key]);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    for (final key in updateKeys) {
+      final parsed = _parseWorkTimestamp(data[key]);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  DateTime? _parseWorkTimestamp(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return null;
+      }
+
+      final parsed = DateTime.tryParse(trimmed);
+      if (parsed != null) {
+        return parsed;
+      }
+
+      final normalized = trimmed.replaceAll('/', '-');
+      if (normalized != trimmed) {
+        final normalizedParsed = DateTime.tryParse(normalized);
+        if (normalizedParsed != null) {
+          return normalizedParsed;
+        }
+      }
+
+      final numeric = int.tryParse(trimmed);
+      if (numeric != null) {
+        return _parseNumericTimestamp(numeric);
+      }
+    }
+
+    if (value is num) {
+      return _parseNumericTimestamp(value.toInt());
+    }
+
+    return null;
+  }
+
+  DateTime? _parseNumericTimestamp(int value) {
+    if (value <= 0) {
+      return null;
+    }
+
+    if (value > 1000000000000) {
+      return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true).toLocal();
+    }
+
+    if (value > 1000000000) {
+      return DateTime.fromMillisecondsSinceEpoch(value * 1000, isUtc: true)
+          .toLocal();
+    }
+
+    return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true).toLocal();
   }
 
   String? _resolveWorkDescription(Work work) {
