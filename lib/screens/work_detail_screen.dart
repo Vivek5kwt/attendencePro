@@ -3845,12 +3845,12 @@ class _AttendanceSection extends StatelessWidget {
                   required TextInputAction textInputAction,
                   required String? Function(String?) validator,
                   required Widget customField,
+                  required Color accentColor,
                 }) {
                   return _AttendanceTimeCard(
                     label: label,
                     controller: controller,
-                    icon: Icons.access_time_rounded,
-                    color: const Color(0xFF2563EB),
+                    accentColor: accentColor,
                     hintText: AppString.timeInputHint,
                     keyboardType: keyboardType,
                     textInputAction: textInputAction,
@@ -3866,6 +3866,7 @@ class _AttendanceSection extends StatelessWidget {
                   buildCard(
                     label: l.startTimeLabel,
                     controller: startTimeController,
+                    accentColor: const Color(0xFF2563EB),
                     keyboardType: TextInputType.datetime,
                     textInputAction: TextInputAction.next,
                     validator: startTimeValidator,
@@ -3881,6 +3882,7 @@ class _AttendanceSection extends StatelessWidget {
                   buildCard(
                     label: l.endTimeLabel,
                     controller: endTimeController,
+                    accentColor: const Color(0xFF9333EA),
                     keyboardType: TextInputType.datetime,
                     textInputAction: TextInputAction.next,
                     validator: endTimeValidator,
@@ -3896,8 +3898,7 @@ class _AttendanceSection extends StatelessWidget {
                   _AttendanceTimeCard(
                     label: l.breakLabel,
                     controller: breakMinutesController,
-                    icon: Icons.access_time_rounded,
-                    color: const Color(0xFF2563EB),
+                    accentColor: const Color(0xFFF59E0B),
                     hintText: AppString.zeroInputHint,
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.done,
@@ -5455,8 +5456,7 @@ class _AttendanceTimeCard extends StatelessWidget {
   const _AttendanceTimeCard({
     required this.label,
     required this.controller,
-    required this.icon,
-    required this.color,
+    required this.accentColor,
     required this.hintText,
     required this.keyboardType,
     required this.textInputAction,
@@ -5470,8 +5470,7 @@ class _AttendanceTimeCard extends StatelessWidget {
 
   final String label;
   final TextEditingController controller;
-  final IconData icon;
-  final Color color;
+  final Color accentColor;
   final String hintText;
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
@@ -5484,9 +5483,6 @@ class _AttendanceTimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconBadgeSize = isCompact ? 36.0 : 48.0;
-    final iconRadius = BorderRadius.circular(isCompact ? 14 : 18);
-    final iconSize = isCompact ? 18.0 : 22.0;
     final labelStyle = TextStyle(
       fontSize: isCompact ? 12 : 14,
       fontWeight: FontWeight.w700,
@@ -5512,28 +5508,21 @@ class _AttendanceTimeCard extends StatelessWidget {
     );
     final fieldRadius = BorderRadius.circular(isCompact ? 16 : 20);
     final titleSpacing = SizedBox(height: isCompact ? 10 : 16);
-    final fieldSpacing = SizedBox(
-      width: isCompact ? 0 : 12,
-      height: isCompact ? 8 : 0,
-    );
     final boxShadow = [
       BoxShadow(
-        color: const Color(0x0F1E293B),
+        color: accentColor.withOpacity(0.08),
         blurRadius: isCompact ? 12 : 16,
         offset: const Offset(0, 8),
       ),
     ];
-
-    final iconBadge = Container(
-      width: iconBadgeSize,
-      height: iconBadgeSize,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: iconRadius,
-      ),
-      alignment: Alignment.center,
-      child: Icon(icon, color: color, size: iconSize),
-    );
+    final outerBorderColor = accentColor.withOpacity(0.25);
+    final innerBorderColor = accentColor.withOpacity(0.35);
+    final innerBackgroundColor = Color.lerp(
+          Colors.white,
+          accentColor.withOpacity(0.08),
+          0.6,
+        ) ??
+        Colors.white;
 
     final input = customField ??
         TextFormField(
@@ -5558,7 +5547,7 @@ class _AttendanceTimeCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(isCompact ? 22 : 26),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: outerBorderColor),
         boxShadow: boxShadow,
       ),
       padding: cardPadding,
@@ -5572,23 +5561,12 @@ class _AttendanceTimeCard extends StatelessWidget {
           titleSpacing,
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: innerBackgroundColor,
               borderRadius: fieldRadius,
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: innerBorderColor),
             ),
             padding: fieldPadding,
-            child: Flex(
-              direction: isCompact ? Axis.vertical : Axis.horizontal,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                iconBadge,
-                fieldSpacing,
-                if (isCompact)
-                  SizedBox(width: double.infinity, child: input)
-                else
-                  Expanded(child: input),
-              ],
-            ),
+            child: SizedBox(width: double.infinity, child: input),
           ),
         ],
       ),
