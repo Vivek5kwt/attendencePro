@@ -1914,23 +1914,166 @@ class _MonthlyReportContainer extends StatelessWidget {
       );
     }
 
+    final sections = _buildSections(
+      resolvedReport.days,
+      localization,
+    );
+    final defaultCurrencySymbol =
+        resolvedReport.currencySymbol ?? currencySymbol;
+
+    if (sections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final sectionWidgets = sections
+        .map(
+          (section) => _MonthlyReportTypeSection(
+            title: section.label,
+            days: section.days,
+            localization: localization,
+            currencyFallback: defaultCurrencySymbol,
+          ),
+        )
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var index = 0; index < resolvedReport.days.length; index++)
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: index == resolvedReport.days.length - 1 ? 0 : 12,
-            ),
-            child: _MonthlyReportDayCard(
-              day: resolvedReport.days[index],
-              currencySymbol: resolvedReport.days[index].currencySymbol ??
-                  resolvedReport.currencySymbol ??
-                  currencySymbol,
-              localization: localization,
-            ),
-          ),
-      ],
+      children: _insertSectionSpacing(sectionWidgets),
+    );
+  }
+
+  List<_MonthlyReportSectionData> _buildSections(
+    List<MonthlyReportDay> days,
+    AppLocalizations localization,
+  ) {
+    final lookup = <String, _MonthlyReportSectionData>{};
+    final ordered = <_MonthlyReportSectionData>[];
+
+    for (final day in days) {
+      final label = _resolveSectionLabel(day, localization);
+      final key = label.toLowerCase();
+
+      final existing = lookup[key];
+      if (existing != null) {
+        existing.days.add(day);
+        continue;
+      }
+
+      final section = _MonthlyReportSectionData(label: label, days: [day]);
+      lookup[key] = section;
+      ordered.add(section);
+    }
+
+    return ordered;
+  }
+
+  String _resolveSectionLabel(
+    MonthlyReportDay day,
+    AppLocalizations localization,
+  ) {
+    final type = monthlyReportTypeFromString(day.type);
+    switch (type) {
+      case MonthlyReportType.hourly:
+        return localization.reportsMonthlyTypeHourly;
+      case MonthlyReportType.fixed:
+        return localization.reportsMonthlyTypeFixed;
+      case MonthlyReportType.unknown:
+        final raw = day.type;
+        if (raw == null) {
+          return localization.notAvailableLabel;
+        }
+        final trimmed = raw.trim();
+        if (trimmed.isEmpty) {
+          return localization.notAvailableLabel;
+        }
+        final normalized = trimmed.toLowerCase();
+        if (normalized == 'hourly' || normalized == 'hourly_work') {
+          return localization.reportsMonthlyTypeHourly;
+        }
+        if (normalized == 'fixed' ||
+            normalized == 'fixed_salary' ||
+            normalized == 'salary' ||
+            normalized == 'contract') {
+          return localization.reportsMonthlyTypeFixed;
+        }
+        return trimmed[0].toUpperCase() + trimmed.substring(1);
+    }
+  }
+
+  List<Widget> _insertSectionSpacing(List<Widget> sections) {
+    if (sections.length <= 1) {
+      return sections;
+    }
+
+    final spaced = <Widget>[];
+    for (var index = 0; index < sections.length; index++) {
+      spaced.add(sections[index]);
+      if (index != sections.length - 1) {
+        spaced.add(const SizedBox(height: 20));
+      }
+    }
+    return spaced;
+  }
+}
+
+class _MonthlyReportSectionData {
+  _MonthlyReportSectionData({
+    required this.label,
+    required this.days,
+  });
+
+  final String label;
+  final List<MonthlyReportDay> days;
+}
+
+class _MonthlyReportTypeSection extends StatelessWidget {
+  const _MonthlyReportTypeSection({
+    required this.title,
+    required this.days,
+    required this.localization,
+    required this.currencyFallback,
+  });
+
+  final String title;
+  final List<MonthlyReportDay> days;
+  final AppLocalizations localization;
+  final String currencyFallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+          color: Color(0xFF111827),
+        );
+
+    final children = <Widget>[
+      Text(title, style: titleStyle),
+      const SizedBox(height: 12),
+    ];
+
+    for (var index = 0; index < days.length; index++) {
+      final day = days[index];
+      children.add(
+        _MonthlyReportDayCard(
+          day: day,
+          currencySymbol: day.currencySymbol ?? currencyFallback,
+          localization: localization,
+        ),
+      );
+      if (index != days.length - 1) {
+        children.add(const SizedBox(height: 12));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
     );
   }
 }
