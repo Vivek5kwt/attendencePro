@@ -3982,7 +3982,7 @@ class _AttendanceSection extends StatelessWidget {
                 errorMessage: contractFieldsError,
                 contractTypes: contractTypes,
                 entries: contractBundleEntries,
-                onToggle: onContractFieldsToggle!,
+                onToggle: onContractFieldsToggle,
                 onTypeChanged: onContractBundleTypeChanged == null
                     ? null
                     : (entry, value) =>
@@ -4087,7 +4087,7 @@ class _AttendanceSection extends StatelessWidget {
         }
 
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: children,
         );
       },
@@ -5026,7 +5026,7 @@ class _ContractEntryForm extends StatelessWidget {
     required this.isLoading,
     required this.contractTypes,
     required this.entries,
-    required this.onToggle,
+    this.onToggle,
     required this.bundleUnitsValidator,
     required this.isSubmitting,
     required this.isWorkOff,
@@ -5043,7 +5043,7 @@ class _ContractEntryForm extends StatelessWidget {
   final bool isLoading;
   final List<ContractType> contractTypes;
   final List<_ContractBundleFormEntry> entries;
-  final ValueChanged<bool> onToggle;
+  final ValueChanged<bool>? onToggle;
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final void Function(_ContractBundleFormEntry, String?)? onTypeChanged;
   final VoidCallback? onRetry;
@@ -5060,6 +5060,7 @@ class _ContractEntryForm extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final bool disableInteractions = isSubmitting || isWorkOff;
+    final bool toggleDisabled = disableInteractions || onToggle == null;
 
     ContractType? resolveType(String? id) {
       if (id == null) {
@@ -5102,7 +5103,7 @@ class _ContractEntryForm extends StatelessWidget {
                   Switch.adaptive(
                     value: isActive,
                     activeColor: const Color(0xFF2563EB),
-                    onChanged: disableInteractions ? null : onToggle,
+                    onChanged: toggleDisabled ? null : onToggle,
                   ),
                 ],
               );
