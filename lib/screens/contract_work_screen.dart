@@ -324,31 +324,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: Semantics(
-                                button: true,
-                                label: l.contractWorkCloseSheetLabel,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: () {
-                                    Navigator.of(context).maybePop();
-                                  },
-                                  child: Padding(
-                                    padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
-                                    child: Container(
-                                      width: 44,
-                                      height: 5,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFD1D5DB),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -388,9 +364,20 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                         ) ??
                                             const TextStyle(
                                               color: Color(0xFF6B7280),
-                                            ),
+                                        ),
                                       ),
                                     ],
+                                  ),
+                                ),
+                                Semantics(
+                                  button: true,
+                                  label: l.contractWorkCloseSheetLabel,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close_rounded),
+                                    color: const Color(0xFF6B7280),
+                                    tooltip: l.contractWorkCloseSheetLabel,
+                                    onPressed: () =>
+                                        Navigator.of(context).maybePop(),
                                   ),
                                 ),
                               ],
