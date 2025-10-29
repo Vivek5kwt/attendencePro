@@ -45,7 +45,7 @@ class AttendanceHistoryData {
             .toList(growable: false);
 
     final currencySymbol = (detectedCurrency ?? '').trim().isEmpty
-        ? '₹'
+        ? '€'
         : detectedCurrency!.trim();
 
     return AttendanceHistoryData(

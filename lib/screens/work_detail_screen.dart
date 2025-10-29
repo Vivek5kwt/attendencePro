@@ -2680,7 +2680,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String _resolveCurrencyPrefix([Map<String, dynamic>? override]) {
-    const fallback = '₹';
+    const fallback = '€';
     final summarySymbol = _extractCurrencySymbol(override ?? _dashboardSummary?.raw);
     if (summarySymbol != null) {
       return summarySymbol;
