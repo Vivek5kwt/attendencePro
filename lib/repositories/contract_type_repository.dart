@@ -1,6 +1,7 @@
 import '../apis/auth_api.dart';
 import '../apis/contract_type_api.dart';
 import '../models/contract_type.dart';
+import '../utils/contract_type_normalizer.dart';
 import '../utils/session_manager.dart';
 
 class ContractTypeRepository {
@@ -38,10 +39,11 @@ class ContractTypeRepository {
     }
 
     try {
+      final normalizedSubtype = normalizeContractSubtype(subtype);
       return await _api.createContractType(
         token: token,
         name: name,
-        subtype: subtype,
+        subtype: normalizedSubtype,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
       );
@@ -63,11 +65,12 @@ class ContractTypeRepository {
     }
 
     try {
+      final normalizedSubtype = normalizeContractSubtype(subtype);
       return await _api.updateContractType(
         token: token,
         contractTypeId: id,
         name: name,
-        subtype: subtype,
+        subtype: normalizedSubtype,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
       );
