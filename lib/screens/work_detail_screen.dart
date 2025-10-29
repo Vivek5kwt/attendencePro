@@ -4645,6 +4645,9 @@ class _AttendanceSection extends StatelessWidget {
                   ),
                 );
 
+                final compactLabelSpacing = isNarrow ? 6.0 : 8.0;
+                final compactDividerSpacing = isNarrow ? 10.0 : 14.0;
+
                 Widget buildWideLayout() {
                   return Row(
                     mainAxisSize: MainAxisSize.min,
@@ -4666,24 +4669,21 @@ class _AttendanceSection extends StatelessWidget {
                 }
 
                 Widget buildNarrowLayout() {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(child: hourSegment),
-                          const SizedBox(width: 8),
-                          const Text('hr', style: labelStyle),
-                        ],
+                      Expanded(child: hourSegment),
+                      SizedBox(width: compactLabelSpacing),
+                      const Text('hr', style: labelStyle),
+                      SizedBox(width: compactDividerSpacing),
+                      _buildSegmentDivider(
+                        showColon: false,
+                        height: dividerHeight,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(child: minuteSegment),
-                          const SizedBox(width: 8),
-                          const Text('min', style: labelStyle),
-                        ],
-                      ),
+                      SizedBox(width: compactDividerSpacing),
+                      Expanded(child: minuteSegment),
+                      SizedBox(width: compactLabelSpacing),
+                      const Text('min', style: labelStyle),
                     ],
                   );
                 }
