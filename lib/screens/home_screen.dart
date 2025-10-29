@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _worksError;
   bool _shouldOpenDashboard = false;
   bool _hasOpenedDashboard = false;
+  bool _hasTriggeredAutoActivation = false;
 
   @override
   void initState() {
@@ -64,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.openDashboardOnLogin && !oldWidget.openDashboardOnLogin) {
       _shouldOpenDashboard = true;
       _hasOpenedDashboard = false;
+      _hasTriggeredAutoActivation = false;
     }
   }
 
@@ -253,24 +255,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _maybeNavigateToDashboard(WorkState state) {
-    if (!_shouldOpenDashboard || _hasOpenedDashboard) {
-      return;
-    }
-
-    if (state.loadStatus != WorkLoadStatus.success) {
+    if (_hasOpenedDashboard) {
       return;
     }
 
     final works = state.works;
     if (works.isEmpty) {
-      _shouldOpenDashboard = false;
       return;
     }
 
     final Work targetWork = works.firstWhere(
-          (work) => _isWorkActive(work),
+      (work) => _isWorkActive(work),
       orElse: () => works.first,
     );
+
+    final bool hasActiveWork = _isWorkActive(targetWork);
+    if (!hasActiveWork && !_hasTriggeredAutoActivation) {
+      _hasTriggeredAutoActivation = true;
+      context.read<WorkBloc>().add(WorkActivated(work: targetWork));
+    }
+
+    if (!_shouldOpenDashboard) {
+      _shouldOpenDashboard = true;
+    }
+
+    if (!_shouldOpenDashboard) {
+      return;
+    }
 
     _shouldOpenDashboard = false;
     _hasOpenedDashboard = true;
