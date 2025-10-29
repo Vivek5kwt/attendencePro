@@ -2512,9 +2512,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       ],
     ];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F6FB),
-      appBar: AppBar(
+      return Scaffold(
+        backgroundColor: const Color(0xFFF3F6FB),
+        appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(
@@ -2558,22 +2558,23 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => contentWidgets[index],
-                  childCount: contentWidgets.length,
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: contentWidgets,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
 
   String _buildHourlyRateText(AppLocalizations l) {
