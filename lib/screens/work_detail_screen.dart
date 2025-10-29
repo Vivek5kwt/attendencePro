@@ -260,7 +260,7 @@ Widget _buildTimeDropdownField({
   VoidCallback? onChanged,
 }) {
   final normalizedValue = _normalizeTimeDropdownValue(controller.text);
-  return DropdownButtonFormField<String?> (
+  return DropdownButtonFormField<String?>(
     value: normalizedValue,
     items: _buildTimeDropdownMenuItems(),
     onChanged: enabled
@@ -276,6 +276,10 @@ Widget _buildTimeDropdownField({
     isExpanded: true,
     decoration: InputDecoration(
       labelText: label,
+      labelStyle: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
       prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
       filled: true,
       fillColor: Colors.white,
@@ -299,7 +303,7 @@ Widget _buildBreakDropdownField({
   final parsed = int.tryParse(controller.text.trim());
   final selectedValue =
       parsed != null && _breakDurationOptions.contains(parsed) ? parsed : null;
-  return DropdownButtonFormField<int?> (
+  return DropdownButtonFormField<int?>(
     value: selectedValue,
     items: _buildBreakDropdownMenuItems(),
     onChanged: enabled
@@ -315,6 +319,10 @@ Widget _buildBreakDropdownField({
     isExpanded: true,
     decoration: InputDecoration(
       labelText: label,
+      labelStyle: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
       prefixIcon: Icon(icon, color: const Color(0xFFF59E0B)),
       filled: true,
       fillColor: Colors.white,
@@ -3959,10 +3967,15 @@ class _AttendanceSection extends StatelessWidget {
                 bundleUnitsValidator: bundleUnitsValidator,
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
+                trailingAction: _buildSubmitButton(context, l),
               ),
             ],
             const SizedBox(height: 24),
-            _buildActionButtons(context, l),
+            _buildActionButtons(
+              context,
+              l,
+              includeSubmit: !showContractFields,
+            ),
             if (statusMessage != null)
               Container(
                 margin: const EdgeInsets.only(top: 16),
@@ -3990,20 +4003,27 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, AppLocalizations l) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    AppLocalizations l, {
+    bool includeSubmit = true,
+  }) {
     final hasContractButton = showContractWorkButton && onContractWorkTap != null;
     final hasWorkOffButton = onWorkOffSubmit != null;
+    final submitButton = includeSubmit ? _buildSubmitButton(context, l) : null;
 
     if (!hasContractButton) {
       if (!hasWorkOffButton) {
-        return _buildSubmitButton(context, l);
+        return submitButton ?? const SizedBox.shrink();
       }
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildWorkOffButton(context, l),
-          const SizedBox(height: 12),
-          _buildSubmitButton(context, l),
+          if (submitButton != null) ...[
+            const SizedBox(height: 12),
+            submitButton,
+          ],
         ],
       );
     }
@@ -4020,8 +4040,10 @@ class _AttendanceSection extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildWorkOffButton(context, l),
               ],
-              const SizedBox(height: 12),
-              _buildSubmitButton(context, l),
+              if (submitButton != null) ...[
+                const SizedBox(height: 12),
+                submitButton,
+              ],
             ],
           );
         }
@@ -4033,8 +4055,10 @@ class _AttendanceSection extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(child: _buildWorkOffButton(context, l)),
             ],
-            const SizedBox(width: 12),
-            Expanded(child: _buildSubmitButton(context, l)),
+            if (submitButton != null) ...[
+              const SizedBox(width: 12),
+              Expanded(child: submitButton),
+            ],
           ],
         );
       },
@@ -4889,6 +4913,7 @@ class _ContractEntryForm extends StatelessWidget {
     this.onAddEntry,
     this.onRemoveEntry,
     this.onUnitsChanged,
+    this.trailingAction,
   });
 
   final bool isActive;
@@ -4905,6 +4930,7 @@ class _ContractEntryForm extends StatelessWidget {
   final bool isSubmitting;
   final bool isWorkOff;
   final String? errorMessage;
+  final Widget? trailingAction;
 
   @override
   Widget build(BuildContext context) {
@@ -4934,26 +4960,58 @@ class _ContractEntryForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l.contractWorkLabel,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                ),
-              ),
-              Switch.adaptive(
-                value: isActive,
-                activeColor: const Color(0xFF2563EB),
-                onChanged: disableInteractions ? null : onToggle,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final toggleContent = Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l.contractWorkLabel,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ) ??
+                          const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                          ),
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: isActive,
+                    activeColor: const Color(0xFF2563EB),
+                    onChanged: disableInteractions ? null : onToggle,
+                  ),
+                ],
+              );
+
+              final Widget? action = trailingAction;
+              if (action == null) {
+                return toggleContent;
+              }
+
+              final showInlineAction = constraints.maxWidth >= 520;
+              final button = SizedBox(height: 48, child: action);
+
+              if (showInlineAction) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: toggleContent),
+                    const SizedBox(width: 12),
+                    Expanded(child: button),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  toggleContent,
+                  const SizedBox(height: 12),
+                  button,
+                ],
+              );
+            },
           ),
           if (isActive) ...[
             const SizedBox(height: 16),
