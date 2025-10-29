@@ -2235,6 +2235,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       'total_duration',
       'totalDuration',
     ]);
+    final trimmedHoursDisplay = hoursDisplay?.trim();
+    final hasHoursDisplay =
+        trimmedHoursDisplay != null && trimmedHoursDisplay.isNotEmpty;
     final salaryDisplay = _resolvePreviewDisplayValue(previewData, const [
       'total_salary',
       'totalSalary',
@@ -2258,7 +2261,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               cancelLabel: l.attendancePreviewCancelButton,
               confirmLabel: l.attendancePreviewConfirmButton,
               hoursLabel: l.attendancePreviewHoursLabel,
-              hoursValue: hoursDisplay ?? '--',
+              hoursValue: hasHoursDisplay ? trimmedHoursDisplay : null,
               salaryLabel: l.attendancePreviewSalaryLabel,
               salaryValue: salaryDisplay,
               entries: infoEntries,
@@ -6391,7 +6394,7 @@ class _AttendancePreviewSheet extends StatelessWidget {
     required this.cancelLabel,
     required this.confirmLabel,
     required this.hoursLabel,
-    required this.hoursValue,
+    this.hoursValue,
     required this.salaryLabel,
     required this.salaryValue,
     required this.entries,
@@ -6405,7 +6408,7 @@ class _AttendancePreviewSheet extends StatelessWidget {
   final String cancelLabel;
   final String confirmLabel;
   final String hoursLabel;
-  final String hoursValue;
+  final String? hoursValue;
   final String salaryLabel;
   final String? salaryValue;
   final List<_PreviewInfoEntry> entries;
@@ -6604,20 +6607,21 @@ class _AttendancePreviewSheet extends StatelessWidget {
 class _AttendancePreviewSummaryCard extends StatelessWidget {
   const _AttendancePreviewSummaryCard({
     required this.hoursLabel,
-    required this.hoursValue,
+    this.hoursValue,
     required this.salaryLabel,
     required this.salaryValue,
     required this.entries,
   });
 
   final String hoursLabel;
-  final String hoursValue;
+  final String? hoursValue;
   final String salaryLabel;
   final String? salaryValue;
   final List<_PreviewInfoEntry> entries;
 
   @override
   Widget build(BuildContext context) {
+    final hasHours = hoursValue != null && hoursValue!.trim().isNotEmpty;
     final hasSalary = salaryValue != null && salaryValue!.trim().isNotEmpty;
 
     return Container(
@@ -6637,34 +6641,37 @@ class _AttendancePreviewSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _PreviewHighlightCard(
-                  label: hoursLabel,
-                  value: hoursValue,
-                  color: const Color(0xFF2563EB),
-                ),
-              ),
-              if (hasSalary) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _PreviewHighlightCard(
-                    label: salaryLabel,
-                    value: salaryValue!.trim(),
-                    color: const Color(0xFF16A34A),
+          if (hasHours || hasSalary)
+            Row(
+              children: [
+                if (hasHours)
+                  Expanded(
+                    child: _PreviewHighlightCard(
+                      label: hoursLabel,
+                      value: hoursValue!.trim(),
+                      color: const Color(0xFF2563EB),
+                    ),
                   ),
-                ),
+                if (hasHours && hasSalary) const SizedBox(width: 12),
+                if (hasSalary)
+                  Expanded(
+                    child: _PreviewHighlightCard(
+                      label: salaryLabel,
+                      value: salaryValue!.trim(),
+                      color: const Color(0xFF16A34A),
+                    ),
+                  ),
               ],
-            ],
-          ),
-          if (entries.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            const Divider(
-              height: 1,
-              color: Color(0xFFE5E7EB),
             ),
-            const SizedBox(height: 12),
+          if (entries.isNotEmpty) ...[
+            if (hasHours || hasSalary) ...[
+              const SizedBox(height: 20),
+              const Divider(
+                height: 1,
+                color: Color(0xFFE5E7EB),
+              ),
+              const SizedBox(height: 12),
+            ],
             ...entries.map(
               (entry) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
