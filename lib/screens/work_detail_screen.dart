@@ -2435,7 +2435,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         normalizedRate.toLowerCase() == normalizedNotAvailable.toLowerCase() ||
         normalizedRate.toLowerCase() == normalizedWorkType.toLowerCase();
     final rateDescription = hideRateDescription ? null : normalizedRate;
-    final contractItems = _resolveContractItems();
     final summaryStats = _buildSummaryStats(l);
     final todayEntry = _dashboardSummary?.todayEntry;
     final dateLabel = (_dateLabelOverride?.isNotEmpty ?? false)
@@ -2446,6 +2445,72 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final summarySection = _buildSummarySection(l, summaryStats);
     final hasSummaryContent =
         _isSummaryLoading || _summaryError != null || summaryStats.isNotEmpty;
+
+    final contentWidgets = <Widget>[
+      _WorkHeaderCard(
+        work: widget.work,
+        workTypeLabel: workTypeLabel,
+        rateDescription: rateDescription,
+      ),
+      const SizedBox(height: 20),
+      if (_pendingMissedDates.isNotEmpty) ...[
+        _PendingAttendanceCard(
+          title: l.attendanceMissedEntriesTitle,
+          description: l.attendanceMissedEntriesDescription,
+          dateLabels: _pendingMissedDates
+              .map(_formatDate)
+              .toList(growable: false),
+          highlightedLabel: _formatDate(_pendingMissedDates.first),
+          buttonLabel: l.attendanceMissedEntriesReviewButton(
+            _formatDate(_pendingMissedDates.first),
+          ),
+          onReview: _handlePendingAttendanceReview,
+        ),
+        const SizedBox(height: 20),
+      ],
+      _AttendanceSection(
+        dateLabel: dateLabel,
+        onDateTap: _handleDateTap,
+        dateSelectionEnabled: _pendingMissedDates.isNotEmpty,
+        formKey: _attendanceFormKey,
+        startTimeController: _startTimeController,
+        endTimeController: _endTimeController,
+        breakMinutesController: _breakMinutesController,
+        onSubmit: _submitAttendance,
+        onWorkOffSubmit: _submitWorkOffAttendance,
+        isWorkOffLocked: _isTodayAttendanceMarked,
+        onWorkOffLockedTap: _handleWorkOffLockedTap,
+        onFieldChanged: _handleAttendanceFieldChanged,
+        isSubmitting: _isSubmittingAttendance,
+        isWorkOff: _markAsWorkOff,
+        showContractWorkButton: widget.work.isContract,
+        onContractWorkTap:
+            widget.work.isContract ? _openContractWorkManager : null,
+        showContractFields: widget.work.isContract,
+        contractFieldsEnabled: _contractFieldsEnabled,
+        isContractFieldsLoading: _isLoadingContractTypes,
+        contractFieldsError: _contractTypesError,
+        contractTypes: _contractTypes,
+        contractBundleEntries: _contractBundleEntries,
+        onContractFieldsToggle: _handleContractFieldsToggle,
+        onContractBundleTypeChanged: _handleContractTypeChanged,
+        onContractTypeRetry:
+            widget.work.isContract ? () => _loadContractTypes() : null,
+        onAddContractBundle: _handleAddContractBundle,
+        onRemoveContractBundle: _handleRemoveContractBundle,
+        onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
+        bundleUnitsValidator: _validateBundleUnits,
+        startTimeValidator: _validateStartTime,
+        endTimeValidator: _validateEndTime,
+        breakValidator: _validateBreakMinutes,
+        statusMessage: _attendanceStatusMessage,
+        isStatusError: _attendanceStatusIsError,
+      ),
+      if (hasSummaryContent) ...[
+        const SizedBox(height: 24),
+        summarySection,
+      ],
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6FB),
@@ -2494,80 +2559,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _WorkHeaderCard(
-                work: widget.work,
-                workTypeLabel: workTypeLabel,
-                rateDescription: rateDescription,
-              ),
-              const SizedBox(height: 20),
-              if (_pendingMissedDates.isNotEmpty) ...[
-                _PendingAttendanceCard(
-                  title: l.attendanceMissedEntriesTitle,
-                  description: l.attendanceMissedEntriesDescription,
-                  dateLabels: _pendingMissedDates
-                      .map(_formatDate)
-                      .toList(growable: false),
-                  highlightedLabel: _formatDate(_pendingMissedDates.first),
-                  buttonLabel: l.attendanceMissedEntriesReviewButton(
-                    _formatDate(_pendingMissedDates.first),
-                  ),
-                  onReview: _handlePendingAttendanceReview,
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => contentWidgets[index],
+                  childCount: contentWidgets.length,
                 ),
-                const SizedBox(height: 20),
-              ],
-              _AttendanceSection(
-                dateLabel: dateLabel,
-                onDateTap: _handleDateTap,
-                dateSelectionEnabled: _pendingMissedDates.isNotEmpty,
-                formKey: _attendanceFormKey,
-                startTimeController: _startTimeController,
-                endTimeController: _endTimeController,
-                breakMinutesController: _breakMinutesController,
-                onSubmit: _submitAttendance,
-                onWorkOffSubmit: _submitWorkOffAttendance,
-                isWorkOffLocked: _isTodayAttendanceMarked,
-                onWorkOffLockedTap: _handleWorkOffLockedTap,
-                onFieldChanged: _handleAttendanceFieldChanged,
-                isSubmitting: _isSubmittingAttendance,
-                isWorkOff: _markAsWorkOff,
-                showContractWorkButton: widget.work.isContract,
-                onContractWorkTap:
-                    widget.work.isContract ? _openContractWorkManager : null,
-                showContractFields: widget.work.isContract,
-                contractFieldsEnabled: _contractFieldsEnabled,
-                isContractFieldsLoading: _isLoadingContractTypes,
-                contractFieldsError: _contractTypesError,
-                contractTypes: _contractTypes,
-                contractBundleEntries: _contractBundleEntries,
-                onContractFieldsToggle: _handleContractFieldsToggle,
-                onContractBundleTypeChanged: _handleContractTypeChanged,
-                onContractTypeRetry:
-                    widget.work.isContract ? () => _loadContractTypes() : null,
-                onAddContractBundle: _handleAddContractBundle,
-                onRemoveContractBundle: _handleRemoveContractBundle,
-                onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
-                bundleUnitsValidator: _validateBundleUnits,
-                startTimeValidator: _validateStartTime,
-                endTimeValidator: _validateEndTime,
-                breakValidator: _validateBreakMinutes,
-                statusMessage: _attendanceStatusMessage,
-                isStatusError: _attendanceStatusIsError,
               ),
-         /*     _ContractSummarySection(
-                items: contractItems,
-              ),*/
-              if (hasSummaryContent) ...[
-                const SizedBox(height: 24),
-                summarySection,
-              ],
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
