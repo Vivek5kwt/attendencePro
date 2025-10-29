@@ -3712,12 +3712,26 @@ class _WorkHeaderCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.22),
                     shape: BoxShape.circle,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: ClipOval(
-                      child: Image.asset(
-                        AppAssets.homeBanner2,
-                        fit: BoxFit.cover,
+                  child: Center(
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _buildWorkInitials(work.name),
+                        style: textTheme.headlineMedium?.copyWith(
+                              color: const Color(0xFF2563EB),
+                              fontWeight: FontWeight.w700,
+                            ) ??
+                            const TextStyle(
+                              color: Color(0xFF2563EB),
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                     ),
                   ),
@@ -3728,6 +3742,27 @@ class _WorkHeaderCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _buildWorkInitials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+    final parts = trimmed.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    if (parts.isEmpty) {
+      return '';
+    }
+    if (parts.length == 1) {
+      final word = parts.first;
+      if (word.length == 1) {
+        return word.toUpperCase();
+      }
+      return word.substring(0, word.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    final firstInitial = parts.first[0];
+    final lastInitial = parts.last[0];
+    return '$firstInitial$lastInitial'.toUpperCase();
   }
 }
 
