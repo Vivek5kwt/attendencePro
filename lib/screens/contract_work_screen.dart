@@ -228,8 +228,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     final nameController = TextEditingController(text: type?.name ?? '');
     final rateController =
         TextEditingController(text: type != null ? type.rate.toStringAsFixed(2) : '');
-    final unitController =
-        TextEditingController(text: type?.unitLabel ?? '');
     final isEditing = type != null;
     final isNameEditable = !(type?.isDefault ?? false);
 
@@ -613,19 +611,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(height: 20),
-                                            TextField(
-                                              controller: unitController,
-                                              decoration: InputDecoration(
-                                                hintText: AppString.contractUnitHint,
-                                                filled: true,
-                                                fillColor: const Color(0xFFF9FAFB),
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(18),
-                                                ),
-                                              ),
-                                            ),
                                           ],
                                         ),
                                       ),
@@ -685,7 +670,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                             final name = nameController.text.trim();
                                             final rate = double.tryParse(
                                                 rateController.text.trim());
-                                            final unit = unitController.text.trim();
                                             final resolvedSubtype =
                                                 selectedSubtypeValue?.trim() ?? '';
 
@@ -725,11 +709,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                               return;
                                             }
 
-                                            final fallbackUnit =
-                                                l.contractWorkUnitFallback;
-                                            final normalizedUnit = unit.isEmpty
-                                                ? fallbackUnit
-                                                : unit;
+                                            final existingUnitLabel =
+                                                type?.unitLabel?.trim();
+                                            final resolvedUnitLabel =
+                                                (existingUnitLabel != null &&
+                                                        existingUnitLabel.isNotEmpty)
+                                                    ? existingUnitLabel
+                                                    : l.contractWorkUnitFallback;
                                             final resolvedName = type == null ||
                                                     isNameEditable
                                                 ? name
@@ -747,7 +733,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                                 name: resolvedName,
                                                 subtype: resolvedSubtype,
                                                 ratePerUnit: rate,
-                                                unitLabel: normalizedUnit,
+                                                unitLabel: resolvedUnitLabel,
                                               )
                                                   .then(
                                                 (created) => _ContractType.fromModel(
@@ -762,7 +748,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                                 name: resolvedName,
                                                 subtype: resolvedSubtype,
                                                 ratePerUnit: rate,
-                                                unitLabel: normalizedUnit,
+                                                unitLabel: resolvedUnitLabel,
                                               )
                                                   .then(
                                                 (updated) => _ContractType.fromModel(
