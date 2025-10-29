@@ -4072,45 +4072,54 @@ class _AttendanceSection extends StatelessWidget {
         final spacing = isCompact ? 8.0 : 12.0;
         final buttonHeight = isCompact ? 44.0 : 48.0;
 
-        final children = <Widget>[];
+        final primaryButtons = <Widget>[];
 
-        void addButton(Widget button) {
-          if (children.isNotEmpty) {
-            children.add(SizedBox(width: spacing));
+        void addPrimaryButton(Widget button) {
+          if (primaryButtons.isNotEmpty) {
+            primaryButtons.add(SizedBox(width: spacing));
           }
-          children.add(Expanded(child: button));
+          primaryButtons.add(Expanded(child: button));
         }
 
         if (hasContractButton) {
-          addButton(_buildContractWorkButton(
+          addPrimaryButton(_buildContractWorkButton(
             context,
             l,
-            height: buttonHeight,
-          ));
-        }
-
-        if (hasWorkOffButton) {
-          addButton(_buildWorkOffButton(
-            context,
-            l,
-            isLocked: isWorkOffLocked,
-            onLockedTap: onWorkOffLockedTap,
             height: buttonHeight,
           ));
         }
 
         final submitButton = buildSubmitButton(height: buttonHeight);
         if (submitButton != null) {
-          addButton(submitButton);
+          addPrimaryButton(submitButton);
         }
 
-        if (children.isEmpty) {
+        final workOffButton = hasWorkOffButton
+            ? _buildWorkOffButton(
+                context,
+                l,
+                isLocked: isWorkOffLocked,
+                onLockedTap: onWorkOffLockedTap,
+                height: buttonHeight,
+              )
+            : null;
+
+        if (primaryButtons.isEmpty && workOffButton == null) {
           return const SizedBox.shrink();
         }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: children,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (primaryButtons.isNotEmpty)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: primaryButtons,
+              ),
+            if (primaryButtons.isNotEmpty && workOffButton != null)
+              SizedBox(height: spacing),
+            if (workOffButton != null) workOffButton,
+          ],
         );
       },
     );
@@ -4175,10 +4184,13 @@ class _AttendanceSection extends StatelessWidget {
     return SizedBox(
       height: resolvedHeight,
       child: _DashedBorderCard(
-        borderColor: baseColor.withOpacity(isEnabled ? 0.6 : 0.25),
+        borderColor: isEnabled ? baseColor : baseColor.withOpacity(0.35),
         backgroundColor:
             isEnabled ? const Color(0xFFF5F9FF) : const Color(0xFFF8FAFC),
         radius: 20,
+        strokeWidth: 1.6,
+        dashLength: 2.5,
+        gapLength: 3.5,
         child: Material(
           type: MaterialType.transparency,
           borderRadius: BorderRadius.circular(20),
@@ -4296,7 +4308,7 @@ class _AttendanceSection extends StatelessWidget {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                final isNarrow = constraints.maxWidth < 320;
+                final spacing = constraints.maxWidth < 360 ? 8.0 : 10.0;
                 final hourSegment = _buildSelectorSegment<int>(
                   value: selectedHour,
                   placeholder: 'HH',
@@ -4388,51 +4400,23 @@ class _AttendanceSection extends StatelessWidget {
                   dropdownKey: ValueKey('period-${selectedPeriod ?? 'null'}'),
                 );
 
-                Widget buildWideLayout() {
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(width: 70, child: hourSegment),
-                      const SizedBox(width: 10),
-                      _buildSegmentDivider(),
-                      const SizedBox(width: 10),
-                      SizedBox(width: 70, child: minuteSegment),
-                      const SizedBox(width: 10),
-                      _buildSegmentDivider(),
-                      const SizedBox(width: 10),
-                      SizedBox(width: 70, child: periodSegment),
-                    ],
-                  );
-                }
-
-                Widget buildNarrowLayout() {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(child: hourSegment),
-                          const SizedBox(width: 8),
-                          _buildSegmentDivider(),
-                          const SizedBox(width: 8),
-                          Expanded(child: minuteSegment),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(width: 70, child: periodSegment),
-                        ],
-                      ),
-                    ],
-                  );
-                }
-
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    isNarrow ? buildNarrowLayout() : buildWideLayout(),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: periodSegment),
+                        SizedBox(width: spacing),
+                        _buildSegmentDivider(showColon: false),
+                        SizedBox(width: spacing),
+                        Expanded(child: hourSegment),
+                        SizedBox(width: spacing),
+                        _buildSegmentDivider(),
+                        SizedBox(width: spacing),
+                        Expanded(child: minuteSegment),
+                      ],
+                    ),
                     if (field.hasError)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
