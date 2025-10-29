@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -364,6 +366,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   bool _isSubmittingAttendance = false;
   String? _attendanceStatusMessage;
   bool _attendanceStatusIsError = false;
+  Timer? _attendanceStatusTimer;
   DateTime _selectedDate = DateTime.now();
   String? _dateLabelOverride;
   List<DateTime> _pendingMissedDates = const <DateTime>[];
@@ -1093,7 +1096,41 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleAttendanceFieldChanged() {
-    if (_attendanceStatusMessage != null) {
+    if (_attendanceStatusMessage != null || _attendanceStatusIsError) {
+      _clearAttendanceStatus();
+    }
+  }
+
+  void _setAttendanceStatus(
+    String message, {
+    required bool isError,
+    Duration? autoHideDuration,
+  }) {
+    _attendanceStatusTimer?.cancel();
+    _attendanceStatusTimer = null;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _attendanceStatusMessage = message;
+      _attendanceStatusIsError = isError;
+    });
+    if (!isError && autoHideDuration != null) {
+      _attendanceStatusTimer = Timer(autoHideDuration, () {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _attendanceStatusMessage = null;
+        });
+      });
+    }
+  }
+
+  void _clearAttendanceStatus() {
+    _attendanceStatusTimer?.cancel();
+    _attendanceStatusTimer = null;
+    if (_attendanceStatusMessage != null || _attendanceStatusIsError) {
       setState(() {
         _attendanceStatusMessage = null;
         _attendanceStatusIsError = false;
@@ -1730,9 +1767,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (isWorkOff) {
       setState(() {
         _isSubmittingAttendance = true;
-        _attendanceStatusMessage = null;
-        _attendanceStatusIsError = false;
       });
+      _clearAttendanceStatus();
 
       try {
         final response = await _attendanceRepository.submitAttendance(
@@ -1745,10 +1781,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         }
         final message =
             _extractResponseMessage(response) ?? l.attendanceSubmitSuccess;
-        setState(() {
-          _attendanceStatusMessage = message;
-          _attendanceStatusIsError = false;
-        });
+        _setAttendanceStatus(
+          message,
+          isError: false,
+          autoHideDuration: const Duration(seconds: 3),
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -1759,10 +1796,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           return;
         }
         final message = l.authenticationRequiredMessage;
-        setState(() {
-          _attendanceStatusMessage = message;
-          _attendanceStatusIsError = true;
-        });
+        _setAttendanceStatus(message, isError: true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -1773,10 +1807,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         final message = e.message.trim().isNotEmpty
             ? e.message.trim()
             : l.attendanceSubmitFailed;
-        setState(() {
-          _attendanceStatusMessage = message;
-          _attendanceStatusIsError = true;
-        });
+        _setAttendanceStatus(message, isError: true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -1785,10 +1816,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           return;
         }
         final message = l.attendanceSubmitFailed;
-        setState(() {
-          _attendanceStatusMessage = message;
-          _attendanceStatusIsError = true;
-        });
+        _setAttendanceStatus(message, isError: true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -1810,10 +1838,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final bool? contractEntryPayloadValue = isContractEntryEnabled;
     if (isContractEntryEnabled && _contractTypes.isEmpty) {
       final message = l.contractWorkLoadError;
-      setState(() {
-        _attendanceStatusMessage = message;
-        _attendanceStatusIsError = true;
-      });
+      _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -1829,10 +1854,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final collectionResult = _collectContractBundles();
       if (collectionResult.errorMessage != null) {
         final message = collectionResult.errorMessage!;
-        setState(() {
-          _attendanceStatusMessage = message;
-          _attendanceStatusIsError = true;
-        });
+        _setAttendanceStatus(message, isError: true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -1842,10 +1864,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       bundles = collectionResult.bundles;
       if (bundles.isEmpty) {
         final message = l.attendanceUnitsRequired;
-        setState(() {
-          _attendanceStatusMessage = message;
-          _attendanceStatusIsError = true;
-        });
+        _setAttendanceStatus(message, isError: true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -1863,9 +1882,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     setState(() {
       _isSubmittingAttendance = true;
-      _attendanceStatusMessage = null;
-      _attendanceStatusIsError = false;
     });
+    _clearAttendanceStatus();
 
     var previewFetched = false;
 
@@ -1916,9 +1934,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
       setState(() {
         _isSubmittingAttendance = true;
-        _attendanceStatusMessage = null;
-        _attendanceStatusIsError = false;
       });
+      _clearAttendanceStatus();
 
       final response = await _attendanceRepository.submitAttendance(
         workId: widget.work.id,
@@ -1938,10 +1955,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
       final message =
           _extractResponseMessage(response) ?? l.attendanceSubmitSuccess;
-      setState(() {
-        _attendanceStatusMessage = message;
-        _attendanceStatusIsError = false;
-      });
+      _setAttendanceStatus(
+        message,
+        isError: false,
+        autoHideDuration: const Duration(seconds: 3),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -1952,10 +1970,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         return;
       }
       final message = l.authenticationRequiredMessage;
-      setState(() {
-        _attendanceStatusMessage = message;
-        _attendanceStatusIsError = true;
-      });
+      _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -1969,10 +1984,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final message = e.message.trim().isNotEmpty
           ? e.message.trim()
           : fallback;
-      setState(() {
-        _attendanceStatusMessage = message;
-        _attendanceStatusIsError = true;
-      });
+      _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -1983,10 +1995,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final message = previewFetched
           ? l.attendanceSubmitFailed
           : l.attendancePreviewFetchFailed;
-      setState(() {
-        _attendanceStatusMessage = message;
-        _attendanceStatusIsError = true;
-      });
+      _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -2226,6 +2235,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   @override
   void dispose() {
+    _attendanceStatusTimer?.cancel();
     _startTimeController.dispose();
     _endTimeController.dispose();
     _breakMinutesController.dispose();
