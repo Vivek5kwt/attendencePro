@@ -379,6 +379,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   List<DateTime> _pendingMissedDates = const <DateTime>[];
   bool _missedDialogShown = false;
   bool _isCompletingMissedAttendance = false;
+  final Set<DateTime> _lockedAttendanceDates = <DateTime>{};
 
   @override
   void initState() {
@@ -1854,11 +1855,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (formState == null) {
       return;
     }
+    final l = AppLocalizations.of(context);
+    final normalizedSelectedDate = _normalizeDateOnly(_selectedDate);
+    final normalizedToday = _normalizeDateOnly(DateTime.now());
+    if (_isSelectedDateLocked) {
+      final message = l.attendanceAlreadyMarkedMessage;
+      _setAttendanceStatus(message, isError: true);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
     if (!formState.validate()) {
       return;
     }
 
-    final l = AppLocalizations.of(context);
     final isWorkOff = _markAsWorkOff;
 
     final canSubmit = await _ensureNoBlockingMissedEntries();
@@ -1893,10 +1903,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         );
         if (mounted) {
           setState(() {
-            _isTodayAttendanceMarked = true;
+            if (normalizedSelectedDate == normalizedToday) {
+              _isTodayAttendanceMarked = true;
+            }
+            _updateAttendanceLockForDate(
+              normalizedSelectedDate,
+              isLocked: true,
+            );
           });
         } else {
-          _isTodayAttendanceMarked = true;
+          if (normalizedSelectedDate == normalizedToday) {
+            _isTodayAttendanceMarked = true;
+          }
+          _updateAttendanceLockForDate(
+            normalizedSelectedDate,
+            isLocked: true,
+          );
         }
         await _loadSummary();
         await _refreshMissedAttendance(showDialog: false);
@@ -2074,10 +2096,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       );
       if (mounted) {
         setState(() {
-          _isTodayAttendanceMarked = true;
+          if (normalizedSelectedDate == normalizedToday) {
+            _isTodayAttendanceMarked = true;
+          }
+          _updateAttendanceLockForDate(
+            normalizedSelectedDate,
+            isLocked: true,
+          );
         });
       } else {
-        _isTodayAttendanceMarked = true;
+        if (normalizedSelectedDate == normalizedToday) {
+          _isTodayAttendanceMarked = true;
+        }
+        _updateAttendanceLockForDate(
+          normalizedSelectedDate,
+          isLocked: true,
+        );
       }
       await _loadSummary();
       await _refreshMissedAttendance(showDialog: false);
@@ -2373,11 +2407,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     try {
       final summary = await _dashboardRepository.fetchSummary(workId: widget.work.id);
       if (!mounted) return;
+      final isTodayMarked = _hasMarkedAttendanceForToday(summary.todayEntry);
       setState(() {
         _dashboardSummary = summary;
         _isSummaryLoading = false;
-        _isTodayAttendanceMarked =
-            _hasMarkedAttendanceForToday(summary.todayEntry);
+        _isTodayAttendanceMarked = isTodayMarked;
+        _updateAttendanceLockForDate(DateTime.now(), isLocked: isTodayMarked);
       });
       _applyAttendanceDetailsFromSummary(summary.todayEntry);
       await _refreshMissedAttendance(showDialog: true);
@@ -2902,6 +2937,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   DateTime _normalizeDateOnly(DateTime date) {
     return DateTime(date.year, date.month, date.day);
+  }
+
+  bool get _isSelectedDateLocked {
+    return _lockedAttendanceDates.contains(_normalizeDateOnly(_selectedDate));
+  }
+
+  void _updateAttendanceLockForDate(DateTime date, {required bool isLocked}) {
+    final normalized = _normalizeDateOnly(date);
+    if (isLocked) {
+      _lockedAttendanceDates.add(normalized);
+    } else {
+      _lockedAttendanceDates.remove(normalized);
+    }
   }
 
   String _formatDate(DateTime date) {
