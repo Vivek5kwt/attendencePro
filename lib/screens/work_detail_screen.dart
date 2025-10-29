@@ -2498,6 +2498,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _WorkHeaderCard(
                 work: widget.work,
@@ -4925,6 +4926,7 @@ class _SummaryStatusCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             header,
@@ -4940,6 +4942,7 @@ class _SummaryStatusCard extends StatelessWidget {
           const SizedBox(height: 20),
           SizedBox(
             height: 120,
+            width: double.infinity,
             child: Center(
               child: isLoading
                   ? const CircularProgressIndicator()
