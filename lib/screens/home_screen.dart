@@ -261,21 +261,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final works = state.works;
     if (works.isEmpty) {
+      _hasTriggeredAutoActivation = false;
       return;
     }
 
-    final Work targetWork = works.firstWhere(
-      (work) => _isWorkActive(work),
-      orElse: () => works.first,
-    );
-
-    final bool hasActiveWork = _isWorkActive(targetWork);
-    if (!hasActiveWork && !_hasTriggeredAutoActivation) {
-      _hasTriggeredAutoActivation = true;
-      context.read<WorkBloc>().add(WorkActivated(work: targetWork));
+    final bool hasSingleWork = works.length == 1;
+    Work? activeWork;
+    for (final work in works) {
+      if (_isWorkActive(work)) {
+        activeWork = work;
+        break;
+      }
     }
 
-    if (!_shouldOpenDashboard) {
+    final bool hasActiveWork = activeWork != null;
+
+    if (!hasActiveWork) {
+      if (!hasSingleWork) {
+        _hasTriggeredAutoActivation = false;
+        return;
+      }
+
+      if (state.activateStatus == WorkActionStatus.failure &&
+          _hasTriggeredAutoActivation) {
+        _hasTriggeredAutoActivation = false;
+      }
+
+      if (_hasTriggeredAutoActivation ||
+          state.activateStatus == WorkActionStatus.inProgress) {
+        return;
+      }
+
+      _hasTriggeredAutoActivation = true;
+      context.read<WorkBloc>().add(WorkActivated(work: works.first));
+      return;
+    }
+
+    _hasTriggeredAutoActivation = false;
+
+    if (hasSingleWork) {
       _shouldOpenDashboard = true;
     }
 
@@ -286,6 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _shouldOpenDashboard = false;
     _hasOpenedDashboard = true;
 
+    final targetWork = activeWork!;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<AppCubit>().showHome();
