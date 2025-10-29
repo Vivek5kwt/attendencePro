@@ -2219,8 +2219,8 @@ class _MonthlyReportDayCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 3,
-                      child: Text(
-                        detail.value,
+                      child: _MonthlyDetailValue(
+                        detail: detail,
                         style: valueStyle,
                       ),
                     ),
@@ -2273,6 +2273,357 @@ class _MonthlyReportDayCard extends StatelessWidget {
     }
     return trimmed[0].toUpperCase() + trimmed.substring(1);
   }
+}
+
+class _MonthlyDetailValue extends StatelessWidget {
+  const _MonthlyDetailValue({
+    required this.detail,
+    required this.style,
+  });
+
+  final MonthlyReportDayDetail detail;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final structured = _buildFromRaw(detail.rawValue);
+    if (structured != null) {
+      return structured;
+    }
+
+    final fallback = detail.value.trim();
+    if (fallback.isEmpty) {
+      return Text('-', style: style);
+    }
+    return Text(fallback, style: style);
+  }
+
+  Widget? _buildFromRaw(Object? rawValue) {
+    if (rawValue == null) {
+      return null;
+    }
+    if (rawValue is List) {
+      return _buildList(rawValue);
+    }
+    if (rawValue is Map) {
+      return _buildMap(rawValue);
+    }
+
+    final text = _stringifyPrimitive(rawValue);
+    if (text == null || text.isEmpty) {
+      return null;
+    }
+    return Text(text, style: style);
+  }
+
+  Widget? _buildList(List<dynamic> values) {
+    if (values.isEmpty) {
+      return null;
+    }
+
+    final children = <Widget>[];
+    final mapCount = values.whereType<Map>().length;
+
+    for (var index = 0; index < values.length; index++) {
+      final item = values[index];
+
+      if (item is Map) {
+        final heading = _extractHeading(item);
+        final content = _buildMap(
+          item,
+          overrideHeading: null,
+          skipKeys: heading == null ? const <String>{} : _headingKeys,
+        );
+        if (content == null) {
+          continue;
+        }
+
+        final resolvedHeading = heading ??
+            (mapCount > 1 ? 'Entry ${index + 1}' : null);
+
+        Widget child = content;
+        if (resolvedHeading != null && resolvedHeading.isNotEmpty) {
+          child = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                resolvedHeading,
+                style: style.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              content,
+            ],
+          );
+        }
+
+        children.add(
+          Container(
+            margin: EdgeInsets.only(top: children.isEmpty ? 0 : 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: child,
+          ),
+        );
+        continue;
+      }
+
+      if (item is List) {
+        final nested = _buildList(item);
+        if (nested == null) {
+          continue;
+        }
+        children.add(
+          Container(
+            margin: EdgeInsets.only(top: children.isEmpty ? 0 : 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: nested,
+          ),
+        );
+        continue;
+      }
+
+      final text = _stringifyPrimitive(item);
+      if (text == null || text.isEmpty) {
+        continue;
+      }
+
+      children.add(
+        Padding(
+          padding: EdgeInsets.only(top: children.isEmpty ? 0 : 4),
+          child: Text('• $text', style: style),
+        ),
+      );
+    }
+
+    if (children.isEmpty) {
+      return null;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
+  }
+
+  Widget? _buildMap(
+    Map<dynamic, dynamic> rawMap, {
+    String? overrideHeading,
+    Set<String> skipKeys = const <String>{},
+  }) {
+    if (rawMap.isEmpty) {
+      return null;
+    }
+
+    final sanitized = <String, dynamic>{};
+    final normalizedLookup = <String, String>{};
+    rawMap.forEach((key, value) {
+      final stringKey = key.toString();
+      final normalizedKey = stringKey.toLowerCase();
+      if (skipKeys.contains(normalizedKey)) {
+        return;
+      }
+      sanitized[stringKey] = value;
+      normalizedLookup[normalizedKey] = stringKey;
+    });
+
+    String? heading = overrideHeading;
+    if (heading == null) {
+      for (final candidate in _headingKeys) {
+        final originalKey = normalizedLookup[candidate];
+        if (originalKey == null) {
+          continue;
+        }
+        final rawHeading = sanitized.remove(originalKey);
+        final formatted = _stringifyPrimitive(rawHeading);
+        if (formatted != null && formatted.isNotEmpty) {
+          heading = formatted;
+          break;
+        }
+      }
+    }
+
+    final entryWidgets = <Widget>[];
+    sanitized.forEach((key, value) {
+      final widget = _buildMapEntry(key, value);
+      if (widget != null) {
+        entryWidgets.add(widget);
+      }
+    });
+
+    if (entryWidgets.isEmpty) {
+      if (heading != null) {
+        return Text(
+          heading,
+          style: style.copyWith(fontWeight: FontWeight.w600),
+        );
+      }
+      return null;
+    }
+
+    final spacedEntries = _intersperse(entryWidgets, 6);
+    if (heading != null && heading.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            heading,
+            style: style.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          ...spacedEntries,
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: spacedEntries,
+    );
+  }
+
+  Widget? _buildMapEntry(String key, dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is Map) {
+      final nested = _buildMap(value);
+      if (nested == null) {
+        return null;
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _formatKey(key),
+            style: style.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          nested,
+        ],
+      );
+    }
+
+    if (value is List) {
+      final nested = _buildList(value);
+      if (nested == null) {
+        return null;
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _formatKey(key),
+            style: style.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          nested,
+        ],
+      );
+    }
+
+    final text = _stringifyPrimitive(value);
+    if (text == null || text.isEmpty) {
+      return null;
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: style,
+        children: [
+          TextSpan(
+            text: '${_formatKey(key)}: ',
+            style: style.copyWith(fontWeight: FontWeight.w600),
+          ),
+          TextSpan(text: text),
+        ],
+      ),
+    );
+  }
+
+  String? _extractHeading(Map<dynamic, dynamic> value) {
+    for (final entry in value.entries) {
+      final key = entry.key.toString();
+      if (_headingKeys.contains(key.toLowerCase())) {
+        final text = _stringifyPrimitive(entry.value);
+        if (text != null && text.isNotEmpty) {
+          return text;
+        }
+      }
+    }
+    return null;
+  }
+
+  String? _stringifyPrimitive(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    if (value is num || value is bool) {
+      return value.toString();
+    }
+    return value.toString();
+  }
+
+  List<Widget> _intersperse(List<Widget> widgets, double spacing) {
+    if (widgets.length <= 1) {
+      return widgets;
+    }
+    final result = <Widget>[];
+    for (var i = 0; i < widgets.length; i++) {
+      result.add(widgets[i]);
+      if (i != widgets.length - 1) {
+        result.add(SizedBox(height: spacing));
+      }
+    }
+    return result;
+  }
+
+  String _formatKey(String key) {
+    if (key.trim().isEmpty) {
+      return key;
+    }
+    final buffer = StringBuffer();
+    var uppercaseNext = true;
+    for (var i = 0; i < key.length; i++) {
+      final char = key[i];
+      if (char == '_' || char == '-') {
+        buffer.write(' ');
+        uppercaseNext = true;
+        continue;
+      }
+      if (uppercaseNext) {
+        buffer.write(char.toUpperCase());
+        uppercaseNext = false;
+      } else if (char.toUpperCase() == char && char.toLowerCase() != char) {
+        buffer.write(' ');
+        buffer.write(char);
+      } else {
+        buffer.write(char);
+      }
+    }
+    return buffer.toString().trim();
+  }
+
+  static const Set<String> _headingKeys = {
+    'label',
+    'title',
+    'name',
+    'entry',
+    'header',
+  };
 }
 
 class _MonthlyInfoChip extends StatelessWidget {
