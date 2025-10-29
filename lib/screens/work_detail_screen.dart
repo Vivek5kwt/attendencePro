@@ -2401,16 +2401,17 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                minimumSize: const Size(0, 40),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.w600,
@@ -2420,8 +2421,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.sync_alt_rounded, size: 18),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.sync_alt_rounded, size: 16),
+                  const SizedBox(width: 6),
                   Text(l.changeWorkButton),
                 ],
               ),
@@ -2440,7 +2441,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                 workTypeLabel: workTypeLabel,
                 rateDescription: rateDescription,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               if (_pendingMissedDates.isNotEmpty) ...[
                 _PendingAttendanceCard(
                   title: l.attendanceMissedEntriesTitle,
@@ -2454,7 +2455,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                   ),
                   onReview: _handlePendingAttendanceReview,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
               ],
               _AttendanceSection(
                 dateLabel: dateLabel,
@@ -3476,7 +3477,7 @@ class _WorkHeaderCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
-      height: 200,
+      height: 176,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -3515,11 +3516,11 @@ class _WorkHeaderCard extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 18,
-            right: 24,
+            top: 16,
+            right: 22,
             child: Container(
-              width: 54,
-              height: 54,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.18),
                 shape: BoxShape.circle,
@@ -3527,7 +3528,7 @@ class _WorkHeaderCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -3560,7 +3561,7 @@ class _WorkHeaderCard extends StatelessWidget {
                               ),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 14),
                       Text(
                         work.name,
                         maxLines: 2,
@@ -3575,7 +3576,7 @@ class _WorkHeaderCard extends StatelessWidget {
                               fontWeight: FontWeight.w700,
                             ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -3611,16 +3612,16 @@ class _WorkHeaderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 18),
                 Container(
-                  width: 118,
-                  height: 118,
+                  width: 104,
+                  height: 104,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.22),
                     shape: BoxShape.circle,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(5),
                     child: ClipOval(
                       child: Image.asset(
                         AppAssets.homeBanner2,
@@ -3717,16 +3718,16 @@ class _AttendanceSection extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.045),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
       child: Form(
         key: formKey,
         child: Column(
@@ -3738,8 +3739,8 @@ class _AttendanceSection extends StatelessWidget {
                 final titleWidget = Row(
                   children: [
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
                         color: const Color(0xFFE0F2FE),
                         borderRadius: BorderRadius.circular(16),
@@ -3748,7 +3749,7 @@ class _AttendanceSection extends StatelessWidget {
                       child: const Icon(
                         Icons.today_rounded,
                         color: Color(0xFF2563EB),
-                        size: 20,
+                        size: 18,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -3758,11 +3759,11 @@ class _AttendanceSection extends StatelessWidget {
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 18,
+                                  fontSize: 17,
                                 ) ??
                                 const TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 18,
+                                  fontSize: 17,
                                 ),
                       ),
                     ),
@@ -4042,7 +4043,7 @@ class _AttendanceSection extends StatelessWidget {
 
   Widget _buildContractWorkButton(BuildContext context, AppLocalizations l) {
     return SizedBox(
-      height: 52,
+      height: 48,
       child: OutlinedButton(
         onPressed: isSubmitting ? null : onContractWorkTap,
         style: OutlinedButton.styleFrom(
@@ -4050,19 +4051,19 @@ class _AttendanceSection extends StatelessWidget {
           foregroundColor: const Color(0xFF1D4ED8),
           side: const BorderSide(color: Color(0xFF2563EB)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
-            const Icon(Icons.work_outline_rounded, size: 20),
-            const SizedBox(width: 8),
+            const Icon(Icons.work_outline_rounded, size: 18),
+            const SizedBox(width: 6),
             Text(l.contractWorkLabel),
           ],
         ),
@@ -4078,21 +4079,21 @@ class _AttendanceSection extends StatelessWidget {
           color: isEnabled ? baseColor : baseColor.withOpacity(0.4),
         ) ??
         TextStyle(
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: FontWeight.w700,
           color: isEnabled ? baseColor : baseColor.withOpacity(0.4),
         );
 
     return SizedBox(
-      height: 52,
+      height: 48,
       child: _DashedBorderCard(
         borderColor: baseColor.withOpacity(isEnabled ? 0.6 : 0.25),
         backgroundColor:
             isEnabled ? const Color(0xFFF5F9FF) : const Color(0xFFF8FAFC),
-        radius: 24,
+        radius: 20,
         child: Material(
           type: MaterialType.transparency,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: isEnabled ? onWorkOffSubmit : null,
@@ -4110,18 +4111,18 @@ class _AttendanceSection extends StatelessWidget {
 
   Widget _buildSubmitButton(BuildContext context, AppLocalizations l) {
     return SizedBox(
-      height: 52,
+      height: 48,
       child: ElevatedButton(
         onPressed: isSubmitting ? null : onSubmit,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2563EB),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 15,
           ),
         ),
         child: isSubmitting
@@ -5402,10 +5403,29 @@ class _MonthlySummarySection extends StatelessWidget {
     final monthName = _formatMonthYearLabel(DateTime.now());
     final l = AppLocalizations.of(context);
 
+    final totalHoursLabel = l.totalHoursLabel;
+    final totalSalaryLabel = l.totalSalaryLabel;
+    final primaryStats = <_SummaryStat>[];
+    final remainingStats = <_SummaryStat>[];
+    var hasHours = false;
+    var hasSalary = false;
+
+    for (final stat in stats) {
+      if (!hasHours && stat.title == totalHoursLabel) {
+        primaryStats.add(stat);
+        hasHours = true;
+      } else if (!hasSalary && stat.title == totalSalaryLabel) {
+        primaryStats.add(stat);
+        hasSalary = true;
+      } else {
+        remainingStats.add(stat);
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -5414,7 +5434,7 @@ class _MonthlySummarySection extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -5429,31 +5449,37 @@ class _MonthlySummarySection extends StatelessWidget {
                   fontSize: 18,
                 ),
           ),
-          const SizedBox(height: 20),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final maxWidth = constraints.maxWidth;
-              final isCompact = maxWidth < 420;
-              final crossAxisCount = isCompact ? 1 : 2;
-              const crossAxisSpacing = 12.0;
-              final availableWidth =
-                  maxWidth - crossAxisSpacing * (crossAxisCount - 1);
-              final itemWidth = availableWidth / crossAxisCount;
-              final desiredHeight = isCompact ? 164.0 : 156.0;
-              final childAspectRatio = itemWidth / desiredHeight;
+          const SizedBox(height: 16),
+          if (primaryStats.isNotEmpty) ...[
+            _CompactSummaryRow(stats: primaryStats),
+            if (remainingStats.isNotEmpty) const SizedBox(height: 18),
+          ],
+          if (remainingStats.isNotEmpty)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth;
+                final isCompact = maxWidth < 420;
+                final crossAxisCount = isCompact ? 1 : 2;
+                const crossAxisSpacing = 12.0;
+                final availableWidth =
+                    maxWidth - crossAxisSpacing * (crossAxisCount - 1);
+                final itemWidth = availableWidth / crossAxisCount;
+                final desiredHeight = isCompact ? 150.0 : 142.0;
+                final childAspectRatio = itemWidth / desiredHeight;
 
-              return GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: crossAxisSpacing,
-                childAspectRatio: childAspectRatio,
-                children:
-                    stats.map((stat) => _SummaryStatCard(stat: stat)).toList(),
-              );
-            },
-          ),
+                return GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: crossAxisSpacing,
+                  childAspectRatio: childAspectRatio,
+                  children: remainingStats
+                      .map((stat) => _SummaryStatCard(stat: stat))
+                      .toList(),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -5583,6 +5609,105 @@ class _AttendanceTimeCard extends StatelessWidget {
   }
 }
 
+class _CompactSummaryRow extends StatelessWidget {
+  const _CompactSummaryRow({required this.stats});
+
+  final List<_SummaryStat> stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleStats = stats.take(2).toList(growable: false);
+    return Row(
+      children: [
+        for (var i = 0; i < visibleStats.length; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
+          Expanded(child: _CompactSummaryTile(stat: visibleStats[i])),
+        ],
+      ],
+    );
+  }
+}
+
+class _CompactSummaryTile extends StatelessWidget {
+  const _CompactSummaryTile({required this.stat});
+
+  final _SummaryStat stat;
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = stat.color;
+    final backgroundColor = baseColor.withOpacity(0.08);
+    final borderColor = baseColor.withOpacity(0.18);
+    final iconBackground = baseColor.withOpacity(0.16);
+    final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1E293B),
+        ) ??
+        const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1E293B),
+        );
+    final valueStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          color: const Color(0xFF0F172A),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          color: Color(0xFF0F172A),
+        );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconBackground,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              stat.icon,
+              color: baseColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stat.title,
+                  style: labelStyle,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  stat.value,
+                  style: valueStyle,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SummaryStatCard extends StatelessWidget {
   const _SummaryStatCard({required this.stat});
 
@@ -5595,17 +5720,17 @@ class _SummaryStatCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(
             color: Color(0x14222C3A),
-            offset: Offset(0, 16),
-            blurRadius: 32,
+            offset: Offset(0, 12),
+            blurRadius: 28,
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
             DecoratedBox(
@@ -5632,12 +5757,12 @@ class _SummaryStatCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.22),
@@ -5645,7 +5770,7 @@ class _SummaryStatCard extends StatelessWidget {
                     child: Icon(
                       stat.icon,
                       color: Colors.white,
-                      size: 26,
+                      size: 24,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -5659,16 +5784,16 @@ class _SummaryStatCard extends StatelessWidget {
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                            fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 8),
                         Text(
                           stat.value,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
-                            fontSize: 28,
+                            fontSize: 24,
                           ),
                         ),
                       ],
