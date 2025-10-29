@@ -4267,118 +4267,154 @@ class _AttendanceSection extends StatelessWidget {
               field.didChange(textValue);
             }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 320;
+                final hourSegment = _buildSelectorSegment<int>(
+                  value: selectedHour,
+                  placeholder: 'HH',
+                  items: _timeHourOptions
+                      .map(
+                        (hour) => DropdownMenuItem<int>(
+                          value: hour,
+                          child: Text(
+                            hour.toString().padLeft(2, '0'),
+                            style: valueStyle,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: enabled
+                      ? (value) {
+                          if (value == null) {
+                            controller.clear();
+                            field.didChange('');
+                            onValueChanged();
+                          } else {
+                            updateValue(hour: value);
+                          }
+                        }
+                      : null,
+                  placeholderStyle: placeholderStyle,
+                  dropdownKey: ValueKey('hour-${selectedHour ?? 'null'}'),
+                );
+
+                final minuteSegment = _buildSelectorSegment<int>(
+                  value: selectedMinute,
+                  placeholder: 'MM',
+                  items: minuteOptions
+                      .map(
+                        (minute) => DropdownMenuItem<int>(
+                          value: minute,
+                          child: Text(
+                            minute.toString().padLeft(2, '0'),
+                            style: valueStyle,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: enabled
+                      ? (value) {
+                          if (value == null) {
+                            controller.clear();
+                            field.didChange('');
+                            onValueChanged();
+                          } else {
+                            updateValue(minute: value);
+                          }
+                        }
+                      : null,
+                  placeholderStyle: placeholderStyle,
+                  dropdownKey: ValueKey(
+                    'minute-${parsedTime?.hour ?? 'null'}-${minuteOptions.length}',
+                  ),
+                );
+
+                final periodSegment = _buildSelectorSegment<DayPeriod>(
+                  value: selectedPeriod,
+                  placeholder: AppString.amLabel,
+                  items: DayPeriod.values
+                      .map(
+                        (period) => DropdownMenuItem<DayPeriod>(
+                          value: period,
+                          child: Text(
+                            period == DayPeriod.am
+                                ? AppString.amLabel
+                                : AppString.pmLabel,
+                            style: valueStyle,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: enabled
+                      ? (value) {
+                          if (value == null) {
+                            controller.clear();
+                            field.didChange('');
+                            onValueChanged();
+                          } else {
+                            updateValue(period: value);
+                          }
+                        }
+                      : null,
+                  placeholderStyle: placeholderStyle,
+                  dropdownKey: ValueKey('period-${selectedPeriod ?? 'null'}'),
+                );
+
+                Widget buildWideLayout() {
+                  return Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildSelectorSegment<int>(
-                        width: 70,
-                        value: selectedHour,
-                        placeholder: 'HH',
-                        items: _timeHourOptions
-                            .map(
-                              (hour) => DropdownMenuItem<int>(
-                                value: hour,
-                                child: Text(
-                                  hour.toString().padLeft(2, '0'),
-                                  style: valueStyle,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                } else {
-                                  updateValue(hour: value);
-                                }
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
+                      SizedBox(width: 70, child: hourSegment),
                       const SizedBox(width: 10),
                       _buildSegmentDivider(),
                       const SizedBox(width: 10),
-                      _buildSelectorSegment<int>(
-                        width: 70,
-                        value: selectedMinute,
-                        placeholder: 'MM',
-                        items: minuteOptions
-                            .map(
-                              (minute) => DropdownMenuItem<int>(
-                                value: minute,
-                                child: Text(
-                                  minute.toString().padLeft(2, '0'),
-                                  style: valueStyle,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                } else {
-                                  updateValue(minute: value);
-                                }
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
+                      SizedBox(width: 70, child: minuteSegment),
                       const SizedBox(width: 10),
                       _buildSegmentDivider(),
                       const SizedBox(width: 10),
-                      _buildSelectorSegment<DayPeriod>(
-                        width: 82,
-                        value: selectedPeriod,
-                        placeholder: AppString.amLabel,
-                        items: DayPeriod.values
-                            .map(
-                              (period) => DropdownMenuItem<DayPeriod>(
-                                value: period,
-                                child: Text(
-                                  period == DayPeriod.am
-                                      ? AppString.amLabel
-                                      : AppString.pmLabel,
-                                  style: valueStyle,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                } else {
-                                  updateValue(period: value);
-                                }
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
+                      SizedBox(width: 82, child: periodSegment),
+                    ],
+                  );
+                }
+
+                Widget buildNarrowLayout() {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: hourSegment),
+                          const SizedBox(width: 8),
+                          _buildSegmentDivider(),
+                          const SizedBox(width: 8),
+                          Expanded(child: minuteSegment),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: periodSegment,
                       ),
                     ],
-                  ),
-                ),
-                if (field.hasError)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      field.errorText ?? '',
-                      style: errorStyle,
-                    ),
-                  ),
-              ],
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    isNarrow ? buildNarrowLayout() : buildWideLayout(),
+                    if (field.hasError)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          field.errorText ?? '',
+                          style: errorStyle,
+                        ),
+                      ),
+                  ],
+                );
+              },
             );
           },
         );
@@ -4460,82 +4496,118 @@ class _AttendanceSection extends StatelessWidget {
               field.didChange(textValue);
             }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 320;
+
+                final hourSegment = _buildSelectorSegment<int>(
+                  value: resolvedHour,
+                  placeholder: '00',
+                  items: hourItems,
+                  onChanged: enabled
+                      ? (value) {
+                          if (value == null) {
+                            controller.clear();
+                            field.didChange('');
+                            onValueChanged();
+                            return;
+                          }
+                          final minutes = _breakMinutesForHour(value).first;
+                          updateBreakValue(value, minutes);
+                        }
+                      : null,
+                  placeholderStyle: placeholderStyle,
+                  dropdownKey: const ValueKey('break-hour'),
+                );
+
+                final minuteSegment = _buildSelectorSegment<int>(
+                  value: resolvedMinute,
+                  placeholder: '00',
+                  items: minutesForHour
+                      .map(
+                        (minute) => DropdownMenuItem<int>(
+                          value: minute,
+                          child: Text(
+                            minute.toString().padLeft(2, '0'),
+                            style: valueStyle,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: enabled
+                      ? (value) {
+                          if (value == null) {
+                            controller.clear();
+                            field.didChange('');
+                            onValueChanged();
+                            return;
+                          }
+                          final hour =
+                              resolvedHour ?? _breakHourOptions.first;
+                          updateBreakValue(hour, value);
+                        }
+                      : null,
+                  placeholderStyle: placeholderStyle,
+                  dropdownKey: ValueKey(
+                    'break-minute-${resolvedHour ?? 'null'}-${minutesForHour.length}',
+                  ),
+                );
+
+                Widget buildWideLayout() {
+                  return Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildSelectorSegment<int>(
-                        width: 70,
-                        value: resolvedHour,
-                        placeholder: '00',
-                        items: hourItems,
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                  return;
-                                }
-                                final minutes = _breakMinutesForHour(value).first;
-                                updateBreakValue(value, minutes);
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
+                      SizedBox(width: 70, child: hourSegment),
                       const SizedBox(width: 8),
                       const Text('hr', style: labelStyle),
                       const SizedBox(width: 14),
                       _buildSegmentDivider(showColon: false),
                       const SizedBox(width: 14),
-                      _buildSelectorSegment<int>(
-                        width: 70,
-                        value: resolvedMinute,
-                        placeholder: '00',
-                        items: minutesForHour
-                            .map(
-                              (minute) => DropdownMenuItem<int>(
-                                value: minute,
-                                child: Text(
-                                  minute.toString().padLeft(2, '0'),
-                                  style: valueStyle,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: enabled
-                            ? (value) {
-                                if (value == null) {
-                                  controller.clear();
-                                  field.didChange('');
-                                  onValueChanged();
-                                  return;
-                                }
-                                final hour =
-                                    resolvedHour ?? _breakHourOptions.first;
-                                updateBreakValue(hour, value);
-                              }
-                            : null,
-                        placeholderStyle: placeholderStyle,
-                      ),
+                      SizedBox(width: 70, child: minuteSegment),
                       const SizedBox(width: 8),
                       const Text('min', style: labelStyle),
                     ],
-                  ),
-                ),
-                if (field.hasError)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      field.errorText ?? '',
-                      style: errorStyle,
-                    ),
-                  ),
-              ],
+                  );
+                }
+
+                Widget buildNarrowLayout() {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: hourSegment),
+                          const SizedBox(width: 8),
+                          const Text('hr', style: labelStyle),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: minuteSegment),
+                          const SizedBox(width: 8),
+                          const Text('min', style: labelStyle),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    isNarrow ? buildNarrowLayout() : buildWideLayout(),
+                    if (field.hasError)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          field.errorText ?? '',
+                          style: errorStyle,
+                        ),
+                      ),
+                  ],
+                );
+              },
             );
           },
         );
@@ -4544,15 +4616,14 @@ class _AttendanceSection extends StatelessWidget {
   }
 
   Widget _buildSelectorSegment<T>({
-    required double width,
     required T? value,
     required List<DropdownMenuItem<T>> items,
     required String placeholder,
     required ValueChanged<T?>? onChanged,
     required TextStyle placeholderStyle,
+    Key? dropdownKey,
   }) {
     return Container(
-      width: width,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -4561,6 +4632,7 @@ class _AttendanceSection extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
+          key: dropdownKey,
           value: value,
           isExpanded: true,
           icon: const Icon(
