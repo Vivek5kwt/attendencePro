@@ -5839,33 +5839,21 @@ class _ContractUnitBadge extends StatelessWidget {
           vertical: 6,
           horizontal: 12,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.schedule_rounded,
-              size: 14,
-              color: textColor,
-              semanticLabel: label,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ) ??
-                  TextStyle(
-                    color: textColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+        child: Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ) ??
+              TextStyle(
+                color: textColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
