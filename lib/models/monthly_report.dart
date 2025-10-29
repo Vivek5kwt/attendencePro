@@ -254,6 +254,7 @@ class MonthlyReportDay {
         MonthlyReportDayDetail(
           label: _prettifyKey(entry.key),
           value: valueString,
+          rawValue: entry.value,
         ),
       );
     }
@@ -311,10 +312,14 @@ class MonthlyReportDayDetail {
   const MonthlyReportDayDetail({
     required this.label,
     required this.value,
+    this.rawValue,
   });
 
   final String label;
   final String value;
+  final Object? rawValue;
+
+  bool get hasStructuredValue => rawValue is Map || rawValue is List;
 }
 
 Map<String, dynamic>? _ensureMap(dynamic value) {
