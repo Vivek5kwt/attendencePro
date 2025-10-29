@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../models/monthly_report.dart';
 import '../models/report_summary.dart';
 import 'auth_api.dart' show ApiException;
 import 'logging_client.dart';
@@ -42,6 +43,47 @@ class ReportsApi {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return ReportSummary.fromJson(decoded ?? <String, dynamic>{});
+      }
+
+      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+    } on SocketException {
+      throw ApiException('Unable to reach the server. Please check your connection.');
+    } on HttpException {
+      throw ApiException('A network error occurred while contacting the server.');
+    } on FormatException {
+      throw ApiException('Received an invalid response from the server.');
+    }
+  }
+
+  Future<MonthlyReport> fetchMonthlyReport({
+    required String userId,
+    required int month,
+    required int year,
+    required MonthlyReportType type,
+    String? token,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/reports/monthly');
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null && token.trim().isNotEmpty)
+        'Authorization': 'Bearer ${token.trim()}',
+    };
+
+    final payload = jsonEncode(<String, dynamic>{
+      'user_id': userId,
+      'month': month,
+      'year': year,
+      'type': type.apiValue,
+    });
+
+    try {
+      final response = await _client.post(uri, headers: headers, body: payload);
+      final decoded = _decodeBody(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return MonthlyReport.fromJson(decoded ?? <String, dynamic>{});
       }
 
       throw ApiException(_extractErrorMessage(decoded, response.statusCode));

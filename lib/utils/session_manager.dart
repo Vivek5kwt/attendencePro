@@ -4,6 +4,7 @@ class SessionManager {
   const SessionManager();
 
   static const _tokenKey = 'auth_token';
+  static const _userIdKey = 'user_id';
   static const _nameKey = 'user_name';
   static const _emailKey = 'user_email';
   static const _usernameKey = 'user_username';
@@ -19,9 +20,11 @@ class SessionManager {
     String? phone,
     String? countryCode,
     String? language,
+    String? userId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
+    await _setOptionalString(prefs, _userIdKey, userId);
     await _setOptionalString(prefs, _nameKey, name);
     await _setOptionalString(prefs, _emailKey, email);
     await _setOptionalString(prefs, _usernameKey, username);
@@ -37,6 +40,15 @@ class SessionManager {
       return null;
     }
     return token;
+  }
+
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString(_userIdKey);
+    if (id == null || id.isEmpty) {
+      return null;
+    }
+    return id;
   }
 
   Future<Map<String, String?>> getUserProfile() async {
@@ -85,6 +97,7 @@ class SessionManager {
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    await prefs.remove(_userIdKey);
     await prefs.remove(_nameKey);
     await prefs.remove(_emailKey);
     await prefs.remove(_usernameKey);

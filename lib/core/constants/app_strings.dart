@@ -220,6 +220,10 @@ abstract final class AppString {
       'reportsTotalUnitsLabel': 'Total Units',
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
+      'reportsMonthlySectionTitle': 'Monthly Report',
+      'reportsMonthlyTypeHourly': 'Hourly',
+      'reportsMonthlyTypeFixed': 'Fixed Salary',
+      'reportsMonthlyEmptyMessage': 'No records available for this month.',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'Fetching the latest summary...',
       'dashboardSummaryLoadFailedMessage':
@@ -607,6 +611,10 @@ abstract final class AppString {
       'reportsTotalUnitsLabel': 'Total Units',
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
+      'reportsMonthlySectionTitle': 'मासिक रिपोर्ट',
+      'reportsMonthlyTypeHourly': 'घंटेवार',
+      'reportsMonthlyTypeFixed': 'निश्चित वेतन',
+      'reportsMonthlyEmptyMessage': 'इस महीने के लिए कोई रिकॉर्ड उपलब्ध नहीं हैं।',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'नवीनतम सारांश प्राप्त किया जा रहा है...',
       'dashboardSummaryLoadFailedMessage':
@@ -991,6 +999,10 @@ abstract final class AppString {
       'reportsTotalUnitsLabel': 'Total Units',
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
+      'reportsMonthlySectionTitle': 'ਮਾਸਿਕ ਰਿਪੋਰਟ',
+      'reportsMonthlyTypeHourly': 'ਘੰਟਾ ਅਧਾਰਿਤ',
+      'reportsMonthlyTypeFixed': 'ਨਿਰਧਾਰਤ ਤਨਖਾਹ',
+      'reportsMonthlyEmptyMessage': 'ਇਸ ਮਹੀਨੇ ਲਈ ਕੋਈ ਰਿਕਾਰਡ ਉਪਲਬਧ ਨਹੀਂ ਹਨ।',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'ਤਾਜ਼ਾ ਸੰਖੇਪ ਲਿਆ ਜਾ ਰਿਹਾ ਹੈ...',
       'dashboardSummaryLoadFailedMessage':
@@ -1382,6 +1394,11 @@ abstract final class AppString {
       'reportsTotalUnitsLabel': 'Total Units',
       'reportsContractSalaryLabel': 'Contract Salary',
       'reportsBreakdownSuffix': 'Breakdown',
+      'reportsMonthlySectionTitle': 'Rapporto mensile',
+      'reportsMonthlyTypeHourly': 'Orario',
+      'reportsMonthlyTypeFixed': 'Stipendio fisso',
+      'reportsMonthlyEmptyMessage':
+          'Nessun record disponibile per questo mese.',
       'reportsGrandTotalLabel': 'Grand Total',
       'reportsLoadingMessage': 'Recupero del riepilogo più recente...',
       'dashboardSummaryLoadFailedMessage':
