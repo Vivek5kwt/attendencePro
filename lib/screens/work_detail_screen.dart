@@ -3805,38 +3805,16 @@ class _AttendanceSection extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final isCompact = constraints.maxWidth < 360;
-                final titleWidget = Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE0F2FE),
-                        borderRadius: BorderRadius.circular(16),
+                final titleWidget = Text(
+                  l.todaysAttendanceTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
                       ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.today_rounded,
-                        color: Color(0xFF2563EB),
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l.todaysAttendanceTitle,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 17,
-                                ) ??
-                                const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 17,
-                                ),
-                      ),
-                    ),
-                  ],
                 );
 
                 final dateSelector = AbsorbPointer(
@@ -3850,8 +3828,8 @@ class _AttendanceSection extends StatelessWidget {
                         onTap: onDateTap,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
+                            horizontal: 16,
+                            vertical: 10,
                           ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF2563EB),
@@ -3864,26 +3842,18 @@ class _AttendanceSection extends StatelessWidget {
                               ),
                             ],
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.calendar_month,
-                                size: 18,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minWidth: 0),
+                            child: Text(
+                              dateLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 color: Colors.white,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  dateLabel,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -3891,21 +3861,12 @@ class _AttendanceSection extends StatelessWidget {
                   ),
                 );
 
-                if (isCompact) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      titleWidget,
-                      const SizedBox(height: 12),
-                      dateSelector,
-                    ],
-                  );
-                }
+                final horizontalSpacing = isCompact ? 8.0 : 12.0;
 
                 return Row(
                   children: [
                     Expanded(child: titleWidget),
-                    const SizedBox(width: 12),
+                    SizedBox(width: horizontalSpacing),
                     Flexible(child: dateSelector),
                   ],
                 );
@@ -4071,81 +4032,71 @@ class _AttendanceSection extends StatelessWidget {
   }) {
     final hasContractButton = showContractWorkButton && onContractWorkTap != null;
     final hasWorkOffButton = onWorkOffSubmit != null;
-    final submitButton = includeSubmit ? _buildSubmitButton(context, l) : null;
+    Widget? buildSubmitButton({double? height}) =>
+        includeSubmit ? _buildSubmitButton(context, l, height: height) : null;
 
-    if (!hasContractButton) {
-      if (!hasWorkOffButton) {
-        return submitButton ?? const SizedBox.shrink();
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildWorkOffButton(
-            context,
-            l,
-            isLocked: isWorkOffLocked,
-            onLockedTap: onWorkOffLockedTap,
-          ),
-          if (submitButton != null) ...[
-            const SizedBox(height: 12),
-            submitButton,
-          ],
-        ],
-      );
+    if (!hasContractButton && !hasWorkOffButton && !includeSubmit) {
+      return const SizedBox.shrink();
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isStacked = constraints.maxWidth < 420;
-        if (isStacked) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildContractWorkButton(context, l),
-              if (hasWorkOffButton) ...[
-                const SizedBox(height: 12),
-                _buildWorkOffButton(
-                  context,
-                  l,
-                  isLocked: isWorkOffLocked,
-                  onLockedTap: onWorkOffLockedTap,
-                ),
-              ],
-              if (submitButton != null) ...[
-                const SizedBox(height: 12),
-                submitButton,
-              ],
-            ],
-          );
+        final isCompact = constraints.maxWidth < 360;
+        final spacing = isCompact ? 8.0 : 12.0;
+        final buttonHeight = isCompact ? 44.0 : 48.0;
+
+        final children = <Widget>[];
+
+        void addButton(Widget button) {
+          if (children.isNotEmpty) {
+            children.add(SizedBox(width: spacing));
+          }
+          children.add(Expanded(child: button));
+        }
+
+        if (hasContractButton) {
+          addButton(_buildContractWorkButton(
+            context,
+            l,
+            height: buttonHeight,
+          ));
+        }
+
+        if (hasWorkOffButton) {
+          addButton(_buildWorkOffButton(
+            context,
+            l,
+            isLocked: isWorkOffLocked,
+            onLockedTap: onWorkOffLockedTap,
+            height: buttonHeight,
+          ));
+        }
+
+        final submitButton = buildSubmitButton(height: buttonHeight);
+        if (submitButton != null) {
+          addButton(submitButton);
+        }
+
+        if (children.isEmpty) {
+          return const SizedBox.shrink();
         }
 
         return Row(
-          children: [
-            Expanded(child: _buildContractWorkButton(context, l)),
-            if (hasWorkOffButton) ...[
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildWorkOffButton(
-                  context,
-                  l,
-                  isLocked: isWorkOffLocked,
-                  onLockedTap: onWorkOffLockedTap,
-                ),
-              ),
-            ],
-            if (submitButton != null) ...[
-              const SizedBox(width: 12),
-              Expanded(child: submitButton),
-            ],
-          ],
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
         );
       },
     );
   }
 
-  Widget _buildContractWorkButton(BuildContext context, AppLocalizations l) {
+  Widget _buildContractWorkButton(
+    BuildContext context,
+    AppLocalizations l, {
+    double? height,
+  }) {
+    final resolvedHeight = height ?? 48;
     return SizedBox(
-      height: 48,
+      height: resolvedHeight,
       child: OutlinedButton(
         onPressed: isSubmitting ? null : onContractWorkTap,
         style: OutlinedButton.styleFrom(
@@ -4178,6 +4129,7 @@ class _AttendanceSection extends StatelessWidget {
     AppLocalizations l, {
     required bool isLocked,
     VoidCallback? onLockedTap,
+    double? height,
   }) {
     final baseColor = const Color(0xFF2563EB);
     final isEnabled = !isSubmitting && onWorkOffSubmit != null && !isLocked;
@@ -4191,8 +4143,10 @@ class _AttendanceSection extends StatelessWidget {
           color: isEnabled ? baseColor : baseColor.withOpacity(0.4),
         );
 
+    final resolvedHeight = height ?? 48;
+
     return SizedBox(
-      height: 48,
+      height: resolvedHeight,
       child: _DashedBorderCard(
         borderColor: baseColor.withOpacity(isEnabled ? 0.6 : 0.25),
         backgroundColor:
@@ -4218,9 +4172,14 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context, AppLocalizations l) {
+  Widget _buildSubmitButton(
+    BuildContext context,
+    AppLocalizations l, {
+    double? height,
+  }) {
+    final resolvedHeight = height ?? 48;
     return SizedBox(
-      height: 48,
+      height: resolvedHeight,
       child: ElevatedButton(
         onPressed: isSubmitting ? null : onSubmit,
         style: ElevatedButton.styleFrom(
