@@ -321,13 +321,15 @@ class _WorkSelectionTile extends StatelessWidget {
           color: isSelected ? Colors.white : const Color(0xFFE5E7EB),
           width: 1,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
+        boxShadow: isSelected
+            ? []
+            : const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 24,
+                  offset: Offset(0, 12),
+                ),
+              ],
       ),
       child: Row(
         children: [
