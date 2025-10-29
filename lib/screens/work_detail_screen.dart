@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/work_bloc.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
@@ -14,6 +16,7 @@ import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
+import '../widgets/work_selection_dialog.dart';
 import 'contract_work_screen.dart';
 
 const List<int> _timeHourOptions = <int>[
@@ -397,6 +400,35 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
       _loadSummary();
     });
+  }
+
+  Future<void> _handleChangeWork() async {
+    final workBloc = context.read<WorkBloc>();
+    final works = workBloc.state.works;
+    if (works.isEmpty) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    final selected = await showWorkSelectionDialog(
+      context: context,
+      works: works,
+      localization: l,
+      initialSelectedWorkId: widget.work.id,
+    );
+
+    if (!mounted || selected == null || selected.id == widget.work.id) {
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (context) => WorkDetailScreen(work: selected),
+      ),
+    );
   }
 
   String _normalizeTimeString(String value) {
@@ -2568,7 +2600,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _handleChangeWork,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

@@ -131,114 +131,58 @@ Future<Work?> showWorkSelectionDialog({
                                   child: ConstrainedBox(
                                     constraints: BoxConstraints(
                                       maxHeight: math.min(
-                                        mediaQuery.size.height * 0.4,
-                                        320,
+                                        mediaQuery.size.height * 0.5,
+                                        360,
                                       ),
                                     ),
-                                    child: ListView.separated(
-                                      padding: EdgeInsets.zero,
-                                      clipBehavior: Clip.none,
-                                      shrinkWrap: true,
-                                      physics: const BouncingScrollPhysics(),
-                                      itemCount: works.length,
-                                      itemBuilder: (context, index) {
-                                        final work = works[index];
-                                        return _WorkSelectionTile(
-                                          work: work,
-                                          isSelected: work.id == selectedId,
-                                          localization: localization,
-                                          onTap: () {
-                                            setState(() {
-                                              selectedId = work.id;
-                                            });
-                                          },
-                                        );
-                                      },
-                                      separatorBuilder: (_, __) =>
-                                      const SizedBox(height: 12),
+                                    child: Scrollbar(
+                                      thumbVisibility: works.length > 3,
+                                      interactive: true,
+                                      child: ListView.separated(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        clipBehavior: Clip.none,
+                                        physics: const BouncingScrollPhysics(),
+                                        keyboardDismissBehavior:
+                                            ScrollViewKeyboardDismissBehavior
+                                                .onDrag,
+                                        itemCount: works.length +
+                                            (onAddNewWork != null ? 1 : 0),
+                                        itemBuilder: (context, index) {
+                                          if (index < works.length) {
+                                            final work = works[index];
+                                            return _WorkSelectionTile(
+                                              work: work,
+                                              isSelected: work.id == selectedId,
+                                              localization: localization,
+                                              onTap: () {
+                                                setState(() {
+                                                  selectedId = work.id;
+                                                });
+                                              },
+                                            );
+                                          }
+
+                                          return _AddNewWorkButton(
+                                            localization: localization,
+                                            onTap: () {
+                                              Navigator.of(dialogContext)
+                                                  .pop(_kAddNewWorkResult);
+                                            },
+                                          );
+                                        },
+                                        separatorBuilder: (_, index) {
+                                          final isBeforeAddButton =
+                                              onAddNewWork != null &&
+                                                  index == works.length - 1;
+                                          return SizedBox(
+                                            height: isBeforeAddButton ? 20 : 12,
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 24),
-                                if (onAddNewWork != null) ...[
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(22),
-                                        onTap: () {
-                                          Navigator.of(dialogContext)
-                                              .pop(_kAddNewWorkResult);
-                                        },
-                                        child: _DashedBorder(
-                                          borderRadius: 22,
-                                          color: const Color(0xFF2563EB),
-                                          strokeWidth: 1.6,
-                                          dashLength: 8,
-                                          dashGap: 5,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 16,
-                                              horizontal: 18,
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Container(
-                                                  height: 32,
-                                                  width: 32,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                      color: const Color(
-                                                          0xFF2563EB),
-                                                      width: 1.4,
-                                                    ),
-                                                    color: Colors.white,
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: const Icon(
-                                                    Icons.add,
-                                                    size: 18,
-                                                    color: Color(0xFF2563EB),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Flexible(
-                                                  child: Text(
-                                                    localization.addNewWorkLabel,
-                                                    style: Theme.of(context)
-                                                            .textTheme
-                                                            .labelLarge
-                                                            ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: const Color(
-                                                              0xFF2563EB),
-                                                        ) ??
-                                                        const TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Color(0xFF2563EB),
-                                                        ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
@@ -478,6 +422,83 @@ class _WorkSelectionTile extends StatelessWidget {
           color: isSelected ? const Color(0xFFF2F7FF) : Colors.transparent,
           padding: EdgeInsets.zero,
           child: _tileBody,
+        ),
+      ),
+    );
+  }
+}
+
+class _AddNewWorkButton extends StatelessWidget {
+  const _AddNewWorkButton({
+    required this.localization,
+    required this.onTap,
+  });
+
+  final AppLocalizations localization;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: onTap,
+          child: _DashedBorder(
+            borderRadius: 22,
+            color: const Color(0xFF2563EB),
+            strokeWidth: 1.6,
+            dashLength: 8,
+            dashGap: 5,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 16,
+                horizontal: 18,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 32,
+                    width: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF2563EB),
+                        width: 1.4,
+                      ),
+                      color: Colors.white,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.add,
+                      size: 18,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      localization.addNewWorkLabel,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF2563EB),
+                          ) ??
+                          const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2563EB),
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
