@@ -5288,188 +5288,199 @@ class _ContractEntryForm extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              final selectedTypeIds = entries
-                  .map((entry) => entry.contractTypeId)
-                  .whereType<String>()
-                  .toSet();
-              final canAddMoreEntries =
-                  contractTypes.length > selectedTypeIds.length;
-              ...entries.asMap().entries.map((entryMap) {
-                final entry = entryMap.value;
-                final isLast = entryMap.key == entries.length - 1;
-                final selectedType = resolveType(entry.contractTypeId);
-                final dropdownValue = selectedType?.id;
-                final unitLabel = (selectedType?.unitLabel.trim().isNotEmpty ?? false)
-                    ? selectedType!.unitLabel.trim()
-                    : l.contractWorkUnitFallback;
-                final String? rateHelperText = selectedType != null
-                    ? '${l.contractWorkRateLabel}: '
-                        '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
-                    : null;
-                final VoidCallback? removeCallback =
-                    entries.length > 1 && onRemoveEntry != null && !disableInteractions
+              ...(() {
+                final selectedTypeIds = entries
+                    .map((entry) => entry.contractTypeId)
+                    .whereType<String>()
+                    .toSet();
+                final canAddMoreEntries =
+                    contractTypes.length > selectedTypeIds.length;
+
+                return [
+                  ...entries.asMap().entries.map((entryMap) {
+                    final entry = entryMap.value;
+                    final isLast = entryMap.key == entries.length - 1;
+                    final selectedType = resolveType(entry.contractTypeId);
+                    final dropdownValue = selectedType?.id;
+                    final unitLabel =
+                        (selectedType?.unitLabel.trim().isNotEmpty ?? false)
+                            ? selectedType!.unitLabel.trim()
+                            : l.contractWorkUnitFallback;
+                    final String? rateHelperText = selectedType != null
+                        ? '${l.contractWorkRateLabel}: '
+                            '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
+                        : null;
+                    final VoidCallback? removeCallback = entries.length > 1 &&
+                            onRemoveEntry != null &&
+                            !disableInteractions
                         ? () => onRemoveEntry!(entry)
                         : null;
-                final takenTypeIds = entries
-                    .where((other) =>
-                        other != entry && other.contractTypeId != null)
-                    .map((other) => other.contractTypeId!)
-                    .toSet();
-                List<Widget> buildSelectedItems() {
-                  return contractTypes
-                      .map((type) {
-                        final resolvedUnitLabel = type.unitLabel.trim().isNotEmpty
-                            ? type.unitLabel.trim()
-                            : l.contractWorkUnitFallback;
-                        final rateLabelText =
-                            '${l.contractWorkRateLabel}: '
-                            '${type.rate.toStringAsFixed(2)} / '
-                            '$resolvedUnitLabel';
-                        return _ContractTypeSelectedLabel(
-                          name: type.name,
-                          unitLabel: resolvedUnitLabel,
-                          rateLabel: rateLabelText,
-                        );
-                      })
-                      .toList(growable: false);
-                }
-                List<DropdownMenuItem<String>> buildDropdownItems() {
-                  return contractTypes
-                      .map((type) {
-                        final resolvedUnitLabel = type.unitLabel.trim().isNotEmpty
-                            ? type.unitLabel.trim()
-                            : l.contractWorkUnitFallback;
-                        final rateLabelText =
-                            '${l.contractWorkRateLabel}: '
-                            '${type.rate.toStringAsFixed(2)} / '
-                            '$resolvedUnitLabel';
-                        final isTypeTaken =
-                            takenTypeIds.contains(type.id) && type.id != dropdownValue;
-                        return DropdownMenuItem<String>(
-                          value: type.id,
-                          enabled: !isTypeTaken,
-                          alignment: AlignmentDirectional.topStart,
-                          child: _ContractTypeDropdownItem(
-                            name: type.name,
-                            unitLabel: resolvedUnitLabel,
-                            rateLabel: rateLabelText,
-                            isDisabled: isTypeTaken,
-                          ),
-                        );
-                      })
-                      .toList(growable: false);
-                }
+                    final takenTypeIds = entries
+                        .where((other) =>
+                            other != entry && other.contractTypeId != null)
+                        .map((other) => other.contractTypeId!)
+                        .toSet();
+                    List<Widget> buildSelectedItems() {
+                      return contractTypes
+                          .map((type) {
+                            final resolvedUnitLabel =
+                                type.unitLabel.trim().isNotEmpty
+                                    ? type.unitLabel.trim()
+                                    : l.contractWorkUnitFallback;
+                            final rateLabelText =
+                                '${l.contractWorkRateLabel}: '
+                                '${type.rate.toStringAsFixed(2)} / '
+                                '$resolvedUnitLabel';
+                            return _ContractTypeSelectedLabel(
+                              name: type.name,
+                              unitLabel: resolvedUnitLabel,
+                              rateLabel: rateLabelText,
+                            );
+                          })
+                          .toList(growable: false);
+                    }
 
-                return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    List<DropdownMenuItem<String>> buildDropdownItems() {
+                      return contractTypes
+                          .map((type) {
+                            final resolvedUnitLabel =
+                                type.unitLabel.trim().isNotEmpty
+                                    ? type.unitLabel.trim()
+                                    : l.contractWorkUnitFallback;
+                            final rateLabelText =
+                                '${l.contractWorkRateLabel}: '
+                                '${type.rate.toStringAsFixed(2)} / '
+                                '$resolvedUnitLabel';
+                            final isTypeTaken = takenTypeIds.contains(type.id) &&
+                                type.id != dropdownValue;
+                            return DropdownMenuItem<String>(
+                              value: type.id,
+                              enabled: !isTypeTaken,
+                              alignment: AlignmentDirectional.topStart,
+                              child: _ContractTypeDropdownItem(
+                                name: type.name,
+                                unitLabel: resolvedUnitLabel,
+                                rateLabel: rateLabelText,
+                                isDisabled: isTypeTaken,
+                              ),
+                            );
+                          })
+                          .toList(growable: false);
+                    }
+
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: dropdownValue,
-                              onChanged: disableInteractions
-                                  ? null
-                                  : (value) => onTypeChanged?.call(entry, value),
-                              isExpanded: true,
-                              itemHeight: null,
-                              menuMaxHeight: 360,
-                              dropdownColor: const Color(0xFFF8FAFF),
-                              borderRadius: BorderRadius.circular(18),
-                              selectedItemBuilder: (context) => buildSelectedItems(),
-                              decoration: InputDecoration(
-                                labelText: l.contractWorkContractTypeLabel,
-                                prefixIcon: const Icon(
-                                  Icons.assignment_rounded,
-                                  color: Color(0xFF1D4ED8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 18,
-                                  horizontal: 12,
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: dropdownValue,
+                                  onChanged: disableInteractions
+                                      ? null
+                                      : (value) => onTypeChanged?.call(entry, value),
+                                  isExpanded: true,
+                                  itemHeight: null,
+                                  menuMaxHeight: 360,
+                                  dropdownColor: const Color(0xFFF8FAFF),
                                   borderRadius: BorderRadius.circular(18),
+                                  selectedItemBuilder: (context) => buildSelectedItems(),
+                                  decoration: InputDecoration(
+                                    labelText: l.contractWorkContractTypeLabel,
+                                    prefixIcon: const Icon(
+                                      Icons.assignment_rounded,
+                                      color: Color(0xFF1D4ED8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 18,
+                                      horizontal: 12,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                  ),
+                                  items: buildDropdownItems(),
                                 ),
                               ),
-                              items: buildDropdownItems(),
-                            ),
+                              if (removeCallback != null) ...[
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  onPressed: removeCallback,
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: MaterialLocalizations.of(context)
+                                      .deleteButtonTooltip,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
+                            ],
                           ),
-                          if (removeCallback != null) ...[
-                            const SizedBox(width: 8),
-                            IconButton(
-                              onPressed: removeCallback,
-                              icon: const Icon(Icons.close_rounded),
-                              tooltip:
-                                  MaterialLocalizations.of(context).deleteButtonTooltip,
-                              visualDensity: VisualDensity.compact,
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: entry.controller,
+                            enabled: !disableInteractions,
+                            validator: (value) => bundleUnitsValidator(entry, value),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: false),
+                            decoration: InputDecoration(
+                              labelText: l.contractWorkUnitsLabel,
+                              prefixIcon: const Icon(
+                                Icons.inventory_2_outlined,
+                                color: Color(0xFF2563EB),
+                              ),
+                              suffixIcon: Padding(
+                                padding: const EdgeInsets.only(
+                                    right: 12, top: 12, bottom: 12),
+                                child: _ContractUnitBadge(label: unitLabel),
+                              ),
+                              suffixIconConstraints:
+                                  const BoxConstraints(minHeight: 0, minWidth: 0),
+                              helperText: rateHelperText,
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
                             ),
-                          ],
+                            onChanged: (_) => onUnitsChanged?.call(entry),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: entry.controller,
-                        enabled: !disableInteractions,
-                        validator: (value) => bundleUnitsValidator(entry, value),
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: false),
-                        decoration: InputDecoration(
-                          labelText: l.contractWorkUnitsLabel,
-                          prefixIcon: const Icon(
-                            Icons.inventory_2_outlined,
-                            color: Color(0xFF2563EB),
-                          ),
-                          suffixIcon: Padding(
-                            padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
-                            child: _ContractUnitBadge(label: unitLabel),
-                          ),
-                          suffixIconConstraints:
-                              const BoxConstraints(minHeight: 0, minWidth: 0),
-                          helperText: rateHelperText,
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        onChanged: (_) => onUnitsChanged?.call(entry),
+                    );
+                  }).toList(growable: false),
+                  if (onAddEntry != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: disableInteractions || !canAddMoreEntries
+                            ? null
+                            : onAddEntry,
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: Text(l.contractWorkAddTypeTitle),
                       ),
-                    ],
-                  ),
-                );
-              }).toList(growable: false),
-              if (onAddEntry != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: disableInteractions || !canAddMoreEntries
-                        ? null
-                        : onAddEntry,
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: Text(l.contractWorkAddTypeTitle),
-                  ),
-                ),
-              if (!canAddMoreEntries)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    l.contractWorkAllTypesAddedMessage,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ) ??
-                        const TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ),
+                    ),
+                  if (!canAddMoreEntries)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        l.contractWorkAllTypesAddedMessage,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ) ??
+                            const TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ),
+                ];
+              }()),
             ],
           ],
         ],
