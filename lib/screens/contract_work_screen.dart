@@ -26,7 +26,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     'Bundle',
   ];
 
-  final List<_ContractEntry> _recentEntries = <_ContractEntry>[
+  final List<_ContractEntry> _recentContractEntries = <_ContractEntry>[
 
   ];
 
@@ -138,7 +138,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
   }
 
-  void _removeContractType(_ContractType type) {
+  void _handleRemoveContractType(_ContractType type) {
     setState(() {
       _userContractTypes.removeWhere((item) => item.id == type.id);
       _syncAvailableSubtypes();
@@ -206,7 +206,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     return true;
   }
 
-  void _showComingSoonSnackBar(BuildContext context) {
+  void _showComingSoonMessage(BuildContext context) {
     final l = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l.helpSupportComingSoon)),
@@ -214,13 +214,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   double get _totalUnits =>
-      _recentEntries.fold<double>(0, (sum, entry) => sum + entry.unitsCompleted);
+      _recentContractEntries.fold<double>(0, (sum, entry) => sum + entry.unitsCompleted);
 
   double get _totalContractSalary =>
-      _recentEntries.fold<double>(0, (sum, entry) => sum + entry.totalAmount);
+      _recentContractEntries.fold<double>(0, (sum, entry) => sum + entry.totalAmount);
 
 
-  Future<void> _showContractTypeDialog({
+  Future<void> _openContractTypeDialog({
     _ContractType? type,
   }) async {
     final l = AppLocalizations.of(context);
@@ -647,7 +647,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                             ),
                             const SizedBox(height: 20),
             /*                OutlinedButton.icon(
-                              onPressed: () => _showComingSoonSnackBar(rootContext),
+                              onPressed: () => _showComingSoonMessage(rootContext),
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(48),
                                 foregroundColor: const Color(0xFF1D4ED8),
@@ -995,7 +995,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                 lastUpdatedLabel:
                                     l.contractWorkLastUpdatedLabel,
                                 onEdit: () =>
-                                    _showContractTypeDialog(type: type),
+                                    _openContractTypeDialog(type: type),
                                 editLabel: l.contractWorkEditRateButton,
                                 defaultTag: l.contractWorkDefaultTag,
                               ),
@@ -1020,7 +1020,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               BorderRadius.circular(responsive.scale(18)),
                         ),
                       ),
-                      onPressed: () => _showContractTypeDialog(),
+                      onPressed: () => _openContractTypeDialog(),
                       icon: const Icon(Icons.add_rounded),
                       label: Text(
                         l.addContractWorkButton,
@@ -1052,7 +1052,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                 direction: DismissDirection.endToStart,
                                 confirmDismiss: (_) =>
                                     _confirmDeleteContractType(type),
-                                onDismissed: (_) => _removeContractType(type),
+                                onDismissed: (_) => _handleRemoveContractType(type),
                                 background: const SizedBox.shrink(),
                                 secondaryBackground: ClipRRect(
                                   borderRadius: BorderRadius.circular(
@@ -1089,7 +1089,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                   lastUpdatedLabel:
                                       l.contractWorkLastUpdatedLabel,
                                   onEdit: () =>
-                                      _showContractTypeDialog(type: type),
+                                      _openContractTypeDialog(type: type),
                                   editLabel: l.contractWorkEditRateButton,
                                   defaultTag: l.contractWorkDefaultTag,
                                 ),
@@ -1101,14 +1101,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   SizedBox(height: responsive.scale(28)),
                   _SectionTitle(
                     text: l.contractWorkRecentEntriesTitle,
-                    itemCount: _recentEntries.length,
+                    itemCount: _recentContractEntries.length,
                   ),
                   SizedBox(height: responsive.scale(12)),
-                  if (_recentEntries.isEmpty)
+                  if (_recentContractEntries.isEmpty)
                     _EmptyState(message: l.contractWorkNoEntriesLabel)
                   else
                     Column(
-                      children: _recentEntries
+                      children: _recentContractEntries
                           .map(
                             (entry) => Padding(
                               padding: EdgeInsets.only(
@@ -1119,7 +1119,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                 contractLabel: l.contractWorkLabel,
                                 unitsLabel: l.contractWorkUnitsLabel,
                                 onTap: () =>
-                                    _showComingSoonSnackBar(context),
+                                    _showComingSoonMessage(context),
                               ),
                             ),
                           )
