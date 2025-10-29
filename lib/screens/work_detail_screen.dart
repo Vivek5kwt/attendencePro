@@ -2526,7 +2526,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _AttendanceSection(
         dateLabel: dateLabel,
         onDateTap: _handleDateTap,
-        dateSelectionEnabled: _pendingMissedDates.isNotEmpty,
+        dateSelectionEnabled: _pendingMissedDates.isEmpty,
         formKey: _attendanceFormKey,
         startTimeController: _startTimeController,
         endTimeController: _endTimeController,
