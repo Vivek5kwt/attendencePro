@@ -281,7 +281,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         subtypeOptions.isNotEmpty ? subtypeOptions.first : null;
 
     bool isSaving = false;
-    bool isSelected = true;
 
     final result = await showModalBottomSheet<_ContractType>(
       context: rootContext,
@@ -413,209 +412,226 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Transform.translate(
-                                        offset: const Offset(-4, 0),
-                                        child: Checkbox(
-                                          value: isSelected,
-                                          activeColor: const Color(0xFF2563EB),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          onChanged: (value) {
-                                            setSheetState(() {
-                                              isSelected = value ?? true;
-                                            });
-                                          },
-                                        ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF9FAFB),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: const Color(0xFFE5E7EB),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFFF1F2),
+                                            borderRadius: BorderRadius.circular(14),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: const Text(
+                                            '📦',
+                                            style: TextStyle(fontSize: 20),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: nameController,
+                                            enabled: isNameEditable,
+                                            decoration: InputDecoration(
+                                              border: InputBorder.none,
+                                              hintText: AppString.contractNameHint,
+                                              hintStyle: textTheme.bodyMedium?.copyWith(
+                                                    color: const Color(0xFF9CA3AF),
+                                                  ) ??
+                                                  const TextStyle(
+                                                    color: Color(0xFF9CA3AF),
+                                                  ),
+                                            ),
+                                            style: textTheme.bodyLarge?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(0xFF111827),
+                                                ) ??
+                                                const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF111827),
+                                                  fontSize: 16,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Text(
+                                    l.contractWorkContractTypeLabel,
+                                    style: textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF1F2937),
+                                        ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1F2937),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  DropdownButtonFormField<String>(
+                                    value: dropdownValue,
+                                    items: subtypeOptions
+                                        .map(
+                                          (option) => DropdownMenuItem(
+                                            value: option,
+                                            child: Text(option),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setSheetState(() {
+                                        selectedSubtypeValue = value;
+                                      });
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: l.contractWorkSubtypeHint,
+                                      filled: true,
+                                      fillColor: const Color(0xFFF9FAFB),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.arrow_drop_down),
+                                  ),
+                                  if (subtypeOptions.isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Text(
+                                        l.contractWorkSubtypeRequiredMessage,
+                                        style: textTheme.bodySmall?.copyWith(
+                                              color: const Color(0xFF6B7280),
+                                            ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF6B7280),
+                                            ),
+                                      ),
+                                    ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
+                                    style: textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF1F2937),
+                                        ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1F2937),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final responsive = context.responsive;
+                                      final isCompact = constraints.maxWidth < 360;
+                                      final horizontalPadding =
+                                          responsive.scale(isCompact ? 12 : 16);
+                                      final verticalPadding =
+                                          responsive.scale(isCompact ? 8 : 10);
+                                      final spacing =
+                                          responsive.scale(isCompact ? 8 : 12);
+                                      final prefixStyle =
+                                          textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF1D4ED8),
+                                                fontSize:
+                                                    responsive.scaleText(isCompact ? 16 : 18),
+                                              ) ??
+                                              TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF1D4ED8),
+                                                fontSize:
+                                                    responsive.scaleText(isCompact ? 16 : 18),
+                                              );
+                                      final inputStyle =
+                                          textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF111827),
+                                                fontSize:
+                                                    responsive.scaleText(isCompact ? 16 : 18),
+                                              ) ??
+                                              TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF111827),
+                                                fontSize:
+                                                    responsive.scaleText(isCompact ? 16 : 18),
+                                              );
+                                      final hintStyle =
+                                          textTheme.bodyMedium?.copyWith(
+                                                color: const Color(0xFF94A3B8),
+                                                fontWeight: FontWeight.w500,
+                                                fontSize:
+                                                    responsive.scaleText(isCompact ? 12 : 14),
+                                              ) ??
+                                              TextStyle(
+                                                color: const Color(0xFF94A3B8),
+                                                fontWeight: FontWeight.w500,
+                                                fontSize:
+                                                    responsive.scaleText(isCompact ? 12 : 14),
+                                              );
+
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF9FAFB),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: const Color(0xFFE5E7EB),
+                                          ),
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: horizontalPadding,
+                                          vertical: verticalPadding,
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF9FAFB),
-                                                borderRadius: BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: const Color(0xFFE5E7EB),
-                                                ),
-                                              ),
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 12,
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 36,
-                                                    height: 36,
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(0xFFFFF1F2),
-                                                      borderRadius: BorderRadius.circular(14),
-                                                    ),
-                                                    alignment: Alignment.center,
-                                                    child: const Text(
-                                                      '📦',
-                                                      style: TextStyle(fontSize: 20),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: TextField(
-                                                      controller: nameController,
-                                                      enabled: isNameEditable,
-                                                      decoration: InputDecoration(
-                                                        border: InputBorder.none,
-                                                        hintText: AppString.contractNameHint,
-                                                        hintStyle: textTheme.bodyMedium?.copyWith(
-                                                              color: const Color(0xFF9CA3AF),
-                                                            ) ??
-                                                            const TextStyle(
-                                                              color: Color(0xFF9CA3AF),
-                                                            ),
-                                                      ),
-                                                      style: textTheme.bodyLarge?.copyWith(
-                                                            fontWeight: FontWeight.w600,
-                                                            color: const Color(0xFF111827),
-                                                          ) ??
-                                                          const TextStyle(
-                                                            fontWeight: FontWeight.w600,
-                                                            color: Color(0xFF111827),
-                                                            fontSize: 16,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ],
+                                            FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                AppString.euroPrefix,
+                                                style: prefixStyle,
                                               ),
                                             ),
-                                            const SizedBox(height: 18),
-                                            Text(
-                                              l.contractWorkContractTypeLabel,
-                                              style: textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF1F2937),
-                                                  ) ??
-                                                  const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF1F2937),
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            DropdownButtonFormField<String>(
-                                              value: dropdownValue,
-                                              items: subtypeOptions
-                                                  .map(
-                                                    (option) => DropdownMenuItem(
-                                                      value: option,
-                                                      child: Text(option),
-                                                    ),
-                                                  )
-                                                  .toList(),
-                                              onChanged: (value) {
-                                                setSheetState(() {
-                                                  selectedSubtypeValue = value;
-                                                });
-                                              },
-                                              decoration: InputDecoration(
-                                                hintText: l.contractWorkSubtypeHint,
-                                                filled: true,
-                                                fillColor: const Color(0xFFF9FAFB),
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(18),
+                                            SizedBox(width: spacing),
+                                            Expanded(
+                                              child: TextField(
+                                                controller: rateController,
+                                                keyboardType:
+                                                    const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                  signed: false,
                                                 ),
-                                              ),
-                                              icon: const Icon(Icons.arrow_drop_down),
-                                            ),
-                                            if (subtypeOptions.isEmpty)
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.only(top: 12),
-                                                child: Text(
-                                                  l.contractWorkSubtypeRequiredMessage,
-                                                  style: textTheme.bodySmall?.copyWith(
-                                                        color:
-                                                            const Color(0xFF6B7280),
-                                                      ) ??
-                                                      const TextStyle(
-                                                        color: Color(0xFF6B7280),
-                                                      ),
+                                                textInputAction: TextInputAction.done,
+                                                decoration: InputDecoration(
+                                                  border: InputBorder.none,
+                                                  isDense: true,
+                                                  hintText: AppString.contractRateHint,
+                                                  hintStyle: hintStyle,
                                                 ),
-                                              ),
-                                            const SizedBox(height: 20),
-                                            Text(
-                                              '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
-                                              style: textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF1F2937),
-                                                  ) ??
-                                                  const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF1F2937),
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF9FAFB),
-                                                borderRadius: BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: const Color(0xFFE5E7EB),
-                                                ),
-                                              ),
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 10,
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Text(
-                                                    AppString.euroPrefix,
-                                                    style: textTheme.titleMedium?.copyWith(
-                                                          fontWeight: FontWeight.w700,
-                                                          color: const Color(0xFF1D4ED8),
-                                                        ) ??
-                                                        const TextStyle(
-                                                          fontWeight: FontWeight.w700,
-                                                          color: Color(0xFF1D4ED8),
-                                                        ),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: TextField(
-                                                      controller: rateController,
-                                                      keyboardType:
-                                                          const TextInputType.numberWithOptions(
-                                                        decimal: true,
-                                                        signed: false,
-                                                      ),
-                                                      decoration: const InputDecoration(
-                                                        border: InputBorder.none,
-                                                        hintText:
-                                                            AppString.contractRateHint,
-                                                      ),
-                                                      style: textTheme.titleMedium?.copyWith(
-                                                            fontWeight: FontWeight.w700,
-                                                            color: const Color(0xFF111827),
-                                                          ) ??
-                                                          const TextStyle(
-                                                            fontWeight: FontWeight.w700,
-                                                            color: Color(0xFF111827),
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ],
+                                                style: inputStyle,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    },
                                   ),
+                                ],
+                              ),
+                            ),
                                   const SizedBox(height: 20),
                                   Text(
                                     l.contractWorkRatesNote,
