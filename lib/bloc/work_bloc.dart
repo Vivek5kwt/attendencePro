@@ -157,6 +157,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
       return;
     }
 
+    final previousWorkIds = state.works.map((work) => work.id).toSet();
+
     emit(
       state.copyWith(
         addStatus: WorkActionStatus.inProgress,
@@ -175,6 +177,13 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
       );
       final successMessage = (result.message ?? '').trim();
       final works = await _repository.fetchWorks();
+      Work? createdWork;
+      for (final work in works) {
+        if (!previousWorkIds.contains(work.id)) {
+          createdWork = work;
+          break;
+        }
+      }
       emit(
         state.copyWith(
           addStatus: WorkActionStatus.success,
@@ -184,6 +193,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           feedbackKind: WorkFeedbackKind.add,
         ),
       );
+      if (createdWork != null && !createdWork.isActive) {
+        add(WorkActivated(work: createdWork));
+      }
     } on WorkAuthException {
       emit(
         state.copyWith(
