@@ -177,15 +177,12 @@ Future<Work?> showWorkSelectionDialog({
                                 ),
                                 if (onAddNewWork != null) ...[
                                   const SizedBox(height: 16),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: _AddNewWorkLink(
-                                      localization: localization,
-                                      onTap: () {
-                                        Navigator.of(dialogContext)
-                                            .pop(_kAddNewWorkResult);
-                                      },
-                                    ),
+                                  _AddNewWorkLink(
+                                    localization: localization,
+                                    onTap: () {
+                                      Navigator.of(dialogContext)
+                                          .pop(_kAddNewWorkResult);
+                                    },
                                   ),
                                 ],
                                 const SizedBox(height: 24),
@@ -378,38 +375,6 @@ class _WorkSelectionTile extends StatelessWidget {
               onPressed: onEdit!,
             ),
           ],
-          const SizedBox(width: 12),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 28,
-            width: 28,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: isSelected
-                  ? ClipOval(
-                      key: const ValueKey('selected'),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Image.asset(
-                          AppAssets.icTick,
-                          width: 22,
-                          height: 22,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    )
-                  : Container(
-                      key: const ValueKey('unselected'),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFD1D5DB),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-            ),
-          ),
         ],
       ),
     );
@@ -463,52 +428,129 @@ class _AddNewWorkLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 26,
-                width: 26,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFF2563EB),
-                    width: 1.4,
-                  ),
-                  color: const Color(0xFFEFF6FF),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.add,
-                  size: 16,
-                  color: Color(0xFF2563EB),
-                ),
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: CustomPaint(
+            painter: _DashedBorderPainter(
+              color: const Color(0xFFB8C5FF),
+              radius: 24,
+              strokeWidth: 1.6,
+              dashLength: 8,
+              dashGap: 6,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFF),
+                borderRadius: BorderRadius.circular(24),
               ),
-              const SizedBox(width: 10),
-              Text(
-                localization.addNewWorkLabel,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2563EB),
-                    ) ??
-                    const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 36,
+                    width: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x140F1F47),
+                          blurRadius: 12,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.add_rounded,
+                      size: 22,
                       color: Color(0xFF2563EB),
                     ),
+                  ),
+                  const SizedBox(width: 14),
+                  Text(
+                    localization.addNewWorkLabel,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF2563EB),
+                        ) ??
+                        const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2563EB),
+                        ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({
+    required this.color,
+    required this.radius,
+    this.strokeWidth = 1.5,
+    this.dashLength = 6,
+    this.dashGap = 4,
+  });
+
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  final double dashLength;
+  final double dashGap;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    final path = Path()..addRRect(rrect);
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final dashedPath = _createDashedPath(path);
+    canvas.drawPath(dashedPath, paint);
+  }
+
+  Path _createDashedPath(Path source) {
+    final dashedPath = Path();
+    for (final metric in source.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final nextDistance = math.min(distance + dashLength, metric.length);
+        dashedPath.addPath(
+          metric.extractPath(distance, nextDistance),
+          Offset.zero,
+        );
+        distance = nextDistance + dashGap;
+      }
+    }
+    return dashedPath;
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
+    return color != oldDelegate.color ||
+        radius != oldDelegate.radius ||
+        strokeWidth != oldDelegate.strokeWidth ||
+        dashLength != oldDelegate.dashLength ||
+        dashGap != oldDelegate.dashGap;
   }
 }
 
