@@ -395,6 +395,7 @@ class AppLocalizations {
   String get hourlyRateNegativeValidation =>
       _value('hourlyRateNegativeValidation');
   String get contractWorkHeader => _value('contractWorkHeader');
+  String get contractHistoryButton => _value('contractHistoryButton');
   String get addContractWorkButton => _value('addContractWorkButton');
   String get contractWorkDescription => _value('contractWorkDescription');
   String get cancelButton => _value('cancelButton');
