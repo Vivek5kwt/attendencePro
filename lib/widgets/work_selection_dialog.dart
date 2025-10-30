@@ -391,13 +391,14 @@ class _WorkSelectionTile extends StatelessWidget {
     // If selected, wrap the inner card with a thin gradient border outside.
     final Widget _tileBody = isSelected
         ? Container(
-      decoration: BoxDecoration(
-        gradient: _gradientBorder,
-        borderRadius: BorderRadius.circular(26), // slightly larger radius
-      ),
-      padding: const EdgeInsets.all(2), // gradient stroke thickness
-      child: _innerCard,
-    )
+            decoration: BoxDecoration(
+              gradient: _gradientBorder,
+              borderRadius:
+                  BorderRadius.circular(26), // slightly larger radius
+            ),
+            padding: const EdgeInsets.all(2), // gradient stroke thickness
+            child: _innerCard,
+          )
         : _innerCard;
 
     return Material(
@@ -413,7 +414,10 @@ class _WorkSelectionTile extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeInOut,
-          color: isSelected ? const Color(0xFFF2F7FF) : Colors.transparent,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(26),
+          ),
           padding: EdgeInsets.zero,
           child: _tileBody,
         ),
