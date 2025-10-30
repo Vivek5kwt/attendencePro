@@ -1317,12 +1317,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     work.name,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize: 22, // increased to 20
+                      fontSize: 18, // increased to 20
                       color: const Color(0xFF0F172A),
                       height: 1.3,
                     ) ??
                         const TextStyle(
-                          fontSize: 22,
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
                           height: 1.3,
