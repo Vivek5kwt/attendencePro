@@ -762,6 +762,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                     onPressed: isSaving
                                         ? null
                                         : () async {
+                                      if (!sheetContext.mounted) {
+                                        return;
+                                      }
                                       FocusScope.of(sheetContext).unfocus();
                                       final name = nameController.text.trim();
                                       final rate = double.tryParse(
@@ -814,10 +817,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                           ? existingUnitLabel
                                           : l.contractWorkUnitFallback;
                                       final resolvedName = type == null ||
-                                          isNameEditable
+                                              isNameEditable
                                           ? name
                                           : type!.name;
 
+                                      if (!context.mounted) {
+                                        return;
+                                      }
                                       setSheetState(() {
                                         isSaving = true;
                                       });
@@ -857,16 +863,21 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
                                       try {
                                         final updatedType = await future;
-                                        if (!mounted) {
+                                        if (!mounted || !sheetContext.mounted) {
                                           return;
                                         }
                                         Navigator.of(sheetContext).pop(
                                           updatedType,
                                         );
                                       } on ContractTypeRepositoryException catch (error) {
-                                        setSheetState(() {
-                                          isSaving = false;
-                                        });
+                                        if (context.mounted) {
+                                          setSheetState(() {
+                                            isSaving = false;
+                                          });
+                                        }
+                                        if (!mounted) {
+                                          return;
+                                        }
                                         ScaffoldMessenger.of(rootContext)
                                             .showSnackBar(
                                           SnackBar(
@@ -874,9 +885,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                           ),
                                         );
                                       } catch (error) {
-                                        setSheetState(() {
-                                          isSaving = false;
-                                        });
+                                        if (context.mounted) {
+                                          setSheetState(() {
+                                            isSaving = false;
+                                          });
+                                        }
+                                        if (!mounted) {
+                                          return;
+                                        }
                                         ScaffoldMessenger.of(rootContext)
                                             .showSnackBar(
                                           SnackBar(
@@ -923,6 +939,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       },
     );
 
+    nameController.dispose();
+    rateController.dispose();
     customSubtypeController.dispose();
 
     if (!mounted || result == null) {
