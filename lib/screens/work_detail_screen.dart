@@ -2600,7 +2600,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _isSummaryLoading || _summaryError != null || summaryStats.isNotEmpty;
 
     final contentWidgets = <Widget>[
+      _WorkHeaderCard(
+        work: widget.work,
+        workTypeLabel: workTypeLabel,
+        rateDescription: rateDescription,
+      ),
       if (activeWork != null) ...[
+        const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerLeft,
           child: _ActiveWorkIndicator(
@@ -2608,13 +2614,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             isSelectedWork: isViewingActiveWork,
           ),
         ),
-        const SizedBox(height: 12),
       ],
-      _WorkHeaderCard(
-        work: widget.work,
-        workTypeLabel: workTypeLabel,
-        rateDescription: rateDescription,
-      ),
       const SizedBox(height: 20),
       if (_pendingMissedDates.isNotEmpty) ...[
         _PendingAttendanceCard(
@@ -3733,56 +3733,109 @@ class _ActiveWorkIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final baseStyle = theme.textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+    final l = AppLocalizations.of(context);
+    const accentColor = Color(0xFF2563EB);
+
+    final labelStyle = theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w700,
           color: const Color(0xFF1F2937),
-          fontSize: 12,
+          letterSpacing: 0.2,
         ) ??
         const TextStyle(
-          fontWeight: FontWeight.w600,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
           color: Color(0xFF1F2937),
-          fontSize: 12,
+          letterSpacing: 0.2,
         );
-    final nameStyle = baseStyle.copyWith(
-      fontSize: 11,
-    );
-    final suffixStyle = baseStyle.copyWith(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
-    );
+
+    final nameStyle = theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF374151),
+        ) ??
+        const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF374151),
+        );
+
+    final badgeStyle = theme.textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: accentColor,
+          letterSpacing: 0.3,
+        ) ??
+        const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: accentColor,
+          letterSpacing: 0.3,
+        );
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: accentColor.withOpacity(0.15),
+          width: 1.2,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A2563EB),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.work_outline, size: 16, color: Color(0xFF2563EB)),
-          const SizedBox(width: 6),
-          Flexible(
-            child: RichText(
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: baseStyle,
-                children: [
-                  const TextSpan(text: 'Active Work – '),
-                  TextSpan(
-                    text: workName,
-                    style: nameStyle,
-                  ),
-                  if (isSelectedWork)
-                    TextSpan(
-                      text: ' (User Selected)',
-                      style: suffixStyle,
-                    ),
-                ],
-              ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.work_outline,
+              size: 20,
+              color: accentColor,
             ),
           ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l.activeWorkLabel,
+                  style: labelStyle,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  workName,
+                  style: nameStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (isSelectedWork) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                'User Selected',
+                style: badgeStyle,
+              ),
+            ),
+          ],
         ],
       ),
     );
