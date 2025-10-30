@@ -1138,376 +1138,337 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isCompact = constraints.maxWidth < 520;
                   final disableActions = isDeleting || isActivating;
 
-                  Widget buildActionColumn({required bool alignStart}) {
-                    final alignment =
-                    alignStart ? Alignment.centerLeft : Alignment.centerRight;
-                    final wrapAlignment =
-                    alignStart ? WrapAlignment.start : WrapAlignment.end;
-
-                    return Column(
-                      crossAxisAlignment: alignStart
-                          ? CrossAxisAlignment.start
-                          : CrossAxisAlignment.end,
+                  final hourlyInfo = Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color.alphaBlend(
+                        accentContainerColor.withOpacity(0.18),
+                        colorScheme.surface,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: accentColor.withOpacity(0.14),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Align(
-                          alignment: alignment,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              gradient: work.isContract
-                                  ? const LinearGradient(
-                                colors: [
-                                  Color(0xFFFFEDD5),
-                                  Color(0xFFFFF7ED),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                                  : const LinearGradient(
-                                colors: [
-                                  Color(0xFFDCEBFF),
-                                  Color(0xFFEFF6FF),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: accentColor.withOpacity(0.16),
-                              ),
-                            ),
-                            child: Text(
-                              work.isContract
-                                  ? l.contractWorkLabel
-                                  : l.hourlyWorkLabel,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF0A0A0A),
-                              ),
+                        Container(
+                          height: 36,
+                          width: 36,
+                          decoration: BoxDecoration(
+                            color: accentContainerColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: accentColor.withOpacity(0.2),
                             ),
                           ),
+                          child: Icon(
+                            Icons.payments_outlined,
+                            color: accentOnContainerColor,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: alignment,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            transitionBuilder: (child, animation) => FadeTransition(
-                              opacity: animation,
-                              child: SizeTransition(
-                                sizeFactor: animation,
-                                axisAlignment: -1,
-                                child: child,
-                              ),
-                            ),
-                            child: isActive
-                                ? Container(
-                              key: const ValueKey('active-badge'),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFECFDF3),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.verified_rounded,
-                                    color: Color(0xFF22C55E),
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    l.activeWorkLabel,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF15803D),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                                : SizedBox(
-                              key: const ValueKey('activate-button'),
-                              height: 36,
-                              child: FilledButton.tonal(
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14),
-                                  backgroundColor: accentColor.withOpacity(0.08),
-                                  foregroundColor: accentColor,
-                                  textStyle: const TextStyle(
+                        const SizedBox(width: 12),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l.hourlySalaryLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ) ??
+                                  TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                ),
-                                onPressed: disableActivateButton
-                                    ? null
-                                    : () => _handleSetActiveWork(work),
-                                child: isActivating
-                                    ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: 18,
-                                      width: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                        AlwaysStoppedAnimation<Color>(
-                                          accentColor,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(l.settingActiveWorkLabel),
-                                  ],
-                                )
-                                    : Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.bolt_rounded,
-                                        size: 18, color: accentColor),
-                                    const SizedBox(width: 6),
-                                    Text(l.setActiveWorkButton),
-                                  ],
-                                ),
-                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: alignment,
-                          child: Wrap(
-                            alignment: wrapAlignment,
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              SizedBox(
-                                height: 36,
-                                child: FilledButton.tonalIcon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: accentColor.withOpacity(0.08),
-                                    foregroundColor: accentColor,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    textStyle: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _formatHourlyRate(work, l),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: accentColor,
+                                fontWeight: FontWeight.w700,
+                              ) ??
+                                  TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: accentColor,
                                   ),
-                                  onPressed: disableActions
-                                      ? null
-                                      : () => _showEditWorkDialog(work),
-                                  icon: const Icon(Icons.edit_outlined, size: 18),
-                                  label: Text(l.editWorkTooltip),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 36,
-                                child: FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
-                                    backgroundColor: const Color(0xFFFFE8E6),
-                                    foregroundColor: const Color(0xFFB42318),
-                                    textStyle: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                    ),
-                                  ),
-                                  onPressed: disableActions
-                                      ? null
-                                      : () => _handleDeleteWorkTap(work, l),
-                                  icon: const Icon(Icons.delete_outline, size: 18),
-                                  label: Text(l.workDeleteConfirmButton),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
-                    );
+                    ),
+                  );
+
+                  final activeControl = AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1,
+                        child: child,
+                      ),
+                    ),
+                    child: isActive
+                        ? Container(
+                            key: const ValueKey('active-badge'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF3),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  color: Color(0xFF22C55E),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l.activeWorkLabel,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF15803D),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : SizedBox(
+                            key: const ValueKey('activate-button'),
+                            height: 36,
+                            child: FilledButton.tonal(
+                              style: FilledButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 14),
+                                backgroundColor: accentColor.withOpacity(0.08),
+                                foregroundColor: accentColor,
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                              ),
+                              onPressed: disableActivateButton
+                                  ? null
+                                  : () => _handleSetActiveWork(work),
+                              child: isActivating
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              accentColor,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(l.settingActiveWorkLabel),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.bolt_rounded,
+                                            size: 18, color: accentColor),
+                                        const SizedBox(width: 6),
+                                        Text(l.setActiveWorkButton),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                  );
+
+                  final actionButtons = Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      SizedBox(
+                        height: 36,
+                        child: FilledButton.tonalIcon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: accentColor.withOpacity(0.08),
+                            foregroundColor: accentColor,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          onPressed: disableActions
+                              ? null
+                              : () => _showEditWorkDialog(work),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: Text(l.editWorkTooltip),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 36,
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            backgroundColor: const Color(0xFFFFE8E6),
+                            foregroundColor: const Color(0xFFB42318),
+                            textStyle: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          onPressed: disableActions
+                              ? null
+                              : () => _handleDeleteWorkTap(work, l),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: Text(l.workDeleteConfirmButton),
+                        ),
+                      ),
+                    ],
+                  );
+
+                  List<Widget> buildDescription() {
+                    if (description == null) {
+                      return const [];
+                    }
+                    return [
+                      const SizedBox(height: 12),
+                      Text(
+                        description,
+                        maxLines: isCompact ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF6B7280),
+                              height: 1.4,
+                            ) ??
+                            const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF6B7280),
+                              height: 1.4,
+                            ),
+                      ),
+                    ];
                   }
 
-                  final Widget actionSection = isCompact
-                      ? buildActionColumn(alignStart: true)
-                      : SizedBox(width: 220, child: buildActionColumn(alignStart: false));
+                  final List<Widget> content = [];
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  if (isCompact) {
+                    content.add(
+                      Text(
+                        work.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20,
+                            ) ??
+                            const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    );
+                    content.add(const SizedBox(height: 12));
+                    content.add(hourlyInfo);
+                  } else {
+                    content.add(
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            height: 54,
-                            width: 54,
-                            decoration: BoxDecoration(
-                              color: accentColor.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: Icon(
-                              isActive
-                                  ? Icons.workspace_premium_outlined
-                                  : Icons.work_outline,
-                              color: isActive
-                                  ? const Color(0xFF16A34A)
-                                  : accentColor,
-                              size: 28,
+                          Expanded(
+                            child: Text(
+                              work.name,
+                              style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 20,
+                                      ) ??
+                                  const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  work.name,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 20,
-                                  ) ??
-                                      const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Color.alphaBlend(
-                                      accentContainerColor.withOpacity(0.18),
-                                      colorScheme.surface,
-                                    ),
-                                    borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(
-                                      color: accentColor.withOpacity(0.14),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        height: 36,
-                                        width: 36,
-                                        decoration: BoxDecoration(
-                                          color: accentContainerColor,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: accentColor.withOpacity(0.2),
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.payments_outlined,
-                                          color: accentOnContainerColor,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              l.hourlySalaryLabel,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: theme.textTheme.labelLarge?.copyWith(
-                                                color: colorScheme.onSurfaceVariant,
-                                                fontWeight: FontWeight.w600,
-                                              ) ??
-                                                  TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: colorScheme.onSurfaceVariant,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              _formatHourlyRate(work, l),
-                                              style: theme.textTheme.titleMedium?.copyWith(
-                                                color: accentColor,
-                                                fontWeight: FontWeight.w700,
-                                              ) ??
-                                                  TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: accentColor,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (description != null) ...[
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    description,
-                                    maxLines: isCompact ? 3 : 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                      color: const Color(0xFF6B7280),
-                                      height: 1.4,
-                                    ) ??
-                                        const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF6B7280),
-                                          height: 1.4,
-                                        ),
-                                  ),
-                                ],
-                              ],
-                            ),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 240),
+                            child: hourlyInfo,
                           ),
-                          if (!isCompact) ...[
-                            const SizedBox(width: 12),
-                            actionSection,
-                          ],
                         ],
                       ),
-                      if (isCompact) ...[
-                        const SizedBox(height: 16),
-                        actionSection,
-                      ],
-                    ],
+                    );
+                  }
+
+                  content.addAll(buildDescription());
+                  content.add(const SizedBox(height: 16));
+
+                  if (isCompact) {
+                    content.add(actionButtons);
+                    content.add(const SizedBox(height: 12));
+                    content.add(
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: activeControl,
+                      ),
+                    );
+                  } else {
+                    content.add(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(child: actionButtons),
+                          const SizedBox(width: 12),
+                          activeControl,
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: content,
                   );
                 },
               ),
             ),
           ),
         ));
+
 
     return Dismissible(
       key: ValueKey(work.id),
