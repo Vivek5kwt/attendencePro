@@ -506,27 +506,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const SizedBox(height: 8),
                                         TextFormField(
                                           controller: hourlyController,
+                                          enabled: false,
                                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                           decoration: _buildTextFieldDecoration(
                                             context: dialogContext,
                                             hintText: l.hourlySalaryHint,
                                             prefixIcon: const Icon(Icons.payments_outlined),
                                           ),
-                                          validator: (value) {
-                                            final trimmed = value?.trim();
-                                            if (trimmed == null || trimmed.isEmpty) {
-                                              return null;
-                                            }
-                                            final sanitized = trimmed.replaceAll(',', '');
-                                            final parsed = double.tryParse(sanitized);
-                                            if (parsed == null) {
-                                              return l.invalidHourlyRateMessage;
-                                            }
-                                            if (parsed < 0) {
-                                              return l.hourlyRateNegativeValidation;
-                                            }
-                                            return null;
-                                          },
                                         ),
                                         const SizedBox(height: 20),
                                         ValueListenableBuilder<bool>(
@@ -548,9 +534,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     ),
                                                     Switch.adaptive(
                                                       value: isContract,
-                                                      onChanged: isSaving
-                                                          ? null
-                                                          : (value) => _editIsContractNotifier.value = value,
+                                                      onChanged: null,
                                                       activeColor: theme.colorScheme.primary,
                                                     ),
                                                   ],
@@ -566,6 +550,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         height: 1.3,
                                                       ),
                                                 ),
+                                                if (isContract) ...[
+                                                  const SizedBox(height: 12),
+                                                  OutlinedButton.icon(
+                                                    onPressed: () async {
+                                                      await Navigator.of(
+                                                        dialogContext,
+                                                        rootNavigator: true,
+                                                      ).push(
+                                                        MaterialPageRoute<void>(
+                                                          builder: (_) => const ContractWorkScreen(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    style: OutlinedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFFEFF6FF),
+                                                      foregroundColor: const Color(0xFF1D4ED8),
+                                                      side: const BorderSide(color: Color(0xFF2563EB)),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(20),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 14,
+                                                      ),
+                                                      textStyle: const TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    icon: const Icon(Icons.work_outline_rounded, size: 18),
+                                                    label: Text(l.addContractWorkButton),
+                                                  ),
+                                                ],
                                               ],
                                             );
                                           },
@@ -618,7 +634,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                               work,
                                               nameController,
                                               hourlyController,
-                                              _editIsContractNotifier.value,
                                             );
                                           },
                                           style: ElevatedButton.styleFrom(
@@ -1203,6 +1218,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                await Navigator.of(
+                                  dialogContext,
+                                  rootNavigator: true,
+                                ).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const ContractWorkScreen(),
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: const Color(0xFFEFF6FF),
+                                foregroundColor: const Color(0xFF1D4ED8),
+                                side: const BorderSide(color: Color(0xFF2563EB)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              icon: const Icon(Icons.work_outline_rounded, size: 18),
+                              label: Text(l.addContractWorkButton),
+                            ),
                           ],
                         ),
                       ),
@@ -1319,11 +1364,9 @@ class _HomeScreenState extends State<HomeScreen> {
       Work work,
       TextEditingController nameController,
       TextEditingController hourlyController,
-      bool isContract,
       ) async {
     final messenger = ScaffoldMessenger.of(context);
     final workName = nameController.text.trim();
-    final hourlyRateText = hourlyController.text.trim();
 
     if (workName.isEmpty) {
       messenger.showSnackBar(
@@ -1332,17 +1375,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    num hourlyRate = work.hourlyRate ?? 0;
-    if (hourlyRateText.isNotEmpty) {
-      final parsedRate = double.tryParse(hourlyRateText.replaceAll(',', ''));
-      if (parsedRate == null) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.invalidHourlyRateMessage)),
-        );
-        return;
-      }
-      hourlyRate = parsedRate;
-    }
+    final hourlyRate = work.hourlyRate ?? 0;
 
     FocusScope.of(dialogContext).unfocus();
     context.read<WorkBloc>().add(
@@ -1350,7 +1383,7 @@ class _HomeScreenState extends State<HomeScreen> {
         work: work,
         name: workName,
         hourlyRate: hourlyRate,
-        isContract: isContract,
+        isContract: work.isContract,
       ),
     );
   }

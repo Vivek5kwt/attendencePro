@@ -575,15 +575,16 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                                   Expanded(
                                                     child: TextField(
                                                       controller: rateController,
+                                                      enabled: !isEditing,
                                                       keyboardType:
-                                                      const TextInputType.numberWithOptions(
+                                                          const TextInputType.numberWithOptions(
                                                         decimal: true,
                                                         signed: false,
                                                       ),
                                                       decoration: const InputDecoration(
                                                         border: InputBorder.none,
                                                         hintText:
-                                                        AppString.contractRateHint,
+                                                            AppString.contractRateHint,
                                                       ),
                                                       style: textTheme.titleMedium?.copyWith(
                                                         fontWeight: FontWeight.w700,
@@ -967,7 +968,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               l.contractWorkLastUpdatedLabel,
                               onEdit: () =>
                                   _showContractTypeDialog(type: type),
-                              editLabel: l.contractWorkEditRateButton,
+                              editLabel: l.contractWorkEditTypeTitle,
                               defaultTag: l.contractWorkDefaultTag,
                             ),
                           ),
@@ -1061,7 +1062,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                 l.contractWorkLastUpdatedLabel,
                                 onEdit: () =>
                                     _showContractTypeDialog(type: type),
-                                editLabel: l.contractWorkEditRateButton,
+                                editLabel: l.contractWorkEditTypeTitle,
                                 defaultTag: l.contractWorkDefaultTag,
                               ),
                             ),
