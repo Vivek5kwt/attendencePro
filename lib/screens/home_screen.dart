@@ -1000,6 +1000,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final disableActivateButton =
         isDeleting || (activationInProgress && !isActivating) || isActive;
     final disableActions = isDeleting || isActivating;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final activeChipMaxWidth = math.min(screenWidth * 0.45, 220.0);
 
     // top-right quick actions (edit / delete)
     final actionsRow = Row(
@@ -1116,7 +1118,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     )
         : Container(
-      height: 34,
+      constraints: BoxConstraints(
+        minHeight: 34,
+        maxWidth: activeChipMaxWidth,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
@@ -1126,25 +1131,24 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 1,
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.verified_rounded,
-            size: 16,
-            color: Color(0xFF10B981),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            l.activeWorkLabel,
-            style: const TextStyle(
-              fontSize: 13,
+      alignment: Alignment.center,
+      child: Text(
+        l.activeWorkLabel,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.labelMedium?.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF065F46),
+              height: 1.2,
+            ) ??
+            const TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: Color(0xFF065F46),
               height: 1.2,
             ),
-          ),
-        ],
       ),
     );
 
@@ -1288,7 +1292,12 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(child: hourlySalaryRow),
               const SizedBox(width: 12),
-              activateButton,
+              Flexible(
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: activateButton,
+                ),
+              ),
             ],
           ),
         ),
