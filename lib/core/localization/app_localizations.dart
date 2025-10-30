@@ -400,12 +400,16 @@ class AppLocalizations {
   String get cancelButton => _value('cancelButton');
   String get saveButtonLabel => _value('saveButtonLabel');
   String get saveWorkButton => _value('saveWorkButton');
+  String get saveChangesButton => _value('saveChangesButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
   String get workUpdatedMessage => _value('workUpdatedMessage');
   String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
   String get editWorkTitle => _value('editWorkTitle');
   String get editWorkSubtitle => _value('editWorkSubtitle');
+  String get editWorkDetailsTitle => _value('editWorkDetailsTitle');
+  String get editWorkDetailsSubtitle =>
+      _value('editWorkDetailsSubtitle');
   String get updateWorkButton => _value('updateWorkButton');
   String get editWorkTooltip => _value('editWorkTooltip');
   String get workDeleteConfirmationTitle =>
