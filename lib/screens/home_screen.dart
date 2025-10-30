@@ -728,7 +728,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               title: Text(
                 l.appTitle,
-                style: const TextStyle(color: Colors.black,fontSize: 20,fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500),
               ),
               actions: [
                 IconButton(
@@ -865,7 +868,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildHomeBody(AppLocalizations l, WorkState state) {
     _maybeNavigateToDashboard(state);
     final works = state.works;
@@ -940,7 +942,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         separatorBuilder: (context, index) =>
-            SizedBox(height: index == 0 ? 24 : 12),
+            SizedBox(height: index == 0 ? 14 : 12),
       ),
     );
   }
@@ -1002,7 +1004,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: _showAddWorkDialog,
                 child: Text(
                   l.addYourFirstWork,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1058,6 +1061,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// REWORKED CARD FOR BETTER USER EXPERIENCE
+  /// - Taller touch area
+  /// - Clear "Hourly Salary" text + value
+  /// - Edit/Delete always visible in top-right
+  /// - Activate CTA bottom-right, loud and obvious
   Widget _buildWorkCard(
       Work work,
       AppLocalizations l, {
@@ -1066,410 +1074,417 @@ class _HomeScreenState extends State<HomeScreen> {
         required bool activationInProgress,
       }) {
     final isActive = _isWorkActive(work);
-    final disableActivateButton =
-        isDeleting || (activationInProgress && !isActivating) || isActive;
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final description = _resolveWorkDescription(work);
+
     final accentColor = work.isContract
         ? colorScheme.tertiary
         : colorScheme.primary;
-    final accentContainerColor = work.isContract
-        ? colorScheme.tertiaryContainer
-        : colorScheme.primaryContainer;
-    final accentOnContainerColor = work.isContract
-        ? colorScheme.onTertiaryContainer
-        : colorScheme.onPrimaryContainer;
-    final gradient = LinearGradient(
-      colors: [
-        Color.alphaBlend(accentContainerColor.withOpacity(0.8), colorScheme.surface),
-        accentContainerColor.withOpacity(0.4),
+
+    final statusBarColor = isActive
+        ? const Color(0xFF10B981) // green if active
+        : accentColor.withOpacity(0.8); // themed color if not active
+
+    final disableActivateButton =
+        isDeleting || (activationInProgress && !isActivating) || isActive;
+    final disableActions = isDeleting || isActivating;
+
+    // top-right quick actions (edit / delete)
+    final actionsRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: disableActions ? null : () => _showEditWorkDialog(work),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: accentColor.withOpacity(0.07),
+              border: Border.all(
+                color: accentColor.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.edit_outlined,
+              color: accentColor,
+              size: 17,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: disableActions ? null : () => _handleDeleteWorkTap(work, l),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFFFE8E6),
+              border: Border.all(
+                color: const Color(0xFFB42318).withOpacity(0.22),
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.delete_outline,
+              color: Color(0xFFB42318),
+              size: 17,
+            ),
+          ),
+        ),
       ],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
     );
 
-    final card = Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(28),
-        elevation: 0,
-        child: InkWell(
-          onTap: (isDeleting || isActivating)
-              ? null
-              : () => _openWorkDetail(work),
-          onLongPress: (isDeleting || isActivating)
-              ? null
-              : () => _showEditWorkDialog(work),
-          borderRadius: BorderRadius.circular(28),
-          splashFactory: NoSplash.splashFactory,
-          hoverColor: Colors.transparent,
-          focusColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                (states) {
-              if (states.contains(MaterialState.pressed)) {
-                return accentColor.withOpacity(0.12);
-              }
-              return Colors.transparent;
-            },
+    // active badge (if active)
+    final activeBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDCFCE7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF10B981), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(
+            Icons.check_circle,
+            size: 14,
+            color: Color(0xFF10B981),
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(28),
-            ),
-            padding: const EdgeInsets.all(2.4),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isActive
-                      ? const Color(0xFF34D399)
-                      : accentColor.withOpacity(0.18),
-                  width: isActive ? 1.5 : 1.1,
+          SizedBox(width: 4),
+        ],
+      ),
+    );
+
+    // CTA button bottom-right
+    final activateButton = !isActive
+        ? Container(
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2563EB),
+            Color(0xFF4F46E5),
+          ],
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x662563EB),
+            blurRadius: 18,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap:
+        disableActivateButton ? null : () => _handleSetActiveWork(work),
+        borderRadius: BorderRadius.circular(999),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isActivating)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor:
+                  const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withOpacity(0.08),
-                    blurRadius: 22,
-                    offset: const Offset(0, 12),
+              )
+            else
+              const Icon(
+                Icons.bolt_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
+            const SizedBox(width: 6),
+            Text(
+              isActivating
+                  ? l.settingActiveWorkLabel
+                  : l.setActiveWorkButton,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    )
+        : Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: const Color(0xFFECFDF5),
+        border: Border.all(
+          color: const Color(0xFF10B981),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.verified_rounded,
+            size: 16,
+            color: Color(0xFF10B981),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l.activeWorkLabel,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF065F46),
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // salary row bottom-left
+    final hourlySalaryRow = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.hourlySalaryLabel, // "Hourly Salary"
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
+            height: 1.3,
+          ) ??
+              const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
+                height: 1.3,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _formatHourlyRate(work, l),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: accentColor,
+            height: 1.2,
+          ) ??
+              TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: accentColor,
+                height: 1.2,
+              ),
+        ),
+      ],
+    );
+
+    // title + desc + footer stacked vertically
+    final contentColumn = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // first row: work name + active badge + edit/delete row on right
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // left side: work name + (active chip if active)
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    work.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                      color: const Color(0xFF0F172A),
+                      height: 1.3,
+                    ) ??
+                        const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0F172A),
+                          height: 1.3,
+                        ),
                   ),
+                  if (isActive)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF10B981),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.check_circle,
+                            size: 14,
+                            color: Color(0xFF10B981),
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Active',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF065F46),
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isCompact = constraints.maxWidth < 520;
-                  final disableActions = isDeleting || isActivating;
+            ),
+            const SizedBox(width: 12),
+            actionsRow,
+          ],
+        ),
 
-                  final hourlyInfo = Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Color.alphaBlend(
-                        accentContainerColor.withOpacity(0.18),
-                        colorScheme.surface,
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: accentColor.withOpacity(0.14),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 36,
-                          width: 36,
-                          decoration: BoxDecoration(
-                            color: accentContainerColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: accentColor.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.payments_outlined,
-                            color: accentOnContainerColor,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l.hourlySalaryLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w600,
-                              ) ??
-                                  TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _formatHourlyRate(work, l),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: accentColor,
-                                fontWeight: FontWeight.w700,
-                              ) ??
-                                  TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: accentColor,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-
-                  final activeControl = AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        axisAlignment: -1,
-                        child: child,
-                      ),
-                    ),
-                    child: isActive
-                        ? Container(
-                            key: const ValueKey('active-badge'),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFECFDF3),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.verified_rounded,
-                                  color: Color(0xFF22C55E),
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  l.activeWorkLabel,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF15803D),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : SizedBox(
-                            key: const ValueKey('activate-button'),
-                            height: 36,
-                            child: FilledButton.tonal(
-                              style: FilledButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 14),
-                                backgroundColor: accentColor.withOpacity(0.08),
-                                foregroundColor: accentColor,
-                                textStyle: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              onPressed: disableActivateButton
-                                  ? null
-                                  : () => _handleSetActiveWork(work),
-                              child: isActivating
-                                  ? Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SizedBox(
-                                          height: 18,
-                                          width: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              accentColor,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(l.settingActiveWorkLabel),
-                                      ],
-                                    )
-                                  : Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.bolt_rounded,
-                                            size: 18, color: accentColor),
-                                        const SizedBox(width: 6),
-                                        Text(l.setActiveWorkButton),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                  );
-
-                  final actionButtons = Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      SizedBox(
-                        height: 36,
-                        child: FilledButton.tonalIcon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: accentColor.withOpacity(0.08),
-                            foregroundColor: accentColor,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                            textStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          onPressed: disableActions
-                              ? null
-                              : () => _showEditWorkDialog(work),
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: Text(l.editWorkTooltip),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 36,
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                            backgroundColor: const Color(0xFFFFE8E6),
-                            foregroundColor: const Color(0xFFB42318),
-                            textStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          onPressed: disableActions
-                              ? null
-                              : () => _handleDeleteWorkTap(work, l),
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          label: Text(l.workDeleteConfirmButton),
-                        ),
-                      ),
-                    ],
-                  );
-
-                  List<Widget> buildDescription() {
-                    if (description == null) {
-                      return const [];
-                    }
-                    return [
-                      const SizedBox(height: 12),
-                      Text(
-                        description,
-                        maxLines: isCompact ? 3 : 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
-                              height: 1.4,
-                            ) ??
-                            const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF6B7280),
-                              height: 1.4,
-                            ),
-                      ),
-                    ];
-                  }
-
-                  final List<Widget> content = [];
-
-                  if (isCompact) {
-                    content.add(
-                      Text(
-                        work.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 20,
-                            ) ??
-                            const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    );
-                    content.add(const SizedBox(height: 12));
-                    content.add(hourlyInfo);
-                  } else {
-                    content.add(
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              work.name,
-                              style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 20,
-                                      ) ??
-                                  const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 240),
-                            child: hourlyInfo,
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  content.addAll(buildDescription());
-                  content.add(const SizedBox(height: 16));
-
-                  if (isCompact) {
-                    content.add(actionButtons);
-                    content.add(const SizedBox(height: 12));
-                    content.add(
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: activeControl,
-                      ),
-                    );
-                  } else {
-                    content.add(
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(child: actionButtons),
-                          const SizedBox(width: 12),
-                          activeControl,
-                        ],
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: content,
-                  );
-                },
-              ),
+        // description
+        if (description != null && description.trim().isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              description.trim(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 13,
+                color: const Color(0xFF6B7280),
+                height: 1.4,
+              ) ??
+                  const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF6B7280),
+                    height: 1.4,
+                  ),
             ),
           ),
-        ));
 
+        // footer row: salary left / activate button right
+        Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(child: hourlySalaryRow),
+              const SizedBox(width: 12),
+              activateButton,
+            ],
+          ),
+        ),
+      ],
+    );
 
+    // visual frame with left color bar and smooth border/glow
+    final framedCard = Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            (isActive
+                ? const Color(0xFF10B981)
+                : accentColor)
+                .withOpacity(0.18),
+            Colors.white.withOpacity(0),
+          ],
+        ),
+        border: Border.all(
+          color: isActive
+              ? const Color(0xFF10B981).withOpacity(0.5)
+              : accentColor.withOpacity(0.16),
+          width: 1.2,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // status color bar
+            Container(
+              width: 5,
+              decoration: BoxDecoration(
+                color: statusBarColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(22),
+                  bottomLeft: Radius.circular(22),
+                ),
+              ),
+            ),
+            // inner white body
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(22),
+                    bottomRight: Radius.circular(22),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: contentColumn,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // tap wrapper
+    final interactiveCard = Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        onTap: (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
+        onLongPress:
+        (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
+        borderRadius: BorderRadius.circular(22),
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        child: framedCard,
+      ),
+    );
+
+    // swipe to delete wrapper with loading overlay
     return Dismissible(
       key: ValueKey(work.id),
       direction: DismissDirection.endToStart,
@@ -1483,18 +1498,18 @@ class _HomeScreenState extends State<HomeScreen> {
       secondaryBackground: _buildDeleteBackground(l),
       child: Stack(
         children: [
-          card,
+          interactiveCard,
           if (isDeleting)
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.75),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: const Center(
                   child: SizedBox(
-                    height: 32,
-                    width: 32,
+                    height: 28,
+                    width: 28,
                     child: CircularProgressIndicator(strokeWidth: 3),
                   ),
                 ),
@@ -1507,7 +1522,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDeleteBackground(AppLocalizations l) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
         color: const Color(0xFFFF3B30),
         alignment: Alignment.centerRight,
@@ -1807,8 +1822,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _showLanguageDialog(BuildContext context,
-      Map<String, String> options, AppLocalizations l) async {
+  Future<void> _showLanguageDialog(
+      BuildContext context, Map<String, String> options, AppLocalizations l) async {
     final currentCode = context.read<LocaleCubit>().state.languageCode;
     final selectedCode = await showCreativeLanguageDialog(
       context,
@@ -2179,7 +2194,7 @@ class _DrawerMenuItem {
     required this.backgroundColor,
     this.iconColor,
     required this.onTap,
-  }) : assert(icon != null || assetPath != null,
+  })  : assert(icon != null || assetPath != null,
   'Either icon or assetPath must be provided.'),
         assert(icon == null || assetPath == null,
         'Provide only one of icon or assetPath.');
@@ -2191,4 +2206,3 @@ class _DrawerMenuItem {
   final Color? iconColor;
   final VoidCallback onTap;
 }
-
