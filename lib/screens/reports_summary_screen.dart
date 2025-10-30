@@ -964,11 +964,6 @@ class _ActiveWorkBadge extends StatelessWidget {
       fontSize: 11,
       fontWeight: FontWeight.w600,
     );
-    final suffixStyle = labelStyle.copyWith(
-      fontSize: 12,
-      fontWeight: FontWeight.w500,
-    );
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -980,25 +975,22 @@ class _ActiveWorkBadge extends StatelessWidget {
         children: [
           const Icon(Icons.work_outline, size: 18, color: Color(0xFF2563EB)),
           const SizedBox(width: 8),
-          // Try to place here work name in small size
           Flexible(
-            child: RichText(
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: labelStyle,
-                children: [
-                  const TextSpan(text: 'Active Work – '),
-                  TextSpan(
-                    text: workName,
-                    style: workNameStyle,
-                  ),
-                  TextSpan(
-                    text: ' (User Selected)',
-                    style: suffixStyle,
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Active Work',
+                  style: labelStyle,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  workName,
+                  style: workNameStyle,
+                  softWrap: true,
+                ),
+              ],
             ),
           ),
         ],
