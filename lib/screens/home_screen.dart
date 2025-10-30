@@ -40,6 +40,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const String _shareLink = 'https://attendancepro.app';
+
+  // currency symbol variable for hourly rate UI
+  static const String _currencySymbol = '€';
+
   final WorkApi _workApi = WorkApi();
   final SessionManager _sessionManager = const SessionManager();
   List<Work> _works = const <Work>[];
@@ -570,9 +574,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (success) {
       context.read<WorkBloc>().add(const WorkCleared());
     }
-    final message = success
-        ? l.deleteAccountSuccessMessage
-        : l.deleteAccountFailedMessage;
+    final message =
+    success ? l.deleteAccountSuccessMessage : l.deleteAccountFailedMessage;
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -943,7 +946,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _AddNewWorkCard(
                 title: l.addNewWorkLabel,
-                subtitle: l.editWorkSubtitle, // make sure you have this in l10n. If not, you can hardcode like "Add another job/contract so you can track it separately."
+                subtitle: l.editWorkSubtitle,
                 onTap: _showAddWorkDialog,
               ),
             );
@@ -1007,7 +1010,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 l.startTrackingAttendance,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                style:
+                const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
               ),
             ),
             const SizedBox(height: 12),
@@ -1025,8 +1029,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: _showAddWorkDialog,
                 child: Text(
                   l.addYourFirstWork,
-                  style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1044,7 +1048,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: Color(0xFFD32F2F), size: 64),
+            const Icon(Icons.error_outline,
+                color: Color(0xFFD32F2F), size: 64),
             const SizedBox(height: 16),
             Text(
               l.worksLoadFailedTitle,
@@ -1095,9 +1100,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final colorScheme = theme.colorScheme;
     final description = _resolveWorkDescription(work);
 
-    final accentColor = work.isContract
-        ? colorScheme.tertiary
-        : colorScheme.primary;
+    final accentColor =
+    work.isContract ? colorScheme.tertiary : colorScheme.primary;
 
     final statusBarColor = isActive
         ? const Color(0xFF10B981) // green if active
@@ -1308,16 +1312,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
+                  // Work Name (bigger font now)
                   Text(
                     work.name,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize: 17,
+                      fontSize: 22, // increased to 20
                       color: const Color(0xFF0F172A),
                       height: 1.3,
                     ) ??
                         const TextStyle(
-                          fontSize: 17,
+                          fontSize: 22,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF0F172A),
                           height: 1.3,
@@ -1408,10 +1413,7 @@ class _HomeScreenState extends State<HomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            (isActive
-                ? const Color(0xFF10B981)
-                : accentColor)
-                .withOpacity(0.18),
+            (isActive ? const Color(0xFF10B981) : accentColor).withOpacity(0.18),
             Colors.white.withOpacity(0),
           ],
         ),
@@ -1737,7 +1739,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ? doubleValue.toStringAsFixed(0)
         : doubleValue.toStringAsFixed(2);
 
-    return formatted;
+    // now includes currency symbol before amount, and "/hour" after
+    return '$_currencySymbol$formatted/hour';
   }
 
   String? _successFallback(WorkFeedbackKind? kind, AppLocalizations l) {
@@ -1858,9 +1861,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final textScaler = MediaQuery.textScalerOf(dialogContext);
 
         TextStyle scaleTextStyle(TextStyle base, {FontWeight? fontWeight}) {
-          final scaledFontSize = textScaler.scale(
-            responsive.scaleText(base.fontSize ?? 16),
-          );
+          final scaledFontSize =
+          textScaler.scale(responsive.scaleText(base.fontSize ?? 16));
           return base.copyWith(
             fontSize: scaledFontSize,
             fontWeight: fontWeight ?? base.fontWeight,
@@ -1911,17 +1913,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     final availableWidth =
                         constraints.maxWidth - (horizontalPadding * 2);
                     final safeAvailableWidth =
-                        availableWidth > 0 ? availableWidth : 0.0;
+                    availableWidth > 0 ? availableWidth : 0.0;
                     final buttonWidth = isWide
                         ? math.max((safeAvailableWidth - spacing) / 2, 0.0)
                         : safeAvailableWidth;
 
                     final titleStyle = scaleTextStyle(
                       (theme.textTheme.titleMedium ??
-                              const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ))
+                          const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ))
                           .copyWith(fontWeight: FontWeight.w600),
                     );
 
@@ -1982,10 +1984,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: shareActions
                                 .map(
                                   (button) => SizedBox(
-                                    width: buttonWidth,
-                                    child: button,
-                                  ),
-                                )
+                                width: buttonWidth,
+                                child: button,
+                              ),
+                            )
                                 .toList(),
                           ),
                           SizedBox(height: responsive.scale(18)),
@@ -2023,17 +2025,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final responsive = context.responsive;
     final textScaler = MediaQuery.textScalerOf(context);
     final baseStyle = theme.textTheme.labelLarge?.copyWith(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-        ) ??
+      color: textColor,
+      fontWeight: FontWeight.w600,
+    ) ??
         TextStyle(
           color: textColor,
           fontSize: 16,
           fontWeight: FontWeight.w600,
         );
-    final scaledFontSize = textScaler.scale(
-      responsive.scaleText(baseStyle.fontSize ?? 16),
-    );
+    final scaledFontSize =
+    textScaler.scale(responsive.scaleText(baseStyle.fontSize ?? 16));
     final textStyle = baseStyle.copyWith(fontSize: scaledFontSize);
 
     return ElevatedButton(
@@ -2128,9 +2129,8 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallbackInitial = userName.trim().isNotEmpty
-        ? userName.trim()[0].toUpperCase()
-        : '?';
+    final fallbackInitial =
+    userName.trim().isNotEmpty ? userName.trim()[0].toUpperCase() : '?';
 
     return SizedBox(
       height: 220,
@@ -2216,7 +2216,8 @@ class _DrawerHeader extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         userEmail,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        style:
+                        Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.white.withOpacity(0.85),
                           fontSize: 14,
                         ) ??
@@ -2318,7 +2319,7 @@ class _DrawerMenuItem {
 }
 
 /// --------------------------------------------
-/// NEW: "Add New Work" Quick Card
+/// "Add New Work" Quick Card
 /// --------------------------------------------
 
 class _AddNewWorkCard extends StatelessWidget {
