@@ -149,8 +149,9 @@ Future<Work?> showWorkSelectionDialog({
                                       thumbVisibility: works.length > 3,
                                       interactive: true,
                                       child: ListView.separated(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        clipBehavior: Clip.none,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
                                         physics: const BouncingScrollPhysics(),
                                         keyboardDismissBehavior:
                                             ScrollViewKeyboardDismissBehavior
