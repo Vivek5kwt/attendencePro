@@ -17,7 +17,6 @@ import '../repositories/attendance_entry_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
 import '../widgets/work_selection_dialog.dart';
-import 'contract_work_screen.dart';
 
 const List<int> _timeHourOptions = <int>[
   1,
@@ -1603,23 +1602,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     );
   }
 
-  Future<void> _openContractWorkManager() async {
-    if (!mounted) {
-      return;
-    }
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const ContractWorkScreen(),
-      ),
-    );
-    if (!mounted) {
-      return;
-    }
-    if (widget.work.isContract) {
-      await _loadContractTypes();
-    }
-  }
-
   String? _validateStartTime(String? value) {
     if (_markAsWorkOff) {
       return null;
@@ -2576,9 +2558,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onFieldChanged: _handleAttendanceFieldChanged,
         isSubmitting: _isSubmittingAttendance,
         isWorkOff: _markAsWorkOff,
-        showContractWorkButton: widget.work.isContract,
-        onContractWorkTap:
-            widget.work.isContract ? _openContractWorkManager : null,
         showContractFields: widget.work.isContract,
         contractFieldsEnabled: _contractFieldsEnabled,
         isContractFieldsLoading: _isLoadingContractTypes,
