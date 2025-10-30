@@ -15,8 +15,7 @@ Future<Work?> showWorkSelectionDialog({
   VoidCallback? onAddNewWork,
   ValueChanged<Work>? onEditWork,
 }) async {
-  final visibleWorks =
-      works.where((work) => !work.isContract).toList(growable: false);
+  final visibleWorks = works;
 
   if (visibleWorks.isEmpty) {
     return null;
