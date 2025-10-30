@@ -796,6 +796,75 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildHomeBanner(AppLocalizations l) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F9FF),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE0EDFF)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 52,
+              width: 52,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE0EDFF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.ads_click_outlined,
+                color: Color(0xFF1D4ED8),
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l.adPlaceholderTitle,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1F2937),
+                      fontSize: 18,
+                    ) ??
+                        const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1F2937),
+                          fontSize: 18,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l.adPlaceholderSubtitle,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF4B5563),
+                      height: 1.4,
+                    ) ??
+                        const TextStyle(
+                          color: Color(0xFF4B5563),
+                          height: 1.4,
+                          fontSize: 14,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildHomeBody(AppLocalizations l, WorkState state) {
     _maybeNavigateToDashboard(state);
@@ -851,20 +920,27 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: () => _handleRefresh(state),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: works.length,
+        padding: const EdgeInsets.only(bottom: 24),
+        itemCount: works.length + 1,
         itemBuilder: (context, index) {
-          final work = works[index];
-          return _buildWorkCard(
-            work,
-            l,
-            isDeleting: state.deletingWorkId == work.id,
-            isActivating:
-                activatingWorkId == work.id && isActivationInProgress,
-            activationInProgress: isActivationInProgress,
+          if (index == 0) {
+            return _buildHomeBanner(l);
+          }
+          final work = works[index - 1];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildWorkCard(
+              work,
+              l,
+              isDeleting: state.deletingWorkId == work.id,
+              isActivating:
+              activatingWorkId == work.id && isActivationInProgress,
+              activationInProgress: isActivationInProgress,
+            ),
           );
         },
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        separatorBuilder: (context, index) =>
+            SizedBox(height: index == 0 ? 24 : 12),
       ),
     );
   }
@@ -879,9 +955,9 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: onRefresh ?? () => _handleRefresh(state),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
-          const SizedBox(height: 8),
+          _buildHomeBanner(l),
           ...children,
         ],
       ),
@@ -1015,55 +1091,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     final card = Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(28),
-      elevation: 0,
-      child: InkWell(
-        onTap: (isDeleting || isActivating)
-            ? null
-            : () => _openWorkDetail(work),
-        onLongPress: (isDeleting || isActivating)
-            ? null
-            : () => _showEditWorkDialog(work),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(28),
-        splashFactory: NoSplash.splashFactory,
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        overlayColor: MaterialStateProperty.resolveWith<Color?>(
-          (states) {
-            if (states.contains(MaterialState.pressed)) {
-              return accentColor.withOpacity(0.12);
-            }
-            return Colors.transparent;
-          },
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(28),
+        elevation: 0,
+        child: InkWell(
+          onTap: (isDeleting || isActivating)
+              ? null
+              : () => _openWorkDetail(work),
+          onLongPress: (isDeleting || isActivating)
+              ? null
+              : () => _showEditWorkDialog(work),
+          borderRadius: BorderRadius.circular(28),
+          splashFactory: NoSplash.splashFactory,
+          hoverColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          overlayColor: MaterialStateProperty.resolveWith<Color?>(
+                (states) {
+              if (states.contains(MaterialState.pressed)) {
+                return accentColor.withOpacity(0.12);
+              }
+              return Colors.transparent;
+            },
           ),
-          padding: const EdgeInsets.all(2.4),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isActive
-                    ? const Color(0xFF34D399)
-                    : accentColor.withOpacity(0.18),
-                width: isActive ? 1.5 : 1.1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: accentColor.withOpacity(0.08),
-                  blurRadius: 22,
-                  offset: const Offset(0, 12),
-                ),
-              ],
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(28),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: LayoutBuilder(
+            padding: const EdgeInsets.all(2.4),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isActive
+                      ? const Color(0xFF34D399)
+                      : accentColor.withOpacity(0.18),
+                  width: isActive ? 1.5 : 1.1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withOpacity(0.08),
+                    blurRadius: 22,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: LayoutBuilder(
                 builder: (context, constraints) {
                   final isCompact = constraints.maxWidth < 520;
                   final disableActions = isDeleting || isActivating;
@@ -1716,7 +1792,7 @@ class _HomeScreenState extends State<HomeScreen> {
       focusColor: Colors.transparent,
       highlightColor: Colors.transparent,
       overlayColor: MaterialStateProperty.resolveWith<Color?>(
-        (states) {
+            (states) {
           if (states.contains(MaterialState.pressed)) {
             return item.backgroundColor.withOpacity(0.16);
           }
@@ -1737,15 +1813,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(
                 child: item.assetPath != null
                     ? Image.asset(
-                        item.assetPath!,
-                        width: 24,
-                        height: 24,
-                      )
+                  item.assetPath!,
+                  width: 24,
+                  height: 24,
+                )
                     : Icon(
-                        item.icon!,
-                        color: item.iconColor,
-                        size: 24,
-                      ),
+                  item.icon!,
+                  color: item.iconColor,
+                  size: 24,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -1879,8 +1955,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       label,
                       style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ) ??
+                        fontWeight: FontWeight.w600,
+                      ) ??
                           const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -1913,8 +1989,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   l.shareAppTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ) ??
+                    fontWeight: FontWeight.w700,
+                  ) ??
                       const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
