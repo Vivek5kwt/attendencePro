@@ -3883,8 +3883,8 @@ class _WorkHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return SizedBox(
-      height: 176,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 176),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -3942,7 +3942,8 @@ class _WorkHeaderCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -4003,6 +4004,8 @@ class _WorkHeaderCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               rateDescription ?? workTypeLabel,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: textTheme.bodyLarge?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
