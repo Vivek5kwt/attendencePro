@@ -208,6 +208,16 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         });
       },
+      onEditWork: (work) {
+        if (!mounted) {
+          return;
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showEditWorkDialog(work);
+          }
+        });
+      },
     );
     if (!mounted || selectedWork == null) {
       return;

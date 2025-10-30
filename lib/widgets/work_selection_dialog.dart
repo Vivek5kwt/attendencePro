@@ -5,6 +5,7 @@ import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 
 const _kAddNewWorkResult = '__add_new_work__';
+const _kEditWorkResultPrefix = '__edit_work__:';
 
 Future<Work?> showWorkSelectionDialog({
   required BuildContext context,
@@ -12,6 +13,7 @@ Future<Work?> showWorkSelectionDialog({
   required AppLocalizations localization,
   String? initialSelectedWorkId,
   VoidCallback? onAddNewWork,
+  ValueChanged<Work>? onEditWork,
 }) async {
   if (works.isEmpty) {
     return null;
@@ -145,43 +147,47 @@ Future<Work?> showWorkSelectionDialog({
                                         keyboardDismissBehavior:
                                             ScrollViewKeyboardDismissBehavior
                                                 .onDrag,
-                                        itemCount: works.length +
-                                            (onAddNewWork != null ? 1 : 0),
+                                        itemCount: works.length,
                                         itemBuilder: (context, index) {
-                                          if (index < works.length) {
-                                            final work = works[index];
-                                            return _WorkSelectionTile(
-                                              work: work,
-                                              isSelected: work.id == selectedId,
-                                              localization: localization,
-                                              onTap: () {
-                                                setState(() {
-                                                  selectedId = work.id;
-                                                });
-                                              },
-                                            );
-                                          }
-
-                                          return _AddNewWorkButton(
+                                          final work = works[index];
+                                          return _WorkSelectionTile(
+                                            work: work,
+                                            isSelected: work.id == selectedId,
                                             localization: localization,
                                             onTap: () {
-                                              Navigator.of(dialogContext)
-                                                  .pop(_kAddNewWorkResult);
+                                              setState(() {
+                                                selectedId = work.id;
+                                              });
                                             },
+                                            onEdit: onEditWork == null
+                                                ? null
+                                                : () {
+                                                    Navigator.of(dialogContext)
+                                                        .pop(
+                                                      '$_kEditWorkResultPrefix${work.id}',
+                                                    );
+                                                  },
                                           );
                                         },
-                                        separatorBuilder: (_, index) {
-                                          final isBeforeAddButton =
-                                              onAddNewWork != null &&
-                                                  index == works.length - 1;
-                                          return SizedBox(
-                                            height: isBeforeAddButton ? 20 : 12,
-                                          );
-                                        },
+                                        separatorBuilder: (_, __) =>
+                                            const SizedBox(height: 12),
                                       ),
                                     ),
                                   ),
                                 ),
+                                if (onAddNewWork != null) ...[
+                                  const SizedBox(height: 16),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: _AddNewWorkLink(
+                                      localization: localization,
+                                      onTap: () {
+                                        Navigator.of(dialogContext)
+                                            .pop(_kAddNewWorkResult);
+                                      },
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 24),
                                 SizedBox(
                                   width: double.infinity,
@@ -247,6 +253,17 @@ Future<Work?> showWorkSelectionDialog({
     return null;
   }
 
+  if (result.startsWith(_kEditWorkResultPrefix)) {
+    final workId = result.substring(_kEditWorkResultPrefix.length);
+    for (final work in works) {
+      if (work.id == workId) {
+        onEditWork?.call(work);
+        break;
+      }
+    }
+    return null;
+  }
+
   for (final work in works) {
     if (work.id == result) {
       return work;
@@ -294,12 +311,14 @@ class _WorkSelectionTile extends StatelessWidget {
     required this.isSelected,
     required this.localization,
     required this.onTap,
+    this.onEdit,
   });
 
   final Work work;
   final bool isSelected;
   final AppLocalizations localization;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   static const _gradientBorder = LinearGradient(
     colors: [Color(0xFF2E469D), Color(0xFF0E8CEA)],
@@ -352,6 +371,13 @@ class _WorkSelectionTile extends StatelessWidget {
               ],
             ),
           ),
+          if (onEdit != null) ...[
+            const SizedBox(width: 12),
+            _EditWorkButton(
+              label: localization.editWorkTooltip,
+              onPressed: onEdit!,
+            ),
+          ],
           const SizedBox(width: 12),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -426,8 +452,8 @@ class _WorkSelectionTile extends StatelessWidget {
   }
 }
 
-class _AddNewWorkButton extends StatelessWidget {
-  const _AddNewWorkButton({
+class _AddNewWorkLink extends StatelessWidget {
+  const _AddNewWorkLink({
     required this.localization,
     required this.onTap,
   });
@@ -437,65 +463,48 @@ class _AddNewWorkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
-          child: _DashedBorder(
-            borderRadius: 22,
-            color: const Color(0xFF2563EB),
-            strokeWidth: 1.6,
-            dashLength: 8,
-            dashGap: 5,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 16,
-                horizontal: 18,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 26,
+                width: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFF2563EB),
+                    width: 1.4,
+                  ),
+                  color: const Color(0xFFEFF6FF),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.add,
+                  size: 16,
+                  color: Color(0xFF2563EB),
+                ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: 32,
-                    width: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF2563EB),
-                        width: 1.4,
-                      ),
-                      color: Colors.white,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.add,
-                      size: 18,
+              const SizedBox(width: 10),
+              Text(
+                localization.addNewWorkLabel,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF2563EB),
+                    ) ??
+                    const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF2563EB),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Text(
-                      localization.addNewWorkLabel,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF2563EB),
-                          ) ??
-                          const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2563EB),
-                          ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -503,85 +512,43 @@ class _AddNewWorkButton extends StatelessWidget {
   }
 }
 
-class _DashedBorder extends StatelessWidget {
-  const _DashedBorder({
-    required this.child,
-    required this.borderRadius,
-    required this.color,
-    required this.strokeWidth,
-    required this.dashLength,
-    required this.dashGap,
+class _EditWorkButton extends StatelessWidget {
+  const _EditWorkButton({
+    required this.label,
+    required this.onPressed,
   });
 
-  final Widget child;
-  final double borderRadius;
-  final Color color;
-  final double strokeWidth;
-  final double dashLength;
-  final double dashGap;
+  final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedRRectPainter(
-        borderRadius: borderRadius,
-        color: color,
-        strokeWidth: strokeWidth,
-        dashLength: dashLength,
-        dashGap: dashGap,
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        minimumSize: Size.zero,
       ),
-      child: child,
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ) ??
+            const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+      ),
     );
   }
-}
-
-class _DashedRRectPainter extends CustomPainter {
-  const _DashedRRectPainter({
-    required this.borderRadius,
-    required this.color,
-    required this.strokeWidth,
-    required this.dashLength,
-    required this.dashGap,
-  });
-
-  final double borderRadius;
-  final Color color;
-  final double strokeWidth;
-  final double dashLength;
-  final double dashGap;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.isEmpty) {
-      return;
-    }
-
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(
-      rect,
-      Radius.circular(borderRadius),
-    );
-    final path = Path()..addRRect(rrect);
-
-    for (final metric in path.computeMetrics()) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final double nextDistance = math.min(distance + dashLength, metric.length);
-        final extractPath = metric.extractPath(distance, nextDistance);
-        canvas.drawPath(extractPath, paint);
-        distance += dashLength + dashGap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _DialogCloseButton extends StatelessWidget {
