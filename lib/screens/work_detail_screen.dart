@@ -333,6 +333,8 @@ Widget _buildBreakDropdownField({
   );
 }
 
+enum _WorkDetailMenuAction { changeWork, close }
+
 class WorkDetailScreen extends StatefulWidget {
   const WorkDetailScreen({super.key, required this.work});
 
@@ -2677,8 +2679,32 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          iconTheme: const IconThemeData(
-            color: Colors.black,
+          automaticallyImplyLeading: false,
+          leading: PopupMenuButton<_WorkDetailMenuAction>(
+            icon: const Icon(
+              Icons.dehaze,
+              color: Color(0xFF0A0A0A),
+            ),
+            onSelected: (action) {
+              switch (action) {
+                case _WorkDetailMenuAction.changeWork:
+                  _handleChangeWork();
+                  break;
+                case _WorkDetailMenuAction.close:
+                  Navigator.of(context).maybePop();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<_WorkDetailMenuAction>(
+                value: _WorkDetailMenuAction.changeWork,
+                child: Text(l.changeWorkButton),
+              ),
+              PopupMenuItem<_WorkDetailMenuAction>(
+                value: _WorkDetailMenuAction.close,
+                child: Text(l.close),
+              ),
+            ],
           ),
           title: Text(
             l.appTitle,
