@@ -1831,7 +1831,14 @@ class _HomeScreenState extends State<HomeScreen> {
     if (selectedCode != null && options.containsKey(selectedCode)) {
       context.read<LocaleCubit>().setLocale(Locale(selectedCode));
       final updatedLocalization = AppLocalizations(Locale(selectedCode));
-      final label = options[selectedCode] ?? selectedCode;
+      final updatedNames = {
+        'en': updatedLocalization.languageEnglish,
+        'hi': updatedLocalization.languageHindi,
+        'pa': updatedLocalization.languagePunjabi,
+        'it': updatedLocalization.languageItalian,
+      };
+      final label =
+          updatedNames[selectedCode] ?? options[selectedCode] ?? selectedCode;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(updatedLocalization.languageSelection(label))),
       );
