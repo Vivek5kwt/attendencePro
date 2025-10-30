@@ -32,6 +32,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isDeleteMode = false;
 
   @override
   void initState() {
@@ -60,6 +61,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             isUserDefined: true,
           )));
         _syncAvailableSubtypes();
+        if (_userContractTypes.isEmpty && _isDeleteMode) {
+          _isDeleteMode = false;
+        }
         _isLoading = false;
       });
     } on ContractTypeRepositoryException catch (error) {
@@ -141,7 +145,19 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   void _removeContractType(_ContractType type) {
     setState(() {
       _userContractTypes.removeWhere((item) => item.id == type.id);
+      if (_userContractTypes.isEmpty && _isDeleteMode) {
+        _isDeleteMode = false;
+      }
       _syncAvailableSubtypes();
+    });
+  }
+
+  void _toggleDeleteMode() {
+    if (_userContractTypes.isEmpty) {
+      return;
+    }
+    setState(() {
+      _isDeleteMode = !_isDeleteMode;
     });
   }
 
@@ -558,21 +574,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 20),
-                            OutlinedButton.icon(
-                              onPressed: () =>
-                                  _showComingSoonSnackBar(rootContext),
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(48),
-                                foregroundColor: const Color(0xFF1D4ED8),
-                                side: const BorderSide(color: Color(0xFFE0ECFF)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              icon: const Icon(Icons.add_circle_outline),
-                              label: Text(l.addContractWorkButton),
-                            ),
                             const SizedBox(height: 24),
                             Row(
                               children: [
@@ -888,6 +889,74 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       defaultTypesLabel: l.contractWorkDefaultTypesTitle,
                       customTypesLabel: l.contractWorkCustomTypesTitle,
                     ),
+                    SizedBox(height: responsive.scale(16)),
+                    Wrap(
+                      spacing: responsive.scale(12),
+                      runSpacing: responsive.scale(12),
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () => _showContractTypeDialog(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            foregroundColor: Colors.white,
+                            padding: responsive.scaledSymmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(responsive.scale(16)),
+                            ),
+                            textStyle: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: responsive.scaleText(14),
+                            ),
+                          ),
+                          icon: const Icon(Icons.add_circle_outline),
+                          label: Text(l.contractWorkAddTypeTitle),
+                        ),
+                        if (_userContractTypes.isNotEmpty)
+                          OutlinedButton.icon(
+                            onPressed: _toggleDeleteMode,
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: _isDeleteMode
+                                  ? Colors.white
+                                  : const Color(0xFFFFF1F2),
+                              foregroundColor: _isDeleteMode
+                                  ? const Color(0xFF374151)
+                                  : const Color(0xFFB91C1C),
+                              side: BorderSide(
+                                color: _isDeleteMode
+                                    ? const Color(0xFFE5E7EB)
+                                    : const Color(0xFFFECACA),
+                              ),
+                              padding: responsive.scaledSymmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  responsive.scale(16),
+                                ),
+                              ),
+                              textStyle: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: responsive.scaleText(14),
+                              ),
+                            ),
+                            icon: Icon(
+                              _isDeleteMode
+                                  ? Icons.close_rounded
+                                  : Icons.delete_outline,
+                            ),
+                            label: Text(
+                              _isDeleteMode
+                                  ? l.cancelButton
+                                  : l.contractWorkDeleteButton,
+                            ),
+                          ),
+                      ],
+                    ),
                     SizedBox(height: responsive.scale(20)),
                     _SectionTitle(
                       text: l.contractWorkDefaultTypesTitle,
@@ -933,52 +1002,25 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                             padding: EdgeInsets.only(
                               bottom: responsive.scale(12),
                             ),
-                            child: Dismissible(
-                              key: ValueKey('contract-type-${type.id}'),
-                              direction: DismissDirection.endToStart,
-                              confirmDismiss: (_) =>
-                                  _confirmDeleteContractType(type),
-                              onDismissed: (_) => _removeContractType(type),
-                              background: const SizedBox.shrink(),
-                              secondaryBackground: ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                  responsive.scale(20),
-                                ),
-                                child: Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: responsive.scaledSymmetric(
-                                    horizontal: 24,
-                                  ),
-                                  color: const Color(0xFFFEE2E2),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.delete_outline,
-                                        color: Color(0xFFB91C1C),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        l.contractWorkDeleteButton,
-                                        style: const TextStyle(
-                                          color: Color(0xFFB91C1C),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              child: _ContractTypeTile(
-                                type: type,
-                                lastUpdatedLabel:
-                                l.contractWorkLastUpdatedLabel,
-                                onEdit: () =>
-                                    _showContractTypeDialog(type: type),
-                                editLabel: l.contractWorkEditTypeTitle,
-                                defaultTag: l.contractWorkDefaultTag,
-                              ),
+                            child: _ContractTypeTile(
+                              type: type,
+                              lastUpdatedLabel:
+                                  l.contractWorkLastUpdatedLabel,
+                              onEdit: () =>
+                                  _showContractTypeDialog(type: type),
+                              editLabel: l.contractWorkEditTypeTitle,
+                              defaultTag: l.contractWorkDefaultTag,
+                              showDeleteAction: _isDeleteMode,
+                              deleteLabel: l.contractWorkDeleteButton,
+                              onDelete: !_isDeleteMode
+                                  ? null
+                                  : () async {
+                                      final shouldDelete =
+                                          await _confirmDeleteContractType(type);
+                                      if (shouldDelete == true && mounted) {
+                                        _removeContractType(type);
+                                      }
+                                    },
                             ),
                           ),
                         )
@@ -1524,6 +1566,9 @@ class _ContractTypeTile extends StatelessWidget {
     required this.onEdit,
     required this.editLabel,
     required this.defaultTag,
+    this.onDelete,
+    this.deleteLabel,
+    this.showDeleteAction = false,
   });
 
   final _ContractType type;
@@ -1531,6 +1576,9 @@ class _ContractTypeTile extends StatelessWidget {
   final VoidCallback onEdit;
   final String editLabel;
   final String defaultTag;
+  final VoidCallback? onDelete;
+  final String? deleteLabel;
+  final bool showDeleteAction;
 
   @override
   Widget build(BuildContext context) {
@@ -1737,6 +1785,32 @@ class _ContractTypeTile extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined, size: 18),
                 label: Text(editLabel),
               );
+              final actions = <Widget>[editButton];
+              if (showDeleteAction && onDelete != null) {
+                actions.add(
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFF1F2),
+                      foregroundColor: const Color(0xFFB91C1C),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: responsive.scale(18),
+                        vertical: responsive.scale(10),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(responsive.scale(16)),
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: responsive.scaleText(14),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: Text(deleteLabel ?? l.contractWorkDeleteButton),
+                  ),
+                );
+              }
 
               if (shouldStack) {
                 return Column(
@@ -1744,7 +1818,14 @@ class _ContractTypeTile extends StatelessWidget {
                   children: [
                     dateColumn,
                     SizedBox(height: responsive.scale(12)),
-                    editButton,
+                    if (actions.length == 1)
+                      actions.first
+                    else
+                      Wrap(
+                        spacing: responsive.scale(10),
+                        runSpacing: responsive.scale(10),
+                        children: actions,
+                      ),
                   ],
                 );
               }
@@ -1754,7 +1835,11 @@ class _ContractTypeTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(child: dateColumn),
-                  editButton,
+                  Wrap(
+                    spacing: responsive.scale(10),
+                    runSpacing: responsive.scale(10),
+                    children: actions,
+                  ),
                 ],
               );
             },
