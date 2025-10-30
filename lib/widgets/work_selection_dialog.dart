@@ -93,42 +93,50 @@ Future<Work?> showWorkSelectionDialog({
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(width: 44),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            localization.selectWorkTitle,
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge
-                                                ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: const Color(0xFF111827),
-                                            ) ??
-                                                const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Color(0xFF111827),
-                                                ),
+                                SizedBox(
+                                  height: 44,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Positioned.fill(
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 48,
+                                            ),
+                                            child: Text(
+                                              localization.selectWorkTitle,
+                                              textAlign: TextAlign.center,
+                                              softWrap: true,
+                                              style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleLarge
+                                                      ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF111827),
+                                              ) ??
+                                                  const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFF111827),
+                                                  ),
+                                            ),
                                           ),
-                                          const SizedBox(height: 8),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    _DialogCloseButton(
-                                      onPressed: () {
-                                        Navigator.of(dialogContext).pop();
-                                      },
-                                    ),
-                                  ],
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: _DialogCloseButton(
+                                          onPressed: () {
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 32),
                                 Flexible(
                                   child: ConstrainedBox(
                                     constraints: BoxConstraints(
@@ -188,6 +196,7 @@ Future<Work?> showWorkSelectionDialog({
                                 const SizedBox(height: 24),
                                 SizedBox(
                                   width: double.infinity,
+                                  height: 56,
                                   child: ElevatedButton(
                                     onPressed: () {
                                       if (selectedId == null) {
@@ -199,7 +208,8 @@ Future<Work?> showWorkSelectionDialog({
                                     },
                                     style: ElevatedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 18),
+                                        horizontal: 24,
+                                      ),
                                       backgroundColor:
                                       const Color(0xFF2563EB),
                                       shape: RoundedRectangleBorder(
@@ -444,7 +454,9 @@ class _AddNewWorkLink extends StatelessWidget {
               dashGap: 6,
             ),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFF),
                 borderRadius: BorderRadius.circular(24),
