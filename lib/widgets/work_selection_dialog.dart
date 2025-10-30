@@ -382,8 +382,6 @@ class _WorkSelectionTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _WorkTileIcon(work: work),
-          const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,65 +720,6 @@ class _DialogCloseButton extends StatelessWidget {
           fit: BoxFit.contain,
         ),
       ),
-    );
-  }
-}
-
-class _WorkTileIcon extends StatelessWidget {
-  const _WorkTileIcon({required this.work});
-  final Work work;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      width: 56,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      alignment: Alignment.center,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: _buildIconWidget(),
-      ),
-    );
-  }
-
-  Widget _buildIconWidget() {
-    final dynamic iconValue = work.additionalData['icon'] ??
-        work.additionalData['image'] ??
-        work.additionalData['asset'];
-
-    if (iconValue is String && iconValue.trim().isNotEmpty) {
-      final iconPath = iconValue.trim();
-      if (iconPath.startsWith('http')) {
-        return Image.network(
-          iconPath,
-          width: 40,
-          height: 40,
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => _placeholderIcon(),
-        );
-      }
-      return Image.asset(
-        iconPath,
-        width: 40,
-        height: 40,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => _placeholderIcon(),
-      );
-    }
-
-    return _placeholderIcon();
-  }
-
-  Widget _placeholderIcon() {
-    return Image.asset(
-      AppAssets.workPlaceholder,
-      width: 40,
-      height: 40,
-      fit: BoxFit.contain,
     );
   }
 }
