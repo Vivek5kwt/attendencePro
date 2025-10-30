@@ -4495,8 +4495,10 @@ class _AttendanceSection extends StatelessWidget {
                 contractTypes: contractTypes,
                 entries: contractBundleEntries,
                 onToggle: onContractFieldsToggle,
+                onTypeChanged: onContractBundleTypeChanged,
                 onRetry: onContractTypeRetry,
                 onRemoveEntry: onRemoveContractBundle,
+                onAddEntry: onAddContractBundle,
                 onUnitsChanged: onContractBundleUnitsChanged,
                 bundleUnitsValidator: bundleUnitsValidator,
                 isSubmitting: isSubmitting,
@@ -5575,12 +5577,14 @@ class _ContractEntryForm extends StatelessWidget {
     required this.contractTypes,
     required this.entries,
     this.onToggle,
+    this.onTypeChanged,
     required this.bundleUnitsValidator,
     required this.isSubmitting,
     required this.isWorkOff,
     this.errorMessage,
     this.onRetry,
     this.onRemoveEntry,
+    this.onAddEntry,
     this.onUnitsChanged,
     this.trailingAction,
   });
@@ -5590,9 +5594,11 @@ class _ContractEntryForm extends StatelessWidget {
   final List<ContractType> contractTypes;
   final List<_ContractBundleFormEntry> entries;
   final ValueChanged<bool>? onToggle;
+  final void Function(String, String?)? onTypeChanged;
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final VoidCallback? onRetry;
   final void Function(_ContractBundleFormEntry)? onRemoveEntry;
+  final VoidCallback? onAddEntry;
   final void Function(_ContractBundleFormEntry)? onUnitsChanged;
   final bool isSubmitting;
   final bool isWorkOff;
@@ -5728,6 +5734,46 @@ class _ContractEntryForm extends StatelessWidget {
                         !disableInteractions
                     ? () => onRemoveEntry!(entry)
                     : null;
+                final bool typeSelectionDisabled =
+                    disableInteractions || onTypeChanged == null;
+                final otherSelectedIds = entries
+                    .where((other) => other.id != entry.id)
+                    .map((other) => other.contractTypeId)
+                    .whereType<String>()
+                    .toSet();
+                final dropdownItems = contractTypes.map((type) {
+                  final isCurrentSelection = type.id == entry.contractTypeId;
+                  final isTakenElsewhere =
+                      otherSelectedIds.contains(type.id) && !isCurrentSelection;
+                  final itemTextStyle = theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight:
+                            isCurrentSelection ? FontWeight.w600 : FontWeight.w500,
+                        color: isTakenElsewhere
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF1E293B),
+                      ) ??
+                      TextStyle(
+                        fontWeight:
+                            isCurrentSelection ? FontWeight.w600 : FontWeight.w500,
+                        color: isTakenElsewhere
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF1E293B),
+                      );
+                  return DropdownMenuItem<String>(
+                    value: type.id,
+                    enabled: !isTakenElsewhere,
+                    child: Text(
+                      type.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: itemTextStyle,
+                    ),
+                  );
+                }).toList(growable: false);
+                final String? resolvedTypeId = contractTypes
+                        .any((type) => type.id == entry.contractTypeId)
+                    ? entry.contractTypeId
+                    : null;
 
                 final labelStyle = theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -5746,15 +5792,6 @@ class _ContractEntryForm extends StatelessWidget {
                     const TextStyle(
                       color: Color(0xFF94A3B8),
                       fontWeight: FontWeight.w500,
-                    );
-
-                final typeTitleStyle = theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1D4ED8),
-                    ) ??
-                    const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1D4ED8),
                     );
 
                 return Padding(
@@ -5777,36 +5814,87 @@ class _ContractEntryForm extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (selectedType != null || removeCallback != null)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: selectedType != null
-                                      ? Text(
-                                          selectedType.name,
-                                          style: typeTitleStyle,
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
-                                if (removeCallback != null) ...[
-                                  const SizedBox(width: 12),
-                                  IconButton(
-                                    onPressed: removeCallback,
-                                    icon: const Icon(Icons.close_rounded),
-                                    tooltip: MaterialLocalizations.of(context)
-                                        .deleteButtonTooltip,
-                                    visualDensity: VisualDensity.compact,
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: const Color(0xFFE2E8F0),
-                                      foregroundColor: const Color(0xFF1F2937),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l.contractWorkContractTypeLabel,
+                                      style: labelStyle,
                                     ),
+                                    const SizedBox(height: 8),
+                                    DropdownButtonFormField<String>(
+                                      value: resolvedTypeId,
+                                      items: dropdownItems,
+                                      onChanged: typeSelectionDisabled
+                                          ? null
+                                          : (value) =>
+                                              onTypeChanged?.call(entry.id, value),
+                                      isExpanded: true,
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: l.contractWorkContractTypeHint,
+                                        hintStyle: hintStyle,
+                                        filled: true,
+                                        fillColor: const Color(0xFFF8FAFF),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                          horizontal: 12,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFFE0E7FF),
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFFE0E7FF),
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF2563EB),
+                                            width: 1.4,
+                                          ),
+                                        ),
+                                        disabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(18),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFFE2E8F0),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (removeCallback != null) ...[
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  onPressed: removeCallback,
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: MaterialLocalizations.of(context)
+                                      .deleteButtonTooltip,
+                                  visualDensity: VisualDensity.compact,
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: const Color(0xFFE2E8F0),
+                                    foregroundColor: const Color(0xFF1F2937),
                                   ),
-                                ],
+                                ),
                               ],
-                            ),
-                          if (selectedType != null || removeCallback != null)
-                            const SizedBox(height: 12),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
                           Text(
                             l.contractWorkUnitsLabel,
                             style: labelStyle,
@@ -5877,6 +5965,48 @@ class _ContractEntryForm extends StatelessWidget {
                   ),
                 );
               }).toList(growable: false),
+              if (onAddEntry != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: disableInteractions ||
+                                onAddEntry == null ||
+                                contractTypes.length <= entries.length
+                            ? null
+                            : onAddEntry,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF2563EB),
+                          side: const BorderSide(color: Color(0xFF2563EB)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: Text(l.contractWorkAddTypeTitle),
+                      ),
+                      if (contractTypes.length <= entries.length)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              l.contractWorkAllTypesAddedMessage,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF94A3B8),
+                                    fontWeight: FontWeight.w500,
+                                  ) ??
+                                  const TextStyle(
+                                    color: Color(0xFF94A3B8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
             ],
           ],
         ],
