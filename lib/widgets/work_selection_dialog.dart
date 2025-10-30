@@ -342,7 +342,6 @@ class _WorkSelectionTile extends StatelessWidget {
     if (work.isActive) {
       chips.add(
         _WorkMetaChip(
-          icon: Icons.bolt_rounded,
           label: localization.activeWorkLabel,
           backgroundColor: const Color(0xFFF5F3FF),
           foregroundColor: const Color(0xFF7C3AED),
@@ -351,9 +350,6 @@ class _WorkSelectionTile extends StatelessWidget {
     }
     chips.add(
       _WorkMetaChip(
-        icon: work.isContract
-            ? Icons.assignment_turned_in_rounded
-            : Icons.schedule_rounded,
         label: work.isContract
             ? localization.contractWorkLabel
             : localization.hourlyWorkLabel,
@@ -556,48 +552,55 @@ class _AddNewWorkLink extends StatelessWidget {
 
 class _WorkMetaChip extends StatelessWidget {
   const _WorkMetaChip({
-    required this.icon,
     required this.label,
     required this.backgroundColor,
     required this.foregroundColor,
   });
 
-  final IconData icon;
   final String label;
   final Color backgroundColor;
   final Color foregroundColor;
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
+    final textTheme = Theme.of(context).textTheme;
+    final textStyle = textTheme.labelMedium?.copyWith(
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           color: foregroundColor,
           letterSpacing: 0.2,
+          height: 1.2,
         ) ??
         TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: foregroundColor,
           letterSpacing: 0.2,
+          height: 1.2,
         );
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(18),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxChipWidth = math.min(screenWidth * 0.55, 220.0);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: 30,
+        maxWidth: maxChipWidth,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: foregroundColor,
-          ),
-          const SizedBox(width: 6),
-          Text(label, style: textStyle),
-        ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: textStyle,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }
