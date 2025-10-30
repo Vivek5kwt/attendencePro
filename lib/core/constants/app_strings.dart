@@ -338,7 +338,8 @@ abstract final class AppString {
       'contractWorkDescription':
           'Manage piece-rate items like Ravanello, Radish, Carrot or add your own.',
       'contractWorkCustomTypesTitle': 'Your contract types',
-      'contractWorkNoCustomTypesLabel': 'No custom contract types yet.',
+      'contractWorkNoCustomTypesLabel':
+          'No contract type added yet. Please add a new contract in Work Details.',
       'contractWorkLoadError': 'Unable to load contract types right now.',
       'cancelButton': 'Cancel',
       'saveButtonLabel': 'Save',
@@ -577,7 +578,8 @@ abstract final class AppString {
       'profileValidationLanguage': 'कृपया एक भाषा चुनें।',
       'profileLoadingFailed': 'प्रोफ़ाइल विवरण लोड नहीं हो सके।',
       'contractWorkCustomTypesTitle': 'आपके कॉन्ट्रैक्ट प्रकार',
-      'contractWorkNoCustomTypesLabel': 'अभी कोई कस्टम कॉन्ट्रैक्ट प्रकार नहीं है।',
+      'contractWorkNoCustomTypesLabel':
+          'अभी कोई कॉन्ट्रैक्ट प्रकार नहीं जोड़ा गया है। कृपया वर्क विवरण में नया कॉन्ट्रैक्ट जोड़ें।',
       'contractWorkLoadError': 'अभी कॉन्ट्रैक्ट प्रकार लोड नहीं हो पाए।',
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
@@ -974,7 +976,8 @@ abstract final class AppString {
       'profileValidationLanguage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੋਈ ਭਾਸ਼ਾ ਚੁਣੋ।',
       'profileLoadingFailed': 'ਪ੍ਰੋਫ਼ਾਈਲ ਵੇਰਵੇ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।',
       'contractWorkCustomTypesTitle': 'ਤੁਹਾਡੀਆਂ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ',
-      'contractWorkNoCustomTypesLabel': 'ਹਾਲੇ ਤੱਕ ਕੋਈ ਕਸਟਮ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਨਹੀਂ ਹੈ।',
+      'contractWorkNoCustomTypesLabel':
+          'ਹਾਲੇ ਤੱਕ ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਨਹੀਂ ਜੋੜੀ ਗਈ। ਕਿਰਪਾ ਕਰਕੇ ਵਰਕ ਵੇਰਵਿਆਂ ਵਿੱਚ ਨਵਾਂ ਕਾਂਟ੍ਰੈਕਟ ਸ਼ਾਮਲ ਕਰੋ।',
       'contractWorkLoadError': 'ਇਸ ਵੇਲੇ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ।',
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
@@ -1375,7 +1378,8 @@ abstract final class AppString {
       'profileValidationLanguage': 'Seleziona una lingua.',
       'profileLoadingFailed': 'Impossibile caricare i dettagli del profilo.',
       'contractWorkCustomTypesTitle': 'I tuoi tipi di contratto',
-      'contractWorkNoCustomTypesLabel': 'Nessun tipo di contratto personalizzato.',
+      'contractWorkNoCustomTypesLabel':
+          'Nessun tipo di contratto aggiunto. Aggiungi un nuovo contratto nei dettagli del lavoro.',
       'contractWorkLoadError': 'Impossibile caricare i tipi di contratto in questo momento.',
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
