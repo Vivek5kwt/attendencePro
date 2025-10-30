@@ -294,11 +294,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             final textTheme = Theme.of(context).textTheme;
             final headerTitle =
             isEditing ? l.contractWorkEditTypeTitle : l.contractWorkAddTypeTitle;
-            final dropdownValue = (selectedSubtypeValue != null &&
-                subtypeOptions.contains(selectedSubtypeValue))
-                ? selectedSubtypeValue
-                : null;
-
             return AnimatedPadding(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOut,
@@ -479,60 +474,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(height: 18),
-                                            Text(
-                                              l.contractWorkContractTypeLabel,
-                                              style: textTheme.bodyMedium?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: const Color(0xFF1F2937),
-                                              ) ??
-                                                  const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF1F2937),
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            DropdownButtonFormField<String>(
-                                              value: dropdownValue,
-                                              items: subtypeOptions
-                                                  .map(
-                                                    (option) => DropdownMenuItem(
-                                                  value: option,
-                                                  child: Text(option),
-                                                ),
-                                              )
-                                                  .toList(),
-                                              onChanged: (value) {
-                                                setSheetState(() {
-                                                  selectedSubtypeValue = value;
-                                                });
-                                              },
-                                              decoration: InputDecoration(
-                                                hintText: l.contractWorkSubtypeHint,
-                                                filled: true,
-                                                fillColor: const Color(0xFFF9FAFB),
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                  BorderRadius.circular(18),
-                                                ),
-                                              ),
-                                              icon: const Icon(Icons.arrow_drop_down),
-                                            ),
-                                            if (subtypeOptions.isEmpty)
-                                              Padding(
-                                                padding:
-                                                const EdgeInsets.only(top: 12),
-                                                child: Text(
-                                                  l.contractWorkSubtypeRequiredMessage,
-                                                  style: textTheme.bodySmall?.copyWith(
-                                                    color:
-                                                    const Color(0xFF6B7280),
-                                                  ) ??
-                                                      const TextStyle(
-                                                        color: Color(0xFF6B7280),
-                                                      ),
-                                                ),
-                                              ),
                                             const SizedBox(height: 20),
                                             Text(
                                               '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
@@ -618,8 +559,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            /*                OutlinedButton.icon(
-                              onPressed: () => _showComingSoonSnackBar(rootContext),
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  _showComingSoonSnackBar(rootContext),
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(48),
                                 foregroundColor: const Color(0xFF1D4ED8),
@@ -630,7 +572,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               ),
                               icon: const Icon(Icons.add_circle_outline),
                               label: Text(l.addContractWorkButton),
-                            ),*/
+                            ),
                             const SizedBox(height: 24),
                             Row(
                               children: [
