@@ -6163,7 +6163,7 @@ class _CompactSummaryTile extends StatelessWidget {
     final borderColor = baseColor.withOpacity(0.18);
     final iconBackground = baseColor.withOpacity(0.16);
     final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 13,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF1E293B),
         ) ??
@@ -6174,7 +6174,7 @@ class _CompactSummaryTile extends StatelessWidget {
         );
     final valueStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w700,
-          fontSize: 20,
+          fontSize: 18,
           color: const Color(0xFF0F172A),
         ) ??
         const TextStyle(
@@ -6193,21 +6193,8 @@ class _CompactSummaryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconBackground,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              stat.icon,
-              color: baseColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
+
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
