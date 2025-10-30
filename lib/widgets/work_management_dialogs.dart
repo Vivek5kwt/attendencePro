@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';

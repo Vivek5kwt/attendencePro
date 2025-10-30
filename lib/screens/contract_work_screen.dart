@@ -1125,35 +1125,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                           ),
                       ],
                     ),
-                    SizedBox(height: responsive.scale(20)),
-                    _SectionTitle(
-                      text: l.contractWorkDefaultTypesTitle,
-                      itemCount: _defaultContractTypes.length,
-                    ),
-                    SizedBox(height: responsive.scale(12)),
-                    if (_defaultContractTypes.isEmpty)
-                      _EmptyState(message: l.contractWorkNoEntriesLabel)
-                    else
-                      Column(
-                        children: _defaultContractTypes
-                            .map(
-                              (type) => Padding(
-                            padding: EdgeInsets.only(
-                              bottom: responsive.scale(12),
-                            ),
-                            child: _ContractTypeTile(
-                              type: type,
-                              lastUpdatedLabel:
-                              l.contractWorkLastUpdatedLabel,
-                              onEdit: () =>
-                                  _showContractTypeDialog(type: type),
-                              editLabel: l.contractWorkEditTypeTitle,
-                              defaultTag: l.contractWorkDefaultTag,
-                            ),
-                          ),
-                        )
-                            .toList(),
-                      ),
                     SizedBox(height: responsive.scale(28)),
                     _SectionTitle(
                       text: l.contractWorkCustomTypesTitle,
@@ -1195,33 +1166,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                             .toList(),
                       ),
                     SizedBox(height: responsive.scale(28)),
-                    _SectionTitle(
-                      text: l.contractWorkRecentEntriesTitle,
-                      itemCount: _recentEntries.length,
-                    ),
-                    SizedBox(height: responsive.scale(12)),
-                    if (_recentEntries.isEmpty)
-                      _EmptyState(message: l.contractWorkNoEntriesLabel)
-                    else
-                      Column(
-                        children: _recentEntries
-                            .map(
-                              (entry) => Padding(
-                            padding: EdgeInsets.only(
-                              bottom: responsive.scale(12),
-                            ),
-                            child: _ContractEntryTile(
-                              entry: entry,
-                              contractLabel: l.contractWorkLabel,
-                              unitsLabel: l.contractWorkUnitsLabel,
-                              rateLabel: l.contractWorkRateLabel,
-                              onTap: () =>
-                                  _showComingSoonSnackBar(context),
-                            ),
-                          ),
-                        )
-                            .toList(),
-                      ),
                   ],
                 ),
               ),
