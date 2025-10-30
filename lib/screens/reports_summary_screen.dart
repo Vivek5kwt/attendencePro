@@ -950,14 +950,20 @@ class _ActiveWorkBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+    final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w600,
           color: const Color(0xFF1F2937),
+          fontSize: 14,
         ) ??
         const TextStyle(
           fontWeight: FontWeight.w600,
           color: Color(0xFF1F2937),
+          fontSize: 14,
         );
+    final workNameStyle = labelStyle.copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -970,7 +976,22 @@ class _ActiveWorkBadge extends StatelessWidget {
         children: [
           const Icon(Icons.work_outline, size: 18, color: Color(0xFF2563EB)),
           const SizedBox(width: 8),
-          Text(workName, style: textStyle),
+          // Try to place here work name in small size
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                style: labelStyle,
+                children: [
+                  const TextSpan(text: 'Active Work – '),
+                  TextSpan(
+                    text: workName,
+                    style: workNameStyle,
+                  ),
+                  const TextSpan(text: ' (User Selected)'),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
