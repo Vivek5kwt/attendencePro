@@ -82,6 +82,9 @@ abstract final class AppString {
       'homeBannerTitle': 'Track Attendance Smarter',
       'homeBannerSubtitle':
           'Manage your shifts, track hours, and stay organized every day.',
+      'adPlaceholderTitle': 'Ad placement coming soon',
+      'adPlaceholderSubtitle':
+          'We will show relevant offers here shortly. Stay tuned!',
       'addNewWorkLabel': 'Add New Work',
       'selectWorkTitle': 'Select Work',
       'workSelectionSubtitle':
@@ -472,6 +475,9 @@ abstract final class AppString {
       'homeBannerTitle': 'उपस्थिति को स्मार्ट तरीके से ट्रैक करें',
       'homeBannerSubtitle':
           'अपनी शिफ्ट्स प्रबंधित करें, घंटे ट्रैक करें और हर दिन व्यवस्थित रहें।',
+      'adPlaceholderTitle': 'यहाँ जल्द विज्ञापन आएगा',
+      'adPlaceholderSubtitle':
+          'हम जल्द ही यहाँ उपयोगी ऑफ़र दिखाएंगे। जुड़े रहें!',
       'addNewWorkLabel': 'नया कार्य जोड़ें',
       'selectWorkTitle': 'कार्य चुनें',
       'workSelectionSubtitle': 'रिपोर्ट देखने के लिए कार्य चुनें।',
@@ -862,6 +868,9 @@ abstract final class AppString {
       'homeBannerTitle': 'ਹਾਜ਼ਰੀ ਨੂੰ ਹੋਰ ਸਮਝਦਾਰੀ ਨਾਲ ਟਰੈਕ ਕਰੋ',
       'homeBannerSubtitle':
           'ਆਪਣੀਆਂ ਸ਼ਿਫਟਾਂ ਸੰਭਾਲੋ, ਘੰਟੇ ਟਰੈਕ ਕਰੋ ਅਤੇ ਹਰ ਰੋਜ਼ ਸੁਵਿਧਾਜਨਕ ਰਹੋ।',
+      'adPlaceholderTitle': 'ਇੱਥੇ ਜਲਦੀ ਵਿਗਿਆਪਨ ਆਏਗਾ',
+      'adPlaceholderSubtitle':
+          'ਅਸੀਂ ਜਲਦੀ ਹੀ ਇੱਥੇ ਲਾਹੇਵੰਦ ਔਫ਼ਰ ਦਿਖਾਵਾਂਗੇ। ਬਣੇ ਰਹੋ!',
       'addNewWorkLabel': 'ਨਵਾਂ ਕੰਮ ਜੋੜੋ',
       'selectWorkTitle': 'ਕੰਮ ਚੁਣੋ',
       'workSelectionSubtitle': 'ਰਿਪੋਰਟ ਦੇਖਣ ਲਈ ਕੰਮ ਚੁਣੋ।',
@@ -1255,6 +1264,9 @@ abstract final class AppString {
       'homeBannerTitle': 'Monitora le presenze in modo intelligente',
       'homeBannerSubtitle':
           'Gestisci i tuoi turni, traccia le ore e rimani organizzato ogni giorno.',
+      'adPlaceholderTitle': 'Spazio pubblicitario in arrivo',
+      'adPlaceholderSubtitle':
+          'Presto mostreremo qui offerte rilevanti. Restate sintonizzati!',
       'addNewWorkLabel': 'Aggiungi nuovo lavoro',
       'selectWorkTitle': 'Seleziona lavoro',
       'workSelectionSubtitle':

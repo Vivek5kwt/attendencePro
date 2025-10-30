@@ -51,6 +51,8 @@ class AppLocalizations {
   String get dashboardLabel => _value('dashboardLabel');
   String get homeBannerTitle => _value('homeBannerTitle');
   String get homeBannerSubtitle => _value('homeBannerSubtitle');
+  String get adPlaceholderTitle => _value('adPlaceholderTitle');
+  String get adPlaceholderSubtitle => _value('adPlaceholderSubtitle');
   String get addNewWorkLabel => _value('addNewWorkLabel');
   String get attendanceHistoryLabel => _value('attendanceHistoryLabel');
   String get attendanceHistoryMonthLabel =>
