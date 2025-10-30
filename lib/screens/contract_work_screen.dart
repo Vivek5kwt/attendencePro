@@ -5,11 +5,14 @@ import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/contract_type.dart' as models;
+import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../utils/responsive.dart';
 
 class ContractWorkScreen extends StatefulWidget {
-  const ContractWorkScreen({super.key});
+  const ContractWorkScreen({super.key, this.work});
+
+  final Work? work;
 
   @override
   State<ContractWorkScreen> createState() => _ContractWorkScreenState();
@@ -1260,6 +1263,24 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               color: const Color(0xFF0F172A),
                             ),
                       ),
+                      if (widget.work != null) ...[
+                        SizedBox(height: responsive.scale(2)),
+                        Text(
+                          widget.work!.name,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1F2937),
+                                fontSize: responsive.scaleText(13),
+                              ) ??
+                              TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1F2937),
+                                fontSize: responsive.scaleText(13),
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                       SizedBox(height: responsive.scale(4)),
                       Text(
                         l.contractWorkSetupSubtitle,

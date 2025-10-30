@@ -334,6 +334,7 @@ abstract final class AppString {
       'hourlySalaryHint': '€ 0.00',
       'hourlyRateNegativeValidation': 'Hourly rate cannot be negative.',
       'contractWorkHeader': 'Contract Work (if have)',
+      'contractHistoryButton': 'View contract history',
       'addContractWorkButton': 'Add Contract Work',
       'contractWorkDescription':
           'Manage piece-rate items like Ravanello, Radish, Carrot or add your own.',
@@ -736,6 +737,7 @@ abstract final class AppString {
       'hourlySalaryHint': '€ 0.00',
       'hourlyRateNegativeValidation': 'घंटे की दर नकारात्मक नहीं हो सकती।',
       'contractWorkHeader': 'ठेका कार्य (यदि हो)',
+      'contractHistoryButton': 'कॉन्ट्रैक्ट इतिहास देखें',
       'addContractWorkButton': 'ठेका कार्य जोड़ें',
       'contractWorkDescription':
           'पीस-रेट कार्य जैसे रावनेलो, मूली, गाजर जोड़ें या अपना नया बनाएं।',
@@ -1134,6 +1136,7 @@ abstract final class AppString {
       'hourlySalaryHint': '€ 0.00',
       'hourlyRateNegativeValidation': 'ਘੰਟੇ ਦੀ ਦਰ ਨਕਾਰਾਤਮਕ ਨਹੀਂ ਹੋ ਸਕਦੀ।',
       'contractWorkHeader': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ (ਜੇ ਹੋਵੇ)',
+      'contractHistoryButton': 'ਕਾਂਟ੍ਰੈਕਟ ਇਤਿਹਾਸ ਵੇਖੋ',
       'addContractWorkButton': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ',
       'contractWorkDescription':
           'ਰਾਵੇਨੇਲੋ, ਮੂਲੀ, ਗਾਜਰ ਵਰਗੇ ਪੀਸ-ਰੇਟ ਕੰਮ ਜੋੜੋ ਜਾਂ ਆਪਣਾ ਬਣਾਓ।',
@@ -1540,6 +1543,7 @@ abstract final class AppString {
       'hourlySalaryHint': '€ 0,00',
       'hourlyRateNegativeValidation': 'La tariffa oraria non può essere negativa.',
       'contractWorkHeader': 'Lavoro a Contratto (se disponibile)',
+      'contractHistoryButton': 'Cronologia contratti',
       'addContractWorkButton': 'Aggiungi Lavoro a Contratto',
       'contractWorkDescription':
           'Gestisci lavori a cottimo come Ravanello, Rapa, Carota oppure aggiungi i tuoi.',
