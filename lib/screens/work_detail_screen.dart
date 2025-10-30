@@ -2587,49 +2587,44 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(
-          color: Colors.black,
-        ),
-        title: Text(
-          l.appTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0A0A0A),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: const IconThemeData(
+            color: Colors.black,
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: const Color(0xFF2563EB),
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                minimumSize: const Size(0, 40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: _handleChangeWork,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.sync_alt_rounded, size: 16),
-                  const SizedBox(width: 6),
-                  Text(l.changeWorkButton),
-                ],
-              ),
+          title: Text(
+            l.appTitle,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0A0A0A),
             ),
           ),
-        ],
-      ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: TextButton(
+                onPressed: _handleChangeWork,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2563EB),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                child: Text(
+                  l.changeWorkButton,
+                  style:
+                      Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF2563EB),
+                          ) ??
+                          const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2563EB),
+                          ),
+                ),
+              ),
+            ),
+          ],
+        ),
         body: SafeArea(
           child: CustomScrollView(
             slivers: [
