@@ -975,34 +975,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                         )
                             .toList(),
                       ),
-                    SizedBox(height: responsive.scale(12)),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: const Color(0xFF4C6EF5),
-                          foregroundColor: Colors.white,
-                          padding: responsive.scaledSymmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(responsive.scale(18)),
-                          ),
-                        ),
-                        onPressed: () => _showContractTypeDialog(),
-                        icon: const Icon(Icons.add_rounded),
-                        label: Text(
-                          l.addContractWorkButton,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: responsive.scaleText(14),
-                          ),
-                        ),
-                      ),
-                    ),
                     SizedBox(height: responsive.scale(28)),
                     _SectionTitle(
                       text: l.contractWorkCustomTypesTitle,
@@ -1273,6 +1245,9 @@ class _SummaryHeader extends StatelessWidget {
             value: '€${totalAmount.toStringAsFixed(2)}',
           ),
         ];
+        final activeTypesText = totalTypes > 0
+            ? '$totalTypes $activeTypesLabel'
+            : activeTypesLabel;
         final progress = totalTypes == 0
             ? 0.0
             : (userDefinedCount / totalTypes).clamp(0.0, 1.0);
@@ -1301,6 +1276,24 @@ class _SummaryHeader extends StatelessWidget {
                   SizedBox(width: responsive.scale(20)),
               ],
             ],
+          );
+        }
+
+        final countChips = <Widget>[];
+        if (defaultCount > 0) {
+          countChips.add(
+            _SummaryCountChip(
+              label: defaultTypesLabel,
+              count: defaultCount,
+            ),
+          );
+        }
+        if (userDefinedCount > 0) {
+          countChips.add(
+            _SummaryCountChip(
+              label: customTypesLabel,
+              count: userDefinedCount,
+            ),
           );
         }
 
@@ -1372,7 +1365,7 @@ class _SummaryHeader extends StatelessWidget {
                         ),
                         SizedBox(height: responsive.scale(6)),
                         Text(
-                          '$totalTypes $activeTypesLabel',
+                          activeTypesText,
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.8),
                             fontWeight: FontWeight.w600,
@@ -1408,20 +1401,12 @@ class _SummaryHeader extends StatelessWidget {
                 ),
               ),
               SizedBox(height: responsive.scale(18)),
-              Wrap(
-                spacing: responsive.scale(12),
-                runSpacing: responsive.scale(12),
-                children: [
-                  _SummaryCountChip(
-                    label: defaultTypesLabel,
-                    count: defaultCount,
-                  ),
-                  _SummaryCountChip(
-                    label: customTypesLabel,
-                    count: userDefinedCount,
-                  ),
-                ],
-              ),
+              if (countChips.isNotEmpty)
+                Wrap(
+                  spacing: responsive.scale(12),
+                  runSpacing: responsive.scale(12),
+                  children: countChips,
+                ),
             ],
           ),
         );
@@ -1556,7 +1541,7 @@ class _SectionTitle extends StatelessWidget {
                 ),
           ),
         ),
-        if (count != null) ...[
+        if (count != null && count > 0) ...[
           SizedBox(width: responsive.scale(12)),
           Container(
             padding: EdgeInsets.symmetric(
