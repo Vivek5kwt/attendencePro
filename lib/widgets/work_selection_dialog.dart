@@ -337,6 +337,33 @@ class _WorkSelectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Inner core card (white) used in both states
+    final textTheme = Theme.of(context).textTheme;
+    final chips = <Widget>[];
+    if (work.isActive) {
+      chips.add(
+        _WorkMetaChip(
+          icon: Icons.bolt_rounded,
+          label: localization.activeWorkLabel,
+          backgroundColor: const Color(0xFFF5F3FF),
+          foregroundColor: const Color(0xFF7C3AED),
+        ),
+      );
+    }
+    chips.add(
+      _WorkMetaChip(
+        icon: work.isContract
+            ? Icons.assignment_turned_in_rounded
+            : Icons.schedule_rounded,
+        label: work.isContract
+            ? localization.contractWorkLabel
+            : localization.hourlyWorkLabel,
+        backgroundColor:
+            work.isContract ? const Color(0xFFECFDF5) : const Color(0xFFEFF4FF),
+        foregroundColor:
+            work.isContract ? const Color(0xFF047857) : const Color(0xFF1D4ED8),
+      ),
+    );
+
     final Widget _innerCard = Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
@@ -357,25 +384,42 @@ class _WorkSelectionTile extends StatelessWidget {
               ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _WorkTileIcon(work: work),
           const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  work.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF111827),
-                  ) ??
-                      const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
+                Tooltip(
+                  message: work.name,
+                  waitDuration: const Duration(milliseconds: 300),
+                  child: Text(
+                    work.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                    style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF111827),
+                        ) ??
+                        const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                  ),
                 ),
+                if (chips.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: chips,
+                  ),
+                ],
               ],
             ),
           ),
@@ -505,6 +549,55 @@ class _AddNewWorkLink extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WorkMetaChip extends StatelessWidget {
+  const _WorkMetaChip({
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: foregroundColor,
+          letterSpacing: 0.2,
+        ) ??
+        TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: foregroundColor,
+          letterSpacing: 0.2,
+        );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: foregroundColor,
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: textStyle),
+        ],
       ),
     );
   }
