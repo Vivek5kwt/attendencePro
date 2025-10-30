@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/app_cubit.dart';
 import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
@@ -17,8 +19,16 @@ import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
+import '../utils/language_dialog.dart';
+import '../widgets/app_dialogs.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/work_selection_dialog.dart';
 import '../widgets/work_management_dialogs.dart';
+import 'attendance_history_screen.dart';
+import 'contract_work_screen.dart';
+import 'help_support_screen.dart';
+import 'profile_screen.dart';
+import 'reports_summary_screen.dart';
 
 const List<int> _timeHourOptions = <int>[
   1,
@@ -333,8 +343,6 @@ Widget _buildBreakDropdownField({
   );
 }
 
-enum _WorkDetailMenuAction { changeWork, close }
-
 class WorkDetailScreen extends StatefulWidget {
   const WorkDetailScreen({super.key, required this.work});
 
@@ -445,6 +453,147 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         builder: (context) => WorkDetailScreen(work: selected),
       ),
     );
+  }
+
+  Future<void> _handleDrawerDashboardTap() async {
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _handleDrawerAddWorkTap() async {
+    if (!mounted) return;
+    await showAddWorkDialog(context: context);
+  }
+
+  Future<void> _openDrawerAttendanceHistory() async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const AttendanceHistoryScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openDrawerContractWork() async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ContractWorkScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openDrawerProfile() async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ProfileScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openDrawerHelpSupport() async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const HelpSupportScreen(),
+      ),
+    );
+  }
+
+  Future<void> _openDrawerReportsSummary(AppLocalizations l) async {
+    if (!mounted) return;
+    final workState = context.read<WorkBloc>().state;
+    final works = workState.works;
+    if (works.isEmpty) {
+      await showAddWorkDialog(context: context);
+      return;
+    }
+
+    Work? activeWork;
+    for (final work in works) {
+      if (_isWorkActive(work)) {
+        activeWork = work;
+        break;
+      }
+    }
+    activeWork ??= works.first;
+
+    final selectedWork = await showWorkSelectionDialog(
+      context: context,
+      works: works,
+      localization: l,
+      initialSelectedWorkId: activeWork.id,
+      onAddNewWork: () {
+        if (!mounted) {
+          return;
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showAddWorkDialog(context: context);
+          }
+        });
+      },
+      onEditWork: (work) {
+        if (!mounted) {
+          return;
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            showEditWorkDialog(context: context, work: work);
+          }
+        });
+      },
+    );
+
+    if (!mounted || selectedWork == null) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReportsSummaryScreen(
+          initialWorkId: selectedWork.id,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleDrawerLogoutTap(AppLocalizations l) async {
+    if (!mounted) return;
+    final shouldLogout = await _showLogoutConfirmationDialog(l);
+    if (!shouldLogout || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final success = await context.read<AppCubit>().logout();
+    if (!mounted) return;
+    context.read<WorkBloc>().add(const WorkCleared());
+    final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _handleDrawerDeleteAccountTap(AppLocalizations l) async {
+    if (!mounted) return;
+    final shouldDelete = await _showDeleteAccountConfirmationDialog(l);
+    if (!shouldDelete || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final success = await context.read<AppCubit>().deleteAccount();
+    if (!mounted) return;
+    if (success) {
+      context.read<WorkBloc>().add(const WorkCleared());
+    }
+    final message =
+        success ? l.deleteAccountSuccessMessage : l.deleteAccountFailedMessage;
+    messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<bool> _showLogoutConfirmationDialog(AppLocalizations l) {
+    return showCreativeLogoutDialog(context, l);
+  }
+
+  Future<bool> _showDeleteAccountConfirmationDialog(AppLocalizations l) {
+    return showCreativeDeleteAccountDialog(context, l);
   }
 
   Work? _findActiveWorkFromState(WorkState state) {
@@ -2578,6 +2727,17 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final workState = context.watch<WorkBloc>().state;
+    const languageOptions = <String, String>{
+      'en': 'English',
+      'hi': 'Hindi',
+      'pa': 'Punjabi',
+      'it': 'Italian',
+    };
+    final userName = workState.userName ?? l.drawerUserName;
+    final userContact = workState.userEmail ??
+        workState.userPhone ??
+        workState.userUsername ??
+        l.drawerUserPhone;
     final activeWork = _findActiveWorkFromState(workState);
     final bool isViewingActiveWork =
         activeWork != null && activeWork.id == widget.work.id;
@@ -2680,31 +2840,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           automaticallyImplyLeading: false,
-          leading: PopupMenuButton<_WorkDetailMenuAction>(
-            icon: const Icon(
-              Icons.dehaze,
-              color: Color(0xFF0A0A0A),
-            ),
-            onSelected: (action) {
-              switch (action) {
-                case _WorkDetailMenuAction.changeWork:
-                  _handleChangeWork();
-                  break;
-                case _WorkDetailMenuAction.close:
-                  Navigator.of(context).maybePop();
-                  break;
-              }
+          titleSpacing: 5,
+          leading: Builder(
+            builder: (context) {
+              return IconButton(
+                icon: Image.asset(
+                  AppAssets.icDrawer,
+                  width: 24,
+                  height: 24,
+                ),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              );
             },
-            itemBuilder: (context) => [
-              PopupMenuItem<_WorkDetailMenuAction>(
-                value: _WorkDetailMenuAction.changeWork,
-                child: Text(l.changeWorkButton),
-              ),
-              PopupMenuItem<_WorkDetailMenuAction>(
-                value: _WorkDetailMenuAction.close,
-                child: Text(l.close),
-              ),
-            ],
           ),
           title: Text(
             l.appTitle,
@@ -2738,6 +2885,28 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               ),
             ),
           ],
+        ),
+        drawer: AppDrawer(
+          localization: l,
+          userName: userName,
+          userContact: userContact,
+          onDashboardTap: _handleDrawerDashboardTap,
+          onAddWorkTap: _handleDrawerAddWorkTap,
+          onAttendanceHistoryTap: _openDrawerAttendanceHistory,
+          onContractWorkTap: _openDrawerContractWork,
+          onProfileTap: _openDrawerProfile,
+          onReportsSummaryTap: () => _openDrawerReportsSummary(l),
+          onChangeLanguageTap: () async {
+            if (!mounted) return;
+            await showLanguageSelectionDialog(
+              context: context,
+              options: languageOptions,
+              localization: l,
+            );
+          },
+          onHelpSupportTap: _openDrawerHelpSupport,
+          onDeleteAccountTap: () => _handleDrawerDeleteAccountTap(l),
+          onLogoutTap: () => _handleDrawerLogoutTap(l),
         ),
         body: SafeArea(
           child: CustomScrollView(

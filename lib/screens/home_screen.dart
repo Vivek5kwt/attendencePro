@@ -13,13 +13,14 @@ import '../bloc/app_cubit.dart';
 import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
-import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/session_manager.dart';
 import '../utils/responsive.dart';
+import '../utils/language_dialog.dart';
 import '../widgets/app_dialogs.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/work_management_dialogs.dart';
 import '../widgets/work_selection_dialog.dart';
 import 'help_support_screen.dart';
@@ -137,22 +138,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleDashboardTap() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   Future<void> _handleAddWorkFromDrawer() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     _showAddWorkDialog();
   }
 
   Future<void> _openAttendanceHistory() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -162,8 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openContractWork() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -173,8 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openReportsSummary() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     final workState = context.read<WorkBloc>().state;
     final works = workState.works;
@@ -233,8 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openHelpSupport() async {
-    Navigator.of(context).pop();
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -539,11 +528,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleLogoutTap(AppLocalizations l) async {
-    Navigator.of(context).pop();
-
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
-
     final shouldLogout = await _showLogoutConfirmationDialog(l);
     if (!shouldLogout || !mounted) return;
 
@@ -560,11 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleDeleteAccountTap(AppLocalizations l) async {
-    Navigator.of(context).pop();
-
-    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
-
     final shouldDelete = await _showDeleteAccountConfirmationDialog(l);
     if (!shouldDelete || !mounted) return;
 
@@ -627,92 +608,6 @@ class _HomeScreenState extends State<HomeScreen> {
               state.userPhone ??
               state.userUsername ??
               l.drawerUserPhone;
-          final menuItems = <_DrawerMenuItem>[
-            _DrawerMenuItem(
-              assetPath: AppAssets.home,
-              label: l.dashboardLabel,
-              backgroundColor: const Color(0xFFE6F3FF),
-              iconColor: const Color(0xFF1C87FF),
-              onTap: _handleDashboardTap,
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.addNewWork,
-              label: l.addNewWorkLabel,
-              backgroundColor: const Color(0xFFE8F8F0),
-              iconColor: const Color(0xFF2EBD5F),
-              onTap: _handleAddWorkFromDrawer,
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.history,
-              label: l.attendanceHistoryLabel,
-              backgroundColor: const Color(0xFFFFF2F2),
-              iconColor: const Color(0xFFFF3B30),
-              onTap: _openAttendanceHistory,
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.contractWork,
-              label: l.contractWorkLabel,
-              backgroundColor: const Color(0xFFEDEBFF),
-              iconColor: const Color(0xFF5856D6),
-              onTap: _openContractWork,
-            ),
-            _DrawerMenuItem(
-              icon: Icons.person_outline,
-              label: l.profileLabel,
-              backgroundColor: const Color(0xFFEFF6FF),
-              iconColor: const Color(0xFF2563EB),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await Future.delayed(const Duration(milliseconds: 200));
-                if (!mounted) return;
-                await Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const ProfileScreen(),
-                  ),
-                );
-              },
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.reports,
-              label: l.reportsSummaryLabel,
-              backgroundColor: const Color(0xFFE6F0FF),
-              iconColor: const Color(0xFF2563EB),
-              onTap: _openReportsSummary,
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.changeLanguage,
-              label: l.changeLanguageLabel,
-              backgroundColor: const Color(0xFFF3E8FF),
-              iconColor: const Color(0xFFAF52DE),
-              onTap: () async {
-                Navigator.of(context).pop();
-                await Future.delayed(const Duration(milliseconds: 200));
-                if (!mounted) return;
-                await _showLanguageDialog(context, languageOptions, l);
-              },
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.helpSupport,
-              label: l.helpSupportLabel,
-              backgroundColor: const Color(0xFFE6F3FF),
-              iconColor: const Color(0xFF007AFF),
-              onTap: _openHelpSupport,
-            ),
-            _DrawerMenuItem(
-              icon: Icons.delete_outline,
-              label: l.deleteAccountLabel,
-              backgroundColor: const Color(0xFFFFF1F2),
-              iconColor: const Color(0xFFFF3B30),
-              onTap: () => _handleDeleteAccountTap(l),
-            ),
-            _DrawerMenuItem(
-              assetPath: AppAssets.logout,
-              label: l.logoutLabel,
-              backgroundColor: const Color(0xFFE6F3FF),
-              iconColor: const Color(0xFF007AFF),
-              onTap: () => _handleLogoutTap(l),
-            ),
-          ];
           return Scaffold(
             appBar: AppBar(
               backgroundColor: Colors.transparent,
@@ -745,7 +640,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 24,
                   ),
                   onPressed: () {
-                    _showLanguageDialog(context, languageOptions, l);
+                    showLanguageSelectionDialog(
+                      context: context,
+                      options: languageOptions,
+                      localization: l,
+                    );
                   },
                 ),
                 IconButton(
@@ -758,43 +657,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            drawer: Drawer(
-              width: MediaQuery.of(context).size.width * 0.78,
-              backgroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.horizontal(
-                  right: Radius.circular(28),
-                ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DrawerHeader(
-                      userName: userName,
-                      userEmail: userContact,
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: ListView.separated(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 24),
-                          itemCount: menuItems.length,
-                          itemBuilder: (context, index) =>
-                              _drawerItem(menuItems[index]),
-                          separatorBuilder: (context, index) => const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4),
-                            child: _DashedDivider(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
+            drawer: AppDrawer(
+              localization: l,
+              userName: userName,
+              userContact: userContact,
+              onDashboardTap: _handleDashboardTap,
+              onAddWorkTap: _handleAddWorkFromDrawer,
+              onAttendanceHistoryTap: _openAttendanceHistory,
+              onContractWorkTap: _openContractWork,
+              onProfileTap: () async {
+                if (!mounted) return;
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ProfileScreen(),
+                  ),
+                );
+              },
+              onReportsSummaryTap: _openReportsSummary,
+              onChangeLanguageTap: () async {
+                if (!mounted) return;
+                await showLanguageSelectionDialog(
+                  context: context,
+                  options: languageOptions,
+                  localization: l,
+                );
+              },
+              onHelpSupportTap: _openHelpSupport,
+              onDeleteAccountTap: () => _handleDeleteAccountTap(l),
+              onLogoutTap: () => _handleLogoutTap(l),
             ),
             body: _buildHomeBody(l, state),
           );
@@ -1758,96 +1648,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _drawerItem(_DrawerMenuItem item) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: item.onTap,
-      splashFactory: NoSplash.splashFactory,
-      hoverColor: Colors.transparent,
-      focusColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      overlayColor: MaterialStateProperty.resolveWith<Color?>(
-            (states) {
-          if (states.contains(MaterialState.pressed)) {
-            return item.backgroundColor.withOpacity(0.16);
-          }
-          return Colors.transparent;
-        },
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                color: item.backgroundColor,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: item.assetPath != null
-                    ? Image.asset(
-                  item.assetPath!,
-                  width: 24,
-                  height: 24,
-                )
-                    : Icon(
-                  item.icon!,
-                  color: item.iconColor,
-                  size: 24,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                item.label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2933),
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Color(0xFFB0BEC5),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showLanguageDialog(
-      BuildContext context, Map<String, String> options, AppLocalizations l) async {
-    final currentCode = context.read<LocaleCubit>().state.languageCode;
-    final selectedCode = await showCreativeLanguageDialog(
-      context,
-      options: options,
-      currentSelection: currentCode,
-      localizations: l,
-    );
-
-    if (selectedCode != null && options.containsKey(selectedCode)) {
-      context.read<LocaleCubit>().setLocale(Locale(selectedCode));
-      final updatedLocalization = AppLocalizations(Locale(selectedCode));
-      final updatedNames = {
-        'en': updatedLocalization.languageEnglish,
-        'hi': updatedLocalization.languageHindi,
-        'pa': updatedLocalization.languagePunjabi,
-        'it': updatedLocalization.languageItalian,
-      };
-      final label =
-          updatedNames[selectedCode] ?? options[selectedCode] ?? selectedCode;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(updatedLocalization.languageSelection(label))),
-      );
-    }
-  }
-
   Future<void> _showShareOptions() async {
     final l = AppLocalizations.of(context);
 
@@ -2119,203 +1919,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     super.dispose();
   }
-}
-
-class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader({required this.userName, required this.userEmail});
-
-  final String userName;
-  final String userEmail;
-
-  @override
-  Widget build(BuildContext context) {
-    final fallbackInitial =
-    userName.trim().isNotEmpty ? userName.trim()[0].toUpperCase() : '?';
-
-    return SizedBox(
-      height: 220,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          ClipPath(
-            clipper: _DrawerHeaderClipper(),
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0084FF), Color(0xFF0057FF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.85),
-                      width: 3,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x33000000),
-                        offset: Offset(0, 6),
-                        blurRadius: 16,
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 38,
-                    backgroundColor: Colors.white,
-                    child: ClipOval(
-                      child: Image.asset(
-                        AppAssets.profilePlaceholder,
-                        width: 76,
-                        height: 76,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFF0084FF),
-                          alignment: Alignment.center,
-                          child: Text(
-                            fallbackInitial,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userName,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ) ??
-                            const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        userEmail,
-                        style:
-                        Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.85),
-                          fontSize: 14,
-                        ) ??
-                            TextStyle(
-                              color: Colors.white.withOpacity(0.85),
-                              fontSize: 14,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DrawerHeaderClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0, size.height - 20);
-    path.quadraticBezierTo(
-      size.width * 0.25,
-      size.height - 10,
-      size.width * 0.55,
-      size.height - 36,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.85,
-      size.height - 58,
-      size.width,
-      size.height - 20,
-    );
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-class _DashedDivider extends StatelessWidget {
-  const _DashedDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 1,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          const dashWidth = 6.0;
-          const dashSpace = 4.0;
-          var dashCount =
-          (constraints.maxWidth / (dashWidth + dashSpace)).floor();
-          if (dashCount <= 0) {
-            dashCount = 1;
-          }
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(
-              dashCount,
-                  (_) => Container(
-                width: dashWidth,
-                height: 1,
-                color: const Color(0xFFE0E6ED),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _DrawerMenuItem {
-  const _DrawerMenuItem({
-    this.icon,
-    this.assetPath,
-    required this.label,
-    required this.backgroundColor,
-    this.iconColor,
-    required this.onTap,
-  })  : assert(icon != null || assetPath != null,
-  'Either icon or assetPath must be provided.'),
-        assert(icon == null || assetPath == null,
-        'Provide only one of icon or assetPath.');
-
-  final IconData? icon;
-  final String? assetPath;
-  final String label;
-  final Color backgroundColor;
-  final Color? iconColor;
-  final VoidCallback onTap;
 }
 
 /// --------------------------------------------
