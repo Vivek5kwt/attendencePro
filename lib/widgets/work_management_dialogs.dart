@@ -10,20 +10,55 @@ import '../models/work.dart';
 import '../screens/contract_work_screen.dart';
 
 Future<void> showAddWorkDialog({required BuildContext context}) async {
-  final rootContext = context;
-  final l = AppLocalizations.of(rootContext);
-  final workNameController = TextEditingController();
-  final hourlySalaryController = TextEditingController();
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    barrierColor: Colors.black.withOpacity(0.35),
+    builder: (dialogContext) {
+      return _AddWorkDialog(rootContext: context);
+    },
+  );
+}
 
-  void clearForm() {
-    workNameController.clear();
-    hourlySalaryController.clear();
+class _AddWorkDialog extends StatefulWidget {
+  const _AddWorkDialog({
+    required this.rootContext,
+  });
+
+  final BuildContext rootContext;
+
+  @override
+  State<_AddWorkDialog> createState() => _AddWorkDialogState();
+}
+
+class _AddWorkDialogState extends State<_AddWorkDialog> {
+  late final TextEditingController _workNameController;
+  late final TextEditingController _hourlySalaryController;
+
+  @override
+  void initState() {
+    super.initState();
+    _workNameController = TextEditingController();
+    _hourlySalaryController = TextEditingController();
   }
 
-  Future<void> handleSaveWork(BuildContext dialogContext) async {
-    final messenger = ScaffoldMessenger.of(rootContext);
-    final workName = workNameController.text.trim();
-    final hourlyRateText = hourlySalaryController.text.trim();
+  @override
+  void dispose() {
+    _workNameController.dispose();
+    _hourlySalaryController.dispose();
+    super.dispose();
+  }
+
+  void _clearForm() {
+    _workNameController.clear();
+    _hourlySalaryController.clear();
+  }
+
+  Future<void> _handleSaveWork(BuildContext dialogContext) async {
+    final messenger = ScaffoldMessenger.of(widget.rootContext);
+    final l = AppLocalizations.of(widget.rootContext);
+    final workName = _workNameController.text.trim();
+    final hourlyRateText = _hourlySalaryController.text.trim();
 
     if (workName.isEmpty) {
       messenger.showSnackBar(
@@ -51,7 +86,7 @@ Future<void> showAddWorkDialog({required BuildContext context}) async {
     }
 
     FocusScope.of(dialogContext).unfocus();
-    rootContext.read<WorkBloc>().add(
+    widget.rootContext.read<WorkBloc>().add(
           WorkAdded(
             name: workName,
             hourlyRate: hourlyRate,
@@ -60,292 +95,275 @@ Future<void> showAddWorkDialog({required BuildContext context}) async {
         );
   }
 
-  try {
-    await showDialog<void>(
-      context: rootContext,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.35),
-      builder: (dialogContext) {
-        return BlocConsumer<WorkBloc, WorkState>(
-          listenWhen: (previous, current) =>
-              previous.addStatus != current.addStatus,
-          listener: (blocContext, state) {
-            if (state.addStatus == WorkActionStatus.success) {
-              clearForm();
-              Navigator.of(dialogContext).pop();
-              blocContext
-                  .read<WorkBloc>()
-                  .add(const WorkAddStatusCleared());
-            }
-          },
-          builder: (blocContext, state) {
-            final isSaving = state.addStatus == WorkActionStatus.inProgress;
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(widget.rootContext);
+
+    return BlocConsumer<WorkBloc, WorkState>(
+      listenWhen: (previous, current) => previous.addStatus != current.addStatus,
+      listener: (blocContext, state) {
+        if (state.addStatus == WorkActionStatus.success) {
+          _clearForm();
+          Navigator.of(context).pop();
+          blocContext.read<WorkBloc>().add(const WorkAddStatusCleared());
+        }
+      },
+      builder: (blocContext, state) {
+        final isSaving = state.addStatus == WorkActionStatus.inProgress;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          const SizedBox(width: 40),
-                          Expanded(
-                            child: Text(
-                              l.addNewWorkLabel,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(dialogContext)
+                      const SizedBox(width: 40),
+                      Expanded(
+                        child: Text(
+                          l.addNewWorkLabel,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          _clearForm();
+                          blocContext
+                              .read<WorkBloc>()
+                              .add(const WorkAddStatusCleared());
+                          Navigator.of(context).pop();
+                        },
+                        icon: const Icon(Icons.close),
+                        splashRadius: 20,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F9FF),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              height: 35,
+                              width: 35,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFE5F1FF),
+                              ),
+                              child: Image.asset(AppAssets.clock),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l.hourlyWorkLabel,
+                              style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 20,
                                   ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              clearForm();
-                              blocContext
-                                  .read<WorkBloc>()
-                                  .add(const WorkAddStatusCleared());
-                              Navigator.of(dialogContext).pop();
-                            },
-                            icon: const Icon(Icons.close),
-                            splashRadius: 20,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4F9FF),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  height: 35,
-                                  width: 35,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFFE5F1FF),
-                                  ),
-                                  child: Image.asset(AppAssets.clock),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  l.hourlyWorkLabel,
-                                  style: Theme.of(dialogContext)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              l.workNameLabel,
-                              style: Theme.of(dialogContext)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: workNameController,
-                              textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
-                                hintText: l.workNameHint,
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  borderSide:
-                                      const BorderSide(color: Color(0xFFE0E0E0)),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  borderSide:
-                                      const BorderSide(color: Color(0xFFE0E0E0)),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  borderSide:
-                                      const BorderSide(color: Color(0xFF007BFF)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              l.hourlySalaryLabel,
-                              style: Theme.of(dialogContext)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: hourlySalaryController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: l.hourlySalaryHint,
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  borderSide:
-                                      const BorderSide(color: Color(0xFFE0E0E0)),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  borderSide:
-                                      const BorderSide(color: Color(0xFFE0E0E0)),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  borderSide:
-                                      const BorderSide(color: Color(0xFF007BFF)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton.icon(
-                              onPressed: () async {
-                                await Navigator.of(
-                                  dialogContext,
-                                  rootNavigator: true,
-                                ).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => const ContractWorkScreen(),
-                                  ),
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: const Color(0xFFEFF6FF),
-                                foregroundColor: const Color(0xFF1D4ED8),
-                                side: const BorderSide(color: Color(0xFF2563EB)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                textStyle: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              icon: const Icon(Icons.work_outline_rounded, size: 18),
-                              label: Text(l.addContractWorkButton),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 20),
+                        Text(
+                          l.workNameLabel,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _workNameController,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            hintText: l.workNameHint,
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE0E0E0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE0E0E0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFF007BFF)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l.hourlySalaryLabel,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _hourlySalaryController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: l.hourlySalaryHint,
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE0E0E0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE0E0E0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFF007BFF)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            await Navigator.of(
+                              context,
+                              rootNavigator: true,
+                            ).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const ContractWorkScreen(),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEFF6FF),
+                            foregroundColor: const Color(0xFF1D4ED8),
+                            side: const BorderSide(color: Color(0xFF2563EB)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          icon: const Icon(Icons.work_outline_rounded, size: 18),
+                          label: Text(l.addContractWorkButton),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            _clearForm();
+                            blocContext
+                                .read<WorkBloc>()
+                                .add(const WorkAddStatusCleared());
+                            Navigator.of(context).pop();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: Text(
+                            l.cancelButton,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                clearForm();
-                                blocContext
-                                    .read<WorkBloc>()
-                                    .add(const WorkAddStatusCleared());
-                                Navigator.of(dialogContext).pop();
-                              },
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                              child: Text(
-                                l.cancelButton,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed:
+                              isSaving ? null : () => _handleSaveWork(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF007BFF),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
+                            elevation: 0,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: isSaving
-                                  ? null
-                                  : () => handleSaveWork(dialogContext),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF007BFF),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: isSaving
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                          Colors.white,
-                                        ),
-                                      ),
-                                    )
-                                  : Text(
-                                      l.saveWorkButton,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                          child: isSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
                                     ),
-                            ),
-                          ),
-                        ],
+                                  ),
+                                )
+                              : Text(
+                                  l.saveWorkButton,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
-  } finally {
-    workNameController.dispose();
-    hourlySalaryController.dispose();
   }
 }
 
