@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -874,6 +875,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final isActivationInProgress =
         state.activateStatus == WorkActionStatus.inProgress;
     final activatingWorkId = state.activatingWorkId;
+
+    // loading initial
     if (state.isLoading && works.isEmpty) {
       return _buildRefreshableList(
         l,
@@ -886,6 +889,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    // load error + no data
     if (state.loadStatus == WorkLoadStatus.failure && works.isEmpty) {
       final message = state.requiresAuthentication
           ? l.authenticationRequiredMessage
@@ -905,6 +909,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    // first-time user (no work yet)
     if (works.isEmpty) {
       return _buildRefreshableList(
         l,
@@ -918,17 +923,33 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    // has at least one work
+    // show banner, then "Add New Work" card, then list of works
     return RefreshIndicator(
       onRefresh: () => _handleRefresh(state),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
-        itemCount: works.length + 1,
+        itemCount: works.length + 2, // [0]=banner, [1]=AddWorkCard, [2..] cards
         itemBuilder: (context, index) {
           if (index == 0) {
+            // top banner/ad
             return _buildHomeBanner(l);
           }
-          final work = works[index - 1];
+
+          if (index == 1) {
+            // our new fancy "Add New Work" quick action card
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _AddNewWorkCard(
+                title: l.addNewWorkLabel,
+                subtitle: l.editWorkSubtitle, // make sure you have this in l10n. If not, you can hardcode like "Add another job/contract so you can track it separately."
+                onTap: _showAddWorkDialog,
+              ),
+            );
+          }
+
+          final work = works[index - 2];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildWorkCard(
@@ -942,7 +963,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         separatorBuilder: (context, index) =>
-            SizedBox(height: index == 0 ? 14 : 12),
+            SizedBox(height: index <= 1 ? 14 : 12),
       ),
     );
   }
@@ -1061,11 +1082,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// REWORKED CARD FOR BETTER USER EXPERIENCE
-  /// - Taller touch area
-  /// - Clear "Hourly Salary" text + value
-  /// - Edit/Delete always visible in top-right
-  /// - Activate CTA bottom-right, loud and obvious
+  /// WORK CARD WITH ACTIONS, ACTIVE BADGE, RATE, ACTIVATE BUTTON
   Widget _buildWorkCard(
       Work work,
       AppLocalizations l, {
@@ -1140,27 +1157,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
-    );
-
-    // active badge (if active)
-    final activeBadge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDCFCE7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF10B981), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(
-            Icons.check_circle,
-            size: 14,
-            color: Color(0xFF10B981),
-          ),
-          SizedBox(width: 4),
-        ],
-      ),
     );
 
     // CTA button bottom-right
@@ -1263,7 +1259,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l.hourlySalaryLabel, // "Hourly Salary"
+          l.hourlySalaryLabel,
           style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -1301,7 +1297,7 @@ class _HomeScreenState extends State<HomeScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // first row: work name + active badge + edit/delete row on right
+        // first row: work name + "Active" chip + edit/delete row
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2205,4 +2201,217 @@ class _DrawerMenuItem {
   final Color backgroundColor;
   final Color? iconColor;
   final VoidCallback onTap;
+}
+
+/// --------------------------------------------
+/// NEW: "Add New Work" Quick Card
+/// --------------------------------------------
+
+class _AddNewWorkCard extends StatelessWidget {
+  const _AddNewWorkCard({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    // Card with dashed border and soft gradient badge for the +
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashFactory: InkRipple.splashFactory,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAFAFF),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0F000000),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          child: _DashedOutline(
+            radius: 16,
+            dashColor: const Color(0xFF94A3B8),
+            strokeWidth: 1.2,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Row(
+                children: [
+                  // circular gradient + icon
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF2563EB),
+                          Color(0xFF4F46E5),
+                        ],
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // text
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // main title
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0F172A),
+                            fontSize: 16,
+                          ) ??
+                              const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0F172A),
+                                fontSize: 16,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        // subtitle
+                        Text(
+                          subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: const Color(0xFF6B7280),
+                            fontWeight: FontWeight.w400,
+                          ) ??
+                              const TextStyle(
+                                fontSize: 13,
+                                height: 1.4,
+                                color: Color(0xFF6B7280),
+                                fontWeight: FontWeight.w400,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // chevron
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Draws a dashed rounded border around its child.
+class _DashedOutline extends StatelessWidget {
+  const _DashedOutline({
+    required this.child,
+    required this.radius,
+    required this.dashColor,
+    required this.strokeWidth,
+  });
+
+  final Widget child;
+  final double radius;
+  final Color dashColor;
+  final double strokeWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedBorderPainter(
+        radius: radius,
+        color: dashColor,
+        strokeWidth: strokeWidth,
+      ),
+      child: child,
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  _DashedBorderPainter({
+    required this.radius,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  final double radius;
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+
+    final path = Path()..addRRect(rrect);
+
+    final dashWidth = 6.0;
+    final dashSpace = 4.0;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..color = color
+      ..strokeCap = StrokeCap.round;
+
+    final dashedPath = _createDashedPath(path, dashWidth, dashSpace);
+    canvas.drawPath(dashedPath, paint);
+  }
+
+  Path _createDashedPath(Path source, double dashWidth, double dashSpace) {
+    final Path dashed = Path();
+    for (final PathMetric metric in source.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final double next = distance + dashWidth;
+        final bool isLastSegment = next > metric.length;
+        dashed.addPath(
+          metric.extractPath(
+            distance,
+            isLastSegment ? metric.length : next,
+          ),
+          Offset.zero,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+    return dashed;
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.radius != radius ||
+        oldDelegate.strokeWidth != strokeWidth;
+  }
 }

@@ -82,7 +82,7 @@ class AuthApi {
       'country_code': countryCode,
       'language': language,
     });
-
+    print('djsjd $body');
     return _sendPost(uri, headers: headers, body: body);
   }
 
