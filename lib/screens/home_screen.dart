@@ -1847,163 +1847,270 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showShareOptions() async {
     final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) {
-        final theme = Theme.of(sheetContext);
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final responsive = dialogContext.responsive;
+        final mediaQuery = MediaQuery.of(dialogContext);
+        final textScaler = MediaQuery.textScalerOf(dialogContext);
 
-        Future<void> shareViaWhatsApp() async {
-          Navigator.of(sheetContext).pop();
-          final message = l.shareMessage(_shareLink);
-          final uri = Uri.parse(
-            'whatsapp://send?text=${Uri.encodeComponent(message)}',
+        TextStyle scaleTextStyle(TextStyle base, {FontWeight? fontWeight}) {
+          final scaledFontSize = textScaler.scale(
+            responsive.scaleText(base.fontSize ?? 16),
           );
-
-          try {
-            final canLaunch = await canLaunchUrl(uri);
-            if (!canLaunch) {
-              if (!mounted) return;
-              messenger.showSnackBar(
-                SnackBar(content: Text(l.shareWhatsappUnavailable)),
-              );
-              return;
-            }
-
-            final launched = await launchUrl(
-              uri,
-              mode: LaunchMode.externalApplication,
-            );
-
-            if (!launched && mounted) {
-              messenger.showSnackBar(
-                SnackBar(content: Text(l.shareWhatsappFailed)),
-              );
-            }
-          } catch (_) {
-            if (!mounted) return;
-            messenger.showSnackBar(
-              SnackBar(content: Text(l.shareWhatsappFailed)),
-            );
-          }
-        }
-
-        Future<void> copyLink() async {
-          Navigator.of(sheetContext).pop();
-          await Clipboard.setData(ClipboardData(text: _shareLink));
-          if (!mounted) return;
-          messenger.showSnackBar(
-            SnackBar(content: Text(l.shareLinkCopied)),
+          return base.copyWith(
+            fontSize: scaledFontSize,
+            fontWeight: fontWeight ?? base.fontWeight,
           );
         }
 
-        Widget shareOption({
-          required IconData icon,
-          required Color iconColor,
-          required Color backgroundColor,
-          required String label,
-          required VoidCallback onTap,
-        }) {
-          return InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: backgroundColor,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ) ??
-                          const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                ],
+        final maxWidth = math.min(
+          mediaQuery.size.width *
+              (mediaQuery.orientation == Orientation.portrait ? 0.92 : 0.6),
+          responsive.scaleWidth(420),
+        );
+        final minWidth = math.min(maxWidth, responsive.scaleWidth(280));
+        final borderRadius = BorderRadius.circular(responsive.scale(26));
+        final horizontalPadding = responsive.scale(24);
+        final verticalPadding = responsive.scale(24);
+        final spacing = responsive.scale(12);
+
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: responsive.scale(16),
+            vertical: responsive.scale(24),
+          ),
+          child: Align(
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: minWidth,
+                maxWidth: maxWidth,
               ),
-            ),
-          );
-        }
-
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.outline.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(2),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: borderRadius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: responsive.scale(28),
+                      offset: Offset(0, responsive.scale(18)),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  l.shareAppTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
+                clipBehavior: Clip.antiAlias,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide =
+                        constraints.maxWidth >= responsive.scaleWidth(360);
+                    final availableWidth =
+                        constraints.maxWidth - (horizontalPadding * 2);
+                    final safeAvailableWidth =
+                        availableWidth > 0 ? availableWidth : 0.0;
+                    final buttonWidth = isWide
+                        ? math.max((safeAvailableWidth - spacing) / 2, 0.0)
+                        : safeAvailableWidth;
+
+                    final titleStyle = scaleTextStyle(
+                      (theme.textTheme.titleMedium ??
+                              const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ))
+                          .copyWith(fontWeight: FontWeight.w600),
+                    );
+
+                    final shareActions = <Widget>[
+                      _buildShareButton(
+                        backgroundColor: const Color(0xFF25D366),
+                        icon: Icons.ios_share,
+                        label: l.shareViaWhatsApp,
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          _shareViaWhatsApp();
+                        },
                       ),
+                      _buildShareButton(
+                        backgroundColor: const Color(0xFF007AFF),
+                        icon: Icons.copy,
+                        label: l.copyLink,
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          _copyShareLink();
+                        },
+                      ),
+                    ];
+
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        verticalPadding,
+                        horizontalPadding,
+                        responsive.scale(28),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  l.shareAppTitle,
+                                  style: titleStyle,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
+                                icon: const Icon(Icons.close),
+                                splashRadius: responsive.scale(20),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: responsive.scale(20)),
+                          Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            alignment: WrapAlignment.center,
+                            children: shareActions
+                                .map(
+                                  (button) => SizedBox(
+                                    width: buttonWidth,
+                                    child: button,
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          SizedBox(height: responsive.scale(18)),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildShareButton(
+                              backgroundColor: Colors.black,
+                              label: l.shareCancelButton,
+                              onTap: () => Navigator.of(dialogContext).pop(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 20),
-                shareOption(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  iconColor: const Color(0xFF25D366),
-                  backgroundColor: const Color(0xFFE7F8EF),
-                  label: l.shareViaWhatsApp,
-                  onTap: shareViaWhatsApp,
-                ),
-                const SizedBox(height: 8),
-                shareOption(
-                  icon: Icons.link_rounded,
-                  iconColor: const Color(0xFF2563EB),
-                  backgroundColor: const Color(0xFFE8EEFF),
-                  label: l.copyLink,
-                  onTap: copyLink,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(),
-                    child: Text(l.shareCancelButton),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildShareButton({
+    required Color backgroundColor,
+    required String label,
+    required VoidCallback onTap,
+    IconData? icon,
+    Color textColor = Colors.white,
+    EdgeInsetsGeometry? padding,
+    double? iconSize,
+  }) {
+    final theme = Theme.of(context);
+    final responsive = context.responsive;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final baseStyle = theme.textTheme.labelLarge?.copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+        ) ??
+        TextStyle(
+          color: textColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        );
+    final scaledFontSize = textScaler.scale(
+      responsive.scaleText(baseStyle.fontSize ?? 16),
+    );
+    final textStyle = baseStyle.copyWith(fontSize: scaledFontSize);
+
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        padding: padding ?? EdgeInsets.symmetric(vertical: responsive.scale(14)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(responsive.scale(18)),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              color: textColor,
+              size: iconSize ?? responsive.scale(20),
+            ),
+            SizedBox(width: responsive.scale(8)),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: textStyle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _shareViaWhatsApp() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final message = l.shareMessage(_shareLink);
+    final uri = Uri.parse(
+      'whatsapp://send?text=${Uri.encodeComponent(message)}',
+    );
+
+    try {
+      final canLaunch = await canLaunchUrl(uri);
+      if (!canLaunch) {
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text(l.shareWhatsappUnavailable)),
+        );
+        return;
+      }
+
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched && mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l.shareWhatsappFailed)),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.shareWhatsappFailed)),
+      );
+    }
+  }
+
+  Future<void> _copyShareLink() async {
+    await Clipboard.setData(ClipboardData(text: _shareLink));
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l.shareLinkCopied)),
     );
   }
 
