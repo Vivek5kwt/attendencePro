@@ -15,7 +15,10 @@ Future<Work?> showWorkSelectionDialog({
   VoidCallback? onAddNewWork,
   ValueChanged<Work>? onEditWork,
 }) async {
-  if (works.isEmpty) {
+  final visibleWorks =
+      works.where((work) => !work.isContract).toList(growable: false);
+
+  if (visibleWorks.isEmpty) {
     return null;
   }
 
@@ -25,7 +28,7 @@ Future<Work?> showWorkSelectionDialog({
     barrierColor: const Color(0xCC111827),
     builder: (dialogContext) {
       var selectedId = _initialWorkId(
-        works: works,
+        works: visibleWorks,
         initialSelectedWorkId: initialSelectedWorkId,
       );
 
@@ -146,7 +149,7 @@ Future<Work?> showWorkSelectionDialog({
                                       ),
                                     ),
                                     child: Scrollbar(
-                                      thumbVisibility: works.length > 3,
+                                      thumbVisibility: visibleWorks.length > 3,
                                       interactive: true,
                                       child: ListView.separated(
                                         padding: const EdgeInsets.symmetric(
@@ -156,9 +159,9 @@ Future<Work?> showWorkSelectionDialog({
                                         keyboardDismissBehavior:
                                             ScrollViewKeyboardDismissBehavior
                                                 .onDrag,
-                                        itemCount: works.length,
+                                        itemCount: visibleWorks.length,
                                         itemBuilder: (context, index) {
-                                          final work = works[index];
+                                          final work = visibleWorks[index];
                                           return _WorkSelectionTile(
                                             work: work,
                                             isSelected: work.id == selectedId,
@@ -263,7 +266,7 @@ Future<Work?> showWorkSelectionDialog({
 
   if (result.startsWith(_kEditWorkResultPrefix)) {
     final workId = result.substring(_kEditWorkResultPrefix.length);
-    for (final work in works) {
+    for (final work in visibleWorks) {
       if (work.id == workId) {
         onEditWork?.call(work);
         break;
@@ -272,7 +275,7 @@ Future<Work?> showWorkSelectionDialog({
     return null;
   }
 
-  for (final work in works) {
+  for (final work in visibleWorks) {
     if (work.id == result) {
       return work;
     }
