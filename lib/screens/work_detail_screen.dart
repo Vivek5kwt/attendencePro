@@ -17,6 +17,7 @@ import '../repositories/attendance_entry_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
 import '../widgets/work_selection_dialog.dart';
+import '../widgets/work_management_dialogs.dart';
 
 const List<int> _timeHourOptions = <int>[
   1,
@@ -418,6 +419,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       works: works,
       localization: l,
       initialSelectedWorkId: widget.work.id,
+      onAddNewWork: () {
+        if (!mounted) {
+          return;
+        }
+        showAddWorkDialog(context: context);
+      },
+      onEditWork: (work) {
+        if (!mounted) {
+          return;
+        }
+        showEditWorkDialog(context: context, work: work);
+      },
     );
 
     if (!mounted || selected == null || selected.id == widget.work.id) {
