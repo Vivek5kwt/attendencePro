@@ -4125,12 +4125,7 @@ class _AttendanceSection extends StatelessWidget {
                 contractTypes: contractTypes,
                 entries: contractBundleEntries,
                 onToggle: onContractFieldsToggle,
-                onTypeChanged: onContractBundleTypeChanged == null
-                    ? null
-                    : (entry, value) =>
-                        onContractBundleTypeChanged!(entry.id, value),
                 onRetry: onContractTypeRetry,
-                onAddEntry: onAddContractBundle,
                 onRemoveEntry: onRemoveContractBundle,
                 onUnitsChanged: onContractBundleUnitsChanged,
                 bundleUnitsValidator: bundleUnitsValidator,
@@ -5214,9 +5209,7 @@ class _ContractEntryForm extends StatelessWidget {
     required this.isSubmitting,
     required this.isWorkOff,
     this.errorMessage,
-    this.onTypeChanged,
     this.onRetry,
-    this.onAddEntry,
     this.onRemoveEntry,
     this.onUnitsChanged,
     this.trailingAction,
@@ -5228,9 +5221,7 @@ class _ContractEntryForm extends StatelessWidget {
   final List<_ContractBundleFormEntry> entries;
   final ValueChanged<bool>? onToggle;
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
-  final void Function(_ContractBundleFormEntry, String?)? onTypeChanged;
   final VoidCallback? onRetry;
-  final VoidCallback? onAddEntry;
   final void Function(_ContractBundleFormEntry)? onRemoveEntry;
   final void Function(_ContractBundleFormEntry)? onUnitsChanged;
   final bool isSubmitting;
@@ -5350,440 +5341,174 @@ class _ContractEntryForm extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ...(() {
-                final selectedTypeIds = entries
-                    .map((entry) => entry.contractTypeId)
-                    .whereType<String>()
-                    .toSet();
-                final canAddMoreEntries =
-                    contractTypes.length > selectedTypeIds.length;
+              ...entries.asMap().entries.map((entryMap) {
+                final entry = entryMap.value;
+                final isLast = entryMap.key == entries.length - 1;
+                final selectedType = resolveType(entry.contractTypeId);
+                final unitLabel =
+                    (selectedType?.unitLabel.trim().isNotEmpty ?? false)
+                        ? selectedType!.unitLabel.trim()
+                        : l.contractWorkUnitFallback;
+                final String? rateHelperText = selectedType != null
+                    ? '${l.contractWorkRateLabel}: '
+                        '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
+                    : null;
+                final VoidCallback? removeCallback = entries.length > 1 &&
+                        onRemoveEntry != null &&
+                        !disableInteractions
+                    ? () => onRemoveEntry!(entry)
+                    : null;
 
-                return [
-                  ...entries.asMap().entries.map((entryMap) {
-                    final entry = entryMap.value;
-                    final isLast = entryMap.key == entries.length - 1;
-                    final selectedType = resolveType(entry.contractTypeId);
-                    final dropdownValue = selectedType?.id;
-                    final unitLabel =
-                        (selectedType?.unitLabel.trim().isNotEmpty ?? false)
-                            ? selectedType!.unitLabel.trim()
-                            : l.contractWorkUnitFallback;
-                    final String? rateHelperText = selectedType != null
-                        ? '${l.contractWorkRateLabel}: '
-                            '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
-                        : null;
-                    final VoidCallback? removeCallback = entries.length > 1 &&
-                            onRemoveEntry != null &&
-                            !disableInteractions
-                        ? () => onRemoveEntry!(entry)
-                        : null;
-                    final takenTypeIds = entries
-                        .where((other) =>
-                            other != entry && other.contractTypeId != null)
-                        .map((other) => other.contractTypeId!)
-                        .toSet();
-                    List<Widget> buildSelectedItems() {
-                      return contractTypes
-                          .map((type) {
-                            final resolvedUnitLabel =
-                                type.unitLabel.trim().isNotEmpty
-                                    ? type.unitLabel.trim()
-                                    : l.contractWorkUnitFallback;
-                            final rateLabelText =
-                                '${l.contractWorkRateLabel}: '
-                                '${type.rate.toStringAsFixed(2)} / '
-                                '$resolvedUnitLabel';
-                            return _ContractTypeSelectedLabel(
-                              name: type.name,
-                              unitLabel: resolvedUnitLabel,
-                              rateLabel: rateLabelText,
-                            );
-                          })
-                          .toList(growable: false);
-                    }
-
-                    List<DropdownMenuItem<String>> buildDropdownItems() {
-                      return contractTypes
-                          .map((type) {
-                            final resolvedUnitLabel =
-                                type.unitLabel.trim().isNotEmpty
-                                    ? type.unitLabel.trim()
-                                    : l.contractWorkUnitFallback;
-                            final rateLabelText =
-                                '${l.contractWorkRateLabel}: '
-                                '${type.rate.toStringAsFixed(2)} / '
-                                '$resolvedUnitLabel';
-                            final isTypeTaken = takenTypeIds.contains(type.id) &&
-                                type.id != dropdownValue;
-                            return DropdownMenuItem<String>(
-                              value: type.id,
-                              enabled: !isTypeTaken,
-                              alignment: AlignmentDirectional.topStart,
-                              child: _ContractTypeDropdownItem(
-                                name: type.name,
-                                unitLabel: resolvedUnitLabel,
-                                rateLabel: rateLabelText,
-                                isDisabled: isTypeTaken,
-                              ),
-                            );
-                          })
-                          .toList(growable: false);
-                    }
-
-                    final labelStyle = theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E293B),
-                        ) ??
-                        const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1E293B),
-                          fontSize: 14,
-                        );
-
-                    final hintStyle = theme.textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF94A3B8),
-                          fontWeight: FontWeight.w500,
-                        ) ??
-                        const TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontWeight: FontWeight.w500,
-                        );
-
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x140F172A),
-                              blurRadius: 14,
-                              offset: Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l.contractWorkContractTypeLabel,
-                                          style: labelStyle,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        DropdownButtonFormField<String>(
-                                          value: dropdownValue,
-                                          onChanged: disableInteractions
-                                              ? null
-                                              : (value) =>
-                                                  onTypeChanged?.call(entry, value),
-                                          isExpanded: true,
-                                          itemHeight: null,
-                                          menuMaxHeight: 360,
-                                          dropdownColor: const Color(0xFFF8FAFF),
-                                          borderRadius: BorderRadius.circular(18),
-                                          selectedItemBuilder: (context) =>
-                                              buildSelectedItems(),
-                                          hint: Text(
-                                            l.contractWorkContractTypeHint,
-                                            style: hintStyle,
-                                          ),
-                                          decoration: InputDecoration(
-                                            prefixIcon: const Icon(
-                                              Icons.assignment_rounded,
-                                              color: Color(0xFF1D4ED8),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                              vertical: 18,
-                                              horizontal: 12,
-                                            ),
-                                            filled: true,
-                                            fillColor: const Color(0xFFF8FAFF),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFE0E7FF),
-                                              ),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFE0E7FF),
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFF2563EB),
-                                                width: 1.4,
-                                              ),
-                                            ),
-                                            disabledBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(18),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFE2E8F0),
-                                              ),
-                                            ),
-                                          ),
-                                          items: buildDropdownItems(),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (removeCallback != null) ...[
-                                    const SizedBox(width: 12),
-                                    IconButton(
-                                      onPressed: removeCallback,
-                                      icon: const Icon(Icons.close_rounded),
-                                      tooltip: MaterialLocalizations.of(context)
-                                          .deleteButtonTooltip,
-                                      visualDensity: VisualDensity.compact,
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: const Color(0xFFE2E8F0),
-                                        foregroundColor: const Color(0xFF1F2937),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                l.contractWorkUnitsLabel,
-                                style: labelStyle,
-                              ),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: entry.controller,
-                                enabled: !disableInteractions,
-                                validator: (value) =>
-                                    bundleUnitsValidator(entry, value),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: false),
-                                decoration: InputDecoration(
-                                  hintText: l.contractWorkUnitsHint,
-                                  hintStyle: hintStyle,
-                                  prefixIcon: const Icon(
-                                    Icons.inventory_2_outlined,
-                                    color: Color(0xFF2563EB),
-                                  ),
-                                  suffixIcon: Padding(
-                                    padding: const EdgeInsets.only(
-                                        right: 12, top: 12, bottom: 12),
-                                    child: _ContractUnitBadge(label: unitLabel),
-                                  ),
-                                  suffixIconConstraints: const BoxConstraints(
-                                    minHeight: 0,
-                                    minWidth: 0,
-                                  ),
-                                  helperText: rateHelperText,
-                                  filled: true,
-                                  fillColor: const Color(0xFFF8FAFF),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 18,
-                                    horizontal: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE0E7FF),
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE0E7FF),
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF2563EB),
-                                      width: 1.4,
-                                    ),
-                                  ),
-                                  disabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE2E8F0),
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (_) => onUnitsChanged?.call(entry),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                final labelStyle = theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E293B),
+                      fontSize: 14,
                     );
-                  }).toList(growable: false),
-                  if (onAddEntry != null)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: disableInteractions || !canAddMoreEntries
-                            ? null
-                            : onAddEntry,
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text(l.contractWorkAddTypeTitle),
-                      ),
+
+                final hintStyle = theme.textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w500,
+                    ) ??
+                    const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w500,
+                    );
+
+                final typeTitleStyle = theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1D4ED8),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1D4ED8),
+                    );
+
+                return Padding(
+                  padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x140F172A),
+                          blurRadius: 14,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
                     ),
-                  if (!canAddMoreEntries)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        l.contractWorkAllTypesAddedMessage,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                            ) ??
-                            const TextStyle(
-                              color: Color(0xFF64748B),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (selectedType != null || removeCallback != null)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: selectedType != null
+                                      ? Text(
+                                          selectedType.name,
+                                          style: typeTitleStyle,
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                                if (removeCallback != null) ...[
+                                  const SizedBox(width: 12),
+                                  IconButton(
+                                    onPressed: removeCallback,
+                                    icon: const Icon(Icons.close_rounded),
+                                    tooltip: MaterialLocalizations.of(context)
+                                        .deleteButtonTooltip,
+                                    visualDensity: VisualDensity.compact,
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: const Color(0xFFE2E8F0),
+                                      foregroundColor: const Color(0xFF1F2937),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
+                          if (selectedType != null || removeCallback != null)
+                            const SizedBox(height: 12),
+                          Text(
+                            l.contractWorkUnitsLabel,
+                            style: labelStyle,
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: entry.controller,
+                            enabled: !disableInteractions,
+                            validator: (value) =>
+                                bundleUnitsValidator(entry, value),
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                                    decimal: false),
+                            decoration: InputDecoration(
+                              hintText: l.contractWorkUnitsHint,
+                              hintStyle: hintStyle,
+                              prefixIcon: const Icon(
+                                Icons.inventory_2_outlined,
+                                color: Color(0xFF2563EB),
+                              ),
+                              suffixIcon: Padding(
+                                padding: const EdgeInsets.only(
+                                    right: 12, top: 12, bottom: 12),
+                                child: _ContractUnitBadge(label: unitLabel),
+                              ),
+                              suffixIconConstraints: const BoxConstraints(
+                                minHeight: 0,
+                                minWidth: 0,
+                              ),
+                              helperText: rateHelperText,
+                              filled: true,
+                              fillColor: const Color(0xFFF8FAFF),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 12,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE0E7FF),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE0E7FF),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF2563EB),
+                                  width: 1.4,
+                                ),
+                              ),
+                              disabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                            ),
+                            onChanged: (_) => onUnitsChanged?.call(entry),
+                          ),
+                        ],
                       ),
                     ),
-                ];
-              }()),
+                  ),
+                );
+              }).toList(growable: false),
             ],
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ContractTypeDropdownItem extends StatelessWidget {
-  const _ContractTypeDropdownItem({
-    required this.name,
-    required this.unitLabel,
-    required this.rateLabel,
-    this.isDisabled = false,
-  });
-
-  final String name;
-  final String unitLabel;
-  final String rateLabel;
-  final bool isDisabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final nameStyle = theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ) ??
-        const TextStyle(fontWeight: FontWeight.w600);
-    final rateStyle = theme.textTheme.bodySmall?.copyWith(
-          color: const Color(0xFF475569),
-          fontWeight: FontWeight.w500,
-        ) ??
-        const TextStyle(
-          color: Color(0xFF475569),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        );
-
-    return Opacity(
-      opacity: isDisabled ? 0.45 : 1,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              name,
-              style: nameStyle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    rateLabel,
-                    style: rateStyle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ContractTypeSelectedLabel extends StatelessWidget {
-  const _ContractTypeSelectedLabel({
-    required this.name,
-    required this.unitLabel,
-    required this.rateLabel,
-  });
-
-  final String name;
-  final String unitLabel;
-  final String rateLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final labelStyle = theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ) ??
-        const TextStyle(fontWeight: FontWeight.w600);
-    final detailStyle = theme.textTheme.bodySmall?.copyWith(
-          color: const Color(0xFF64748B),
-          fontWeight: FontWeight.w500,
-        ) ??
-        const TextStyle(
-          color: Color(0xFF64748B),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                Text(
-                  name,
-                  style: labelStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              /*  Text(
-                  rateLabel,
-                  style: detailStyle,
-                  softWrap: true,
-                  overflow: TextOverflow.ellipsis,
-                ),*/
-              ],
-            ),
-          ),
         ],
       ),
     );
