@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/work_bloc.dart';
+import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
@@ -442,6 +443,66 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         builder: (context) => WorkDetailScreen(work: selected),
       ),
     );
+  }
+
+  Work? _findActiveWorkFromState(WorkState state) {
+    if (state.works.isEmpty) {
+      return null;
+    }
+    for (final work in state.works) {
+      if (_isWorkActive(work)) {
+        return work;
+      }
+    }
+    return state.works.first;
+  }
+
+  bool _isWorkActive(Work work) {
+    if (work.isActive) {
+      return true;
+    }
+
+    final data = work.additionalData;
+    const possibleKeys = {
+      'is_active',
+      'isActive',
+      'active',
+      'is_current',
+      'isCurrent',
+      'currently_active',
+    };
+
+    bool? resolve(dynamic value) {
+      if (value is bool) {
+        return value;
+      }
+      if (value is num) {
+        return value != 0;
+      }
+      if (value is String) {
+        final normalized = value.toLowerCase().trim();
+        if (normalized.isEmpty) {
+          return null;
+        }
+        if (['true', '1', 'yes', 'active', 'current'].contains(normalized)) {
+          return true;
+        }
+        if (['false', '0', 'no', 'inactive'].contains(normalized)) {
+          return false;
+        }
+      }
+      return null;
+    }
+
+    for (final key in possibleKeys) {
+      final value = data[key];
+      final resolved = resolve(value);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    return false;
   }
 
   String _normalizeTimeString(String value) {
@@ -2514,6 +2575,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final workState = context.watch<WorkBloc>().state;
+    final activeWork = _findActiveWorkFromState(workState);
+    final bool isViewingActiveWork =
+        activeWork != null && activeWork.id == widget.work.id;
     final hourlyRateText = _buildHourlyRateText(l);
     final workTypeLabel = _resolveWorkTypeLabel(l);
     final normalizedRate = hourlyRateText.trim();
@@ -2535,6 +2600,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _isSummaryLoading || _summaryError != null || summaryStats.isNotEmpty;
 
     final contentWidgets = <Widget>[
+      if (activeWork != null) ...[
+        Align(
+          alignment: Alignment.centerLeft,
+          child: _ActiveWorkIndicator(
+            workName: activeWork.name,
+            isSelectedWork: isViewingActiveWork,
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
       _WorkHeaderCard(
         work: widget.work,
         workTypeLabel: workTypeLabel,
@@ -3638,6 +3713,74 @@ class _PendingAttendanceCard extends StatelessWidget {
                 ),
               ),
               child: Text(buttonLabel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveWorkIndicator extends StatelessWidget {
+  const _ActiveWorkIndicator({
+    required this.workName,
+    this.isSelectedWork = false,
+  });
+
+  final String workName;
+  final bool isSelectedWork;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final baseStyle = theme.textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1F2937),
+          fontSize: 12,
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1F2937),
+          fontSize: 12,
+        );
+    final nameStyle = baseStyle.copyWith(
+      fontSize: 11,
+    );
+    final suffixStyle = baseStyle.copyWith(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.work_outline, size: 16, color: Color(0xFF2563EB)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: RichText(
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                style: baseStyle,
+                children: [
+                  const TextSpan(text: 'Active Work – '),
+                  TextSpan(
+                    text: workName,
+                    style: nameStyle,
+                  ),
+                  if (isSelectedWork)
+                    TextSpan(
+                      text: ' (User Selected)',
+                      style: suffixStyle,
+                    ),
+                ],
+              ),
             ),
           ),
         ],
