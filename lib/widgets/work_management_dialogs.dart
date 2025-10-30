@@ -7,6 +7,7 @@ import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
+import '../screens/attendance_history_screen.dart';
 import '../screens/contract_work_screen.dart';
 
 Future<void> showAddWorkDialog({required BuildContext context}) async {
@@ -760,39 +761,39 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                               children: [
                                                 Expanded(
                                                   child: OutlinedButton.icon(
-                                                    onPressed: null,
-                                                    icon: const Icon(
-                                                      Icons.work_history,
-                                                      size: 18,
-                                                    ),
-                                                    label: Text(
-                                                      l.contractHistoryButton,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: OutlinedButton.icon(
                                                     onPressed: () {
-                                                      Navigator.of(context).push(
+                                                      FocusScope.of(context)
+                                                          .unfocus();
+                                                      Navigator.of(
+                                                        context,
+                                                        rootNavigator: true,
+                                                      ).push(
                                                         MaterialPageRoute(
-                                                          builder: (contractContext) {
-                                                            return ContractWorkScreen(
-                                                              work: widget.work,
+                                                          builder:
+                                                              (historyContext) {
+                                                            return AttendanceHistoryScreen(
+                                                              initialWork:
+                                                                  widget.work,
                                                             );
                                                           },
                                                         ),
                                                       );
                                                     },
-                                                    style: OutlinedButton.styleFrom(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
+                                                    style:
+                                                        OutlinedButton.styleFrom(
+                                                      padding:
+                                                          const EdgeInsets
+                                                              .symmetric(
                                                         vertical: 14,
+                                                        horizontal: 12,
                                                       ),
                                                       side: BorderSide(
                                                         color: theme
-                                                            .colorScheme.primary,
+                                                            .colorScheme.primary
+                                                            .withOpacity(0.45),
                                                       ),
+                                                      foregroundColor: theme
+                                                          .colorScheme.primary,
                                                       shape:
                                                           RoundedRectangleBorder(
                                                         borderRadius:
@@ -801,8 +802,69 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                                       ),
                                                     ),
                                                     icon: const Icon(
-                                                      Icons.work_outline_rounded,
-                                                      size: 18,
+                                                      Icons.history_edu_outlined,
+                                                      size: 20,
+                                                    ),
+                                                    label: Text(
+                                                      l.contractHistoryButton,
+                                                      style: theme
+                                                          .textTheme
+                                                          .labelLarge
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: FilledButton.icon(
+                                                    onPressed: () {
+                                                      FocusScope.of(context)
+                                                          .unfocus();
+                                                      Navigator.of(
+                                                        context,
+                                                        rootNavigator: true,
+                                                      ).push(
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (contractContext) {
+                                                            return ContractWorkScreen(
+                                                              work: widget.work,
+                                                            );
+                                                          },
+                                                        ),
+                                                      );
+                                                    },
+                                                    style: FilledButton.styleFrom(
+                                                      padding:
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                        vertical: 16,
+                                                        horizontal: 12,
+                                                      ),
+                                                      backgroundColor: theme
+                                                          .colorScheme.primary,
+                                                      foregroundColor: theme
+                                                          .colorScheme.onPrimary,
+                                                      textStyle: theme
+                                                          .textTheme
+                                                          .labelLarge
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                24),
+                                                      ),
+                                                    ),
+                                                    icon: const Icon(
+                                                      Icons.add_chart_outlined,
+                                                      size: 20,
                                                     ),
                                                     label: Text(
                                                       l.addContractWorkButton,
