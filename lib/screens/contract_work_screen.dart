@@ -294,7 +294,32 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
     String? selectedSubtypeValue = existingSubtypeDisplay;
     selectedSubtypeValue ??=
-    subtypeOptions.isNotEmpty ? subtypeOptions.first : null;
+        subtypeOptions.isNotEmpty ? subtypeOptions.first : null;
+
+    bool isCustomSubtype = false;
+    if (subtypeOptions.isEmpty &&
+        (selectedSubtypeValue == null || selectedSubtypeValue.isEmpty)) {
+      isCustomSubtype = true;
+    } else if (selectedSubtypeValue != null) {
+      final normalizedSelected = selectedSubtypeValue.toLowerCase();
+      final exists = subtypeOptions.any(
+        (item) => item.toLowerCase() == normalizedSelected,
+      );
+      if (!exists) {
+        isCustomSubtype = true;
+      }
+    }
+
+    final customSubtypeController = TextEditingController(
+      text: isCustomSubtype ? (selectedSubtypeValue ?? '') : '',
+    );
+    if (isCustomSubtype) {
+      selectedSubtypeValue = customSubtypeController.text.isNotEmpty
+          ? customSubtypeController.text
+          : null;
+    }
+
+    const customSubtypeOptionValue = '__custom_contract_subtype__';
 
     bool isSaving = false;
     bool isSelected = true;
@@ -492,6 +517,146 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                             ),
                                             const SizedBox(height: 20),
                                             Text(
+                                              l.contractWorkSubtypeLabel,
+                                              style: textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF1F2937),
+                                              ) ??
+                                                  const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Color(0xFF1F2937),
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF9FAFB),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: const Color(0xFFE5E7EB),
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 4,
+                                              ),
+                                              child: DropdownButtonHideUnderline(
+                                                child: DropdownButton<String>(
+                                                  value: isCustomSubtype
+                                                      ? customSubtypeOptionValue
+                                                      : selectedSubtypeValue,
+                                                  isExpanded: true,
+                                                  hint: Text(
+                                                    l.contractWorkSubtypeHint,
+                                                    style: textTheme.bodyMedium?.copyWith(
+                                                      color: const Color(0xFF9CA3AF),
+                                                    ) ??
+                                                        const TextStyle(
+                                                          color: Color(0xFF9CA3AF),
+                                                        ),
+                                                  ),
+                                                  items: [
+                                                    ...subtypeOptions.map(
+                                                      (option) => DropdownMenuItem<String>(
+                                                        value: option,
+                                                        child: Text(
+                                                          option,
+                                                          style: textTheme.bodyLarge?.copyWith(
+                                                            fontWeight: FontWeight.w600,
+                                                            color: const Color(0xFF111827),
+                                                          ) ??
+                                                              const TextStyle(
+                                                                fontWeight: FontWeight.w600,
+                                                                color: Color(0xFF111827),
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    DropdownMenuItem<String>(
+                                                      value: customSubtypeOptionValue,
+                                                      child: Text(
+                                                        l.contractWorkSubtypeCustomOption,
+                                                        style: textTheme.bodyLarge?.copyWith(
+                                                          fontWeight: FontWeight.w600,
+                                                          color: const Color(0xFF2563EB),
+                                                        ) ??
+                                                            const TextStyle(
+                                                              fontWeight: FontWeight.w600,
+                                                              color: Color(0xFF2563EB),
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  onChanged: (value) {
+                                                    if (value == null) {
+                                                      return;
+                                                    }
+                                                    setSheetState(() {
+                                                      if (value == customSubtypeOptionValue) {
+                                                        isCustomSubtype = true;
+                                                        final existingCustom =
+                                                            customSubtypeController.text.trim();
+                                                        selectedSubtypeValue =
+                                                            existingCustom.isNotEmpty
+                                                                ? existingCustom
+                                                                : null;
+                                                      } else {
+                                                        isCustomSubtype = false;
+                                                        selectedSubtypeValue = value;
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            if (isCustomSubtype) ...[
+                                              const SizedBox(height: 12),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFF9FAFB),
+                                                  borderRadius: BorderRadius.circular(20),
+                                                  border: Border.all(
+                                                    color: const Color(0xFFE5E7EB),
+                                                  ),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 12,
+                                                ),
+                                                child: TextField(
+                                                  controller: customSubtypeController,
+                                                  decoration: InputDecoration(
+                                                    border: InputBorder.none,
+                                                    hintText:
+                                                        l.contractWorkSubtypeCustomLabel,
+                                                    hintStyle:
+                                                        textTheme.bodyMedium?.copyWith(
+                                                      color: const Color(0xFF9CA3AF),
+                                                    ) ??
+                                                            const TextStyle(
+                                                              color: Color(0xFF9CA3AF),
+                                                            ),
+                                                  ),
+                                                  style: textTheme.bodyLarge?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(0xFF111827),
+                                                  ) ??
+                                                      const TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: Color(0xFF111827),
+                                                        fontSize: 16,
+                                                      ),
+                                                  onChanged: (value) {
+                                                    setSheetState(() {
+                                                      selectedSubtypeValue =
+                                                          value.trim().isEmpty ? null : value;
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                            const SizedBox(height: 20),
+                                            Text(
                                               '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
                                               style: textTheme.bodyMedium?.copyWith(
                                                 fontWeight: FontWeight.w600,
@@ -601,8 +766,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                                       final name = nameController.text.trim();
                                       final rate = double.tryParse(
                                           rateController.text.trim());
-                                      final resolvedSubtype =
-                                          selectedSubtypeValue?.trim() ?? '';
+                                      final resolvedSubtype = isCustomSubtype
+                                          ? customSubtypeController.text.trim()
+                                          : (selectedSubtypeValue?.trim() ?? '');
 
                                       if ((name.isEmpty && isNameEditable) ||
                                           (!isNameEditable &&
@@ -756,6 +922,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         );
       },
     );
+
+    customSubtypeController.dispose();
 
     if (!mounted || result == null) {
       return;
