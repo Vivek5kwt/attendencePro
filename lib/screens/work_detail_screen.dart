@@ -2739,8 +2739,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         workState.userUsername ??
         l.drawerUserPhone;
     final activeWork = _findActiveWorkFromState(workState);
-    final bool isViewingActiveWork =
-        activeWork != null && activeWork.id == widget.work.id;
     final hourlyRateText = _buildHourlyRateText(l);
     final workTypeLabel = _resolveWorkTypeLabel(l);
     final normalizedRate = hourlyRateText.trim();
@@ -2773,7 +2771,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           alignment: Alignment.centerLeft,
           child: _ActiveWorkIndicator(
             workName: activeWork.name,
-            isSelectedWork: isViewingActiveWork,
           ),
         ),
       ],
@@ -3919,11 +3916,9 @@ class _PendingAttendanceCard extends StatelessWidget {
 class _ActiveWorkIndicator extends StatelessWidget {
   const _ActiveWorkIndicator({
     required this.workName,
-    this.isSelectedWork = false,
   });
 
   final String workName;
-  final bool isSelectedWork;
 
   @override
   Widget build(BuildContext context) {
@@ -3951,18 +3946,6 @@ class _ActiveWorkIndicator extends StatelessWidget {
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: Color(0xFF374151),
-        );
-
-    final badgeStyle = theme.textTheme.labelSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: accentColor,
-          letterSpacing: 0.3,
-        ) ??
-        const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: accentColor,
-          letterSpacing: 0.3,
         );
 
     return Container(
@@ -4011,26 +3994,11 @@ class _ActiveWorkIndicator extends StatelessWidget {
                 Text(
                   workName,
                   style: nameStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                 ),
               ],
             ),
           ),
-          if (isSelectedWork) ...[
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                'User Selected',
-                style: badgeStyle,
-              ),
-            ),
-          ],
         ],
       ),
     );
