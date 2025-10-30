@@ -953,14 +953,18 @@ class _ActiveWorkBadge extends StatelessWidget {
     final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w600,
           color: const Color(0xFF1F2937),
-          fontSize: 14,
+          fontSize: 13,
         ) ??
         const TextStyle(
           fontWeight: FontWeight.w600,
           color: Color(0xFF1F2937),
-          fontSize: 14,
+          fontSize: 13,
         );
     final workNameStyle = labelStyle.copyWith(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+    );
+    final suffixStyle = labelStyle.copyWith(
       fontSize: 12,
       fontWeight: FontWeight.w500,
     );
@@ -979,6 +983,8 @@ class _ActiveWorkBadge extends StatelessWidget {
           // Try to place here work name in small size
           Flexible(
             child: RichText(
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               text: TextSpan(
                 style: labelStyle,
                 children: [
@@ -987,7 +993,10 @@ class _ActiveWorkBadge extends StatelessWidget {
                     text: workName,
                     style: workNameStyle,
                   ),
-                  const TextSpan(text: ' (User Selected)'),
+                  TextSpan(
+                    text: ' (User Selected)',
+                    style: suffixStyle,
+                  ),
                 ],
               ),
             ),
