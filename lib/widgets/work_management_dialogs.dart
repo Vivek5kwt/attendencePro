@@ -893,8 +893,10 @@ Future<void> showEditWorkDialog({
       },
     );
   } finally {
-    nameController.dispose();
-    hourlyController.dispose();
-    isContractNotifier.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nameController.dispose();
+      hourlyController.dispose();
+      isContractNotifier.dispose();
+    });
   }
 }
