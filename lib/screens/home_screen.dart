@@ -796,75 +796,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeBanner(AppLocalizations l) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF4F9FF),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE0EDFF)),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 52,
-              width: 52,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE0EDFF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.ads_click_outlined,
-                color: Color(0xFF1D4ED8),
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l.adPlaceholderTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1F2937),
-                          fontSize: 18,
-                        ) ??
-                        const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
-                          fontSize: 18,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l.adPlaceholderSubtitle,
-                    style: textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF4B5563),
-                          height: 1.4,
-                        ) ??
-                        const TextStyle(
-                          color: Color(0xFF4B5563),
-                          height: 1.4,
-                          fontSize: 14,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
 
   Widget _buildHomeBody(AppLocalizations l, WorkState state) {
     _maybeNavigateToDashboard(state);
@@ -920,27 +851,20 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: () => _handleRefresh(state),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
-        itemCount: works.length + 1,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        itemCount: works.length,
         itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildHomeBanner(l);
-          }
-          final work = works[index - 1];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildWorkCard(
-              work,
-              l,
-              isDeleting: state.deletingWorkId == work.id,
-              isActivating:
-              activatingWorkId == work.id && isActivationInProgress,
-              activationInProgress: isActivationInProgress,
-            ),
+          final work = works[index];
+          return _buildWorkCard(
+            work,
+            l,
+            isDeleting: state.deletingWorkId == work.id,
+            isActivating:
+                activatingWorkId == work.id && isActivationInProgress,
+            activationInProgress: isActivationInProgress,
           );
         },
-        separatorBuilder: (context, index) =>
-            SizedBox(height: index == 0 ? 24 : 12),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
       ),
     );
   }
@@ -955,9 +879,9 @@ class _HomeScreenState extends State<HomeScreen> {
       onRefresh: onRefresh ?? () => _handleRefresh(state),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          _buildHomeBanner(l),
+          const SizedBox(height: 8),
           ...children,
         ],
       ),
