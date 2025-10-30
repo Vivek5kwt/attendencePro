@@ -26,7 +26,9 @@ const List<String> _kMonthNames = <String>[
 ];
 
 class AttendanceHistoryScreen extends StatefulWidget {
-  const AttendanceHistoryScreen({super.key});
+  const AttendanceHistoryScreen({super.key, this.initialWork});
+
+  final Work? initialWork;
 
   @override
   State<AttendanceHistoryScreen> createState() =>
@@ -48,6 +50,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   String _selectedWork = '';
   String _allWorksLabel = '';
   bool _initialized = false;
+  bool _hasAppliedInitialWork = false;
 
   bool _isLoadingWorks = false;
   bool _isLoadingEntries = false;
@@ -145,22 +148,46 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         ..clear()
         ..addAll(sortedNames);
 
-      _availableWorks = _buildWorkOptions(_workNames);
-
+      final availableWorks = _buildWorkOptions(_workNames);
       final activeWork = _findActiveWork(works);
-      final defaultSelection = _allWorksLabel.isNotEmpty
-          ? _allWorksLabel
-          : (activeWork?.name ??
-              (_workNames.isNotEmpty ? _workNames.first : ''));
+      final shouldApplyInitialWork =
+          !_hasAppliedInitialWork && widget.initialWork != null;
+      final initialWork =
+          shouldApplyInitialWork ? _resolveInitialWork(works) : null;
+
+      String resolvedSelection = _selectedWork;
+      final candidateName = initialWork?.name.trim();
+      if (candidateName != null &&
+          candidateName.isNotEmpty &&
+          availableWorks.contains(candidateName)) {
+        resolvedSelection = candidateName;
+      }
+
+      if (resolvedSelection.isEmpty ||
+          !availableWorks.contains(resolvedSelection)) {
+        final activeName = activeWork?.name.trim();
+        if (activeName != null &&
+            activeName.isNotEmpty &&
+            availableWorks.contains(activeName)) {
+          resolvedSelection = activeName;
+        } else if (_allWorksLabel.isNotEmpty &&
+            availableWorks.contains(_allWorksLabel)) {
+          resolvedSelection = _allWorksLabel;
+        } else if (availableWorks.isNotEmpty) {
+          resolvedSelection = availableWorks.first;
+        } else {
+          resolvedSelection = '';
+        }
+      }
 
       setState(() {
         _isLoadingWorks = false;
         _missingWork = works.isEmpty;
-        _selectedWork = defaultSelection.isNotEmpty
-            ? defaultSelection
-            : (_availableWorks.contains(_allWorksLabel)
-                ? _allWorksLabel
-                : '');
+        _availableWorks = availableWorks;
+        _selectedWork = resolvedSelection;
+        if (shouldApplyInitialWork) {
+          _hasAppliedInitialWork = true;
+        }
       });
 
       if (works.isNotEmpty) {
@@ -398,6 +425,32 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       case AttendanceHistoryEntryType.leave:
         return _AttendanceEntryType.leave;
     }
+  }
+
+  Work? _resolveInitialWork(List<Work> works) {
+    final initialWork = widget.initialWork;
+    if (initialWork == null) {
+      return null;
+    }
+
+    for (final work in works) {
+      if (work.id == initialWork.id) {
+        return work;
+      }
+    }
+
+    final normalizedInitialName = initialWork.name.trim().toLowerCase();
+    if (normalizedInitialName.isEmpty) {
+      return null;
+    }
+
+    for (final work in works) {
+      if (work.name.trim().toLowerCase() == normalizedInitialName) {
+        return work;
+      }
+    }
+
+    return null;
   }
 
   Work? _findActiveWork(List<Work> works) {
