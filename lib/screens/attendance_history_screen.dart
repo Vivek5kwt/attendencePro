@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/attendance_history.dart';
+import '../models/contract_type.dart';
 import '../models/work.dart';
+import '../repositories/attendance_entry_repository.dart';
 import '../repositories/attendance_history_repository.dart';
+import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import '../utils/responsive.dart';
 
@@ -25,6 +28,18 @@ const List<String> _kMonthNames = <String>[
   'December',
 ];
 
+const List<String> _kWeekdayNames = <String>[
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+  'Sat',
+  'Sun',
+];
+
+enum _HistoryViewMode { hours, contract }
+
 class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key, this.initialWork});
 
@@ -37,6 +52,8 @@ class AttendanceHistoryScreen extends StatefulWidget {
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   late final AttendanceHistoryRepository _historyRepository;
+  late final AttendanceEntryRepository _entryRepository;
+  late final ContractTypeRepository _contractTypeRepository;
   late final WorkRepository _workRepository;
 
   final List<String> _availableMonths = <String>[];
@@ -45,15 +62,17 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   final List<_AttendanceEntry> _entries = <_AttendanceEntry>[];
   final List<String> _workNames = <String>[];
   final Map<String, Work> _workLookup = <String, Work>{};
+  List<ContractType> _contractTypes = <ContractType>[];
 
   String _selectedMonth = '';
   String _selectedWork = '';
-  String _allWorksLabel = '';
+  _HistoryViewMode _viewMode = _HistoryViewMode.hours;
   bool _initialized = false;
   bool _hasAppliedInitialWork = false;
 
   bool _isLoadingWorks = false;
   bool _isLoadingEntries = false;
+  bool _isLoadingContractTypes = false;
   bool _missingWork = false;
   bool _requiresAuthentication = false;
   String? _errorMessage;
@@ -65,7 +84,61 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   void initState() {
     super.initState();
     _historyRepository = AttendanceHistoryRepository();
+    _entryRepository = AttendanceEntryRepository();
+    _contractTypeRepository = ContractTypeRepository();
     _workRepository = WorkRepository();
+  }
+
+  Future<void> _ensureContractTypesLoaded() async {
+    if (_contractTypes.isNotEmpty || _isLoadingContractTypes) {
+      return;
+    }
+    setState(() {
+      _isLoadingContractTypes = true;
+    });
+    try {
+      final collection = await _contractTypeRepository.fetchContractTypes();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypes = <ContractType>[...
+            collection.userTypes,
+            ...collection.globalTypes,
+          ];
+        _isLoadingContractTypes = false;
+      });
+    } on ContractTypeAuthException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypes = const <ContractType>[];
+        _isLoadingContractTypes = false;
+      });
+      _showErrorSnackBar(
+        AppLocalizations.of(context).authenticationRequiredMessage,
+      );
+    } on ContractTypeRepositoryException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypes = const <ContractType>[];
+        _isLoadingContractTypes = false;
+      });
+      if (e.message.trim().isNotEmpty) {
+        _showErrorSnackBar(e.message);
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypes = const <ContractType>[];
+        _isLoadingContractTypes = false;
+      });
+    }
   }
 
   @override
@@ -76,8 +149,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       _initialized = true;
       _loadWorks();
     }
-    final l = AppLocalizations.of(context);
-    _updateAllWorksLabel(l.attendanceHistoryAllWorks);
   }
 
   void _initializeMonths() {
@@ -97,28 +168,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _availableMonths.isNotEmpty ? _availableMonths.first : '';
   }
 
-  void _updateAllWorksLabel(String label) {
-    final wasSelected = _selectedWork == _allWorksLabel;
-    _allWorksLabel = label;
-    _availableWorks = _buildWorkOptions(_workNames);
-    if (wasSelected && _allWorksLabel.isNotEmpty) {
-      _selectedWork = _allWorksLabel;
-    } else if (_selectedWork.isNotEmpty &&
-        !_availableWorks.contains(_selectedWork)) {
-      _selectedWork = _availableWorks.isNotEmpty ? _availableWorks.first : '';
-    }
-  }
-
   List<String> _buildWorkOptions(List<String> workNames) {
-    if (workNames.isEmpty) {
-      return _allWorksLabel.isNotEmpty
-          ? <String>[_allWorksLabel]
-          : const <String>[];
-    }
-    return <String>[
-      if (_allWorksLabel.isNotEmpty) _allWorksLabel,
-      ...workNames,
-    ];
+    return List<String>.from(workNames);
   }
 
   Future<void> _loadWorks() async {
@@ -170,9 +221,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             activeName.isNotEmpty &&
             availableWorks.contains(activeName)) {
           resolvedSelection = activeName;
-        } else if (_allWorksLabel.isNotEmpty &&
-            availableWorks.contains(_allWorksLabel)) {
-          resolvedSelection = _allWorksLabel;
         } else if (availableWorks.isNotEmpty) {
           resolvedSelection = availableWorks.first;
         } else {
@@ -210,8 +258,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _workLookup.clear();
         _workNames.clear();
         _availableWorks = _buildWorkOptions(_workNames);
-        _selectedWork =
-            _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
+        _selectedWork = _availableWorks.isNotEmpty ? _availableWorks.first : '';
         _currencySymbol = '€';
       });
     } on WorkRepositoryException catch (e) {
@@ -230,8 +277,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _workLookup.clear();
         _workNames.clear();
         _availableWorks = _buildWorkOptions(_workNames);
-        _selectedWork =
-            _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
+        _selectedWork = _availableWorks.isNotEmpty ? _availableWorks.first : '';
         _currencySymbol = '€';
       });
     } catch (_) {
@@ -247,8 +293,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _workLookup.clear();
         _workNames.clear();
         _availableWorks = _buildWorkOptions(_workNames);
-        _selectedWork =
-            _availableWorks.contains(_allWorksLabel) ? _allWorksLabel : '';
+        _selectedWork = _availableWorks.isNotEmpty ? _availableWorks.first : '';
         _currencySymbol = '€';
       });
     }
@@ -281,33 +326,26 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
 
     try {
-      AttendanceHistoryData result;
-      if (_selectedWork == _allWorksLabel) {
-        result = await _fetchAllWorksHistory(
-          month: targetDate.month,
-          year: targetDate.year,
-        );
-      } else {
-        final work = _workLookup[_selectedWork];
-        if (work == null) {
-          throw const AttendanceHistoryRepositoryException(
-            'Selected work is unavailable.',
-          );
-        }
-        result = await _historyRepository.fetchHistory(
-          workId: work.id,
-          workName: work.name,
-          month: targetDate.month,
-          year: targetDate.year,
+      final work = _workLookup[_selectedWork];
+      if (work == null) {
+        throw const AttendanceHistoryRepositoryException(
+          'Selected work is unavailable.',
         );
       }
+
+      final result = await _historyRepository.fetchHistory(
+        workId: work.id,
+        workName: work.name,
+        month: targetDate.month,
+        year: targetDate.year,
+      );
 
       if (!mounted || requestId != _entriesRequestId) {
         return;
       }
 
       final mappedEntries = result.entries
-          .map(_mapEntryFromData)
+          .map((data) => _mapEntryFromData(data, workId: work.id))
           .toList(growable: false)
         ..sort((a, b) => b.date.compareTo(a.date));
 
@@ -357,33 +395,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
-  Future<AttendanceHistoryData> _fetchAllWorksHistory({
-    required int month,
-    required int year,
-  }) async {
-    final entries = <AttendanceHistoryEntryData>[];
-    String resolvedCurrency = _currencySymbol;
-
-    for (final work in _workLookup.values) {
-      final data = await _historyRepository.fetchHistory(
-        workId: work.id,
-        workName: work.name,
-        month: month,
-        year: year,
-      );
-      if (data.currencySymbol.trim().isNotEmpty) {
-        resolvedCurrency = data.currencySymbol;
-      }
-      entries.addAll(data.entries);
-    }
-
-    return AttendanceHistoryData(
-      entries: entries,
-      currencySymbol:
-          resolvedCurrency.trim().isNotEmpty ? resolvedCurrency : '€',
-    );
-  }
-
   DateTime? _parseMonthLabel(String label) {
     final parts = label.split(' ');
     if (parts.length != 2) {
@@ -398,14 +409,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     return DateTime(year, monthIndex + 1, 1);
   }
 
-  _AttendanceEntry _mapEntryFromData(AttendanceHistoryEntryData data) {
+  _AttendanceEntry _mapEntryFromData(
+    AttendanceHistoryEntryData data, {
+    String? workId,
+  }) {
     return _AttendanceEntry(
       date: data.date,
       workName: data.workName,
+      workId: workId ?? _resolveWorkId(data.workName),
       type: _mapEntryType(data.type),
       startTime: data.startTime,
       endTime: data.endTime,
       breakDuration: data.breakDuration,
+      breakMinutes: _parseBreakMinutes(data.breakDuration),
       hoursWorked: data.hoursWorked,
       overtimeHours: data.overtimeHours,
       contractType: data.contractType,
@@ -414,6 +430,39 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       leaveReason: data.leaveReason,
       salary: data.salary,
     );
+  }
+
+  String? _resolveWorkId(String workName) {
+    if (workName.trim().isEmpty) {
+      return null;
+    }
+    final direct = _workLookup[workName]?.id;
+    if (direct != null) {
+      return direct;
+    }
+    final normalized = workName.trim().toLowerCase();
+    for (final work in _workLookup.values) {
+      if (work.name.trim().toLowerCase() == normalized) {
+        return work.id;
+      }
+    }
+    return null;
+  }
+
+  int _parseBreakMinutes(String? label) {
+    if (label == null || label.trim().isEmpty) {
+      return 0;
+    }
+    final normalized = label.toLowerCase();
+    final hourMatch = RegExp(r'(\d+)h').firstMatch(normalized);
+    final minuteMatch = RegExp(r'(\d+)m').firstMatch(normalized);
+    final hours = hourMatch != null ? int.tryParse(hourMatch.group(1) ?? '') ?? 0 : 0;
+    final minutes = minuteMatch != null ? int.tryParse(minuteMatch.group(1) ?? '') ?? 0 : 0;
+    if (hours == 0 && minutes == 0) {
+      final numeric = int.tryParse(normalized.replaceAll(RegExp('[^0-9]'), ''));
+      return numeric ?? 0;
+    }
+    return hours * 60 + minutes;
   }
 
   _AttendanceEntryType _mapEntryType(AttendanceHistoryEntryType type) {
@@ -529,35 +578,650 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     _loadEntries();
   }
 
+  void _onViewModeChanged(_HistoryViewMode mode) {
+    if (_viewMode == mode) {
+      return;
+    }
+    setState(() {
+      _viewMode = mode;
+    });
+  }
+
+  Future<void> _showWorkPicker() async {
+    if (_availableWorks.isEmpty) {
+      return;
+    }
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppLocalizations.of(context).activeWorkLabel,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                ..._availableWorks.map(
+                  (work) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      tileColor: work == _selectedWork
+                          ? const Color(0xFFEFF6FF)
+                          : const Color(0xFFF9FAFB),
+                      title: Text(
+                        work,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      onTap: () => Navigator.of(context).pop(work),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != null && selected.isNotEmpty && selected != _selectedWork) {
+      _onWorkChanged(selected);
+    }
+  }
+
+  Future<void> _handleEditEntry(_AttendanceEntry entry) async {
+    switch (entry.type) {
+      case _AttendanceEntryType.hourly:
+        await _openHourlyEditSheet(entry);
+        break;
+      case _AttendanceEntryType.contract:
+        await _openContractEditSheet(entry);
+        break;
+      case _AttendanceEntryType.leave:
+        _showInfoSnackBar(
+          AppLocalizations.of(context).attendanceHistoryLeaveEntry,
+        );
+        break;
+    }
+  }
+
+  Future<void> _openHourlyEditSheet(_AttendanceEntry entry) async {
+    final l = AppLocalizations.of(context);
+    final workId = entry.workId ?? _workLookup[_selectedWork]?.id;
+    if (workId == null) {
+      _showErrorSnackBar(l.attendanceHistoryLoadFailedMessage);
+      return;
+    }
+
+    final startController =
+        TextEditingController(text: entry.startTime ?? '');
+    final endController = TextEditingController(text: entry.endTime ?? '');
+    final breakController = TextEditingController(
+      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
+    );
+
+    final formKey = GlobalKey<FormState>();
+    bool isSaving = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${entry.workName} · ${_formatDayLabel(entry.date)}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: startController,
+                      decoration: InputDecoration(
+                        labelText: l.startTimeLabel,
+                      ),
+                      validator: _validateTimeInput,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: endController,
+                      decoration: InputDecoration(
+                        labelText: l.endTimeLabel,
+                      ),
+                      validator: _validateTimeInput,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: breakController,
+                      decoration: InputDecoration(
+                        labelText: l.breakLabel,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: _validateMinutesInput,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isSaving
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          child: Text(l.cancelButton),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  if (!(formKey.currentState?.validate() ??
+                                      false)) {
+                                    return;
+                                  }
+                                  final start =
+                                      _parseTimeOfDay(startController.text);
+                                  final end =
+                                      _parseTimeOfDay(endController.text);
+                                  if (start == null || end == null) {
+                                    _showErrorSnackBar(
+                                      l.attendanceHistoryLoadFailedMessage,
+                                    );
+                                    return;
+                                  }
+                                  final breakMinutes =
+                                      int.tryParse(breakController.text
+                                              .trim()) ??
+                                          0;
+                                  final workedMinutes =
+                                      _calculateWorkedMinutes(start, end);
+                                  if (workedMinutes <= breakMinutes) {
+                                    _showErrorSnackBar(
+                                      l.attendanceHistoryLoadFailedMessage,
+                                    );
+                                    return;
+                                  }
+                                  setModalState(() {
+                                    isSaving = true;
+                                  });
+                                  final success = await _submitHourlyAttendance(
+                                    workId: workId,
+                                    date: entry.date,
+                                    start: start,
+                                    end: end,
+                                    breakMinutes: breakMinutes,
+                                  );
+                                  if (success && mounted) {
+                                    Navigator.of(context).pop();
+                                  }
+                                  if (mounted) {
+                                    setModalState(() {
+                                      isSaving = false;
+                                    });
+                                  }
+                                },
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(l.saveButtonLabel),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _openContractEditSheet(_AttendanceEntry entry) async {
+    final l = AppLocalizations.of(context);
+    final workId = entry.workId ?? _workLookup[_selectedWork]?.id;
+    if (workId == null) {
+      _showErrorSnackBar(l.attendanceHistoryLoadFailedMessage);
+      return;
+    }
+
+    await _ensureContractTypesLoaded();
+    if (_contractTypes.isEmpty) {
+      _showErrorSnackBar(l.contractWorkLoadError);
+      return;
+    }
+
+    ContractType? selectedType;
+    final normalized = entry.contractType?.trim().toLowerCase();
+    for (final type in _contractTypes) {
+      if (type.name.trim().toLowerCase() == normalized) {
+        selectedType = type;
+        break;
+      }
+    }
+    selectedType ??= _contractTypes.first;
+
+    final quantityController = TextEditingController(
+      text: entry.unitsCompleted != null && entry.unitsCompleted! > 0
+          ? entry.unitsCompleted.toString()
+          : '',
+    );
+    final rateController = TextEditingController(
+      text: entry.ratePerUnit != null && entry.ratePerUnit! > 0
+          ? entry.ratePerUnit!.toStringAsFixed(2)
+          : '',
+    );
+
+    final formKey = GlobalKey<FormState>();
+    bool isSaving = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${entry.workName} · ${_formatDayLabel(entry.date)}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<ContractType>(
+                      value: selectedType,
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkLabel,
+                      ),
+                      items: _contractTypes
+                          .map(
+                            (type) => DropdownMenuItem<ContractType>(
+                              value: type,
+                              child: Text(type.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setModalState(() {
+                            selectedType = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: quantityController,
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkUnitsLabel,
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: _validateUnitsInput,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: rateController,
+                      decoration: InputDecoration(
+                        labelText: l.contractWorkRateLabel,
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: _validateRateInput,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: isSaving
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          child: Text(l.cancelButton),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  if (!(formKey.currentState?.validate() ??
+                                      false)) {
+                                    return;
+                                  }
+                                  final type = selectedType;
+                                  if (type == null) {
+                                    _showErrorSnackBar(
+                                      l.contractWorkLoadError,
+                                    );
+                                    return;
+                                  }
+                                  final typeId =
+                                      int.tryParse(type.id.trim());
+                                  if (typeId == null) {
+                                    _showErrorSnackBar(
+                                      l.contractWorkLoadError,
+                                    );
+                                    return;
+                                  }
+                                  final units =
+                                      int.tryParse(quantityController.text.trim()) ??
+                                          0;
+                                  final rate =
+                                      double.tryParse(rateController.text.trim());
+                                  if (units <= 0 || rate == null || rate <= 0) {
+                                    _showErrorSnackBar(
+                                      l.contractWorkLoadError,
+                                    );
+                                    return;
+                                  }
+                                  setModalState(() {
+                                    isSaving = true;
+                                  });
+                                  final success =
+                                      await _submitContractAttendance(
+                                    workId: workId,
+                                    date: entry.date,
+                                    contractTypeId: typeId,
+                                    units: units,
+                                    ratePerUnit: rate,
+                                  );
+                                  if (success && mounted) {
+                                    Navigator.of(context).pop();
+                                  }
+                                  if (mounted) {
+                                    setModalState(() {
+                                      isSaving = false;
+                                    });
+                                  }
+                                },
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(l.saveButtonLabel),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _submitHourlyAttendance({
+    required String workId,
+    required DateTime date,
+    required TimeOfDay start,
+    required TimeOfDay end,
+    required int breakMinutes,
+  }) async {
+    final requestDate = DateTime(date.year, date.month, date.day);
+    try {
+      setState(() {
+        _isLoadingEntries = true;
+      });
+      await _entryRepository.submitAttendance(
+        workId: workId,
+        date: requestDate,
+        startTime: _formatTimeOfDay(start),
+        endTime: _formatTimeOfDay(end),
+        breakMinutes: breakMinutes,
+      );
+      await _loadEntries();
+      _showSuccessSnackBar(
+        AppLocalizations.of(context).attendanceSubmitSuccess,
+      );
+      return true;
+    } on AttendanceAuthException {
+      _showErrorSnackBar(
+        AppLocalizations.of(context).authenticationRequiredMessage,
+      );
+    } on AttendanceRepositoryException catch (e) {
+      _showErrorSnackBar(e.message);
+    } catch (_) {
+      _showErrorSnackBar(
+        AppLocalizations.of(context).attendanceHistoryLoadFailedMessage,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingEntries = false;
+        });
+      }
+    }
+    return false;
+  }
+
+  Future<bool> _submitContractAttendance({
+    required String workId,
+    required DateTime date,
+    required int contractTypeId,
+    required int units,
+    required double ratePerUnit,
+  }) async {
+    final requestDate = DateTime(date.year, date.month, date.day);
+    try {
+      setState(() {
+        _isLoadingEntries = true;
+      });
+      await _entryRepository.submitAttendance(
+        workId: workId,
+        date: requestDate,
+        isContractEntry: true,
+        contractTypeId: contractTypeId,
+        units: units,
+        ratePerUnit: ratePerUnit,
+      );
+      await _loadEntries();
+      _showSuccessSnackBar(
+        AppLocalizations.of(context).attendanceSubmitSuccess,
+      );
+      return true;
+    } on AttendanceAuthException {
+      _showErrorSnackBar(
+        AppLocalizations.of(context).authenticationRequiredMessage,
+      );
+    } on AttendanceRepositoryException catch (e) {
+      _showErrorSnackBar(e.message);
+    } catch (_) {
+      _showErrorSnackBar(
+        AppLocalizations.of(context).attendanceHistoryLoadFailedMessage,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingEntries = false;
+        });
+      }
+    }
+    return false;
+  }
+
+  void _showErrorSnackBar(String message) {
+    final trimmed = message.trim();
+    if (!mounted || trimmed.isEmpty) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(trimmed),
+        backgroundColor: const Color(0xFFB91C1C),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    final trimmed = message.trim();
+    if (!mounted || trimmed.isEmpty) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(trimmed),
+        backgroundColor: const Color(0xFF15803D),
+      ),
+    );
+  }
+
+  void _showInfoSnackBar(String message) {
+    final trimmed = message.trim();
+    if (!mounted || trimmed.isEmpty) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(trimmed)),
+    );
+  }
+
+  TimeOfDay? _parseTimeOfDay(String? value) {
+    if (value == null) {
+      return null;
+    }
+    final sanitized = value.trim();
+    if (sanitized.isEmpty) {
+      return null;
+    }
+    final parts = sanitized.split(':');
+    if (parts.length < 2) {
+      return null;
+    }
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return null;
+    }
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  int _calculateWorkedMinutes(TimeOfDay start, TimeOfDay end) {
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+    return endMinutes - startMinutes;
+  }
+
+  String? _validateTimeInput(String? value) {
+    if (_parseTimeOfDay(value) == null) {
+      return AppLocalizations.of(context).attendanceHistoryLoadFailedMessage;
+    }
+    return null;
+  }
+
+  String? _validateMinutesInput(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed < 0) {
+      return AppLocalizations.of(context).attendanceHistoryLoadFailedMessage;
+    }
+    return null;
+  }
+
+  String? _validateUnitsInput(String? value) {
+    final parsed = int.tryParse((value ?? '').trim());
+    if (parsed == null || parsed <= 0) {
+      return AppLocalizations.of(context).contractWorkLoadError;
+    }
+    return null;
+  }
+
+  String? _validateRateInput(String? value) {
+    final parsed = double.tryParse((value ?? '').trim());
+    if (parsed == null || parsed <= 0) {
+      return AppLocalizations.of(context).contractWorkLoadError;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final responsive = context.responsive;
-    final filteredEntries =
-        _selectedWork == _allWorksLabel || _selectedWork.isEmpty
-            ? _entries
-            : _entries
-                .where((entry) => entry.workName == _selectedWork)
-                .toList();
+    final filteredEntries = List<_AttendanceEntry>.from(_entries);
 
-    final workedDays = filteredEntries
-        .where((entry) => entry.type != _AttendanceEntryType.leave)
-        .length;
-    final leaveDays = filteredEntries
-        .where((entry) => entry.type == _AttendanceEntryType.leave)
-        .length;
-    final totalHours = filteredEntries.fold<double>(
-      0,
-      (previousValue, element) => previousValue + element.hoursWorked,
-    );
-    final overtimeHours = filteredEntries.fold<double>(
-      0,
-      (previousValue, element) => previousValue + element.overtimeHours,
-    );
-    final totalSalary = filteredEntries.fold<double>(
-      0,
-      (previousValue, element) => previousValue + element.salary,
-    );
+    final hoursEntries = filteredEntries
+        .where((entry) =>
+            entry.type == _AttendanceEntryType.hourly ||
+            entry.type == _AttendanceEntryType.leave)
+        .toList();
+
+    final contractEntries = filteredEntries
+        .where((entry) => entry.type == _AttendanceEntryType.contract)
+        .toList();
+
+    final viewEntries =
+        _viewMode == _HistoryViewMode.hours ? hoursEntries : contractEntries;
 
     Widget content;
     if (_isLoadingWorks && _entries.isEmpty) {
@@ -572,6 +1236,26 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     } else if (_missingWork && _entries.isEmpty) {
       content = _StatusMessage(message: l.startTrackingAttendance);
     } else {
+      final historyWidget = viewEntries.isEmpty
+          ? _EmptyState(
+              message: _viewMode == _HistoryViewMode.hours
+                  ? l.attendanceHistoryNoEntriesLabel
+                  : l.contractWorkNoEntriesLabel,
+            )
+          : _viewMode == _HistoryViewMode.hours
+              ? _HoursHistoryList(
+                  entries: hoursEntries,
+                  currencySymbol: _currencySymbol,
+                  localization: l,
+                  onEdit: _handleEditEntry,
+                )
+              : _ContractHistoryList(
+                  entries: contractEntries,
+                  currencySymbol: _currencySymbol,
+                  localization: l,
+                  onEdit: _handleEditEntry,
+                );
+
       content = SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
           responsive.scale(16),
@@ -582,51 +1266,21 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _FilterBar(
+            _HistoryFilterBar(
               months: _availableMonths,
               selectedMonth: _selectedMonth,
-              works: _availableWorks,
-              selectedWork: _selectedWork,
+              viewMode: _viewMode,
               onMonthChanged: _onMonthChanged,
-              onWorkChanged: _onWorkChanged,
+              onViewModeChanged: _onViewModeChanged,
             ),
-            SizedBox(height: responsive.scale(20)),
-            _SummaryCard(
-              title: l.attendanceHistorySummaryTitle,
-              workedDaysLabel: l.attendanceHistoryWorkedDaysLabel,
-              leaveDaysLabel: l.attendanceHistoryLeaveDaysLabel,
-              overtimeLabel: l.attendanceHistoryOvertimeLabel,
-              totalHoursLabel: l.totalHoursLabel,
-              totalSalaryLabel: l.totalSalaryLabel,
-              workedDays: workedDays,
-              leaveDays: leaveDays,
-              totalHours: totalHours,
-              overtimeHours: overtimeHours,
-              totalSalary: totalSalary,
-              currencySymbol: _currencySymbol,
+            SizedBox(height: responsive.scale(16)),
+            _SelectedWorkBanner(
+              workName: _selectedWork,
+              onChange:
+                  _availableWorks.length > 1 ? _showWorkPicker : null,
             ),
             SizedBox(height: responsive.scale(24)),
-            _SectionTitle(text: l.attendanceHistoryTimelineTitle),
-            SizedBox(height: responsive.scale(12)),
-            if (filteredEntries.isEmpty)
-              _EmptyState(message: l.attendanceHistoryNoEntriesLabel)
-            else
-              Column(
-                children: filteredEntries
-                    .map(
-                      (entry) => Padding(
-                        padding: EdgeInsets.only(
-                          bottom: responsive.scale(12),
-                        ),
-                        child: _AttendanceEntryTile(
-                          entry: entry,
-                          localization: l,
-                          currencySymbol: _currencySymbol,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
+            historyWidget,
           ],
         ),
       );
@@ -679,6 +1333,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           ],
         ),
         actions: [
+          if (_availableWorks.length > 1)
+            IconButton(
+              icon: const Icon(Icons.work_outline, color: Color(0xFF2563EB)),
+              tooltip: l.changeWorkButton,
+              onPressed: _showWorkPicker,
+            ),
           IconButton(
             icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
             onPressed: () => Navigator.of(context).maybePop(),
@@ -751,76 +1411,68 @@ class _LoadingOverlay extends StatelessWidget {
   }
 }
 
-class _FilterBar extends StatelessWidget {
-  const _FilterBar({
+class _HistoryFilterBar extends StatelessWidget {
+  const _HistoryFilterBar({
     required this.months,
     required this.selectedMonth,
-    required this.works,
-    required this.selectedWork,
+    required this.viewMode,
     required this.onMonthChanged,
-    required this.onWorkChanged,
+    required this.onViewModeChanged,
   });
 
   final List<String> months;
   final String selectedMonth;
-  final List<String> works;
-  final String selectedWork;
+  final _HistoryViewMode viewMode;
   final ValueChanged<String> onMonthChanged;
-  final ValueChanged<String> onWorkChanged;
+  final ValueChanged<_HistoryViewMode> onViewModeChanged;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final resolvedMonth = months.contains(selectedMonth)
+        ? selectedMonth
+        : (months.isNotEmpty ? months.first : null);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFFFF5D6),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFFFB200)),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x11000000),
+            color: Color(0x33FBBF24),
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            l.attendanceHistoryMonthLabel,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF4B5563),
-                ) ??
-                const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF4B5563),
-                ),
+          Expanded(
+            child: _FilterDropdown<String>(
+              value: resolvedMonth,
+              values: months,
+              placeholder: l.attendanceHistoryMonthLabel,
+              labelBuilder: (value) => value,
+              onChanged: onMonthChanged,
+            ),
           ),
-          const SizedBox(height: 12),
-          _DropdownField(
-            value: selectedMonth,
-            values: months,
-            onChanged: onMonthChanged,
-          ),
-          const SizedBox(height: 18),
-          Text(
-            l.activeWorkLabel,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF4B5563),
-                ) ??
-                const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF4B5563),
-                ),
-          ),
-          const SizedBox(height: 12),
-          _DropdownField(
-            value: selectedWork,
-            values: works,
-            onChanged: onWorkChanged,
+          const SizedBox(width: 12),
+          Expanded(
+            child: _FilterDropdown<_HistoryViewMode>(
+              value: viewMode,
+              values: const <_HistoryViewMode>[
+                _HistoryViewMode.hours,
+                _HistoryViewMode.contract,
+              ],
+              placeholder:
+                  '${l.attendanceHistoryHourlyEntry} / ${l.attendanceHistoryContractEntry}',
+              labelBuilder: (mode) => mode == _HistoryViewMode.hours
+                  ? l.attendanceHistoryHourlyEntry
+                  : l.attendanceHistoryContractEntry,
+              onChanged: onViewModeChanged,
+            ),
           ),
         ],
       ),
@@ -828,37 +1480,68 @@ class _FilterBar extends StatelessWidget {
   }
 }
 
-class _DropdownField extends StatelessWidget {
-  const _DropdownField({
-    required this.value,
+class _FilterDropdown<T> extends StatelessWidget {
+  const _FilterDropdown({
+    this.value,
     required this.values,
+    required this.placeholder,
+    required this.labelBuilder,
     required this.onChanged,
   });
 
-  final String value;
-  final List<String> values;
-  final ValueChanged<String> onChanged;
+  final T? value;
+  final List<T> values;
+  final String placeholder;
+  final String Function(T value) labelBuilder;
+  final ValueChanged<T> onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final hasValue = value != null && values.contains(value);
+    final textStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1F2937),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1F2937),
+        );
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        color: const Color(0xFFF9FAFB),
+        color: const Color(0xFFFFC241),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFFFA000)),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
+        child: DropdownButton<T>(
+          value: hasValue ? value : null,
           isExpanded: true,
-          borderRadius: BorderRadius.circular(16),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Color(0xFF111827),
+          ),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          hint: Text(
+            placeholder,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1F2937),
+                ) ??
+                const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F2937),
+                ),
+          ),
           items: values
               .map(
-                (item) => DropdownMenuItem<String>(
+                (item) => DropdownMenuItem<T>(
                   value: item,
                   child: Text(
-                    item,
+                    labelBuilder(item),
+                    style: textStyle,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -875,354 +1558,591 @@ class _DropdownField extends StatelessWidget {
   }
 }
 
-class _PendingEntriesCard extends StatelessWidget {
-  const _PendingEntriesCard({
-    required this.entries,
-    required this.onResolvePressed,
+class _SelectedWorkBanner extends StatelessWidget {
+  const _SelectedWorkBanner({
+    required this.workName,
+    this.onChange,
   });
 
-  final List<_PendingEntry> entries;
-  final VoidCallback onResolvePressed;
+  final String workName;
+  final VoidCallback? onChange;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final hasWork = workName.trim().isNotEmpty;
+    final displayName = hasWork
+        ? '${l.activeWorkLabel}: $workName'
+        : l.activeWorkLabel;
+
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD7AA)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEDD5),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.warning_rounded,
-                  color: Color(0xFFFB923C),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.attendanceHistoryPendingTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFB45309),
-                          ) ??
-                          const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFB45309),
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l.attendanceHistoryPendingDescription,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF92400E),
-                          ) ??
-                          const TextStyle(
-                            color: Color(0xFF92400E),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x11000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
-          const SizedBox(height: 16),
-          Column(
-            children: entries
-                .map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          height: 36,
-                          width: 36,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF0D5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            entry.dayLabel,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFEA580C),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.formattedDate,
-                                style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF78350F),
-                                        ) ??
-                                    const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF78350F),
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                entry.message,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: const Color(0xFF92400E),
-                                    ) ??
-                                    const TextStyle(
-                                      color: Color(0xFF92400E),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.work_outline, color: Color(0xFF2563EB)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              displayName,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ) ??
+                  const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
                   ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFEA580C),
-              ),
-              onPressed: onResolvePressed,
-              child: Text(l.attendanceHistoryResolveButton),
             ),
           ),
+          if (onChange != null)
+            TextButton(
+              onPressed: onChange,
+              child: Text(
+                l.changeWorkButton,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2563EB),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-class _AllCaughtUpBanner extends StatelessWidget {
-  const _AllCaughtUpBanner({required this.onPressed});
+class _HoursHistoryList extends StatelessWidget {
+  const _HoursHistoryList({
+    required this.entries,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+  });
 
-  final VoidCallback onPressed;
+  final List<_AttendanceEntry> entries;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
+    final grouped = _groupEntriesByDay(entries);
+    return Column(
+      children: grouped.entries
+          .map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _HoursDayCard(
+                date: entry.key,
+                entries: entry.value,
+                currencySymbol: currencySymbol,
+                localization: localization,
+                onEdit: onEdit,
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _HoursDayCard extends StatelessWidget {
+  const _HoursDayCard({
+    required this.date,
+    required this.entries,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+  });
+
+  final DateTime date;
+  final List<_AttendanceEntry> entries;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final dayTotal = entries.fold<double>(
+      0,
+      (previousValue, element) => previousValue + element.salary,
+    );
+
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFE8FDF4),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFBBF7D0)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD1FAE5),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF16A34A),
-                ),
+              Text(
+                _formatDayLabel(date),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.attendanceHistoryAllCaughtUp,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF166534),
-                          ) ??
-                          const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF166534),
-                          ),
+              Text(
+                _formatCurrencyValue(currencySymbol, dayTotal),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2563EB),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2563EB),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l.attendanceHistoryAllCaughtUpDescription,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF15803D),
-                          ) ??
-                          const TextStyle(
-                            color: Color(0xFF15803D),
-                          ),
-                    ),
-                  ],
-                ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: onPressed,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF16A34A),
-            ),
-            child: Text(l.attendanceHistoryResolveButton),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.title,
-    required this.workedDaysLabel,
-    required this.leaveDaysLabel,
-    required this.overtimeLabel,
-    required this.totalHoursLabel,
-    required this.totalSalaryLabel,
-    required this.workedDays,
-    required this.leaveDays,
-    required this.totalHours,
-    required this.overtimeHours,
-    required this.totalSalary,
-    required this.currencySymbol,
-  });
-
-  final String title;
-  final String workedDaysLabel;
-  final String leaveDaysLabel;
-  final String overtimeLabel;
-  final String totalHoursLabel;
-  final String totalSalaryLabel;
-  final int workedDays;
-  final int leaveDays;
-  final double totalHours;
-  final double overtimeHours;
-  final double totalSalary;
-  final String currencySymbol;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF60A5FA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ) ??
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
           ),
           const SizedBox(height: 18),
+          _ResponsiveTable(
+            minWidth: 720,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: _HoursTableHeader(localization: localization),
+                ),
+                const SizedBox(height: 12),
+                if (entries.isEmpty)
+                  const SizedBox.shrink()
+                else
+                  ...List<Widget>.generate(entries.length * 2 - 1, (index) {
+                    if (index.isOdd) {
+                      return const Divider(
+                        height: 20,
+                        thickness: 1,
+                        color: Color(0xFFE5E7EB),
+                      );
+                    }
+                    final entry = entries[index ~/ 2];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _HoursTableRow(
+                        entry: entry,
+                        currencySymbol: currencySymbol,
+                        localization: localization,
+                        onEdit: onEdit,
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HoursTableHeader extends StatelessWidget {
+  const _HoursTableHeader({required this.localization});
+
+  final AppLocalizations localization;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF374151),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF374151),
+        );
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            localization.workNameLabel,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            localization.startTimeLabel,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            localization.endTimeLabel,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            localization.breakLabel,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            localization.totalHoursLabel,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            localization.totalSalaryLabel,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        SizedBox(
+          width: 80,
+          child: Text(
+            'Edit',
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HoursTableRow extends StatelessWidget {
+  const _HoursTableRow({
+    required this.entry,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+  });
+
+  final _AttendanceEntry entry;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final isWorkOff = entry.type == _AttendanceEntryType.leave;
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF111827),
+        );
+
+    final secondaryStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF374151),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF374151),
+        );
+
+    final workName = isWorkOff
+        ? localization.attendanceHistoryLeaveEntry
+        : entry.workName;
+    final start = entry.startTime?.trim().isNotEmpty == true
+        ? entry.startTime!.trim()
+        : '--';
+    final end = entry.endTime?.trim().isNotEmpty == true
+        ? entry.endTime!.trim()
+        : '--';
+    final breakLabel = entry.breakDuration?.trim().isNotEmpty == true
+        ? entry.breakDuration!.trim()
+        : '--';
+    final hoursLabel = entry.hoursWorked > 0
+        ? _formatHours(entry.hoursWorked)
+        : '0h 0m';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isWorkOff ? const Color(0xFFFFF8EB) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(
+              workName,
+              style: textStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              start,
+              textAlign: TextAlign.center,
+              style: secondaryStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              end,
+              textAlign: TextAlign.center,
+              style: secondaryStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              breakLabel,
+              textAlign: TextAlign.center,
+              style: secondaryStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              hoursLabel,
+              textAlign: TextAlign.center,
+              style: secondaryStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              _formatCurrencyValue(currencySymbol, entry.salary),
+              textAlign: TextAlign.center,
+              style: secondaryStyle.copyWith(color: const Color(0xFF047857)),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: TextButton(
+              onPressed: isWorkOff ? null : () => onEdit(entry),
+              child: Text(
+                'Edit',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractHistoryList extends StatelessWidget {
+  const _ContractHistoryList({
+    required this.entries,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+  });
+
+  final List<_AttendanceEntry> entries;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final grouped = _groupEntriesByDay(entries);
+    return Column(
+      children: grouped.entries
+          .map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _ContractDayCard(
+                date: entry.key,
+                entries: entry.value,
+                currencySymbol: currencySymbol,
+                localization: localization,
+                onEdit: onEdit,
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _ContractDayCard extends StatelessWidget {
+  const _ContractDayCard({
+    required this.date,
+    required this.entries,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+  });
+
+  final DateTime date;
+  final List<_AttendanceEntry> entries;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final dayTotal = entries.fold<double>(
+      0,
+      (previousValue, element) => previousValue + element.salary,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _SummaryStat(
-                label: workedDaysLabel,
-                value: workedDays.toString(),
+              Text(
+                _formatDayLabel(date),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
               ),
-              const SizedBox(width: 24),
-              _SummaryStat(
-                label: leaveDaysLabel,
-                value: leaveDays.toString(),
-              ),
-              const SizedBox(width: 24),
-              _SummaryStat(
-                label: overtimeLabel,
-                value: '${overtimeHours.toStringAsFixed(1)}h',
+              Text(
+                _formatCurrencyValue(currencySymbol, dayTotal),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2563EB),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2563EB),
+                    ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
+          _ResponsiveTable(
+            minWidth: 620,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: _ContractTableHeader(localization: localization),
+                ),
+                const SizedBox(height: 12),
+                if (entries.isEmpty)
+                  const SizedBox.shrink()
+                else
+                  ...List<Widget>.generate(entries.length * 2 - 1, (index) {
+                    if (index.isOdd) {
+                      return const Divider(
+                        height: 20,
+                        thickness: 1,
+                        color: Color(0xFFE5E7EB),
+                      );
+                    }
+                    final entry = entries[index ~/ 2];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _ContractTableRow(
+                        entry: entry,
+                        currencySymbol: currencySymbol,
+                        localization: localization,
+                        onEdit: onEdit,
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      totalHoursLabel,
-                      style: const TextStyle(
-                        color: Colors.white70,
+                Text(
+                  localization.contractWorkTotalSalaryLabel,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2937),
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1F2937),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${totalHours.toStringAsFixed(1)}h',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      totalSalaryLabel,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatCurrency(totalSalary),
-                      style: const TextStyle(
-                        color: Colors.white,
+                Text(
+                  _formatCurrencyValue(currencySymbol, dayTotal),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        fontSize: 18,
+                        color: const Color(0xFF047857),
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF047857),
                       ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -1231,39 +2151,144 @@ class _SummaryCard extends StatelessWidget {
       ),
     );
   }
-
-  String _formatCurrency(double value) {
-    final symbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol.trim();
-    return '$symbol${value.toStringAsFixed(2)}';
-  }
 }
 
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({required this.label, required this.value});
+class _ContractTableHeader extends StatelessWidget {
+  const _ContractTableHeader({required this.localization});
 
-  final String label;
-  final String value;
+  final AppLocalizations localization;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final style = Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF374151),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF374151),
+        );
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            localization.contractWorkNameLabel,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(
+            '${localization.contractWorkUnitsLabel} (${localization.contractWorkSubtypeLabel})',
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            localization.totalSalaryLabel,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+        SizedBox(
+          width: 80,
+          child: Text(
+            'Edit',
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContractTableRow extends StatelessWidget {
+  const _ContractTableRow({
+    required this.entry,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+  });
+
+  final _AttendanceEntry entry;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final units = entry.unitsCompleted;
+    final contractLabel = entry.contractType?.isNotEmpty == true
+        ? entry.contractType!
+        : localization.contractWorkUnitFallback;
+    final quantityLabel = units != null && units > 0
+        ? '$units ($contractLabel)'
+        : contractLabel;
+
+    final workStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+
+    final valueStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF374151),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF374151),
+        );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            flex: 4,
+            child: Text(
+              entry.workName,
+              style: workStyle,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
+          Expanded(
+            flex: 3,
+            child: Text(
+              quantityLabel,
+              textAlign: TextAlign.center,
+              style: valueStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              _formatCurrencyValue(currencySymbol, entry.salary),
+              textAlign: TextAlign.center,
+              style: valueStyle.copyWith(color: const Color(0xFF047857)),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: TextButton(
+              onPressed: () => onEdit(entry),
+              child: Text(
+                'Edit',
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ],
@@ -1272,25 +2297,66 @@ class _SummaryStat extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.text});
+class _ResponsiveTable extends StatelessWidget {
+  const _ResponsiveTable({
+    required this.child,
+    this.minWidth = 720,
+  });
 
-  final String text;
+  final Widget child;
+  final double minWidth;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF111827),
-          ) ??
-          const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF111827),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < minWidth) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.antiAlias,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: minWidth),
+              child: child,
+            ),
+          );
+        }
+        return child;
+      },
     );
   }
+}
+
+SplayTreeMap<DateTime, List<_AttendanceEntry>> _groupEntriesByDay(
+    List<_AttendanceEntry> entries) {
+  final map = SplayTreeMap<DateTime, List<_AttendanceEntry>>(
+    (a, b) => b.compareTo(a),
+  );
+  for (final entry in entries) {
+    final key = DateTime(entry.date.year, entry.date.month, entry.date.day);
+    map.putIfAbsent(key, () => <_AttendanceEntry>[]).add(entry);
+  }
+  return map;
+}
+
+String _formatDayLabel(DateTime date) {
+  final index = (date.weekday - 1).clamp(0, 6);
+  final weekday = _kWeekdayNames[index.toInt()];
+  final monthLabel = _kMonthNames[date.month - 1].substring(0, 3);
+  final day = date.day.toString().padLeft(2, '0');
+  return '$weekday, $day $monthLabel';
+}
+
+String _formatCurrencyValue(String symbol, double value) {
+  final resolved = symbol.trim().isEmpty ? '€' : symbol.trim();
+  return '$resolved${value.toStringAsFixed(2)}';
+}
+
+String _formatHours(double hours) {
+  final totalMinutes = (hours * 60).round();
+  final clampedMinutes = totalMinutes < 0 ? 0 : totalMinutes;
+  final resolvedHours = clampedMinutes ~/ 60;
+  final minutes = clampedMinutes % 60;
+  return '${resolvedHours}h ${minutes}m';
 }
 
 class _EmptyState extends StatelessWidget {
@@ -1334,233 +2400,16 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _AttendanceEntryTile extends StatelessWidget {
-  const _AttendanceEntryTile({
-    required this.entry,
-    required this.localization,
-    required this.currencySymbol,
-  });
-
-  final _AttendanceEntry entry;
-  final AppLocalizations localization;
-  final String currencySymbol;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = _resolveColors();
-    final statusLabel = _resolveLabel();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.borderColor),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colorScheme.badgeColor,
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.badgeTextColor,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  entry.formattedDate,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF111827),
-                      ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
-                ),
-              ),
-              Text(
-                _formatCurrency(entry.salary),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111827),
-                    ) ??
-                    const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827),
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ..._buildBody(context),
-        ],
-      ),
-    );
-  }
-
-  _EntryColorScheme _resolveColors() {
-    switch (entry.type) {
-      case _AttendanceEntryType.hourly:
-        return const _EntryColorScheme(
-          badgeColor: Color(0xFFEFF6FF),
-          badgeTextColor: Color(0xFF1D4ED8),
-          borderColor: Color(0xFFE0EAFF),
-        );
-      case _AttendanceEntryType.contract:
-        return const _EntryColorScheme(
-          badgeColor: Color(0xFFF0FDF4),
-          badgeTextColor: Color(0xFF15803D),
-          borderColor: Color(0xFFD1FAE5),
-        );
-      case _AttendanceEntryType.leave:
-        return const _EntryColorScheme(
-          badgeColor: Color(0xFFFFF7ED),
-          badgeTextColor: Color(0xFFB45309),
-          borderColor: Color(0xFFFDE68A),
-        );
-    }
-  }
-
-  String _resolveLabel() {
-    switch (entry.type) {
-      case _AttendanceEntryType.hourly:
-        return localization.attendanceHistoryHourlyEntry;
-      case _AttendanceEntryType.contract:
-        return localization.attendanceHistoryContractEntry;
-      case _AttendanceEntryType.leave:
-        return localization.attendanceHistoryLeaveEntry;
-    }
-  }
-
-  List<Widget> _buildBody(BuildContext context) {
-    switch (entry.type) {
-      case _AttendanceEntryType.hourly:
-        return <Widget>[
-          _EntryRow(
-            label: localization.startTimeLabel,
-            value: entry.startTime ?? '--',
-          ),
-          const SizedBox(height: 8),
-          _EntryRow(
-            label: localization.endTimeLabel,
-            value: entry.endTime ?? '--',
-          ),
-          const SizedBox(height: 8),
-          _EntryRow(
-            label: localization.breakLabel,
-            value: entry.breakDuration ?? '--',
-          ),
-          const SizedBox(height: 12),
-          _EntryRow(
-            label: localization.totalHoursLabel,
-            value: '${entry.hoursWorked.toStringAsFixed(1)}h',
-          ),
-          if (entry.overtimeHours > 0) ...[
-            const SizedBox(height: 6),
-            _EntryRow(
-              label: localization.attendanceHistoryOvertimeEntryLabel,
-              value: '${entry.overtimeHours.toStringAsFixed(1)}h',
-            ),
-          ],
-        ];
-      case _AttendanceEntryType.contract:
-        return <Widget>[
-          _EntryRow(
-            label: localization.contractWorkLabel,
-            value: entry.contractType ?? '--',
-          ),
-          const SizedBox(height: 8),
-          _EntryRow(
-            label: localization.contractWorkUnitsLabel,
-            value: entry.unitsCompleted?.toString() ?? '0',
-          ),
-          if (entry.hoursWorked > 0) ...[
-            const SizedBox(height: 12),
-            _EntryRow(
-              label: localization.attendanceHistoryLoggedHoursLabel,
-              value: '${entry.hoursWorked.toStringAsFixed(1)}h',
-            ),
-          ],
-        ];
-      case _AttendanceEntryType.leave:
-        return <Widget>[
-          _EntryRow(
-            label: localization.attendanceHistoryReasonLabel,
-            value: entry.leaveReason ?? '--',
-          ),
-        ];
-    }
-  }
-
-  String _formatCurrency(double value) {
-    final symbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol.trim();
-    return '$symbol${value.toStringAsFixed(2)}';
-  }
-}
-
-class _EntryRow extends StatelessWidget {
-  const _EntryRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF6B7280),
-              ) ??
-              const TextStyle(
-                color: Color(0xFF6B7280),
-              ),
-        ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF111827),
-              ) ??
-              const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF111827),
-              ),
-        ),
-      ],
-    );
-  }
-}
-
 class _AttendanceEntry {
   _AttendanceEntry({
     required this.date,
     required this.workName,
+    this.workId,
     required this.type,
     this.startTime,
     this.endTime,
     this.breakDuration,
+    this.breakMinutes = 0,
     this.hoursWorked = 0,
     this.overtimeHours = 0,
     this.contractType,
@@ -1572,10 +2421,12 @@ class _AttendanceEntry {
 
   final DateTime date;
   final String workName;
+  final String? workId;
   final _AttendanceEntryType type;
   final String? startTime;
   final String? endTime;
   final String? breakDuration;
+  final int breakMinutes;
   final double hoursWorked;
   final double overtimeHours;
   final String? contractType;
@@ -1602,18 +2453,6 @@ class _PendingEntry {
   }
 
   String get dayLabel => date.day.toString().padLeft(2, '0');
-}
-
-class _EntryColorScheme {
-  const _EntryColorScheme({
-    required this.badgeColor,
-    required this.badgeTextColor,
-    required this.borderColor,
-  });
-
-  final Color badgeColor;
-  final Color badgeTextColor;
-  final Color borderColor;
 }
 
 enum _AttendanceEntryType { hourly, contract, leave }
