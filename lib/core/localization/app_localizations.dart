@@ -407,6 +407,10 @@ class AppLocalizations {
   String get setActiveWorkButton => _value('setActiveWorkButton');
   String get settingActiveWorkLabel => _value('settingActiveWorkLabel');
   String get workActivatedMessage => _value('workActivatedMessage');
+  String workActivatedWithName(String workName) =>
+      _valueWithArgs('workActivatedWithNameMessage', {
+        'workName': workName,
+      });
   String get workNameLabel => _value('workNameLabel');
   String get workNameHint => _value('workNameHint');
   String get workNameTooShortValidation =>

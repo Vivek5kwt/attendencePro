@@ -584,6 +584,17 @@ class _HomeScreenState extends State<HomeScreen> {
             } else if (state.lastErrorMessage != null &&
                 state.lastErrorMessage!.isNotEmpty) {
               message = state.lastErrorMessage;
+            } else if (state.feedbackKind == WorkFeedbackKind.activate &&
+                state.activateStatus == WorkActionStatus.success) {
+              final activatedWork = _resolveActivatedWorkForFeedback(state);
+              if (activatedWork != null) {
+                message = l.workActivatedWithName(activatedWork.name);
+              } else if (state.lastSuccessMessage != null &&
+                  state.lastSuccessMessage!.isNotEmpty) {
+                message = state.lastSuccessMessage;
+              } else {
+                message = _successFallback(state.feedbackKind, l);
+              }
             } else if (state.lastSuccessMessage != null) {
               if (state.lastSuccessMessage!.isNotEmpty) {
                 message = state.lastSuccessMessage;
@@ -1530,6 +1541,19 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
     return null;
+  }
+
+  Work? _resolveActivatedWorkForFeedback(WorkState state) {
+    final pendingId = _pendingActivationWorkId;
+    if (pendingId != null) {
+      for (final work in state.works) {
+        if (work.id == pendingId) {
+          return work;
+        }
+      }
+    }
+
+    return _firstActiveWork(state.works);
   }
 
   Work? _findMostRecentWork(List<Work> works) {
