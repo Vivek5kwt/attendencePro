@@ -16,6 +16,9 @@ MonthlyReportType monthlyReportTypeFromString(String? value) {
     case 'fixed_salary':
     case 'salary':
     case 'contract':
+    case 'bundle':
+    case 'bundled':
+    case 'package':
       return MonthlyReportType.fixed;
     default:
       return MonthlyReportType.unknown;
@@ -52,21 +55,82 @@ class MonthlyReport {
       const ['month', 'month_name', 'monthName', 'label'],
     );
     final year = _parseInt(data, const ['year', 'year_number', 'yearNumber'], 0);
-    final type = monthlyReportTypeFromString(data['type']);
+    var type = monthlyReportTypeFromString(data['type']);
     final currencySymbol = _parseString(
       data,
       const ['currency_symbol', 'currencySymbol', 'currency'],
     );
 
     final days = <MonthlyReportDay>[];
-    final rawDays = data['days'] ?? data['entries'] ?? data['records'];
-    if (rawDays is List) {
-      for (final entry in rawDays) {
-        final map = _ensureMap(entry);
-        if (map == null) {
-          continue;
+    final seen = <String>{};
+
+    void appendEntries(dynamic source) {
+      if (source == null) {
+        return;
+      }
+      if (source is List) {
+        for (final entry in source) {
+          final map = _ensureMap(entry);
+          if (map == null) {
+            continue;
+          }
+          String? fingerprint;
+          try {
+            fingerprint = jsonEncode(map);
+          } catch (_) {
+            fingerprint = map.toString();
+          }
+          if (fingerprint != null && !seen.add(fingerprint)) {
+            continue;
+          }
+          days.add(MonthlyReportDay.fromJson(map));
         }
-        days.add(MonthlyReportDay.fromJson(map));
+        return;
+      }
+      if (source is Map) {
+        appendEntries(source.values);
+        return;
+      }
+      if (source is Iterable) {
+        for (final value in source) {
+          appendEntries(value);
+        }
+      }
+    }
+
+    final candidates = [
+      data['days'],
+      data['entries'],
+      data['records'],
+      data['hourly'],
+      data['hourly_entries'],
+      data['hourlyEntries'],
+      data['contract'],
+      data['contracts'],
+      data['contract_entries'],
+      data['contractEntries'],
+      data['fixed'],
+      data['fixed_entries'],
+      data['fixedEntries'],
+    ];
+
+    for (final candidate in candidates) {
+      appendEntries(candidate);
+    }
+
+    if (type == MonthlyReportType.unknown && days.isNotEmpty) {
+      final resolvedTypes = days
+          .map((day) => monthlyReportTypeFromString(day.type))
+          .where((value) => value != MonthlyReportType.unknown)
+          .toSet();
+      if (resolvedTypes.length == 1) {
+        type = resolvedTypes.first;
+      } else if (resolvedTypes.contains(MonthlyReportType.fixed) &&
+          !resolvedTypes.contains(MonthlyReportType.hourly)) {
+        type = MonthlyReportType.fixed;
+      } else if (resolvedTypes.contains(MonthlyReportType.hourly) &&
+          !resolvedTypes.contains(MonthlyReportType.fixed)) {
+        type = MonthlyReportType.hourly;
       }
     }
 
@@ -128,6 +192,9 @@ class MonthlyReportDay {
           'day_label',
           'display_date',
           'day',
+          'name',
+          'title',
+          'display_name',
         ]) ??
         (date != null ? _formatDate(date) : 'Day');
 
@@ -165,6 +232,8 @@ class MonthlyReportDay {
       'earnings',
       'payment',
       'payout',
+      'rate_per_unit',
+      'ratePerUnit',
     ]);
     final salaryLabel = _parseString(json, const [
       'salary_label',
@@ -197,6 +266,10 @@ class MonthlyReportDay {
       'date_label',
       'day_label',
       'display_date',
+      'name',
+      'title',
+      'display_name',
+      'id',
       'status',
       'attendance_status',
       'state',
@@ -222,6 +295,8 @@ class MonthlyReportDay {
       'earnings',
       'payment',
       'payout',
+      'rate_per_unit',
+      'ratePerUnit',
       'salary_label',
       'amount_label',
       'display_amount',
