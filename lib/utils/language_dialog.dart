@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
-import '../widgets/language_dialog.dart';
+import '../widgets/app_dialogs.dart';
 
 Future<void> showLanguageSelectionDialog({
   required BuildContext context,

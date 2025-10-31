@@ -6029,7 +6029,6 @@ class _ContractEntryForm extends StatelessWidget {
                 ),
             ],
           ],
-        ],
       ),
     );
   }
