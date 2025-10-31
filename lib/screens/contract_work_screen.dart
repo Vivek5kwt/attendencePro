@@ -26,8 +26,20 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   final List<_ContractType> _userContractTypes = <_ContractType>[];
   final List<String> _availableSubtypes = <String>[];
   static const List<String> _defaultSubtypeOptions = <String>[
-    'Fixed',
-    'Bundle',
+    'Bin',
+    'Crate',
+    'Bunches',
+  ];
+  static const List<String> _defaultWorkNameOptions = <String>[
+    'Watermelon',
+    'Orange',
+    'Radish',
+    'Carrot',
+    'Ravanello 10 Unit',
+    'Ravanello 15 Unit',
+    'Ravanello 18 Unit',
+    'Ravanello 20 Unit',
+    'Custom Work',
   ];
 
   final List<_ContractEntry> _recentEntries = <_ContractEntry>[
@@ -137,10 +149,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
 
     switch (trimmed.toLowerCase()) {
-      case 'fixed':
-        return 'Fixed';
-      case 'bundle':
-        return 'Bundle';
+      case 'bin':
+        return 'Bin';
+      case 'crate':
+        return 'Crate';
+      case 'bunches':
+        return 'Bunches';
       default:
         return trimmed;
     }
@@ -256,6 +270,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           repository: _repository,
           rootContext: rootContext,
           isNameEditable: !(type?.isDefault ?? false),
+          workNameOptions: _defaultWorkNameOptions,
           defaultSubtypeOptions: _defaultSubtypeOptions,
           availableSubtypes: _availableSubtypes,
           formatSubtypeDisplay: _formatSubtypeDisplay,
@@ -661,6 +676,7 @@ class _ContractTypeSheet extends StatefulWidget {
     required this.repository,
     required this.rootContext,
     required this.isNameEditable,
+    required this.workNameOptions,
     required this.defaultSubtypeOptions,
     required this.availableSubtypes,
     required this.formatSubtypeDisplay,
@@ -671,6 +687,7 @@ class _ContractTypeSheet extends StatefulWidget {
   final ContractTypeRepository repository;
   final BuildContext rootContext;
   final bool isNameEditable;
+  final List<String> workNameOptions;
   final List<String> defaultSubtypeOptions;
   final List<String> availableSubtypes;
   final String Function(String value) formatSubtypeDisplay;
@@ -680,10 +697,14 @@ class _ContractTypeSheet extends StatefulWidget {
 }
 
 class _ContractTypeSheetState extends State<_ContractTypeSheet> {
+  static const String _customWorkOptionKey = 'custom work';
+
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
+  late final List<String> _workNameOptions;
   late final List<String> _subtypeOptions;
   String? _selectedSubtypeValue;
+  String? _selectedWorkName;
   bool _isSaving = false;
   bool _isSelected = true;
 
@@ -695,6 +716,21 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     _rateController = TextEditingController(
       text: type != null ? type.rate.toStringAsFixed(2) : '',
     );
+
+    _workNameOptions = List<String>.from(widget.workNameOptions);
+
+    final existingName = type?.name.trim();
+    if (existingName != null && existingName.isNotEmpty) {
+      final matchIndex = _workNameOptions.indexWhere(
+        (option) => option.toLowerCase() == existingName.toLowerCase(),
+      );
+      if (matchIndex != -1) {
+        _selectedWorkName = _workNameOptions[matchIndex];
+        _nameController.text = _selectedWorkName!;
+      } else {
+        _selectedWorkName = _resolveCustomWorkLabel();
+      }
+    }
 
     final seenSubtypeOptions = <String>{};
     final options = <String>[];
@@ -751,6 +787,62 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     _nameController.dispose();
     _rateController.dispose();
     super.dispose();
+  }
+
+  String _resolveCustomWorkLabel() {
+    final index = _workNameOptions.indexWhere(
+      (option) => option.toLowerCase() == _customWorkOptionKey,
+    );
+    if (index != -1) {
+      return _workNameOptions[index];
+    }
+    const fallback = 'Custom Work';
+    _workNameOptions.add(fallback);
+    return fallback;
+  }
+
+  bool _isCustomWorkOptionValue(String? value) {
+    if (value == null) {
+      return false;
+    }
+    return value.trim().toLowerCase() == _customWorkOptionKey;
+  }
+
+  bool get _isCustomWorkSelected => _isCustomWorkOptionValue(_selectedWorkName);
+
+  void _handleWorkNameChanged(String? value) {
+    if (value == null) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    final previousSelection = _selectedWorkName;
+
+    setState(() {
+      _selectedWorkName = value;
+      if (_isCustomWorkOptionValue(value)) {
+        if (widget.isNameEditable &&
+            !_isCustomWorkOptionValue(previousSelection)) {
+          _nameController.clear();
+        }
+      } else {
+        _nameController.text = value;
+      }
+    });
+  }
+
+  String _resolveRateHint(AppLocalizations l) {
+    final selection = _selectedSubtypeValue?.toLowerCase();
+    switch (selection) {
+      case 'bin':
+        return l.contractWorkPricePerBinHint;
+      case 'crate':
+        return l.contractWorkPricePerCrateHint;
+      case 'bunches':
+        return l.contractWorkPricePerBunchesHint;
+      default:
+        return l.contractWorkRateHint;
+    }
   }
 
   Future<void> _handleSave() async {
@@ -987,6 +1079,18 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    Text(
+                                      l.workNameLabel,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF1F2937),
+                                          ) ??
+                                          const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF1F2937),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
                                     Container(
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFF9FAFB),
@@ -997,7 +1101,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 16,
-                                        vertical: 12,
+                                        vertical: 4,
                                       ),
                                       child: Row(
                                         children: [
@@ -1016,35 +1120,209 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                           ),
                                           const SizedBox(width: 12),
                                           Expanded(
-                                            child: TextField(
-                                              controller: _nameController,
-                                              enabled: widget.isNameEditable,
-                                              decoration: InputDecoration(
-                                                border: InputBorder.none,
-                                                hintText:
-                                                    AppString.contractNameHint,
-                                                hintStyle:
-                                                    textTheme.bodyMedium?.copyWith(
-                                                          color: const Color(0xFF9CA3AF),
-                                                        ) ??
-                                                        const TextStyle(
-                                                          color: Color(0xFF9CA3AF),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<String>(
+                                                value: _selectedWorkName,
+                                                isExpanded: true,
+                                                icon: const Icon(
+                                                  Icons.keyboard_arrow_down_rounded,
+                                                ),
+                                                hint: Text(
+                                                  l.contractWorkSelectWorkHint,
+                                                  style: textTheme.bodyLarge?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color:
+                                                            const Color(0xFF9CA3AF),
+                                                      ) ??
+                                                      const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color:
+                                                            Color(0xFF9CA3AF),
+                                                      ),
+                                                ),
+                                                disabledHint: Text(
+                                                  _nameController.text.isNotEmpty
+                                                      ? _nameController.text
+                                                      : l.contractWorkSelectWorkHint,
+                                                  style: textTheme.bodyLarge?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color:
+                                                            const Color(0xFF9CA3AF),
+                                                      ) ??
+                                                      const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color:
+                                                            Color(0xFF9CA3AF),
+                                                      ),
+                                                ),
+                                                style: textTheme.bodyLarge?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color:
+                                                          const Color(0xFF111827),
+                                                    ) ??
+                                                    const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Color(0xFF111827),
+                                                    ),
+                                                selectedItemBuilder:
+                                                    (BuildContext context) {
+                                                  return _workNameOptions.map((option) {
+                                                    final isCustom =
+                                                        _isCustomWorkOptionValue(
+                                                      option,
+                                                    );
+                                                    final displayText = isCustom
+                                                        ? (_nameController.text
+                                                                    .trim()
+                                                                    .isNotEmpty
+                                                                ? _nameController
+                                                                    .text
+                                                                    .trim()
+                                                                : l.contractWorkCustomOption)
+                                                        : option;
+                                                    return Align(
+                                                      alignment:
+                                                          Alignment.centerLeft,
+                                                      child: Text(
+                                                        displayText,
+                                                        style: textTheme
+                                                                .bodyLarge
+                                                                ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color: const Color(
+                                                                  0xFF111827),
+                                                            ) ??
+                                                            const TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color:
+                                                                  Color(0xFF111827),
+                                                            ),
+                                                      ),
+                                                    );
+                                                  }).toList();
+                                                },
+                                                items: _workNameOptions
+                                                    .map(
+                                                      (option) =>
+                                                          DropdownMenuItem<String>(
+                                                        value: option,
+                                                        child: Text(
+                                                          _isCustomWorkOptionValue(
+                                                                  option)
+                                                              ? l
+                                                                  .contractWorkCustomOption
+                                                              : option,
+                                                          style: textTheme
+                                                                  .bodyLarge
+                                                                  ?.copyWith(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                                color:
+                                                                    const Color(
+                                                                        0xFF111827),
+                                                              ) ??
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                                color: Color(
+                                                                    0xFF111827),
+                                                              ),
                                                         ),
+                                                      ),
+                                                    )
+                                                    .toList(),
+                                                onChanged: widget.isNameEditable
+                                                    ? _handleWorkNameChanged
+                                                    : null,
                                               ),
-                                              style: textTheme.bodyLarge?.copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                    color: const Color(0xFF111827),
-                                                  ) ??
-                                                  const TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF111827),
-                                                    fontSize: 16,
-                                                  ),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
+                                    if (_isCustomWorkSelected) ...[
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF9FAFB),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: const Color(0xFFE5E7EB),
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 36,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFFFF8EB),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: const Text(
+                                                '✍️',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: TextField(
+                                                controller: _nameController,
+                                                enabled: widget.isNameEditable,
+                                                decoration: InputDecoration(
+                                                  border: InputBorder.none,
+                                                  hintText:
+                                                      AppString.contractNameHint,
+                                                  hintStyle:
+                                                      textTheme.bodyMedium
+                                                              ?.copyWith(
+                                                        color: const Color(
+                                                            0xFF9CA3AF),
+                                                      ) ??
+                                                      const TextStyle(
+                                                        color:
+                                                            Color(0xFF9CA3AF),
+                                                      ),
+                                                ),
+                                                style: textTheme.bodyLarge
+                                                        ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color:
+                                                          const Color(0xFF111827),
+                                                    ) ??
+                                                    const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color:
+                                                          Color(0xFF111827),
+                                                      fontSize: 16,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                     const SizedBox(height: 16),
                                     Text(
                                       l.contractWorkSubtypeLabel,
@@ -1085,7 +1363,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                                 color: Color(0xFF111827),
                                               ),
                                           hint: Text(
-                                            l.contractWorkSubtypeLabel,
+                                            l.contractWorkSubtypeHint,
                                             style: textTheme.bodyLarge?.copyWith(
                                                   fontWeight: FontWeight.w600,
                                                   color: const Color(0xFF9CA3AF),
@@ -1183,7 +1461,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                               ),
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
-                                                hintText: l.contractWorkRateHint,
+                                                hintText: _resolveRateHint(l),
                                                 hintStyle:
                                                     textTheme.bodyMedium?.copyWith(
                                                           color: const Color(0xFF9CA3AF),

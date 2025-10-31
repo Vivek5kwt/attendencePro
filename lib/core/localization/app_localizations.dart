@@ -112,8 +112,18 @@ class AppLocalizations {
   String get contractWorkContractTypeHint =>
       _value('contractWorkContractTypeHint');
   String get contractWorkNameLabel => _value('contractWorkNameLabel');
+  String get contractWorkSelectWorkHint =>
+      _value('contractWorkSelectWorkHint');
+  String get contractWorkCustomOption =>
+      _value('contractWorkCustomOption');
   String get contractWorkRateLabel => _value('contractWorkRateLabel');
   String get contractWorkRateHint => _value('contractWorkRateHint');
+  String get contractWorkPricePerBinHint =>
+      _value('contractWorkPricePerBinHint');
+  String get contractWorkPricePerCrateHint =>
+      _value('contractWorkPricePerCrateHint');
+  String get contractWorkPricePerBunchesHint =>
+      _value('contractWorkPricePerBunchesHint');
   String get contractWorkPricePerCrateLabel =>
       _value('contractWorkPricePerCrateLabel');
   String get contractWorkUnitLabel => _value('contractWorkUnitLabel');
