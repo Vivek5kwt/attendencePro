@@ -2203,7 +2203,7 @@ class _ContractTableHeader extends StatelessWidget {
         Expanded(
           flex: 3,
           child: Text(
-            '${localization.contractWorkUnitsLabel} (${localization.contractWorkSubtypeLabel})',
+            '${localization.contractWorkUnitsLabel} (${localization.contractWorkRoleLabel})',
             textAlign: TextAlign.center,
             style: style,
           ),

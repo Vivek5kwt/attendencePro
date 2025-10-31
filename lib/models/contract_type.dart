@@ -6,7 +6,8 @@ class ContractType {
     required this.unitLabel,
     required this.isDefault,
     required this.isGlobal,
-    this.subtype,
+    required this.type,
+    this.role,
     this.updatedAt,
     Map<String, dynamic>? rawJson,
   }) : additionalData = Map<String, dynamic>.from(rawJson ?? const {});
@@ -17,7 +18,8 @@ class ContractType {
   final String unitLabel;
   final bool isDefault;
   final bool isGlobal;
-  final String? subtype;
+  final String type;
+  final String? role;
   final DateTime? updatedAt;
   final Map<String, dynamic> additionalData;
 
@@ -28,7 +30,8 @@ class ContractType {
     final unitLabel = _parseUnitLabel(json) ?? 'per unit';
     final isDefault = _parseFlag(json, const ['is_default', 'isDefault', 'default']);
     final isGlobal = _parseFlag(json, const ['is_global', 'isGlobal', 'global']);
-    final subtype = _parseSubtype(json);
+    final type = _parseType(json);
+    final role = _parseRole(json, type);
     final updatedAt = _parseUpdatedAt(json);
 
     return ContractType(
@@ -38,7 +41,8 @@ class ContractType {
       unitLabel: unitLabel,
       isDefault: isDefault,
       isGlobal: isGlobal,
-      subtype: subtype,
+      type: type,
+      role: role,
       updatedAt: updatedAt,
       rawJson: json,
     );
@@ -51,7 +55,8 @@ class ContractType {
     String? unitLabel,
     bool? isDefault,
     bool? isGlobal,
-    String? subtype,
+    String? type,
+    String? role,
     DateTime? updatedAt,
   }) {
     return ContractType(
@@ -61,7 +66,8 @@ class ContractType {
       unitLabel: unitLabel ?? this.unitLabel,
       isDefault: isDefault ?? this.isDefault,
       isGlobal: isGlobal ?? this.isGlobal,
-      subtype: subtype ?? this.subtype,
+      type: type ?? this.type,
+      role: role ?? this.role,
       updatedAt: updatedAt ?? this.updatedAt,
       rawJson: additionalData,
     );
@@ -132,22 +138,65 @@ class ContractType {
     return null;
   }
 
-  static String? _parseSubtype(Map<String, dynamic> json) {
+  static String _parseType(Map<String, dynamic> json) {
     const possibleKeys = [
-      'subtype',
-      'contract_subtype',
-      'contractSubtype',
       'type',
+      'contract_type',
+      'contractType',
+      'contract_kind',
+      'contractKind',
+      'kind',
     ];
 
     for (final key in possibleKeys) {
       final value = json[key];
-      if (value is String && value.trim().isNotEmpty) {
-        return value.trim();
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isEmpty) {
+          continue;
+        }
+        final normalized = trimmed.toLowerCase();
+        if (normalized == 'bundle' || normalized == 'fixed') {
+          return normalized;
+        }
       }
     }
 
-    return null;
+    return 'fixed';
+  }
+
+  static String? _parseRole(Map<String, dynamic> json, String parsedType) {
+    const possibleKeys = [
+      'role',
+      'contract_role',
+      'contractRole',
+      'subtype',
+      'contract_subtype',
+      'contractSubtype',
+    ];
+
+    for (final key in possibleKeys) {
+      final value = json[key];
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isNotEmpty) {
+          return trimmed;
+        }
+      }
+    }
+
+    final typeValue = json['type'];
+    if (typeValue is String) {
+      final trimmed = typeValue.trim();
+      if (trimmed.isNotEmpty) {
+        final normalized = trimmed.toLowerCase();
+        if (normalized != 'bundle' && normalized != 'fixed') {
+          return trimmed;
+        }
+      }
+    }
+
+    return parsedType == 'bundle' || parsedType == 'fixed' ? null : parsedType;
   }
 
   static bool _parseFlag(Map<String, dynamic> json, List<String> keys) {

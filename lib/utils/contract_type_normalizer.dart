@@ -1,14 +1,33 @@
-String normalizeContractSubtype(String subtype) {
-  final trimmed = subtype.trim();
+String normalizeContractType(String type) {
+  final trimmed = type.trim();
+  if (trimmed.isEmpty) {
+    return 'fixed';
+  }
+
+  switch (trimmed.toLowerCase()) {
+    case 'bundle':
+      return 'bundle';
+    case 'fixed':
+    default:
+      return 'fixed';
+  }
+}
+
+String normalizeContractRole(String role) {
+  final trimmed = role.trim();
   if (trimmed.isEmpty) {
     return trimmed;
   }
 
   final normalized = trimmed.toLowerCase();
-  const knownSubtypes = {'bundle', 'fixed'};
-  if (knownSubtypes.contains(normalized)) {
-    return normalized;
+  switch (normalized) {
+    case 'bin':
+      return 'Bin';
+    case 'crate':
+      return 'Crate';
+    case 'bunches':
+      return 'Bunches';
+    default:
+      return trimmed;
   }
-
-  return trimmed;
 }

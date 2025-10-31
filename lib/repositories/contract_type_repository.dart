@@ -29,7 +29,8 @@ class ContractTypeRepository {
 
   Future<ContractType> createContractType({
     required String name,
-    required String subtype,
+    required String type,
+    required String role,
     required double ratePerUnit,
     required String unitLabel,
   }) async {
@@ -39,11 +40,13 @@ class ContractTypeRepository {
     }
 
     try {
-      final normalizedSubtype = normalizeContractSubtype(subtype);
+      final normalizedType = normalizeContractType(type);
+      final normalizedRole = normalizeContractRole(role);
       return await _api.createContractType(
         token: token,
         name: name,
-        subtype: normalizedSubtype,
+        type: normalizedType,
+        role: normalizedRole,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
       );
@@ -55,7 +58,8 @@ class ContractTypeRepository {
   Future<ContractType> updateContractType({
     required String id,
     required String name,
-    required String subtype,
+    required String type,
+    required String role,
     required double ratePerUnit,
     required String unitLabel,
   }) async {
@@ -65,12 +69,14 @@ class ContractTypeRepository {
     }
 
     try {
-      final normalizedSubtype = normalizeContractSubtype(subtype);
+      final normalizedType = normalizeContractType(type);
+      final normalizedRole = normalizeContractRole(role);
       return await _api.updateContractType(
         token: token,
         contractTypeId: id,
         name: name,
-        subtype: normalizedSubtype,
+        type: normalizedType,
+        role: normalizedRole,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
       );

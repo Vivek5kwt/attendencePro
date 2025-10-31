@@ -24,8 +24,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   final List<_ContractType> _defaultContractTypes = <_ContractType>[];
   final List<_ContractType> _userContractTypes = <_ContractType>[];
-  final List<String> _availableSubtypes = <String>[];
-  static const List<String> _defaultSubtypeOptions = <String>[
+  final List<String> _availableRoles = <String>[];
+  static const List<String> _defaultRoleOptions = <String>[
     'Bin',
     'Crate',
     'Bunches',
@@ -76,7 +76,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             type: type,
             isUserDefined: true,
           )));
-        _syncAvailableSubtypes();
+        _syncAvailableRoles();
         if (_userContractTypes.isEmpty && _isDeleteMode) {
           _isDeleteMode = false;
         }
@@ -112,37 +112,37 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       } else {
         targetList[index] = type;
       }
-      _syncAvailableSubtypes();
+      _syncAvailableRoles();
     });
   }
 
-  void _syncAvailableSubtypes() {
+  void _syncAvailableRoles() {
     final unique = <String, String>{};
 
-    void addSubtype(String? rawValue) {
+    void addRole(String? rawValue) {
       final value = rawValue?.trim();
       if (value == null || value.isEmpty) {
         return;
       }
       final key = value.toLowerCase();
-      unique.putIfAbsent(key, () => _formatSubtypeDisplay(value));
+      unique.putIfAbsent(key, () => _formatRoleDisplay(value));
     }
 
     for (final type in _defaultContractTypes) {
-      addSubtype(type.subtype);
+      addRole(type.role);
     }
     for (final type in _userContractTypes) {
-      addSubtype(type.subtype);
+      addRole(type.role);
     }
 
     final sorted = unique.values.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    _availableSubtypes
+    _availableRoles
       ..clear()
       ..addAll(sorted);
   }
 
-  String _formatSubtypeDisplay(String value) {
+  String _formatRoleDisplay(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
       return trimmed;
@@ -166,7 +166,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       if (_userContractTypes.isEmpty && _isDeleteMode) {
         _isDeleteMode = false;
       }
-      _syncAvailableSubtypes();
+      _syncAvailableRoles();
     });
   }
 
@@ -271,9 +271,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           rootContext: rootContext,
           isNameEditable: !(type?.isDefault ?? false),
           workNameOptions: _defaultWorkNameOptions,
-          defaultSubtypeOptions: _defaultSubtypeOptions,
-          availableSubtypes: _availableSubtypes,
-          formatSubtypeDisplay: _formatSubtypeDisplay,
+          defaultRoleOptions: _defaultRoleOptions,
+          availableRoles: _availableRoles,
+          formatRoleDisplay: _formatRoleDisplay,
         );
       },
     );
@@ -677,9 +677,9 @@ class _ContractTypeSheet extends StatefulWidget {
     required this.rootContext,
     required this.isNameEditable,
     required this.workNameOptions,
-    required this.defaultSubtypeOptions,
-    required this.availableSubtypes,
-    required this.formatSubtypeDisplay,
+    required this.defaultRoleOptions,
+    required this.availableRoles,
+    required this.formatRoleDisplay,
     super.key,
   });
 
@@ -688,9 +688,9 @@ class _ContractTypeSheet extends StatefulWidget {
   final BuildContext rootContext;
   final bool isNameEditable;
   final List<String> workNameOptions;
-  final List<String> defaultSubtypeOptions;
-  final List<String> availableSubtypes;
-  final String Function(String value) formatSubtypeDisplay;
+  final List<String> defaultRoleOptions;
+  final List<String> availableRoles;
+  final String Function(String value) formatRoleDisplay;
 
   @override
   State<_ContractTypeSheet> createState() => _ContractTypeSheetState();
@@ -698,12 +698,14 @@ class _ContractTypeSheet extends StatefulWidget {
 
 class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   static const String _customWorkOptionKey = 'custom work';
+  static const List<String> _typeValues = <String>['fixed', 'bundle'];
 
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
   late final List<String> _workNameOptions;
-  late final List<String> _subtypeOptions;
-  String? _selectedSubtypeValue;
+  late final List<String> _roleOptions;
+  String? _selectedRoleValue;
+  late String _selectedTypeValue;
   String? _selectedWorkName;
   bool _isSaving = false;
   bool _isSelected = true;
@@ -719,6 +721,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     _workNameOptions = List<String>.from(widget.workNameOptions);
 
+    final existingType = type?.type.trim().toLowerCase();
+    _selectedTypeValue = existingType == 'bundle' ? 'bundle' : 'fixed';
+
     final existingName = type?.name.trim();
     if (existingName != null && existingName.isNotEmpty) {
       final matchIndex = _workNameOptions.indexWhere(
@@ -732,16 +737,16 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       }
     }
 
-    final seenSubtypeOptions = <String>{};
+    final seenRoleOptions = <String>{};
     final options = <String>[];
 
-    void addSubtypeOption(String option, {bool prepend = false}) {
-      final formatted = widget.formatSubtypeDisplay(option);
+    void addRoleOption(String option, {bool prepend = false}) {
+      final formatted = widget.formatRoleDisplay(option);
       if (formatted.isEmpty) {
         return;
       }
       final key = formatted.toLowerCase();
-      if (seenSubtypeOptions.contains(key)) {
+      if (seenRoleOptions.contains(key)) {
         if (prepend) {
           final existingIndex =
               options.indexWhere((item) => item.toLowerCase() == key);
@@ -753,7 +758,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
         return;
       }
 
-      seenSubtypeOptions.add(key);
+      seenRoleOptions.add(key);
       if (prepend) {
         options.insert(0, formatted);
       } else {
@@ -761,25 +766,25 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       }
     }
 
-    final existingSubtype = type?.subtype?.trim();
-    final existingSubtypeDisplay = existingSubtype != null && existingSubtype.isNotEmpty
-        ? widget.formatSubtypeDisplay(existingSubtype)
+    final existingRole = type?.role?.trim();
+    final existingRoleDisplay = existingRole != null && existingRole.isNotEmpty
+        ? widget.formatRoleDisplay(existingRole)
         : null;
-    if (existingSubtypeDisplay != null) {
-      addSubtypeOption(existingSubtypeDisplay, prepend: true);
+    if (existingRoleDisplay != null) {
+      addRoleOption(existingRoleDisplay, prepend: true);
     }
 
-    for (final option in widget.defaultSubtypeOptions) {
-      addSubtypeOption(option);
+    for (final option in widget.defaultRoleOptions) {
+      addRoleOption(option);
     }
-    for (final option in widget.availableSubtypes) {
-      addSubtypeOption(option);
+    for (final option in widget.availableRoles) {
+      addRoleOption(option);
     }
 
-    _subtypeOptions = options;
-    _selectedSubtypeValue = existingSubtypeDisplay;
-    _selectedSubtypeValue ??=
-        _subtypeOptions.isNotEmpty ? _subtypeOptions.first : null;
+    _roleOptions = options;
+    _selectedRoleValue = existingRoleDisplay;
+    _selectedRoleValue ??=
+        _roleOptions.isNotEmpty ? _roleOptions.first : null;
   }
 
   @override
@@ -832,7 +837,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   }
 
   String _resolveRateHint(AppLocalizations l) {
-    final selection = _selectedSubtypeValue?.toLowerCase();
+    final selection = _selectedRoleValue?.toLowerCase();
     switch (selection) {
       case 'bin':
         return l.contractWorkPricePerBinHint;
@@ -845,13 +850,26 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     }
   }
 
+  String _typeLabel(String value, AppLocalizations l) {
+    switch (value) {
+      case 'bundle':
+        return l.contractWorkTypeBundleOption;
+      case 'fixed':
+      default:
+        return l.contractWorkTypeFixedOption;
+    }
+  }
+
   Future<void> _handleSave() async {
     final l = AppLocalizations.of(context);
 
     FocusScope.of(context).unfocus();
     final name = _nameController.text.trim();
     final rate = double.tryParse(_rateController.text.trim());
-    final resolvedSubtype = _selectedSubtypeValue?.trim() ?? '';
+    final resolvedRole = _selectedRoleValue?.trim() ?? '';
+    final resolvedType = _selectedTypeValue.trim().isEmpty
+        ? 'fixed'
+        : _selectedTypeValue.trim().toLowerCase();
 
     final type = widget.type;
 
@@ -868,9 +886,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       );
       return;
     }
-    if (resolvedSubtype.isEmpty) {
+    if (resolvedRole.isEmpty) {
       ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(l.contractWorkSubtypeRequiredMessage)),
+        SnackBar(content: Text(l.contractWorkRoleRequiredMessage)),
       );
       return;
     }
@@ -894,7 +912,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       future = widget.repository
           .createContractType(
         name: resolvedName,
-        subtype: resolvedSubtype,
+        type: resolvedType,
+        role: resolvedRole,
         ratePerUnit: rate,
         unitLabel: resolvedUnitLabel,
       )
@@ -906,7 +925,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
           .updateContractType(
             id: type.id,
             name: resolvedName,
-            subtype: resolvedSubtype,
+            type: resolvedType,
+            role: resolvedRole,
             ratePerUnit: rate,
             unitLabel: resolvedUnitLabel,
           )
@@ -1325,7 +1345,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                     ],
                                     const SizedBox(height: 16),
                                     Text(
-                                      l.contractWorkSubtypeLabel,
+                                      l.contractWorkTypeLabel,
                                       style: textTheme.bodyMedium?.copyWith(
                                             fontWeight: FontWeight.w600,
                                             color: const Color(0xFF1F2937),
@@ -1350,7 +1370,80 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                       ),
                                       child: DropdownButtonHideUnderline(
                                         child: DropdownButton<String>(
-                                          value: _selectedSubtypeValue,
+                                          value: _selectedTypeValue,
+                                          isExpanded: true,
+                                          icon: const Icon(
+                                              Icons.keyboard_arrow_down_rounded),
+                                          style: textTheme.bodyLarge?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF111827),
+                                              ) ??
+                                              const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF111827),
+                                              ),
+                                          items: _typeValues
+                                              .map(
+                                                (value) => DropdownMenuItem<String>(
+                                                  value: value,
+                                                  child: Text(
+                                                    _typeLabel(value, l),
+                                                    style:
+                                                        textTheme.bodyLarge?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight.w600,
+                                                              color: const Color(
+                                                                  0xFF111827),
+                                                            ) ??
+                                                            const TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight.w600,
+                                                              color:
+                                                                  Color(0xFF111827),
+                                                            ),
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                          onChanged: (value) {
+                                            if (value == null) {
+                                              return;
+                                            }
+                                            setState(() {
+                                              _selectedTypeValue = value;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      l.contractWorkRoleLabel,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF1F2937),
+                                          ) ??
+                                          const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF1F2937),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: const Color(0xFFE5E7EB),
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 4,
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: _selectedRoleValue,
                                           isExpanded: true,
                                           icon: const Icon(
                                               Icons.keyboard_arrow_down_rounded),
@@ -1363,7 +1456,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                                 color: Color(0xFF111827),
                                               ),
                                           hint: Text(
-                                            l.contractWorkSubtypeHint,
+                                            l.contractWorkRoleHint,
                                             style: textTheme.bodyLarge?.copyWith(
                                                   fontWeight: FontWeight.w600,
                                                   color: const Color(0xFF9CA3AF),
@@ -1373,7 +1466,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                                   color: Color(0xFF9CA3AF),
                                                 ),
                                           ),
-                                          items: _subtypeOptions
+                                          items: _roleOptions
                                               .map(
                                                 (option) =>
                                                     DropdownMenuItem<String>(
@@ -1397,14 +1490,14 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                                 ),
                                               )
                                               .toList(),
-                                          onChanged: _subtypeOptions.isEmpty
+                                          onChanged: _roleOptions.isEmpty
                                               ? null
                                               : (value) {
                                                   if (value == null) {
                                                     return;
                                                   }
                                                   setState(() {
-                                                    _selectedSubtypeValue = value;
+                                                    _selectedRoleValue = value;
                                                   });
                                                 },
                                         ),
@@ -1982,11 +2075,11 @@ class _ContractTypeTile extends StatelessWidget {
         labelColor: const Color(0xFF1E3A8A),
         valueColor: const Color(0xFF0F172A),
       ),
-      if (type.displaySubtype != null)
+      if (type.displayRole != null)
         _InfoChip(
           icon: Icons.layers_outlined,
           label: l.contractWorkContractTypeLabel,
-          value: type.displaySubtype!,
+          value: type.displayRole!,
           backgroundColor: const Color(0xFFEFF6FF),
           borderColor: const Color(0xFFD6DBFF),
           labelColor: const Color(0xFF1E3A8A),
@@ -2600,7 +2693,8 @@ class _ContractType {
     required this.name,
     required this.rate,
     this.unitLabel = 'per unit',
-    this.subtype,
+    required this.type,
+    this.role,
     this.isDefault = false,
     this.isUserDefined = false,
     this.lastUpdated,
@@ -2616,7 +2710,8 @@ class _ContractType {
       name: type.name,
       rate: type.rate,
       unitLabel: type.unitLabel,
-      subtype: type.subtype,
+      type: type.type,
+      role: type.role,
       isDefault: isDefaultType,
       isUserDefined: isUserDefined ?? !isDefaultType,
       lastUpdated: type.updatedAt,
@@ -2627,7 +2722,8 @@ class _ContractType {
   final String name;
   final double rate;
   final String unitLabel;
-  final String? subtype;
+  final String type;
+  final String? role;
   final bool isDefault;
   final bool isUserDefined;
   final DateTime? lastUpdated;
@@ -2637,7 +2733,8 @@ class _ContractType {
     String? name,
     double? rate,
     String? unitLabel,
-    String? subtype,
+    String? type,
+    String? role,
     bool? isDefault,
     bool? isUserDefined,
     DateTime? lastUpdated,
@@ -2647,7 +2744,8 @@ class _ContractType {
       name: name ?? this.name,
       rate: rate ?? this.rate,
       unitLabel: unitLabel ?? this.unitLabel,
-      subtype: subtype ?? this.subtype,
+      type: type ?? this.type,
+      role: role ?? this.role,
       isDefault: isDefault ?? this.isDefault,
       isUserDefined: isUserDefined ?? this.isUserDefined,
       lastUpdated: lastUpdated ?? this.lastUpdated,
@@ -2656,8 +2754,8 @@ class _ContractType {
 
   String get displayRate => '€${rate.toStringAsFixed(2)}';
 
-  String? get displaySubtype {
-    final value = subtype?.trim();
+  String? get displayRole {
+    final value = role?.trim();
     if (value == null || value.isEmpty) {
       return null;
     }
