@@ -340,6 +340,8 @@ abstract final class AppString {
       'setActiveWorkButton': 'Set Active',
       'settingActiveWorkLabel': 'Activating...',
       'workActivatedMessage': 'Work set as active successfully.',
+      'workActivatedWithNameMessage':
+          'Your work {workName} is now active.',
       'workNameLabel': 'Work Name',
       'workNameHint': 'Ex Restaurant, Warehouse',
       'workNameTooShortValidation': 'Work name must be at least 3 characters.',
@@ -757,6 +759,8 @@ abstract final class AppString {
       'setActiveWorkButton': 'सक्रिय करें',
       'settingActiveWorkLabel': 'सक्रिय किया जा रहा है...',
       'workActivatedMessage': 'कार्य सफलतापूर्वक सक्रिय किया गया।',
+      'workActivatedWithNameMessage':
+          'आपका कार्य {workName} अब सक्रिय है।',
       'workNameLabel': 'कार्य का नाम',
       'workNameHint': 'उदाहरण: रेस्टोरेंट, गोदाम',
       'workNameTooShortValidation': 'कार्य का नाम कम से कम 3 अक्षरों का होना चाहिए।',
@@ -1171,6 +1175,8 @@ abstract final class AppString {
       'setActiveWorkButton': 'ਸਰਗਰਮ ਕਰੋ',
       'settingActiveWorkLabel': 'ਸਰਗਰਮ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...',
       'workActivatedMessage': 'ਕੰਮ ਨੂੰ ਸਰਗਰਮ ਕੀਤਾ ਗਿਆ ਹੈ।',
+      'workActivatedWithNameMessage':
+          'ਤੁਹਾਡਾ ਕੰਮ {workName} ਹੁਣ ਸਰਗਰਮ ਹੈ।',
       'workNameLabel': 'ਕੰਮ ਦਾ ਨਾਮ',
       'workNameHint': 'ਉਦਾਹਰਣ: ਰੈਸਟੋਰੈਂਟ, ਗੋਦਾਮ',
       'workNameTooShortValidation': 'ਕੰਮ ਦਾ ਨਾਮ ਘੱਟੋ-ਘੱਟ 3 ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।',
@@ -1593,6 +1599,8 @@ abstract final class AppString {
       'setActiveWorkButton': 'Imposta come attivo',
       'settingActiveWorkLabel': 'Attivazione...',
       'workActivatedMessage': 'Lavoro impostato come attivo con successo.',
+      'workActivatedWithNameMessage':
+          'Il tuo lavoro {workName} è ora attivo.',
       'workNameLabel': 'Nome del Lavoro',
       'workNameHint': 'Es. Ristorante, Magazzino',
       'workNameTooShortValidation': 'Il nome del lavoro deve contenere almeno 3 caratteri.',

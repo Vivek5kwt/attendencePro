@@ -391,7 +391,29 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     try {
       final result = await _repository.activateWork(event.work);
       final successMessage = (result.message ?? '').trim();
-      final works = await _repository.fetchWorks();
+      final fetchedWorks = await _repository.fetchWorks();
+
+      final previousOrder = <String, int>{};
+      for (var i = 0; i < state.works.length; i++) {
+        previousOrder[state.works[i].id] = i;
+      }
+
+      final works = List<Work>.from(fetchedWorks);
+      if (previousOrder.isNotEmpty) {
+        final fallbackStart = previousOrder.length;
+        final fallbackIndices = <String, int>{};
+        for (var i = 0; i < fetchedWorks.length; i++) {
+          final work = fetchedWorks[i];
+          final previousIndex = previousOrder[work.id];
+          fallbackIndices[work.id] = previousIndex ?? (fallbackStart + i);
+        }
+
+        works.sort(
+          (a, b) => (fallbackIndices[a.id] ?? fallbackStart)
+              .compareTo(fallbackIndices[b.id] ?? fallbackStart),
+        );
+      }
+
       emit(
         state.copyWith(
           activateStatus: WorkActionStatus.success,
