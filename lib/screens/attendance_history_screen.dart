@@ -1752,40 +1752,19 @@ class _HoursDayCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          _ResponsiveTable(
-            minWidth: 720,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: _HoursTableHeader(localization: localization),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var index = 0; index < entries.length; index++) ...[
+                if (index != 0) const SizedBox(height: 12),
+                _HoursEntryTile(
+                  entry: entries[index],
+                  currencySymbol: currencySymbol,
+                  localization: localization,
+                  onEdit: onEdit,
                 ),
-                const SizedBox(height: 12),
-                if (entries.isEmpty)
-                  const SizedBox.shrink()
-                else
-                  ...List<Widget>.generate(entries.length * 2 - 1, (index) {
-                    if (index.isOdd) {
-                      return const Divider(
-                        height: 20,
-                        thickness: 1,
-                        color: Color(0xFFE5E7EB),
-                      );
-                    }
-                    final entry = entries[index ~/ 2];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: _HoursTableRow(
-                        entry: entry,
-                        currencySymbol: currencySymbol,
-                        localization: localization,
-                        onEdit: onEdit,
-                      ),
-                    );
-                  }),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -1793,86 +1772,8 @@ class _HoursDayCard extends StatelessWidget {
   }
 }
 
-class _HoursTableHeader extends StatelessWidget {
-  const _HoursTableHeader({required this.localization});
-
-  final AppLocalizations localization;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF374151),
-        ) ??
-        const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF374151),
-        );
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            localization.workNameLabel,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            localization.startTimeLabel,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            localization.endTimeLabel,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            localization.breakLabel,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            localization.totalHoursLabel,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            localization.totalSalaryLabel,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        SizedBox(
-          width: 80,
-          child: Text(
-            'Edit',
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HoursTableRow extends StatelessWidget {
-  const _HoursTableRow({
+class _HoursEntryTile extends StatelessWidget {
+  const _HoursEntryTile({
     required this.entry,
     required this.currencySymbol,
     required this.localization,
@@ -1887,7 +1788,24 @@ class _HoursTableRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWorkOff = entry.type == _AttendanceEntryType.leave;
-    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF6B7280),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF6B7280),
+        );
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
           color: const Color(0xFF111827),
         ) ??
@@ -1895,15 +1813,7 @@ class _HoursTableRow extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: Color(0xFF111827),
         );
-
-    final secondaryStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-          color: const Color(0xFF374151),
-        ) ??
-        const TextStyle(
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF374151),
-        );
+    final salaryStyle = valueStyle.copyWith(color: const Color(0xFF047857));
 
     final workName = isWorkOff
         ? localization.attendanceHistoryLeaveEntry
@@ -1921,73 +1831,110 @@ class _HoursTableRow extends StatelessWidget {
         ? _formatHours(entry.hoursWorked)
         : '0h 0m';
 
+    Widget buildInfo(String label, String value, {TextAlign align = TextAlign.left}) {
+      return Text.rich(
+        TextSpan(
+          text: '$label: ',
+          style: labelStyle,
+          children: [
+            TextSpan(
+              text: value,
+              style: valueStyle,
+            ),
+          ],
+        ),
+        textAlign: align,
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
-        color: isWorkOff ? const Color(0xFFFFF8EB) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isWorkOff ? const Color(0xFFFFFBEB) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 4,
-            child: Text(
-              workName,
-              style: textStyle,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              start,
-              textAlign: TextAlign.center,
-              style: secondaryStyle,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              end,
-              textAlign: TextAlign.center,
-              style: secondaryStyle,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              breakLabel,
-              textAlign: TextAlign.center,
-              style: secondaryStyle,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              hoursLabel,
-              textAlign: TextAlign.center,
-              style: secondaryStyle,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              _formatCurrencyValue(currencySymbol, entry.salary),
-              textAlign: TextAlign.center,
-              style: secondaryStyle.copyWith(color: const Color(0xFF047857)),
-            ),
-          ),
-          SizedBox(
-            width: 80,
-            child: TextButton(
-              onPressed: isWorkOff ? null : () => onEdit(entry),
-              child: Text(
-                'Edit',
-                textAlign: TextAlign.center,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  workName,
+                  style: titleStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
+              if (!isWorkOff)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    _formatCurrencyValue(currencySymbol, entry.salary),
+                    style: salaryStyle,
+                  ),
+                ),
+              Tooltip(
+                message: 'Edit',
+                child: Semantics(
+                  button: true,
+                  enabled: !isWorkOff,
+                  label: 'Edit',
+                  child: Material(
+                    color: isWorkOff
+                        ? const Color(0xFFE5E7EB)
+                        : const Color(0xFFE0F2FE),
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: isWorkOff ? null : () => onEdit(entry),
+                      child: SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: Icon(
+                          Icons.edit_outlined,
+                          size: 20,
+                          color: isWorkOff
+                              ? const Color(0xFF9CA3AF)
+                              : const Color(0xFF1D4ED8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
+          if (isWorkOff && entry.leaveReason?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 8),
+            Text(
+              entry.leaveReason!.trim(),
+              style: labelStyle,
+            ),
+          ],
+          if (!isWorkOff) ...[
+            const SizedBox(height: 12),
+            buildInfo(localization.startTimeLabel, start),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: buildInfo(localization.breakLabel, breakLabel),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: buildInfo(
+                    localization.totalHoursLabel,
+                    hoursLabel,
+                    align: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            buildInfo(localization.endTimeLabel, end),
+          ],
         ],
       ),
     );
