@@ -340,27 +340,6 @@ class _WorkSelectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // Inner core card (white) used in both states
     final textTheme = Theme.of(context).textTheme;
-    final chips = <Widget>[];
-    if (work.isActive) {
-      chips.add(
-        _WorkMetaChip(
-          label: localization.activeWorkLabel,
-          backgroundColor: const Color(0xFFF5F3FF),
-          foregroundColor: const Color(0xFF7C3AED),
-        ),
-      );
-    }
-    chips.add(
-      _WorkMetaChip(
-        label: work.isContract
-            ? localization.contractWorkLabel
-            : localization.hourlyWorkLabel,
-        backgroundColor:
-            work.isContract ? const Color(0xFFECFDF5) : const Color(0xFFEFF4FF),
-        foregroundColor:
-            work.isContract ? const Color(0xFF047857) : const Color(0xFF1D4ED8),
-      ),
-    );
 
     final Widget _innerCard = Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
@@ -408,14 +387,6 @@ class _WorkSelectionTile extends StatelessWidget {
                         ),
                   ),
                 ),
-                if (chips.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: chips,
-                  ),
-                ],
               ],
             ),
           ),
@@ -544,62 +515,6 @@ class _AddNewWorkLink extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _WorkMetaChip extends StatelessWidget {
-  const _WorkMetaChip({
-    required this.label,
-    required this.backgroundColor,
-    required this.foregroundColor,
-  });
-
-  final String label;
-  final Color backgroundColor;
-  final Color foregroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final textStyle = textTheme.labelMedium?.copyWith(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: foregroundColor,
-          letterSpacing: 0.2,
-          height: 1.2,
-        ) ??
-        TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: foregroundColor,
-          letterSpacing: 0.2,
-          height: 1.2,
-        );
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final maxChipWidth = math.min(screenWidth * 0.55, 220.0);
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minHeight: 30,
-        maxWidth: maxChipWidth,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: textStyle,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
