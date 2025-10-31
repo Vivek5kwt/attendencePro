@@ -25,9 +25,7 @@ Future<void> showAddWorkDialog({required BuildContext context}) async {
 }
 
 class _AddWorkDialog extends StatefulWidget {
-  const _AddWorkDialog({
-    required this.rootContext,
-  });
+  const _AddWorkDialog({required this.rootContext});
 
   final BuildContext rootContext;
 
@@ -56,6 +54,17 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   void _clearForm() {
     _workNameController.clear();
     _hourlySalaryController.clear();
+  }
+
+  Future<void> _navigateToContractWorkScreen() async {
+    await Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ContractWorkScreen(),
+      ),
+    );
   }
 
   Future<void> _handleSaveWork(BuildContext dialogContext) async {
@@ -91,11 +100,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
     FocusScope.of(dialogContext).unfocus();
     widget.rootContext.read<WorkBloc>().add(
-      WorkAdded(
-        name: workName,
-        hourlyRate: hourlyRate,
-        isContract: true,
-      ),
+      WorkAdded(name: workName, hourlyRate: hourlyRate, isContract: true),
     );
   }
 
@@ -104,7 +109,8 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     final l = AppLocalizations.of(widget.rootContext);
 
     return BlocConsumer<WorkBloc, WorkState>(
-      listenWhen: (previous, current) => previous.addStatus != current.addStatus,
+      listenWhen: (previous, current) =>
+      previous.addStatus != current.addStatus,
       listener: (blocContext, state) {
         if (state.addStatus == WorkActionStatus.success) {
           _clearForm();
@@ -116,276 +122,478 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
         final isSaving = state.addStatus == WorkActionStatus.inProgress;
 
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const SizedBox(width: 40),
-                      Expanded(
-                        child: Text(
-                          l.addNewWorkLabel,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          _clearForm();
-                          blocContext
-                              .read<WorkBloc>()
-                              .add(const WorkAddStatusCleared());
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.close),
-                        splashRadius: 20,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: LayoutBuilder(
+            builder: (ctx, constraints) {
+              final maxWidth = constraints.maxWidth.clamp(0.0, 420.0).toDouble();
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF4F9FF),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              height: 35,
-                              width: 35,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFFE5F1FF),
-                              ),
-                              child: Image.asset(AppAssets.clock),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              l.hourlyWorkLabel,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          l.workNameLabel,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _workNameController,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            hintText: l.workNameHint,
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFE0E0E0)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFE0E0E0)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF007BFF)),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l.hourlySalaryLabel,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _hourlySalaryController,
-                          keyboardType:
-                          const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: l.hourlySalaryHint,
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFE0E0E0)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFE0E0E0)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(
-                                  color: Color(0xFF007BFF)),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton(
-                          onPressed: () async {
-                            await Navigator.of(
-                              context,
-                              rootNavigator: true,
-                            ).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) =>
-                                const ContractWorkScreen(),
-                              ),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFFEFF6FF),
-                            foregroundColor: const Color(0xFF1D4ED8),
-                            side: const BorderSide(
-                                color: Color(0xFF2563EB)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.work_outline_rounded,
-                                    size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l.addContractWorkButton,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 40,
+                          offset: Offset(0, 24),
+                          spreadRadius: -8,
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            _clearForm();
-                            blocContext
-                                .read<WorkBloc>()
-                                .add(const WorkAddStatusCleared());
-                            Navigator.of(context).pop();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header Row (Add New Work + Close X)
+                            Row(
+                              children: [
+                                const SizedBox(width: 40),
+                                Expanded(
+                                  child: Text(
+                                    l.addNewWorkLabel,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 20,
+                                      color: const Color(0xFF0F172A),
+                                    ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 20,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    _clearForm();
+                                    blocContext
+                                        .read<WorkBloc>()
+                                        .add(const WorkAddStatusCleared());
+                                    Navigator.of(context).pop();
+                                  },
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.black,
+                                    size: 28,
+                                  ),
+                                  splashRadius: 20,
+                                ),
+                              ],
                             ),
-                          ),
-                          child: Text(
-                            l.cancelButton,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: isSaving
-                              ? null
-                              : () => _handleSaveWork(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007BFF),
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: isSaving
-                              ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor:
-                              AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+
+                            const SizedBox(height: 16),
+
+                            // ========== HOURLY WORK CARD ==========
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9FBFF),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFFBFDBFE),
+                                  width: 2,
+                                ),
+                              ),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Title Row: icon + "Hourly Work"
+                                  Row(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        height: 36,
+                                        width: 36,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFFE5F1FF),
+                                        ),
+                                        child: Center(
+                                          child: Image.asset(
+                                            AppAssets.clock,
+                                            height: 24,
+                                            width: 24,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        l.hourlyWorkLabel,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 18,
+                                          color:
+                                          const Color(0xFF0F172A),
+                                        ) ??
+                                            const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 18,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // Work Name label
+                                  Text(
+                                    l.workNameLabel,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                      color:
+                                      const Color(0xFF0F172A),
+                                    ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Work Name TextField (rounded pill)
+                                  TextField(
+                                    controller: _workNameController,
+                                    textInputAction: TextInputAction.next,
+                                    decoration: InputDecoration(
+                                      hintText: l.workNameHint,
+                                      hintStyle: const TextStyle(
+                                        color: Color(0xFF9CA3AF),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding:
+                                      const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 16,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(28),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFFE0E0E0),
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(28),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFFE0E0E0),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(28),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF007BFF),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  // Hourly Salary label
+                                  Text(
+                                    l.hourlySalaryLabel,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                      color:
+                                      const Color(0xFF0F172A),
+                                    ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Hourly Salary TextField (rounded pill)
+                                  TextField(
+                                    controller: _hourlySalaryController,
+                                    keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: l.hourlySalaryHint,
+                                      hintStyle: const TextStyle(
+                                        color: Color(0xFF9CA3AF),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding:
+                                      const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 16,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(28),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFFE0E0E0),
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(28),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFFE0E0E0),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(28),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF007BFF),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          )
-                              : Text(
-                            l.saveWorkButton,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
+
+                            const SizedBox(height: 16),
+
+                            // ========== CONTRACT WORK CARD ==========
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9FBFF),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFFCBD5E1),
+                                  width: 2,
+                                ),
+                              ),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Title Row: briefcase emoji + title
+                                  Row(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        '💼',
+                                        style: TextStyle(fontSize: 28),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Flexible(
+                                        child: Text(
+                                          l.contractWorkHeader,
+                                          // expects something like "Contract Work (if have)"
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                            fontWeight:
+                                            FontWeight.w700,
+                                            fontSize: 18,
+                                            color: Color(0xFF0F172A),
+                                          ) ??
+                                              const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 18,
+                                                color: Color(0xFF0F172A),
+                                              ),
+                                          maxLines: 2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  // Gradient "Add Contract Work" pill button
+                                  GestureDetector(
+                                    onTap: _navigateToContractWorkScreen,
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                          colors: [
+                                            Color(0xFF1E40AF), // deep blue
+                                            Color(0xFF0EA5E9), // cyan-ish
+                                          ],
+                                        ),
+                                        borderRadius:
+                                        BorderRadius.circular(30),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x33000000),
+                                            blurRadius: 10,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 14,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text(
+                                            '+',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Flexible(
+                                            child: Text(
+                                              l.addContractWorkButton,
+                                              // e.g. "Add Contract Work"
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 16,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
                             ),
-                          ),
+
+                            const SizedBox(height: 24),
+
+                            // ========== FOOTER BUTTONS ==========
+                            Row(
+                              children: [
+                                // Cancel button (black pill)
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      _clearForm();
+                                      blocContext
+                                          .read<WorkBloc>()
+                                          .add(const WorkAddStatusCleared());
+                                      Navigator.of(context).pop();
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor:
+                                      const Color(0xFF1F2937),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(32),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      l.cancelButton,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                // Save Work button (blue pill)
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: isSaving
+                                        ? null
+                                        : () => _handleSaveWork(context),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                      const Color(0xFF0066FF),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(32),
+                                      ),
+                                      elevation: 0,
+                                      disabledBackgroundColor:
+                                      const Color(0xFF0066FF)
+                                          .withOpacity(0.5),
+                                    ),
+                                    child: isSaving
+                                        ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child:
+                                      CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor:
+                                        AlwaysStoppedAnimation<
+                                            Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                        : Text(
+                                      l.saveWorkButton,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -408,10 +616,7 @@ Future<void> showEditWorkDialog({
 }
 
 class _EditWorkDialog extends StatefulWidget {
-  const _EditWorkDialog({
-    required this.rootContext,
-    required this.work,
-  });
+  const _EditWorkDialog({required this.rootContext, required this.work});
 
   final BuildContext rootContext;
   final Work work;
@@ -447,8 +652,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     });
 
     try {
-      final result =
-      await _contractTypeRepository.fetchContractTypes();
+      final result = await _contractTypeRepository.fetchContractTypes();
       if (!mounted) {
         return;
       }
@@ -462,9 +666,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       }
       setState(() {
         final message = error.message.trim();
-        _contractTypesError = message.isEmpty
-            ? l.contractWorkLoadError
-            : message;
+        _contractTypesError =
+        message.isEmpty ? l.contractWorkLoadError : message;
         _isLoadingContractTypes = false;
       });
     } catch (_) {
@@ -536,16 +739,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
   Future<void> _navigateToContractWorkScreen() async {
     FocusScope.of(context).unfocus();
-    await Navigator.of(
-      context,
-      rootNavigator: true,
-    ).push(
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         builder: (contractContext) {
-          return ContractWorkScreen(
-            work: widget.work,
-            allowEditing: false,
-          );
+          return ContractWorkScreen(work: widget.work, allowEditing: false);
         },
       ),
     );
@@ -598,8 +795,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         return;
       }
       setState(() {
-        _contractTypes
-            .removeWhere((item) => item.id == type.id);
+        _contractTypes.removeWhere((item) => item.id == type.id);
         _deletingContractTypeIds.remove(type.id);
       });
       if (!mounted) {
@@ -615,8 +811,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       setState(() {
         _deletingContractTypeIds.remove(type.id);
       });
-      final exists =
-      await _refreshContractTypesAfterDeleteAttempt(type.id);
+      final exists = await _refreshContractTypesAfterDeleteAttempt(type.id);
       if (!mounted) {
         return;
       }
@@ -639,8 +834,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       setState(() {
         _deletingContractTypeIds.remove(type.id);
       });
-      final exists =
-      await _refreshContractTypesAfterDeleteAttempt(type.id);
+      final exists = await _refreshContractTypesAfterDeleteAttempt(type.id);
       if (!mounted) {
         return;
       }
@@ -651,18 +845,16 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         return;
       }
       ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(
-            content: Text(
-                l.contractWorkTypeDeleteFailedMessage)),
+        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
       );
     }
   }
 
   Future<bool> _refreshContractTypesAfterDeleteAttempt(
-      String contractTypeId) async {
+      String contractTypeId,
+      ) async {
     try {
-      final result =
-      await _contractTypeRepository.fetchContractTypes();
+      final result = await _contractTypeRepository.fetchContractTypes();
       if (!mounted) {
         return false;
       }
@@ -671,8 +863,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         _contractTypes = updatedTypes;
         _contractTypesError = null;
       });
-      return updatedTypes
-          .any((type) => type.id == contractTypeId);
+      return updatedTypes.any((type) => type.id == contractTypeId);
     } on ContractTypeRepositoryException {
       return true;
     } catch (_) {
@@ -681,7 +872,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   // ——————————————————
-  // WORK HEADER CARD  (Blue box like "Farm Fresh Ltd.")
+  // WORK HEADER CARD
   // ——————————————————
   Widget _buildWorkInfoSection(BuildContext context) {
     final hourlyText =
@@ -730,7 +921,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   // ——————————————————
-  // CONTRACT TILE  (Cream box like "Orange  €5/crate   X")
+  // CONTRACT TILE
   // ——————————————————
   Widget _buildContractTypeTile(
       BuildContext context,
@@ -794,14 +985,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
               width: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2.2,
-                valueColor:
-                AlwaysStoppedAnimation<Color>(Color(0xFFB91C1C)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Color(0xFFB91C1C),
+                ),
               ),
             )
           else
             InkWell(
-              onTap: () =>
-                  _confirmAndDeleteContractType(context, type),
+              onTap: () => _confirmAndDeleteContractType(context, type),
               borderRadius: BorderRadius.circular(20),
               child: const Padding(
                 padding: EdgeInsets.all(4),
@@ -818,11 +1009,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   // ——————————————————
-  // SECTION combining:
-  //   "My Workplace" title row,
-  //   blue workplace card,
-  //   orange "Contract Work" pill button,
-  //   contract tiles list
+  // CONTRACT SECTION IN EDIT DIALOG
   // ——————————————————
   Widget _buildContractSection(BuildContext context) {
     final theme = Theme.of(context);
@@ -830,30 +1017,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title row "My Workplace" with small emoji-like icon
-        Row(
-          children: [
-            const Icon(
-              Icons.apartment_rounded,
-              color: Color(0xFF1E293B),
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'My Workplace',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
-              ) ??
-                  const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                  ),
-            ),
-          ],
-        ),
-
         const SizedBox(height: 12),
 
         // Blue workplace info card
@@ -861,49 +1024,52 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
         const SizedBox(height: 16),
 
-        // Orange button "Contract Work"
+        // "Add Contract Work" themed button (primary color pill)
         GestureDetector(
           onTap: _navigateToContractWorkScreen,
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF97316), // orange fill
-              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFFEA580C),
-                width: 1,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                width: 1.2,
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x33000000),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withOpacity(0.25),
                   blurRadius: 8,
-                  offset: Offset(0, 4),
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
                   '📑',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontSize: 18),
                 ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    'Contract Work',
-                    style: theme.textTheme.titleSmall?.copyWith(
+                    'Add Contract Work',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
                     ) ??
                         const TextStyle(
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
@@ -919,7 +1085,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
         const SizedBox(height: 16),
 
-        // Contract items list
+        // Contract items list / loading / error
         if (_isLoadingContractTypes)
           const Center(
             child: SizedBox(
@@ -945,7 +1111,9 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                 onPressed: _loadContractTypes,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 12),
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
@@ -954,37 +1122,25 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
               ),
             ],
           )
-        else if (_contractTypes.isEmpty)
-            const Text(
-              'No contract work added.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6B7280),
-                height: 1.4,
+        else
+          Column(
+            children: _contractTypes
+                .map(
+                  (type) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildContractTypeTile(
+                  context,
+                  AppLocalizations.of(widget.rootContext),
+                  type,
+                ),
               ),
             )
-          else
-            Column(
-              children: _contractTypes
-                  .map(
-                    (type) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildContractTypeTile(
-                    context,
-                    AppLocalizations.of(widget.rootContext),
-                    type,
-                  ),
-                ),
-              )
-                  .toList(),
-            ),
+                .toList(),
+          ),
       ],
     );
   }
 
-  // ——————————————————
-  // MAIN BUILD DIALOG
-  // ——————————————————
   Future<void> _handleDeleteWork(BuildContext dialogContext) async {
     FocusManager.instance.primaryFocus?.unfocus();
     final l = AppLocalizations.of(widget.rootContext);
@@ -995,15 +1151,13 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return;
     }
 
-    final shouldDelete =
-    await _showDeleteConfirmationDialog(dialogContext, l);
+    final shouldDelete = await _showDeleteConfirmationDialog(dialogContext, l);
     if (!shouldDelete || !mounted) {
       return;
     }
 
     final completer = Completer<bool>();
-    bloc.add(WorkDeleted(
-        work: widget.work, completer: completer));
+    bloc.add(WorkDeleted(work: widget.work, completer: completer));
     final result = await completer.future;
 
     if (!mounted) {
@@ -1027,8 +1181,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding:
-          const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
@@ -1046,19 +1202,16 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEE2E2),
-                          borderRadius:
-                          BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Icon(
                           Icons.delete_forever_rounded,
@@ -1069,38 +1222,27 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               l.workDeleteConfirmationTitle,
-                              style: theme
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                fontWeight:
-                                FontWeight.w700,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
                               ) ??
                                   const TextStyle(
-                                    fontWeight:
-                                    FontWeight.w700,
+                                    fontWeight: FontWeight.w700,
                                     fontSize: 20,
                                   ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               l.workDeleteConfirmationMessage,
-                              style: theme
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                color: const Color(
-                                    0xFF6B7280),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF6B7280),
                                 height: 1.5,
                               ) ??
                                   const TextStyle(
-                                    color:
-                                    Color(0xFF6B7280),
+                                    color: Color(0xFF6B7280),
                                     height: 1.5,
                                   ),
                             ),
@@ -1108,9 +1250,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () =>
-                            Navigator.of(context)
-                                .pop(false),
+                        onPressed: () => Navigator.of(context).pop(false),
                         icon: const Icon(Icons.close),
                         splashRadius: 20,
                       ),
@@ -1118,17 +1258,13 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                   ),
                   const SizedBox(height: 24),
                   Container(
-                    padding:
-                    const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color:
-                      const Color(0xFFFFF7ED),
-                      borderRadius:
-                      BorderRadius.circular(22),
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                     child: Row(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Icon(
                           Icons.info_outline,
@@ -1138,18 +1274,12 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                         Expanded(
                           child: Text(
                             l.workDeleteIrreversibleMessage,
-                            style: theme
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                              color:
-                              const Color(
-                                  0xFF9A3412),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF9A3412),
                               height: 1.4,
                             ) ??
                                 const TextStyle(
-                                  color: Color(
-                                      0xFF9A3412),
+                                  color: Color(0xFF9A3412),
                                   height: 1.4,
                                 ),
                           ),
@@ -1162,35 +1292,22 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () =>
-                              Navigator.of(context)
-                                  .pop(false),
-                          style: OutlinedButton
-                              .styleFrom(
-                            padding: const EdgeInsets
-                                .symmetric(
-                              vertical: 16,
-                            ),
+                          onPressed: () => Navigator.of(context).pop(false),
+                          style: OutlinedButton.styleFrom(
+                            padding:
+                            const EdgeInsets.symmetric(vertical: 16),
                             side: BorderSide(
-                              color: theme
-                                  .colorScheme
-                                  .primary,
+                              color: theme.colorScheme.primary,
                             ),
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                           child: Text(
                             l.workDeleteCancelButton,
                             style: TextStyle(
-                              color: theme
-                                  .colorScheme
-                                  .primary,
-                              fontWeight:
-                              FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -1199,22 +1316,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () =>
-                              Navigator.of(context)
-                                  .pop(true),
-                          style: ElevatedButton
-                              .styleFrom(
-                            backgroundColor:
-                            const Color(
-                                0xFFB91C1C),
-                            padding: const EdgeInsets
-                                .symmetric(
+                              Navigator.of(context).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB91C1C),
+                            padding: const EdgeInsets.symmetric(
                               vertical: 16,
                             ),
-                            shape:
-                            RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius
-                                  .circular(24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                           child: Text(
@@ -1223,18 +1332,12 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                 .textTheme
                                 .labelLarge
                                 ?.copyWith(
-                              color: Colors
-                                  .white,
-                              fontWeight:
-                              FontWeight
-                                  .w700,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
                             ) ??
                                 const TextStyle(
-                                  color: Colors
-                                      .white,
-                                  fontWeight:
-                                  FontWeight
-                                      .w700,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
                                 ),
                           ),
                         ),
@@ -1258,34 +1361,29 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
     return BlocBuilder<WorkBloc, WorkState>(
       builder: (blocContext, state) {
-        final isDeleting =
-            state.deletingWorkId == widget.work.id;
+        final isDeleting = state.deletingWorkId == widget.work.id;
         final theme = Theme.of(context);
 
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(
-              horizontal: 20, vertical: 24),
+            horizontal: 20,
+            vertical: 24,
+          ),
           backgroundColor: Colors.transparent,
           child: LayoutBuilder(
             builder: (layoutContext, constraints) {
-              final maxWidth = constraints.maxWidth
-                  .clamp(0.0, 420.0)
-                  .toDouble();
+              final maxWidth =
+              constraints.maxWidth.clamp(0.0, 420.0).toDouble();
               return Center(
                 child: ConstrainedBox(
-                  constraints:
-                  BoxConstraints(maxWidth: maxWidth),
+                  constraints: BoxConstraints(maxWidth: maxWidth),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      borderRadius:
-                      BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(28),
                       gradient: const LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFFF8FBFF),
-                          Color(0xFFFFFFFF)
-                        ],
+                        colors: [Color(0xFFF8FBFF), Color(0xFFFFFFFF)],
                       ),
                       boxShadow: const [
                         BoxShadow(
@@ -1297,138 +1395,67 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius:
-                      BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(28),
                       child: SingleChildScrollView(
                         padding:
-                        const EdgeInsets.fromLTRB(
-                            24, 24, 24, 28),
+                        const EdgeInsets.fromLTRB(24, 24, 24, 28),
                         child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          mainAxisSize:
-                          MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
                               crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
+                              CrossAxisAlignment.center,
                               children: [
-                                Container(
-                                  padding:
-                                  const EdgeInsets
-                                      .all(14),
-                                  decoration:
-                                  BoxDecoration(
-                                    color: const Color(
-                                        0xFFE0EDFF),
-                                    borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                        20),
-                                  ),
-                                  child: const Icon(
-                                    Icons.edit_square,
-                                    color: Color(
-                                        0xFF1D4ED8),
-                                    size: 26,
-                                  ),
-                                ),
-                                const SizedBox(
-                                    width: 16),
+                                const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                    CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         l.editWorkDetailsTitle,
-                                        style: theme
-                                            .textTheme
-                                            .titleLarge
+                                        style: theme.textTheme.titleLarge
                                             ?.copyWith(
                                           fontWeight:
-                                          FontWeight
-                                              .w700,
+                                          FontWeight.w700,
+                                          fontSize: 20,
                                         ) ??
                                             const TextStyle(
                                               fontWeight:
-                                              FontWeight
-                                                  .w700,
-                                              fontSize:
-                                              20,
+                                              FontWeight.w700,
+                                              fontSize: 20,
                                             ),
                                       ),
-                                      const SizedBox(
-                                          height: 6),
-                                      Text(
-                                        l.editWorkDetailsSubtitle,
-                                        style: theme
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                          color:
-                                          const Color(
-                                              0xFF6B7280),
-                                          height:
-                                          1.5,
-                                        ) ??
-                                            const TextStyle(
-                                              color: Color(
-                                                  0xFF6B7280),
-                                              height:
-                                              1.5,
-                                            ),
-                                      ),
+                                      const SizedBox(height: 6),
                                     ],
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () =>
-                                      Navigator.of(
-                                          context)
-                                          .pop(),
-                                  icon: const Icon(
-                                      Icons.close),
-                                  splashRadius: 20,
-                                ),
                               ],
                             ),
-                            const SizedBox(
-                                height: 24),
+                            const SizedBox(height: 24),
 
-                            // workplace card + contract list layout
-                            _buildContractSection(
-                                context),
+                            _buildContractSection(context),
 
-                            const SizedBox(
-                                height: 24),
-
-                            // delete work button
                             SizedBox(
                               width: double.infinity,
                               child: TextButton(
                                 onPressed: isDeleting
                                     ? null
                                     : () =>
-                                    _handleDeleteWork(
-                                        context),
-                                style: TextButton
-                                    .styleFrom(
+                                    _handleDeleteWork(context),
+                                style: TextButton.styleFrom(
                                   foregroundColor:
-                                  const Color(
-                                      0xFFB91C1C),
-                                  padding: const EdgeInsets
-                                      .symmetric(
+                                  const Color(0xFFB91C1C),
+                                  padding:
+                                  const EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
-                                  shape:
-                                  RoundedRectangleBorder(
+                                  shape: RoundedRectangleBorder(
                                     borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                        24),
+                                    BorderRadius.circular(24),
                                   ),
                                 ),
                                 child: isDeleting
@@ -1437,26 +1464,21 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                   width: 20,
                                   child:
                                   CircularProgressIndicator(
-                                    strokeWidth:
-                                    2.5,
+                                    strokeWidth: 2.5,
                                     valueColor:
                                     AlwaysStoppedAnimation<
                                         Color>(
-                                      Color(
-                                          0xFFB91C1C),
+                                      Color(0xFFB91C1C),
                                     ),
                                   ),
                                 )
                                     : Row(
                                   mainAxisSize:
-                                  MainAxisSize
-                                      .min,
+                                  MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons
-                                        .delete_outline),
-                                    const SizedBox(
-                                        width:
-                                        8),
+                                    const Icon(
+                                        Icons.delete_outline),
+                                    const SizedBox(width: 8),
                                     Text(
                                       l.deleteWorkButton,
                                       style: theme
@@ -1464,7 +1486,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                           .labelLarge
                                           ?.copyWith(
                                         fontWeight:
-                                        FontWeight.w600,
+                                        FontWeight
+                                            .w600,
                                       ) ??
                                           const TextStyle(
                                             fontWeight:
@@ -1476,8 +1499,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                               ),
                             ),
 
-                            const SizedBox(
-                                height: 12),
+                            const SizedBox(height: 12),
 
                             // close button
                             SizedBox(
@@ -1485,34 +1507,25 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                               child: ElevatedButton(
                                 onPressed: isDeleting
                                     ? null
-                                    : () => Navigator.of(
-                                    context)
+                                    : () => Navigator.of(context)
                                     .pop(),
-                                style: ElevatedButton
-                                    .styleFrom(
+                                style: ElevatedButton.styleFrom(
                                   backgroundColor:
-                                  const Color(
-                                      0xFF2563EB),
-                                  padding: const EdgeInsets
-                                      .symmetric(
+                                  const Color(0xFF2563EB),
+                                  padding:
+                                  const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
-                                  shape:
-                                  RoundedRectangleBorder(
+                                  shape: RoundedRectangleBorder(
                                     borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                        24),
+                                    BorderRadius.circular(24),
                                   ),
                                   elevation: 0,
                                 ),
                                 child: Text(
                                   l.close,
-                                  style:
-                                  const TextStyle(
-                                    fontWeight:
-                                    FontWeight
-                                        .w700,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
