@@ -82,8 +82,17 @@ class AppLocalizations {
       'saveWorkButton': 'Save Work',
       'workNameRequiredMessage': 'Please enter a work name.',
       'workAddedMessage': 'Work added successfully.',
+      'workUpdatedMessage': 'Work updated successfully.',
+      'workDeletedMessage': 'Work deleted successfully.',
       'invalidHourlyRateMessage': 'Please enter a valid hourly rate.',
       'workSaveFailedMessage': 'Failed to save work. Please try again.',
+      'editWorkTitle': 'Edit Work',
+      'deleteWorkButton': 'Delete Work',
+      'deleteWorkConfirmationTitle': 'Delete Work?',
+      'deleteWorkConfirmationMessage':
+          'Are you sure you want to delete this work? This action cannot be undone.',
+      'deleteWorkCancelButton': 'Keep Work',
+      'deleteWorkConfirmButton': 'Delete',
       'walkthroughTitleOne': 'Track Your Work Hours Easily',
       'walkthroughDescOne':
           'Start and end your day with just one tap. Keep your hours accurate and organized.',
@@ -205,8 +214,17 @@ class AppLocalizations {
       'saveWorkButton': 'कार्य सहेजें',
       'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
       'workAddedMessage': 'कार्य सफलतापूर्वक जोड़ा गया।',
+      'workUpdatedMessage': 'कार्य सफलतापूर्वक अपडेट किया गया।',
+      'workDeletedMessage': 'कार्य सफलतापूर्वक हटाया गया।',
       'invalidHourlyRateMessage': 'कृपया मान्य प्रति घंटा दर दर्ज करें।',
       'workSaveFailedMessage': 'कार्य सहेजा नहीं जा सका। कृपया पुनः प्रयास करें।',
+      'editWorkTitle': 'कार्य संपादित करें',
+      'deleteWorkButton': 'कार्य हटाएं',
+      'deleteWorkConfirmationTitle': 'कार्य हटाएं?',
+      'deleteWorkConfirmationMessage':
+          'क्या आप वाकई इस कार्य को हटाना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।',
+      'deleteWorkCancelButton': 'कार्य रखें',
+      'deleteWorkConfirmButton': 'हटाएं',
       'walkthroughTitleOne': 'अपने कार्य घंटों को आसानी से ट्रैक करें',
       'walkthroughDescOne':
           'सिर्फ एक टैप में अपना दिन शुरू और खत्म करें। अपने घंटे सटीक और व्यवस्थित रखें।',
@@ -328,8 +346,17 @@ class AppLocalizations {
       'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
       'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
       'workAddedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਜੋੜਿਆ ਗਿਆ।',
+      'workUpdatedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਅਪਡੇਟ ਕੀਤਾ ਗਿਆ।',
+      'workDeletedMessage': 'ਕੰਮ ਸਫਲਤਾਪੂਰਵਕ ਮਿਟਾਇਆ ਗਿਆ।',
       'invalidHourlyRateMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਠੀਕ ਘੰਟਾਵਾਰੀ ਦਰ ਦਰਜ ਕਰੋ।',
       'workSaveFailedMessage': 'ਕੰਮ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'editWorkTitle': 'ਕੰਮ ਸੋਧੋ',
+      'deleteWorkButton': 'ਕੰਮ ਮਿਟਾਓ',
+      'deleteWorkConfirmationTitle': 'ਕੰਮ ਮਿਟਾਉਣਾ?',
+      'deleteWorkConfirmationMessage':
+          'ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਇਸ ਕੰਮ ਨੂੰ ਮਿਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਇਹ ਕਾਰਵਾਈ ਵਾਪਸ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕਦੀ।',
+      'deleteWorkCancelButton': 'ਕੰਮ ਰੱਖੋ',
+      'deleteWorkConfirmButton': 'ਮਿਟਾਓ',
       'walkthroughTitleOne':
           'ਆਪਣੇ ਕੰਮ ਦੇ ਘੰਟੇ ਆਸਾਨੀ ਨਾਲ ਟ੍ਰੈਕ ਕਰੋ',
       'walkthroughDescOne':
@@ -455,8 +482,17 @@ class AppLocalizations {
       'saveWorkButton': 'Salva Lavoro',
       'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
       'workAddedMessage': 'Lavoro aggiunto con successo.',
+      'workUpdatedMessage': 'Lavoro aggiornato correttamente.',
+      'workDeletedMessage': 'Lavoro eliminato correttamente.',
       'invalidHourlyRateMessage': 'Inserisci una tariffa oraria valida.',
       'workSaveFailedMessage': 'Impossibile salvare il lavoro. Riprova.',
+      'editWorkTitle': 'Modifica lavoro',
+      'deleteWorkButton': 'Elimina lavoro',
+      'deleteWorkConfirmationTitle': 'Eliminare il lavoro?',
+      'deleteWorkConfirmationMessage':
+          'Sei sicuro di voler eliminare questo lavoro? Questa azione non può essere annullata.',
+      'deleteWorkCancelButton': 'Mantieni lavoro',
+      'deleteWorkConfirmButton': 'Elimina',
       'walkthroughTitleOne': 'Traccia facilmente le ore di lavoro',
       'walkthroughDescOne':
           'Avvia e termina la giornata con un tocco. Tieni le ore precise e ordinate.',
@@ -600,8 +636,18 @@ class AppLocalizations {
   String get saveWorkButton => _value('saveWorkButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
+  String get workUpdatedMessage => _value('workUpdatedMessage');
+  String get workDeletedMessage => _value('workDeletedMessage');
   String get invalidHourlyRateMessage => _value('invalidHourlyRateMessage');
   String get workSaveFailedMessage => _value('workSaveFailedMessage');
+  String get editWorkTitle => _value('editWorkTitle');
+  String get deleteWorkButton => _value('deleteWorkButton');
+  String get deleteWorkConfirmationTitle =>
+      _value('deleteWorkConfirmationTitle');
+  String get deleteWorkConfirmationMessage =>
+      _value('deleteWorkConfirmationMessage');
+  String get deleteWorkCancelButton => _value('deleteWorkCancelButton');
+  String get deleteWorkConfirmButton => _value('deleteWorkConfirmButton');
   String get walkthroughTitleOne => _value('walkthroughTitleOne');
   String get walkthroughDescOne => _value('walkthroughDescOne');
   String get walkthroughTitleTwo => _value('walkthroughTitleTwo');
