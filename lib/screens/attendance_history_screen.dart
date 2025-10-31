@@ -2337,7 +2337,9 @@ class _ResponsiveTable extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
               constraints: BoxConstraints(minWidth: minWidth),
-              child: child,
+              child: IntrinsicHeight(
+                child: child,
+              ),
             ),
           );
         }
