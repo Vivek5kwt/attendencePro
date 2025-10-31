@@ -607,7 +607,7 @@ Future<void> showEditWorkDialog({
 }) async {
   await showDialog<void>(
     context: context,
-    barrierDismissible: false,
+    barrierDismissible: true,
     barrierColor: Colors.black.withOpacity(0.35),
     builder: (dialogContext) {
       return _EditWorkDialog(rootContext: context, work: work);
