@@ -78,7 +78,7 @@ abstract final class AppString {
       'appTitle': 'AttendancePro',
       'drawerUserName': 'John Snow',
       'drawerUserPhone': '+39-319-055-5550',
-      'dashboardLabel': 'Dashboard',
+      'dashboardLabel': 'Works List',
       'homeBannerTitle': 'Track Attendance Smarter',
       'homeBannerSubtitle':
           'Manage your shifts, track hours, and stay organized every day.',
@@ -478,7 +478,7 @@ abstract final class AppString {
       'appTitle': 'अटेंडेंस प्रो',
       'drawerUserName': 'जॉन स्नो',
       'drawerUserPhone': '+39-319-055-5550',
-      'dashboardLabel': 'डैशबोर्ड',
+      'dashboardLabel': 'कार्य सूची',
       'homeBannerTitle': 'उपस्थिति को स्मार्ट तरीके से ट्रैक करें',
       'homeBannerSubtitle':
           'अपनी शिफ्ट्स प्रबंधित करें, घंटे ट्रैक करें और हर दिन व्यवस्थित रहें।',
@@ -878,7 +878,7 @@ abstract final class AppString {
       'appTitle': 'ਅਟੈਂਡੈਂਸ ਪ੍ਰੋ',
       'drawerUserName': 'ਜੌਨ ਸਨੋ',
       'drawerUserPhone': '+39-319-055-5550',
-      'dashboardLabel': 'ਡੈਸ਼ਬੋਰਡ',
+      'dashboardLabel': 'ਕੰਮਾਂ ਦੀ ਸੂਚੀ',
       'homeBannerTitle': 'ਹਾਜ਼ਰੀ ਨੂੰ ਹੋਰ ਸਮਝਦਾਰੀ ਨਾਲ ਟਰੈਕ ਕਰੋ',
       'homeBannerSubtitle':
           'ਆਪਣੀਆਂ ਸ਼ਿਫਟਾਂ ਸੰਭਾਲੋ, ਘੰਟੇ ਟਰੈਕ ਕਰੋ ਅਤੇ ਹਰ ਰੋਜ਼ ਸੁਵਿਧਾਜਨਕ ਰਹੋ।',
@@ -1281,7 +1281,7 @@ abstract final class AppString {
       'appTitle': 'PresenzePro',
       'drawerUserName': 'John Snow',
       'drawerUserPhone': '+39-319-055-5550',
-      'dashboardLabel': 'Dashboard',
+      'dashboardLabel': 'Elenco lavori',
       'homeBannerTitle': 'Monitora le presenze in modo intelligente',
       'homeBannerSubtitle':
           'Gestisci i tuoi turni, traccia le ore e rimani organizzato ogni giorno.',

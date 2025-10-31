@@ -25,7 +25,6 @@ import '../widgets/app_drawer.dart';
 import '../widgets/work_selection_dialog.dart';
 import '../widgets/work_management_dialogs.dart';
 import 'attendance_history_screen.dart';
-import 'contract_work_screen.dart';
 import 'help_support_screen.dart';
 import 'profile_screen.dart';
 import 'reports_summary_screen.dart';
@@ -460,25 +459,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  Future<void> _handleDrawerAddWorkTap() async {
-    if (!mounted) return;
-    await showAddWorkDialog(context: context);
-  }
-
   Future<void> _openDrawerAttendanceHistory() async {
     if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const AttendanceHistoryScreen(),
-      ),
-    );
-  }
-
-  Future<void> _openDrawerContractWork() async {
-    if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const ContractWorkScreen(),
       ),
     );
   }
@@ -2894,9 +2879,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           userName: userName,
           userContact: userContact,
           onDashboardTap: _handleDrawerDashboardTap,
-          onAddWorkTap: _handleDrawerAddWorkTap,
           onAttendanceHistoryTap: _openDrawerAttendanceHistory,
-          onContractWorkTap: _openDrawerContractWork,
           onProfileTap: _openDrawerProfile,
           onReportsSummaryTap: () => _openDrawerReportsSummary(l),
           onChangeLanguageTap: () async {
