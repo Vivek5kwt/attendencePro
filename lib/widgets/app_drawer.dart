@@ -49,7 +49,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final menuItems = <_DrawerMenuItem>[
       _DrawerMenuItem(
-        assetPath: AppAssets.home,
+        assetPath: AppAssets.contractWork,
         label: localization.dashboardLabel,
         backgroundColor: const Color(0xFFE6F3FF),
         iconColor: const Color(0xFF1C87FF),
