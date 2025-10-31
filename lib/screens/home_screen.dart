@@ -28,7 +28,6 @@ import 'profile_screen.dart';
 import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
 import 'attendance_history_screen.dart';
-import 'contract_work_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key, this.openDashboardOnLogin = false}) : super(key: key);
@@ -142,25 +141,11 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  Future<void> _handleAddWorkFromDrawer() async {
-    if (!mounted) return;
-    _showAddWorkDialog();
-  }
-
   Future<void> _openAttendanceHistory() async {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const AttendanceHistoryScreen(),
-      ),
-    );
-  }
-
-  Future<void> _openContractWork() async {
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const ContractWorkScreen(),
       ),
     );
   }
@@ -662,9 +647,7 @@ class _HomeScreenState extends State<HomeScreen> {
               userName: userName,
               userContact: userContact,
               onDashboardTap: _handleDashboardTap,
-              onAddWorkTap: _handleAddWorkFromDrawer,
               onAttendanceHistoryTap: _openAttendanceHistory,
-              onContractWorkTap: _openContractWork,
               onProfileTap: () async {
                 if (!mounted) return;
                 await Navigator.of(context).push(

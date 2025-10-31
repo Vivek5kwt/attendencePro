@@ -14,9 +14,7 @@ class AppDrawer extends StatelessWidget {
     required this.userName,
     required this.userContact,
     required this.onDashboardTap,
-    required this.onAddWorkTap,
     required this.onAttendanceHistoryTap,
-    required this.onContractWorkTap,
     required this.onProfileTap,
     required this.onReportsSummaryTap,
     required this.onChangeLanguageTap,
@@ -30,9 +28,7 @@ class AppDrawer extends StatelessWidget {
   final String userContact;
 
   final DrawerActionCallback onDashboardTap;
-  final DrawerActionCallback onAddWorkTap;
   final DrawerActionCallback onAttendanceHistoryTap;
-  final DrawerActionCallback onContractWorkTap;
   final DrawerActionCallback onProfileTap;
   final DrawerActionCallback onReportsSummaryTap;
   final DrawerActionCallback onChangeLanguageTap;
@@ -60,25 +56,11 @@ class AppDrawer extends StatelessWidget {
         onTap: () => _handleTap(context, onDashboardTap),
       ),
       _DrawerMenuItem(
-        assetPath: AppAssets.addNewWork,
-        label: localization.addNewWorkLabel,
-        backgroundColor: const Color(0xFFE8F8F0),
-        iconColor: const Color(0xFF2EBD5F),
-        onTap: () => _handleTap(context, onAddWorkTap),
-      ),
-      _DrawerMenuItem(
         assetPath: AppAssets.history,
         label: localization.attendanceHistoryLabel,
         backgroundColor: const Color(0xFFFFF2F2),
         iconColor: const Color(0xFFFF3B30),
         onTap: () => _handleTap(context, onAttendanceHistoryTap),
-      ),
-      _DrawerMenuItem(
-        assetPath: AppAssets.contractWork,
-        label: localization.contractWorkLabel,
-        backgroundColor: const Color(0xFFEDEBFF),
-        iconColor: const Color(0xFF5856D6),
-        onTap: () => _handleTap(context, onContractWorkTap),
       ),
       _DrawerMenuItem(
         icon: Icons.person_outline,
