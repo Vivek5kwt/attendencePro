@@ -3,21 +3,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:attendancepro/utils/contract_type_normalizer.dart';
 
 void main() {
-  group('normalizeContractSubtype', () {
-    test('returns lowercase for default bundle subtype', () {
-      expect(normalizeContractSubtype('Bundle'), equals('bundle'));
+  group('normalizeContractType', () {
+    test('returns bundle for mixed case bundle input', () {
+      expect(normalizeContractType('Bundle'), equals('bundle'));
     });
 
-    test('returns lowercase for default fixed subtype', () {
-      expect(normalizeContractSubtype('  Fixed  '), equals('fixed'));
+    test('defaults to fixed when input is blank', () {
+      expect(normalizeContractType('   '), equals('fixed'));
     });
 
-    test('trims but preserves casing for custom subtype', () {
-      expect(normalizeContractSubtype('  Custom Type  '), equals('Custom Type'));
+    test('returns fixed for any non bundle value', () {
+      expect(normalizeContractType('custom'), equals('fixed'));
+    });
+  });
+
+  group('normalizeContractRole', () {
+    test('capitalizes known roles', () {
+      expect(normalizeContractRole('bin'), equals('Bin'));
+      expect(normalizeContractRole('Crate'), equals('Crate'));
+      expect(normalizeContractRole(' BUNCHES '), equals('Bunches'));
+    });
+
+    test('trims but preserves unknown casing', () {
+      expect(normalizeContractRole('  Custom Role  '), equals('Custom Role'));
     });
 
     test('returns empty string for blank input', () {
-      expect(normalizeContractSubtype('   '), isEmpty);
+      expect(normalizeContractRole('   '), isEmpty);
     });
   });
 }

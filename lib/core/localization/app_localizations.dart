@@ -135,6 +135,16 @@ class AppLocalizations {
       _value('contractWorkSubtypeCustomLabel');
   String get contractWorkSubtypeRequiredMessage =>
       _value('contractWorkSubtypeRequiredMessage');
+  String get contractWorkTypeLabel => _value('contractWorkTypeLabel');
+  String get contractWorkTypeHint => _value('contractWorkTypeHint');
+  String get contractWorkTypeFixedOption =>
+      _value('contractWorkTypeFixedOption');
+  String get contractWorkTypeBundleOption =>
+      _value('contractWorkTypeBundleOption');
+  String get contractWorkRoleLabel => _value('contractWorkRoleLabel');
+  String get contractWorkRoleHint => _value('contractWorkRoleHint');
+  String get contractWorkRoleRequiredMessage =>
+      _value('contractWorkRoleRequiredMessage');
   String get contractWorkUnitsLabel => _value('contractWorkUnitsLabel');
   String get contractWorkUnitsHint => _value('contractWorkUnitsHint');
   String get contractWorkRateRequiredMessage =>

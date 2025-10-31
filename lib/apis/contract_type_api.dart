@@ -45,7 +45,8 @@ class ContractTypeApi {
   Future<ContractType> createContractType({
     required String token,
     required String name,
-    required String subtype,
+    required String type,
+    required String role,
     required double ratePerUnit,
     required String unitLabel,
   }) async {
@@ -56,14 +57,15 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
-    final normalizedSubtype = normalizeContractSubtype(subtype);
+    final normalizedType = normalizeContractType(type);
+    final normalizedRole = normalizeContractRole(role);
     final payload = jsonEncode({
       'name': name,
-      'type': normalizedSubtype,
+      'type': normalizedType,
+      'role': normalizedRole,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
-    print('djsd $payload');
     try {
       final response = await _client.post(uri, headers: headers, body: payload);
       final decoded = _decodeBody(response.body);
@@ -86,7 +88,8 @@ class ContractTypeApi {
     required String token,
     required String contractTypeId,
     required String name,
-    required String subtype,
+    required String type,
+    required String role,
     required double ratePerUnit,
     required String unitLabel,
   }) async {
@@ -98,10 +101,12 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
-    final normalizedSubtype = normalizeContractSubtype(subtype);
+    final normalizedType = normalizeContractType(type);
+    final normalizedRole = normalizeContractRole(role);
     final payload = jsonEncode({
       'name': name,
-      'type': normalizedSubtype,
+      'type': normalizedType,
+      'role': normalizedRole,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
