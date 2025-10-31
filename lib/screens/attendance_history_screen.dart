@@ -2337,10 +2337,11 @@ class _ResponsiveTable extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: minWidth),
-              child: IntrinsicHeight(
-                child: child,
+              constraints: BoxConstraints(
+                minWidth: minWidth,
+                maxWidth: minWidth,
               ),
+              child: child,
             ),
           );
         }
