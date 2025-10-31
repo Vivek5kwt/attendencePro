@@ -2739,6 +2739,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         workState.userUsername ??
         l.drawerUserPhone;
     final activeWork = _findActiveWorkFromState(workState);
+    final activeWorkName = (activeWork != null &&
+            activeWork.id == widget.work.id &&
+            activeWork.name.trim().isNotEmpty)
+        ? activeWork.name.trim()
+        : widget.work.name.trim();
+    final shouldShowActiveWork = activeWorkName.isNotEmpty;
     final hourlyRateText = _buildHourlyRateText(l);
     final workTypeLabel = _resolveWorkTypeLabel(l);
     final normalizedRate = hourlyRateText.trim();
@@ -2765,12 +2771,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         workTypeLabel: workTypeLabel,
         rateDescription: rateDescription,
       ),
-      if (activeWork != null) ...[
+      if (shouldShowActiveWork) ...[
         const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerLeft,
           child: _ActiveWorkIndicator(
-            workName: activeWork.name,
+            workName: activeWorkName,
           ),
         ),
       ],
