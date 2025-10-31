@@ -9,7 +9,6 @@ import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
-import '../screens/attendance_history_screen.dart';
 import '../screens/contract_work_screen.dart';
 
 Future<void> showAddWorkDialog({required BuildContext context}) async {
@@ -964,121 +963,99 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                                   ),
                                             ),
                                             const SizedBox(height: 16),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: OutlinedButton.icon(
-                                                    onPressed: () {
-                                                      FocusScope.of(context)
-                                                          .unfocus();
-                                                      Navigator.of(
-                                                        context,
-                                                        rootNavigator: true,
-                                                      ).push(
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (historyContext) {
-                                                            return AttendanceHistoryScreen(
-                                                              initialWork:
-                                                                  widget.work,
-                                                            );
-                                                          },
-                                                        ),
-                                                      );
-                                                    },
-                                                    style:
-                                                        OutlinedButton.styleFrom(
-                                                      padding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                        vertical: 14,
-                                                        horizontal: 12,
-                                                      ),
-                                                      side: BorderSide(
-                                                        color: theme
-                                                            .colorScheme.primary
-                                                            .withOpacity(0.45),
-                                                      ),
-                                                      foregroundColor: theme
-                                                          .colorScheme.primary,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                24),
-                                                      ),
-                                                    ),
-                                                    icon: const Icon(
-                                                      Icons.history_edu_outlined,
-                                                      size: 20,
-                                                    ),
-                                                    label: Text(
-                                                      l.contractHistoryButton,
-                                                      style: theme
-                                                          .textTheme
-                                                          .labelLarge
-                                                          ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                    ),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: <Color>[
+                                                      theme.colorScheme.primary,
+                                                      Color.lerp(
+                                                            theme
+                                                                .colorScheme
+                                                                .primary,
+                                                            theme
+                                                                .colorScheme
+                                                                .onPrimary,
+                                                            0.25,
+                                                          ) ??
+                                                          theme.colorScheme
+                                                              .primary,
+                                                    ],
                                                   ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(24),
+                                                  boxShadow: const <BoxShadow>[
+                                                    BoxShadow(
+                                                      color: Color(0x33000000),
+                                                      blurRadius: 16,
+                                                      offset: Offset(0, 8),
+                                                    ),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(24),
                                                   child: FilledButton.icon(
-                                                    onPressed: () {
-                                                      FocusScope.of(context)
-                                                          .unfocus();
-                                                      Navigator.of(
-                                                        context,
-                                                        rootNavigator: true,
-                                                      ).push(
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (contractContext) {
-                                                            return ContractWorkScreen(
-                                                              work: widget.work,
-                                                            );
-                                                          },
+                                                  onPressed: () {
+                                                    FocusScope.of(context)
+                                                        .unfocus();
+                                                    Navigator.of(
+                                                      context,
+                                                      rootNavigator: true,
+                                                    ).push(
+                                                      MaterialPageRoute(
+                                                        builder:
+                                                            (contractContext) {
+                                                          return ContractWorkScreen(
+                                                            work: widget.work,
+                                                          );
+                                                        },
+                                                      ),
+                                                    );
+                                                  },
+                                                  style: FilledButton.styleFrom(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      vertical: 18,
+                                                      horizontal: 20,
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.transparent,
+                                                    foregroundColor: theme
+                                                        .colorScheme.onPrimary,
+                                                    shadowColor:
+                                                        Colors.transparent,
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    textStyle: theme
+                                                        .textTheme
+                                                        .titleMedium
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                         ),
-                                                      );
-                                                    },
-                                                    style: FilledButton.styleFrom(
-                                                      padding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                        vertical: 16,
-                                                        horizontal: 12,
-                                                      ),
-                                                      backgroundColor: theme
-                                                          .colorScheme.primary,
-                                                      foregroundColor: theme
-                                                          .colorScheme.onPrimary,
-                                                      textStyle: theme
-                                                          .textTheme
-                                                          .labelLarge
-                                                          ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                          ),
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                24),
-                                                      ),
-                                                    ),
-                                                    icon: const Icon(
-                                                      Icons.add_chart_outlined,
-                                                      size: 20,
-                                                    ),
-                                                    label: Text(
-                                                      l.addContractWorkButton,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              24),
                                                     ),
                                                   ),
+                                                  icon: const Icon(
+                                                    Icons.add_task_rounded,
+                                                    size: 22,
+                                                  ),
+                                                  label: Text(
+                                                    l.addContractWorkButton,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                  ),
                                                 ),
-                                              ],
+                                              ),
                                             ),
                                           ],
                                         );
