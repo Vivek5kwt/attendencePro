@@ -267,7 +267,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        OutlinedButton.icon(
+                        OutlinedButton(
                           onPressed: () async {
                             await Navigator.of(
                               context,
@@ -293,8 +293,22 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          icon: const Icon(Icons.work_outline_rounded, size: 18),
-                          label: Text(l.addContractWorkButton),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.work_outline_rounded, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l.addContractWorkButton,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1217,7 +1231,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(22),
-                    child: FilledButton.icon(
+                    child: FilledButton(
                       onPressed: _navigateToContractWorkScreen,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -1235,8 +1249,22 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                               fontSize: 15,
                             ),
                       ),
-                      icon: const Icon(Icons.add_task_rounded, size: 20),
-                      label: Text(l.addContractWorkButton),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add_task_rounded, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              l.addContractWorkButton,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
