@@ -1663,23 +1663,24 @@ class _HoursHistoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final grouped = _groupEntriesByDay(entries);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: grouped.entries
-          .map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _HoursDayCard(
-                date: entry.key,
-                entries: entry.value,
-                currencySymbol: currencySymbol,
-                localization: localization,
-                onEdit: onEdit,
-              ),
-            ),
-          )
-          .toList(),
+    final dayGroups = grouped.entries.toList(growable: false);
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: dayGroups.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final entry = dayGroups[index];
+        return _HoursDayCard(
+          date: entry.key,
+          entries: entry.value,
+          currencySymbol: currencySymbol,
+          localization: localization,
+          onEdit: onEdit,
+        );
+      },
     );
   }
 }
