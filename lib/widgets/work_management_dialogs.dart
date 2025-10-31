@@ -897,6 +897,16 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       setState(() {
         _deletingContractTypeIds.remove(type.id);
       });
+      final exists = await _refreshContractTypesAfterDeleteAttempt(type.id);
+      if (!mounted) {
+        return;
+      }
+      if (!exists) {
+        ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+          SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
+        );
+        return;
+      }
       final message = error.message.trim().isEmpty
           ? l.contractWorkTypeDeleteFailedMessage
           : error.message;
@@ -910,9 +920,38 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       setState(() {
         _deletingContractTypeIds.remove(type.id);
       });
+      final exists = await _refreshContractTypesAfterDeleteAttempt(type.id);
+      if (!mounted) {
+        return;
+      }
+      if (!exists) {
+        ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+          SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
+        );
+        return;
+      }
       ScaffoldMessenger.of(widget.rootContext).showSnackBar(
         SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
       );
+    }
+  }
+
+  Future<bool> _refreshContractTypesAfterDeleteAttempt(String contractTypeId) async {
+    try {
+      final result = await _contractTypeRepository.fetchContractTypes();
+      if (!mounted) {
+        return false;
+      }
+      final updatedTypes = result.userTypes;
+      setState(() {
+        _contractTypes = updatedTypes;
+        _contractTypesError = null;
+      });
+      return updatedTypes.any((type) => type.id == contractTypeId);
+    } on ContractTypeRepositoryException {
+      return true;
+    } catch (_) {
+      return true;
     }
   }
 
