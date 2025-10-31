@@ -1307,6 +1307,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           localization: l,
           dateFormatter: _formatDate,
           contractTypeId: contractTypeId,
+          initialStartTime: _startTimeController.text,
+          initialEndTime: _endTimeController.text,
+          initialBreakMinutes: _breakMinutesController.text,
           onSubmit: (entries) => _attendanceRepository.completeMissedAttendance(
             entries: entries,
           ),
@@ -3434,6 +3437,9 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
     required this.localization,
     required this.dateFormatter,
     this.contractTypeId,
+    this.initialStartTime,
+    this.initialEndTime,
+    this.initialBreakMinutes,
     required this.onSubmit,
   });
 
@@ -3443,6 +3449,9 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
   final AppLocalizations localization;
   final String Function(DateTime) dateFormatter;
   final Object? contractTypeId;
+  final String? initialStartTime;
+  final String? initialEndTime;
+  final String? initialBreakMinutes;
   final Future<Map<String, dynamic>?> Function(
     List<MissedAttendanceCompletion> entries,
   ) onSubmit;
@@ -3465,7 +3474,11 @@ class _MissedAttendanceCompletionSheetState
     final sortedDates = widget.dates.toList(growable: false)
       ..sort((a, b) => a.compareTo(b));
     _entries = sortedDates
-        .map((date) => _MissedAttendanceFormData(date: date))
+        .map((date) {
+          final entry = _MissedAttendanceFormData(date: date);
+          _applyInitialValues(entry);
+          return entry;
+        })
         .toList(growable: false);
   }
 
@@ -3475,6 +3488,27 @@ class _MissedAttendanceCompletionSheetState
       entry.dispose();
     }
     super.dispose();
+  }
+
+  void _applyInitialValues(_MissedAttendanceFormData data) {
+    final start = widget.initialStartTime?.trim();
+    if (start != null && start.isNotEmpty) {
+      final normalized = _normalizeTimeDropdownValue(start);
+      data.startTimeController.text = normalized ?? start;
+    }
+
+    final end = widget.initialEndTime?.trim();
+    if (end != null && end.isNotEmpty) {
+      final normalized = _normalizeTimeDropdownValue(end);
+      data.endTimeController.text = normalized ?? end;
+    }
+
+    final breakMinutes = widget.initialBreakMinutes?.trim();
+    if (breakMinutes != null && breakMinutes.isNotEmpty) {
+      data.breakMinutesController.text = breakMinutes;
+    } else if (data.breakMinutesController.text.trim().isEmpty) {
+      data.breakMinutesController.text = '0';
+    }
   }
 
   @override
