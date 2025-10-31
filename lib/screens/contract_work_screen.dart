@@ -10,9 +10,10 @@ import '../repositories/contract_type_repository.dart';
 import '../utils/responsive.dart';
 
 class ContractWorkScreen extends StatefulWidget {
-  const ContractWorkScreen({super.key, this.work});
+  const ContractWorkScreen({super.key, this.work, this.allowEditing = false});
 
   final Work? work;
+  final bool allowEditing;
 
   @override
   State<ContractWorkScreen> createState() => _ContractWorkScreenState();
@@ -482,10 +483,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               type: type,
                               lastUpdatedLabel:
                                   l.contractWorkLastUpdatedLabel,
-                              onEdit: () =>
-                                  _showContractTypeDialog(type: type),
-                              editLabel: l.contractWorkEditTypeTitle,
+                              onEdit: widget.allowEditing
+                                  ? () => _showContractTypeDialog(type: type)
+                                  : null,
+                              editLabel: widget.allowEditing
+                                  ? l.contractWorkEditTypeTitle
+                                  : null,
                               defaultTag: l.contractWorkDefaultTag,
+                              showEditAction: widget.allowEditing,
                               showDeleteAction: _isDeleteMode,
                               deleteLabel: l.contractWorkDeleteButton,
                               onDelete: !_isDeleteMode
@@ -1657,22 +1662,24 @@ class _ContractTypeTile extends StatelessWidget {
   const _ContractTypeTile({
     required this.type,
     required this.lastUpdatedLabel,
-    required this.onEdit,
-    required this.editLabel,
+    this.onEdit,
+    this.editLabel,
     required this.defaultTag,
     this.onDelete,
     this.deleteLabel,
     this.showDeleteAction = false,
+    this.showEditAction = true,
   });
 
   final _ContractType type;
   final String lastUpdatedLabel;
-  final VoidCallback onEdit;
-  final String editLabel;
+  final VoidCallback? onEdit;
+  final String? editLabel;
   final String defaultTag;
   final VoidCallback? onDelete;
   final String? deleteLabel;
   final bool showDeleteAction;
+  final bool showEditAction;
 
   @override
   Widget build(BuildContext context) {
@@ -1859,27 +1866,32 @@ class _ContractTypeTile extends StatelessWidget {
                   ),
                 ],
               );
-              final editButton = TextButton.icon(
-                style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  foregroundColor: const Color(0xFF312E81),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: responsive.scale(18),
-                    vertical: responsive.scale(10),
+              final actions = <Widget>[];
+              if (showEditAction && onEdit != null && editLabel != null) {
+                actions.add(
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFEFF6FF),
+                      foregroundColor: const Color(0xFF312E81),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: responsive.scale(18),
+                        vertical: responsive.scale(10),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(responsive.scale(16)),
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: responsive.scaleText(14),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(editLabel!),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(responsive.scale(16)),
-                  ),
-                  textStyle: TextStyle(
-                    fontSize: responsive.scaleText(14),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(editLabel),
-              );
-              final actions = <Widget>[editButton];
+                );
+              }
               if (showDeleteAction && onDelete != null) {
                 actions.add(
                   TextButton.icon(
@@ -1907,6 +1919,9 @@ class _ContractTypeTile extends StatelessWidget {
               }
 
               if (shouldStack) {
+                if (actions.isEmpty) {
+                  return dateColumn;
+                }
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1929,11 +1944,14 @@ class _ContractTypeTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(child: dateColumn),
-                  Wrap(
-                    spacing: responsive.scale(10),
-                    runSpacing: responsive.scale(10),
-                    children: actions,
-                  ),
+                  if (actions.isEmpty)
+                    const SizedBox.shrink()
+                  else
+                    Wrap(
+                      spacing: responsive.scale(10),
+                      runSpacing: responsive.scale(10),
+                      children: actions,
+                    ),
                 ],
               );
             },
