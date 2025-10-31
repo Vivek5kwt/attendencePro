@@ -1173,103 +1173,94 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.contractWorkLabel,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
+          Text(
+            l.contractWorkLabel,
+            style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ) ??
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l.contractWorkDescription,
+            style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF6B7280),
+                  height: 1.4,
+                ) ??
+                const TextStyle(
+                  color: Color(0xFF6B7280),
+                  height: 1.4,
+                ),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              height: 44,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: <Color>[
+                      theme.colorScheme.primary,
+                      Color.lerp(
+                            theme.colorScheme.primary,
+                            theme.colorScheme.onPrimary,
+                            0.25,
                           ) ??
-                          const TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l.contractWorkDescription,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF6B7280),
-                            height: 1.4,
-                          ) ??
-                          const TextStyle(
-                            color: Color(0xFF6B7280),
-                            height: 1.4,
-                          ),
+                          theme.colorScheme.primary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 12,
+                      offset: Offset(0, 8),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              SizedBox(
-                height: 44,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: <Color>[
-                        theme.colorScheme.primary,
-                        Color.lerp(
-                              theme.colorScheme.primary,
-                              theme.colorScheme.onPrimary,
-                              0.25,
-                            ) ??
-                            theme.colorScheme.primary,
-                      ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: FilledButton(
+                    onPressed: _navigateToContractWorkScreen,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shadowColor: Colors.transparent,
+                      textStyle: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ) ??
+                          const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                     ),
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: const <BoxShadow>[
-                      BoxShadow(
-                        color: Color(0x33000000),
-                        blurRadius: 12,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: FilledButton(
-                      onPressed: _navigateToContractWorkScreen,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
-                        ),
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        shadowColor: Colors.transparent,
-                        textStyle: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ) ??
-                            const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.add_task_rounded, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              l.addContractWorkButton,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add_task_rounded, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            l.addContractWorkButton,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 18),
           _buildContractTypesContent(context, l),
