@@ -11,7 +11,7 @@ class AppAssets {
   static const walkthroughImageTwo = 'assets/images/img_walkthrough2.webp';
   static const walkthroughImageThree = 'assets/images/img_walkthrough3.webp';
   static const walkthroughNextArrow =
-      'assets/images/arrow_next_with_blue_shape.png';
+      'assets/images/arrow_next_with_blue_shape.webp';
   static const bgBanner = 'assets/images/bg_banner.webp';
   static const clock = 'assets/images/ic_clock.webp';
   static const contract = 'assets/images/ic_contract.webp';
@@ -23,11 +23,11 @@ class AppAssets {
   static const history = 'assets/images/ic_history.webp';
   static const home = 'assets/images/ic_home.webp';
   static const logout = 'assets/images/ic_logout.webp';
-  static const dropDownIcon = 'assets/images/ic_down.png';
-  static const language = 'assets/images/ic_lang.png';
-  static const icTick = 'assets/images/ic_tick.png';
-  static const icClose = 'assets/images/ic_close.png';
-  static const icShare = 'assets/images/ic_share.png';
-  static const icDrawer = 'assets/images/ic_drawer.png';
-  static const icCalender = 'assets/images/ic_calender.png';
+  static const dropDownIcon = 'assets/images/ic_down.webp';
+  static const language = 'assets/images/ic_lang.webp';
+  static const icTick = 'assets/images/ic_tick.webp';
+  static const icClose = 'assets/images/ic_close.webp';
+  static const icShare = 'assets/images/ic_share.webp';
+  static const icDrawer = 'assets/images/ic_drawer.webp';
+  static const icCalender = 'assets/images/ic_calender.webp';
 }

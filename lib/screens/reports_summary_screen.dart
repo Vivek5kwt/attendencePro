@@ -1077,7 +1077,7 @@ class _MonthSelector extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Image.asset(
-                  'assets/images/ic_calender.png',
+                  AppAssets.icCalender,
                   height: 20,
                   width: 20,
                   fit: BoxFit.contain,
