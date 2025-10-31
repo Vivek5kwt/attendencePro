@@ -8,7 +8,9 @@ import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../models/contract_type.dart';
 import '../models/work.dart';
+import '../repositories/contract_type_repository.dart';
 import '../screens/contract_work_screen.dart';
 
 Future<void> showAddWorkDialog({required BuildContext context}) async {
@@ -398,26 +400,58 @@ class _EditWorkDialog extends StatefulWidget {
 }
 
 class _EditWorkDialogState extends State<_EditWorkDialog> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _hourlyController;
-  late final ValueNotifier<bool> _isContractNotifier;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final ContractTypeRepository _contractTypeRepository = ContractTypeRepository();
+  final Set<String> _deletingContractTypeIds = <String>{};
+  List<ContractType> _contractTypes = <ContractType>[];
+  bool _isLoadingContractTypes = false;
+  String? _contractTypesError;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.work.name);
-    _hourlyController =
-        TextEditingController(text: widget.work.hourlyRate?.toString() ?? '');
-    _isContractNotifier = ValueNotifier<bool>(widget.work.isContract);
+    unawaited(_loadContractTypes());
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _hourlyController.dispose();
-    _isContractNotifier.dispose();
-    super.dispose();
+  Future<void> _loadContractTypes() async {
+    final l = AppLocalizations.of(widget.rootContext);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isLoadingContractTypes = true;
+      _contractTypesError = null;
+    });
+
+    try {
+      final result = await _contractTypeRepository.fetchContractTypes();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypes = result.userTypes;
+        _isLoadingContractTypes = false;
+      });
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        final message = error.message.trim();
+        _contractTypesError =
+            message.isEmpty ? l.contractWorkLoadError : message;
+        _isLoadingContractTypes = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypesError = l.contractWorkLoadError;
+        _isLoadingContractTypes = false;
+      });
+    }
   }
 
   InputDecoration _buildTextFieldDecoration({
@@ -509,29 +543,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         child: child,
       ),
     );
-  }
-
-  Future<void> _handleUpdateWork(BuildContext dialogContext) async {
-    final messenger = ScaffoldMessenger.of(widget.rootContext);
-    final l = AppLocalizations.of(widget.rootContext);
-    final workName = _nameController.text.trim();
-
-    if (workName.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.workNameRequiredMessage)),
-      );
-      return;
-    }
-
-    FocusScope.of(dialogContext).unfocus();
-    widget.rootContext.read<WorkBloc>().add(
-          WorkUpdated(
-            work: widget.work,
-            name: workName,
-            hourlyRate: widget.work.hourlyRate ?? 0,
-            isContract: widget.work.isContract,
-          ),
-        );
   }
 
   Future<void> _handleDeleteWork(BuildContext dialogContext) async {
@@ -737,25 +748,515 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return result ?? false;
   }
 
+  String? _resolveCurrencySymbol([Map<String, dynamic>? source]) {
+    final data = source ?? widget.work.additionalData;
+    if (data.isEmpty) {
+      return null;
+    }
+    const possibleKeys = [
+      'currency_symbol',
+      'currencySymbol',
+      'currency',
+      'currencyCode',
+      'currencyPrefix',
+    ];
+    for (final key in possibleKeys) {
+      final value = data[key];
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isNotEmpty) {
+          final isAlphabetic = trimmed.length == 3 &&
+              trimmed.codeUnits.every(
+                (unit) =>
+                    (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
+              );
+          if (isAlphabetic) {
+            return '$trimmed ';
+          }
+          return trimmed;
+        }
+      }
+    }
+    return null;
+  }
+
+  String _formatHourlyRate(AppLocalizations l) {
+    final rate = widget.work.hourlyRate;
+    if (rate == null) {
+      return l.notAvailableLabel;
+    }
+    final symbol = _resolveCurrencySymbol();
+    final formatted = rate.toDouble().toStringAsFixed(2);
+    final prefix = symbol ?? '€';
+    return '$prefix$formatted/hour';
+  }
+
+  String _formatContractRate(ContractType type) {
+    final symbol = _resolveCurrencySymbol(type.additionalData) ??
+        _resolveCurrencySymbol() ??
+        '€';
+    final formatted = type.rate.toStringAsFixed(2);
+    final unit = type.unitLabel.trim();
+    if (unit.isEmpty) {
+      return '$symbol$formatted';
+    }
+    return '$symbol$formatted/${unit.toLowerCase()}';
+  }
+
+  Future<void> _navigateToContractWorkScreen() async {
+    FocusScope.of(context).unfocus();
+    await Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push(
+      MaterialPageRoute<void>(
+        builder: (contractContext) {
+          return ContractWorkScreen(
+            work: widget.work,
+            allowEditing: false,
+          );
+        },
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    await _loadContractTypes();
+  }
+
+  Future<void> _confirmAndDeleteContractType(
+    BuildContext dialogContext,
+    ContractType type,
+  ) async {
+    final l = AppLocalizations.of(widget.rootContext);
+
+    final shouldDelete = await showDialog<bool>(
+      context: dialogContext,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l.contractWorkDeleteConfirmationTitle),
+          content: Text(l.contractWorkDeleteConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l.cancelButton),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB91C1C),
+              ),
+              child: Text(l.contractWorkDeleteButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _deletingContractTypeIds.add(type.id);
+    });
+
+    try {
+      await _contractTypeRepository.deleteContractType(id: type.id);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _contractTypes.removeWhere((item) => item.id == type.id);
+        _deletingContractTypeIds.remove(type.id);
+      });
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
+      );
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingContractTypeIds.remove(type.id);
+      });
+      final message = error.message.trim().isEmpty
+          ? l.contractWorkTypeDeleteFailedMessage
+          : error.message;
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingContractTypeIds.remove(type.id);
+      });
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
+      );
+    }
+  }
+
+  Widget _buildReadOnlyField({
+    required BuildContext context,
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final outlineColor = isDark
+        ? theme.colorScheme.outline.withOpacity(0.4)
+        : const Color(0xFFE5E7EB);
+    final fillColor = isDark
+        ? theme.colorScheme.surfaceVariant.withOpacity(0.35)
+        : const Color(0xFFF9FAFB);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ) ??
+              const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          decoration: BoxDecoration(
+            color: fillColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: outlineColor),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkInfoSection(BuildContext context, AppLocalizations l) {
+    return _buildElevatedInputSurface(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildReadOnlyField(
+            context: context,
+            label: l.workNameLabel,
+            value: widget.work.name,
+            icon: Icons.badge_outlined,
+          ),
+          const SizedBox(height: 20),
+          _buildReadOnlyField(
+            context: context,
+            label: l.hourlySalaryLabel,
+            value: _formatHourlyRate(l),
+            icon: Icons.access_time_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContractTypesContent(BuildContext context, AppLocalizations l) {
+    if (_isLoadingContractTypes) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: SizedBox(
+            height: 32,
+            width: 32,
+            child: CircularProgressIndicator(strokeWidth: 2.6),
+          ),
+        ),
+      );
+    }
+
+    if (_contractTypesError != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _contractTypesError!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFFB91C1C),
+                    height: 1.4,
+                  ) ??
+                  const TextStyle(
+                    color: Color(0xFFB91C1C),
+                    height: 1.4,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: _loadContractTypes,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Text(l.retryButtonLabel),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_contractTypes.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+          l.contractWorkNoCustomTypesLabel,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: const Color(0xFF6B7280),
+                height: 1.4,
+              ) ??
+              const TextStyle(
+                color: Color(0xFF6B7280),
+                height: 1.4,
+              ),
+        ),
+      );
+    }
+
+    return Column(
+      children: _contractTypes
+          .map(
+            (type) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildContractTypeTile(context, l, type),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildContractTypeTile(
+    BuildContext context,
+    AppLocalizations l,
+    ContractType type,
+  ) {
+    final theme = Theme.of(context);
+    final isDeleting = _deletingContractTypeIds.contains(type.id);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withOpacity(0.4)
+              : const Color(0xFFE5E7EB),
+        ),
+        boxShadow: [
+          if (theme.brightness != Brightness.dark)
+            const BoxShadow(
+              color: Color(0x14374151),
+              blurRadius: 20,
+              offset: Offset(0, 10),
+              spreadRadius: -6,
+            ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 40,
+            width: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.assignment_turned_in_outlined,
+              color: Color(0xFF1D4ED8),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  type.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ) ??
+                      const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatContractRate(type),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF4B5563),
+                      ) ??
+                      const TextStyle(
+                        color: Color(0xFF4B5563),
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          if (isDeleting)
+            const SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
+            )
+          else
+            IconButton(
+              onPressed: () => _confirmAndDeleteContractType(context, type),
+              icon: const Icon(Icons.close_rounded),
+              tooltip: l.contractWorkDeleteButton,
+              splashRadius: 20,
+              color: const Color(0xFFB91C1C),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContractSection(BuildContext context, AppLocalizations l) {
+    final theme = Theme.of(context);
+    return _buildElevatedInputSurface(
+      context: context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l.contractWorkLabel,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ) ??
+                          const TextStyle(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      l.contractWorkDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7280),
+                            height: 1.4,
+                          ) ??
+                          const TextStyle(
+                            color: Color(0xFF6B7280),
+                            height: 1.4,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                height: 44,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: <Color>[
+                        theme.colorScheme.primary,
+                        Color.lerp(
+                              theme.colorScheme.primary,
+                              theme.colorScheme.onPrimary,
+                              0.25,
+                            ) ??
+                            theme.colorScheme.primary,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: const <BoxShadow>[
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 12,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: FilledButton.icon(
+                      onPressed: _navigateToContractWorkScreen,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        shadowColor: Colors.transparent,
+                        textStyle: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ) ??
+                            const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                      ),
+                      icon: const Icon(Icons.add_task_rounded, size: 20),
+                      label: Text(l.addContractWorkButton),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _buildContractTypesContent(context, l),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(widget.rootContext);
 
-    return BlocConsumer<WorkBloc, WorkState>(
-      listenWhen: (previous, current) =>
-          previous.updateStatus != current.updateStatus,
-      listener: (blocContext, state) {
-        if (state.updateStatus == WorkActionStatus.success) {
-          Navigator.of(context).pop();
-          blocContext
-              .read<WorkBloc>()
-              .add(const WorkUpdateStatusCleared());
-        }
-      },
+    return BlocBuilder<WorkBloc, WorkState>(
       builder: (blocContext, state) {
-        final isSaving = state.updateStatus == WorkActionStatus.inProgress;
         final isDeleting = state.deletingWorkId == widget.work.id;
-        final isProcessing = isSaving || isDeleting;
         final theme = Theme.of(context);
 
         return Dialog(
@@ -789,412 +1290,135 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                       borderRadius: BorderRadius.circular(28),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-                        child: Form(
-                          key: _formKey,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE0EDFF),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit_square,
-                                      color: Color(0xFF1D4ED8),
-                                      size: 26,
-                                    ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE0EDFF),
+                                    borderRadius: BorderRadius.circular(20),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l.editWorkDetailsTitle,
-                                          style: theme.textTheme.titleLarge?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                              ) ??
-                                              const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 20,
-                                              ),
+                                  child: const Icon(
+                                    Icons.edit_square,
+                                    color: Color(0xFF1D4ED8),
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l.editWorkDetailsTitle,
+                                        style: theme.textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ) ??
+                                            const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 20,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        l.editWorkDetailsSubtitle,
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                              color: const Color(0xFF6B7280),
+                                              height: 1.5,
+                                            ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF6B7280),
+                                              height: 1.5,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  icon: const Icon(Icons.close),
+                                  splashRadius: 20,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            _buildWorkInfoSection(context, l),
+                            const SizedBox(height: 20),
+                            _buildContractSection(context, l),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton(
+                                onPressed:
+                                    isDeleting ? null : () => _handleDeleteWork(context),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: const Color(0xFFB91C1C),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                ),
+                                child: isDeleting
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Color(0xFFB91C1C),
+                                          ),
                                         ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          l.editWorkDetailsSubtitle,
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                                color: const Color(0xFF6B7280),
-                                                height: 1.5,
-                                              ) ??
-                                              const TextStyle(
-                                                color: Color(0xFF6B7280),
-                                                height: 1.5,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                      blocContext
-                                          .read<WorkBloc>()
-                                          .add(const WorkUpdateStatusCleared());
-                                    },
-                                    icon: const Icon(Icons.close),
-                                    splashRadius: 20,
-                                  ),
-                                ],
+                                      )
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.delete_outline),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            l.deleteWorkButton,
+                                            style: theme.textTheme.labelLarge?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ) ??
+                                                const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
                               ),
-                              const SizedBox(height: 24),
-                              _buildElevatedInputSurface(
-                                context: context,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l.workNameLabel,
-                                      style: theme.textTheme.labelLarge?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ) ??
-                                          const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    TextFormField(
-                                      controller: _nameController,
-                                      textInputAction: TextInputAction.next,
-                                      decoration: _buildTextFieldDecoration(
-                                        context: context,
-                                        hintText: l.workNameHint,
-                                        prefixIcon:
-                                            const Icon(Icons.badge_outlined),
-                                      ),
-                                      validator: (value) {
-                                        final trimmed = value?.trim() ?? '';
-                                        if (trimmed.isEmpty) {
-                                          return l.workNameRequiredMessage;
-                                        }
-                                        if (trimmed.length < 3) {
-                                          return l.workNameTooShortValidation;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    const SizedBox(height: 20),
-                                    Text(
-                                      l.hourlySalaryLabel,
-                                      style: theme.textTheme.labelLarge?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ) ??
-                                          const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    TextFormField(
-                                      controller: _hourlyController,
-                                      enabled: false,
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                      decoration: _buildTextFieldDecoration(
-                                        context: context,
-                                        hintText: l.hourlySalaryHint,
-                                        prefixIcon: const Icon(
-                                          Icons.payments_outlined,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    ValueListenableBuilder<bool>(
-                                      valueListenable: _isContractNotifier,
-                                      builder: (valueContext, isContract, _) {
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    l.contractWorkLabel,
-                                                    style: theme
-                                                            .textTheme
-                                                            .labelLarge
-                                                            ?.copyWith(
-                                                              fontWeight:
-                                                                  FontWeight.w600,
-                                                            ) ??
-                                                        const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                ),
-                                                Switch.adaptive(
-                                                  value: isContract,
-                                                  onChanged: null,
-                                                  activeColor:
-                                                      theme.colorScheme.primary,
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                              l.contractWorkDescription,
-                                              style: theme.textTheme.bodySmall?.copyWith(
-                                                    color: const Color(0xFF6B7280),
-                                                    height: 1.5,
-                                                  ) ??
-                                                  const TextStyle(
-                                                    color: Color(0xFF6B7280),
-                                                    height: 1.5,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 16),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: DecoratedBox(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: <Color>[
-                                                      theme.colorScheme.primary,
-                                                      Color.lerp(
-                                                            theme
-                                                                .colorScheme
-                                                                .primary,
-                                                            theme
-                                                                .colorScheme
-                                                                .onPrimary,
-                                                            0.25,
-                                                          ) ??
-                                                          theme.colorScheme
-                                                              .primary,
-                                                    ],
-                                                  ),
-                                                  borderRadius:
-                                                      BorderRadius.circular(24),
-                                                  boxShadow: const <BoxShadow>[
-                                                    BoxShadow(
-                                                      color: Color(0x33000000),
-                                                      blurRadius: 16,
-                                                      offset: Offset(0, 8),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(24),
-                                                  child: FilledButton.icon(
-                                                  onPressed: () {
-                                                    FocusScope.of(context)
-                                                        .unfocus();
-                                                    Navigator.of(
-                                                      context,
-                                                      rootNavigator: true,
-                                                    ).push(
-                                                      MaterialPageRoute(
-                                                        builder:
-                                                            (contractContext) {
-                                                          return ContractWorkScreen(
-                                                            work: widget.work,
-                                                          );
-                                                        },
-                                                      ),
-                                                    );
-                                                  },
-                                                  style: FilledButton.styleFrom(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      vertical: 18,
-                                                      horizontal: 20,
-                                                    ),
-                                                    backgroundColor:
-                                                        Colors.transparent,
-                                                    foregroundColor: theme
-                                                        .colorScheme.onPrimary,
-                                                    shadowColor:
-                                                        Colors.transparent,
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    textStyle: theme
-                                                        .textTheme
-                                                        .titleMedium
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              24),
-                                                    ),
-                                                  ),
-                                                  icon: const Icon(
-                                                    Icons.add_task_rounded,
-                                                    size: 22,
-                                                  ),
-                                                  label: Text(
-                                                    l.addContractWorkButton,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ],
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed:
+                                    isDeleting ? null : () => Navigator.of(context).pop(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  l.close,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 24),
-                              SizedBox(
-                                width: double.infinity,
-                                child: TextButton(
-                                  onPressed: isProcessing
-                                      ? null
-                                      : () => _handleDeleteWork(context),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFFB91C1C),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                  ),
-                                  child: isDeleting
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              Color(0xFFB91C1C),
-                                            ),
-                                          ),
-                                        )
-                                      : Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.delete_outline),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              l.deleteWorkButton,
-                                              style: theme
-                                                      .textTheme
-                                                      .labelLarge
-                                                      ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ) ??
-                                                  const TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: isProcessing
-                                          ? null
-                                          : () {
-                                              Navigator.of(context).pop();
-                                              blocContext
-                                                  .read<WorkBloc>()
-                                                  .add(const WorkUpdateStatusCleared());
-                                            },
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                        side: BorderSide(
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(24),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        l.workDeleteCancelButton,
-                                        style: TextStyle(
-                                          color: theme.colorScheme.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: isProcessing
-                                          ? null
-                                          : () async {
-                                              if (_formKey.currentState
-                                                      ?.validate() ??
-                                                  false) {
-                                                await _handleUpdateWork(
-                                                  context,
-                                                );
-                                              }
-                                            },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF2563EB),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(24),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: isSaving
-                                          ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<Color>(
-                                                        Colors.white),
-                                              ),
-                                            )
-                                          : Text(
-                                              l.saveChangesButton,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
