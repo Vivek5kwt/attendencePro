@@ -1295,10 +1295,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           )
         : content;
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          color: colorScheme.onSurface,
+        ) ??
+        TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          color: colorScheme.onSurface,
+        );
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.appBarTheme.backgroundColor ??
+            theme.colorScheme.surface,
         elevation: 0,
         automaticallyImplyLeading: false,
         titleSpacing: 16,
@@ -1307,40 +1322,42 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF2F2),
+                color: colorScheme.primary.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Image.asset(
                 AppAssets.history,
                 width: 24,
                 height: 24,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(width: 12),
-            Text(
-              l.attendanceHistoryLabel,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: const Color(0xFF111827),
-                  ) ??
-                  const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                    color: Color(0xFF111827),
-                  ),
+            Expanded(
+              child: Text(
+                l.attendanceHistoryLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: titleStyle,
+              ),
             ),
           ],
         ),
         actions: [
           if (_availableWorks.length > 1)
             IconButton(
-              icon: const Icon(Icons.work_outline, color: Color(0xFF2563EB)),
+              icon: Icon(
+                Icons.work_outline,
+                color: colorScheme.primary,
+              ),
               tooltip: l.changeWorkButton,
               onPressed: _showWorkPicker,
             ),
           IconButton(
-            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+            icon: Icon(
+              Icons.close,
+              color: colorScheme.onSurfaceVariant,
+            ),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ],
