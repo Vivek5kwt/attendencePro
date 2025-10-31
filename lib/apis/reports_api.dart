@@ -77,7 +77,7 @@ class ReportsApi {
       'year': year,
       'type': type.apiValue,
     });
-
+    print('dsjdjsdh $payload');
     try {
       final response = await _client.post(uri, headers: headers, body: payload);
       final decoded = _decodeBody(response.body);

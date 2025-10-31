@@ -653,8 +653,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   return IconButton(
                     icon: Image.asset(
                       AppAssets.icDrawer,
-                      width: 24,
-                      height: 24,
+                      width: 27,
+                      height: 27,
                     ),
                     onPressed: () => _handleDrawerButtonPressed(context),
                   );
@@ -671,8 +671,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: Image.asset(
                     AppAssets.language,
-                    width: 24,
-                    height: 24,
+                    width: 26,
+                    height: 26,
                   ),
                   onPressed: () {
                     showLanguageSelectionDialog(
@@ -685,8 +685,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: Image.asset(
                     AppAssets.icShare,
-                    width: 24,
-                    height: 24,
+                    width: 34,
+                    height: 34,
                   ),
                   onPressed: _showShareOptions,
                 ),
@@ -2099,7 +2099,6 @@ class _AddNewWorkCard extends StatelessWidget {
   }
 }
 
-/// Draws a dashed rounded border around its child.
 class _DashedOutline extends StatelessWidget {
   const _DashedOutline({
     required this.child,

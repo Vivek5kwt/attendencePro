@@ -2839,8 +2839,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               return IconButton(
                 icon: Image.asset(
                   AppAssets.icDrawer,
-                  width: 24,
-                  height: 24,
+                  width: 27,
+                  height: 27,
                 ),
                 onPressed: () => _handleDrawerButtonPressed(context),
               );
