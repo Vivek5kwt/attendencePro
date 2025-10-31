@@ -52,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _shouldOpenDashboard = false;
   bool _hasOpenedDashboard = false;
   bool _hasTriggeredAutoActivation = false;
+  String? _pendingActivationWorkId;
 
   @override
   void initState() {
@@ -325,6 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleSetActiveWork(Work work) {
+    _pendingActivationWorkId = work.id;
     context.read<WorkBloc>().add(WorkActivated(work: work));
   }
 
@@ -564,34 +566,69 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<WorkBloc, WorkState>(
-      listenWhen: (previous, current) =>
-      previous.lastErrorMessage != current.lastErrorMessage ||
-          previous.lastSuccessMessage != current.lastSuccessMessage ||
-          previous.requiresAuthentication != current.requiresAuthentication ||
-          previous.feedbackKind != current.feedbackKind,
-      listener: (context, state) {
-        final l = AppLocalizations.of(context);
-        final messenger = ScaffoldMessenger.of(context);
-        String? message;
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<WorkBloc, WorkState>(
+          listenWhen: (previous, current) =>
+              previous.lastErrorMessage != current.lastErrorMessage ||
+              previous.lastSuccessMessage != current.lastSuccessMessage ||
+              previous.requiresAuthentication != current.requiresAuthentication ||
+              previous.feedbackKind != current.feedbackKind,
+          listener: (context, state) {
+            final l = AppLocalizations.of(context);
+            final messenger = ScaffoldMessenger.of(context);
+            String? message;
 
-        if (state.requiresAuthentication) {
-          message = l.authenticationRequiredMessage;
-        } else if (state.lastErrorMessage != null &&
-            state.lastErrorMessage!.isNotEmpty) {
-          message = state.lastErrorMessage;
-        } else if (state.lastSuccessMessage != null) {
-          if (state.lastSuccessMessage!.isNotEmpty) {
-            message = state.lastSuccessMessage;
-          } else {
-            message = _successFallback(state.feedbackKind, l);
-          }
-        }
+            if (state.requiresAuthentication) {
+              message = l.authenticationRequiredMessage;
+            } else if (state.lastErrorMessage != null &&
+                state.lastErrorMessage!.isNotEmpty) {
+              message = state.lastErrorMessage;
+            } else if (state.lastSuccessMessage != null) {
+              if (state.lastSuccessMessage!.isNotEmpty) {
+                message = state.lastSuccessMessage;
+              } else {
+                message = _successFallback(state.feedbackKind, l);
+              }
+            }
 
-        if (message != null && message.isNotEmpty) {
-          messenger.showSnackBar(SnackBar(content: Text(message)));
-        }
-      },
+            if (message != null && message.isNotEmpty) {
+              messenger.showSnackBar(SnackBar(content: Text(message)));
+            }
+          },
+        ),
+        BlocListener<WorkBloc, WorkState>(
+          listenWhen: (previous, current) =>
+              previous.activateStatus != current.activateStatus,
+          listener: (context, state) {
+            if (state.activateStatus == WorkActionStatus.success) {
+              final pendingId = _pendingActivationWorkId;
+              _pendingActivationWorkId = null;
+              if (pendingId != null) {
+                Work? activatedWork;
+                for (final work in state.works) {
+                  if (work.id == pendingId && _isWorkActive(work)) {
+                    activatedWork = work;
+                    break;
+                  }
+                }
+
+                activatedWork ??= _firstActiveWork(state.works);
+
+                if (activatedWork != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    context.read<AppCubit>().showHome();
+                    _openWorkDetail(activatedWork!);
+                  });
+                }
+              }
+            } else if (state.activateStatus == WorkActionStatus.failure) {
+              _pendingActivationWorkId = null;
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<WorkBloc, WorkState>(
         builder: (context, state) {
           final l = AppLocalizations.of(context);
@@ -1484,6 +1521,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return false;
+  }
+
+  Work? _firstActiveWork(List<Work> works) {
+    for (final work in works) {
+      if (_isWorkActive(work)) {
+        return work;
+      }
+    }
+    return null;
   }
 
   Work? _findMostRecentWork(List<Work> works) {
