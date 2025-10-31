@@ -2447,7 +2447,10 @@ class _MonthlyReportDayCard extends StatelessWidget {
     if (normalized == 'fixed' ||
         normalized == 'fixed_salary' ||
         normalized == 'salary' ||
-        normalized == 'contract') {
+        normalized == 'contract' ||
+        normalized == 'bundle' ||
+        normalized == 'bundled' ||
+        normalized == 'package') {
       return localization.reportsMonthlyTypeFixed;
     }
     return trimmed[0].toUpperCase() + trimmed.substring(1);
