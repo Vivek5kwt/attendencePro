@@ -6041,23 +6041,7 @@ class _ContractEntryForm extends StatelessWidget {
                         icon: const Icon(Icons.add_circle_outline),
                         label: Text(l.contractWorkAddTypeTitle),
                       ),
-                      if (contractTypes.length <= entries.length)
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 12),
-                            child: Text(
-                              l.contractWorkAllTypesAddedMessage,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF94A3B8),
-                                    fontWeight: FontWeight.w500,
-                                  ) ??
-                                  const TextStyle(
-                                    color: Color(0xFF94A3B8),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                          ),
-                        ),
+
                     ],
                   ),
                 ),
