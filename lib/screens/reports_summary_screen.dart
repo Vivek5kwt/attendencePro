@@ -55,6 +55,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   int _summaryRequestId = 0;
   bool _missingWork = false;
   String? _selectedWorkId;
+  String? _selectedWorkName;
   MonthlyReportType _selectedMonthlyType = MonthlyReportType.hourly;
   MonthlyReport? _monthlyReport;
   bool _isLoadingMonthlyReport = false;
@@ -137,6 +138,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         _missingWork = true;
         _isLoadingSummary = false;
         _selectedWorkId = null;
+        _selectedWorkName = null;
         _monthlyReport = null;
         _monthlyReportError = null;
         _isLoadingMonthlyReport = false;
@@ -151,6 +153,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       _summaryError = null;
       _missingWork = false;
       _selectedWorkId = selectedWork.id;
+      _selectedWorkName = selectedWork.name;
     });
 
     _loadMonthlyReport(targetDate: targetDate, work: selectedWork);
@@ -297,6 +300,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     }
     setState(() {
       _selectedWorkId = selected.id;
+      _selectedWorkName = selected.name;
     });
     _loadSummary();
   }
@@ -510,6 +514,15 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
 
     final workState = context.watch<WorkBloc>().state;
     final selectedWork = _resolveSelectedWork(workState);
+    final storedWorkName = _selectedWorkName?.trim() ?? '';
+    final resolvedWorkNameCandidate = storedWorkName.isNotEmpty
+        ? storedWorkName
+        : (selectedWork?.name ?? '').trim();
+    final hasSelectedWork =
+        selectedWork != null || resolvedWorkNameCandidate.isNotEmpty;
+    final activeWorkName = resolvedWorkNameCandidate.isNotEmpty
+        ? resolvedWorkNameCandidate
+        : l.notAvailableLabel;
     final summary = _summary;
     final error = _summaryError;
     final isLoading = _isLoadingSummary;
@@ -592,6 +605,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             _missingWork = true;
             _isLoadingSummary = false;
             _selectedWorkId = null;
+            _selectedWorkName = null;
           });
           return;
         }
@@ -652,11 +666,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 months: months,
                 onMonthSelected: _onMonthSelected,
               ),
-              if (selectedWork != null) ...[
+              if (hasSelectedWork) ...[
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    _ActiveWorkBadge(workName: selectedWork.name),
+                    _ActiveWorkBadge(workName: activeWorkName),
                     const SizedBox(width: 12),
                     TextButton(
                       onPressed: () => _handleChangeWork(workState.works),
