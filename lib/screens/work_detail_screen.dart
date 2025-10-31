@@ -396,6 +396,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     super.initState();
     _initializeAttendanceControllers();
     if (widget.work.isContract) {
+      _contractFieldsEnabled = !_markAsWorkOff;
       final initialContractTypeId =
           _extractContractTypeIdFromAdditionalData()?.toString();
       _ensurePrimaryBundleEntry(initialContractTypeId: initialContractTypeId);
@@ -1428,29 +1429,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
   }
 
-  void _handleContractFieldsToggle(bool value) {
-    if (!widget.work.isContract || (_markAsWorkOff && value)) {
-      return;
-    }
-    if (value && _contractTypes.isEmpty && !_isLoadingContractTypes) {
-      _loadContractTypes();
-    }
-    setState(() {
-      _contractFieldsEnabled = value;
-      if (value) {
-        _ensurePrimaryBundleEntry();
-        if (_contractTypes.isNotEmpty) {
-          _resolveContractBundleSelectionAfterLoad();
-        }
-      } else {
-        for (final entry in _contractBundleEntries) {
-          entry.controller.clear();
-        }
-      }
-    });
-    _handleAttendanceFieldChanged();
-  }
-
   void _handleContractTypeChanged(String entryId, String? value) {
     if (!widget.work.isContract) {
       return;
@@ -1808,6 +1786,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _previousStartTime = null;
         _previousEndTime = null;
         _previousBreakMinutes = null;
+        if (widget.work.isContract) {
+          _contractFieldsEnabled = true;
+          _ensurePrimaryBundleEntry();
+        }
       }
     });
     _handleAttendanceFieldChanged();
@@ -2830,7 +2812,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         contractFieldsError: _contractTypesError,
         contractTypes: _contractTypes,
         contractBundleEntries: _contractBundleEntries,
-        onContractFieldsToggle: _handleContractFieldsToggle,
         onContractBundleTypeChanged: _handleContractTypeChanged,
         onContractTypeRetry:
             widget.work.isContract ? () => _loadContractTypes() : null,
@@ -4346,7 +4327,6 @@ class _AttendanceSection extends StatelessWidget {
     this.contractFieldsError,
     this.contractTypes = const <ContractType>[],
     this.contractBundleEntries = const <_ContractBundleFormEntry>[],
-    this.onContractFieldsToggle,
     this.onContractBundleTypeChanged,
     this.onContractTypeRetry,
     this.onAddContractBundle,
@@ -4355,10 +4335,7 @@ class _AttendanceSection extends StatelessWidget {
     required this.bundleUnitsValidator,
     this.statusMessage,
     this.isStatusError = false,
-  }) : assert(
-          !showContractFields ||
-              onContractFieldsToggle != null,
-        );
+  });
 
   final String dateLabel;
   final VoidCallback onDateTap;
@@ -4385,7 +4362,6 @@ class _AttendanceSection extends StatelessWidget {
   final String? contractFieldsError;
   final List<ContractType> contractTypes;
   final List<_ContractBundleFormEntry> contractBundleEntries;
-  final ValueChanged<bool>? onContractFieldsToggle;
   final void Function(String, String?)? onContractBundleTypeChanged;
   final VoidCallback? onContractTypeRetry;
   final VoidCallback? onAddContractBundle;
@@ -4584,15 +4560,13 @@ class _AttendanceSection extends StatelessWidget {
                 );
               },
             ),
-            if (showContractFields) ...[
+            if (showContractFields && contractFieldsEnabled) ...[
               const SizedBox(height: 20),
               _ContractEntryForm(
-                isActive: contractFieldsEnabled,
                 isLoading: isContractFieldsLoading,
                 errorMessage: contractFieldsError,
                 contractTypes: contractTypes,
                 entries: contractBundleEntries,
-                onToggle: onContractFieldsToggle,
                 onTypeChanged: onContractBundleTypeChanged,
                 onRetry: onContractTypeRetry,
                 onRemoveEntry: onRemoveContractBundle,
@@ -4608,7 +4582,7 @@ class _AttendanceSection extends StatelessWidget {
             _buildActionButtons(
               context,
               l,
-              includeSubmit: !showContractFields,
+              includeSubmit: !showContractFields || !contractFieldsEnabled,
             ),
             if (statusMessage != null)
               Container(
@@ -5670,11 +5644,9 @@ class _BundleCollectionResult {
 
 class _ContractEntryForm extends StatelessWidget {
   const _ContractEntryForm({
-    required this.isActive,
     required this.isLoading,
     required this.contractTypes,
     required this.entries,
-    this.onToggle,
     this.onTypeChanged,
     required this.bundleUnitsValidator,
     required this.isSubmitting,
@@ -5687,11 +5659,9 @@ class _ContractEntryForm extends StatelessWidget {
     this.trailingAction,
   });
 
-  final bool isActive;
   final bool isLoading;
   final List<ContractType> contractTypes;
   final List<_ContractBundleFormEntry> entries;
-  final ValueChanged<bool>? onToggle;
   final void Function(String, String?)? onTypeChanged;
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final VoidCallback? onRetry;
@@ -5708,7 +5678,6 @@ class _ContractEntryForm extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final bool disableInteractions = isSubmitting || isWorkOff;
-    final bool toggleDisabled = disableInteractions || onToggle == null;
 
     ContractType? resolveType(String? id) {
       if (id == null) {
@@ -5732,90 +5701,43 @@ class _ContractEntryForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final toggleContent = Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l.contractWorkLabel,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ) ??
-                          const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                          ),
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: isActive,
-                    activeColor: const Color(0xFF2563EB),
-                    onChanged: toggleDisabled ? null : onToggle,
-                  ),
-                ],
-              );
-
-              final Widget? action = trailingAction;
-              if (action == null) {
-                return toggleContent;
-              }
-
-              final showInlineAction = constraints.maxWidth >= 520;
-              final button = SizedBox(height: 48, child: action);
-
-              if (showInlineAction) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(child: toggleContent),
-                    const SizedBox(width: 12),
-                    Expanded(child: button),
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  toggleContent,
-                  const SizedBox(height: 12),
-                  button,
-                ],
-              );
-            },
-          ),
-          if (isActive) ...[
+          if (trailingAction != null) ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(height: 48, child: trailingAction),
+            ),
             const SizedBox(height: 16),
-            if (isLoading) ...[
-              const SizedBox(
-                height: 4,
-                child: LinearProgressIndicator(
-                  backgroundColor: Color(0xFFE0E7FF),
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+          ] else
+            const SizedBox(height: 16),
+          if (isLoading) ...[
+            const SizedBox(
+              height: 4,
+              child: LinearProgressIndicator(
+                backgroundColor: Color(0xFFE0E7FF),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+              ),
+            ),
+          ] else if (errorMessage != null && errorMessage!.trim().isNotEmpty) ...[
+            _ContractFormMessage(
+              message: errorMessage!,
+              isError: true,
+              onRetry: onRetry,
+            ),
+          ] else if (contractTypes.isEmpty) ...[
+            _ContractFormMessage(
+              message: l.contractWorkNoCustomTypesLabel,
+              onRetry: onRetry,
+            ),
+          ] else ...[
+            if (entries.isEmpty)
+              Text(
+                l.attendanceUnitsRequired,
+                style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ] else if (errorMessage != null && errorMessage!.trim().isNotEmpty) ...[
-              _ContractFormMessage(
-                message: errorMessage!,
-                isError: true,
-                onRetry: onRetry,
-              ),
-            ] else if (contractTypes.isEmpty) ...[
-              _ContractFormMessage(
-                message: l.contractWorkNoCustomTypesLabel,
-                onRetry: onRetry,
-              ),
-            ] else ...[
-              if (entries.isEmpty)
-                Text(
-                  l.attendanceUnitsRequired,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ...entries.asMap().entries.map((entryMap) {
+            ...entries.asMap().entries.map((entryMap) {
                 final entry = entryMap.value;
                 final isLast = entryMap.key == entries.length - 1;
                 final selectedType = resolveType(entry.contractTypeId);
