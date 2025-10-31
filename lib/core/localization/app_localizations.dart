@@ -33,7 +33,6 @@ class AppLocalizations {
       'dashboardLabel': 'Works List',
       'addNewWorkLabel': 'Add New Work',
       'attendanceHistoryLabel': 'Attendance History',
-      'contractWorkLabel': 'Contract Work',
       'changeLanguageLabel': 'Change Language',
       'helpSupportLabel': 'Help & Support',
       'logoutLabel': 'Logout',
@@ -52,9 +51,7 @@ class AppLocalizations {
       'shareWhatsappFailed': 'Unable to open WhatsApp.',
       'shareMessage': 'Check out AttendancePro: {link}',
       'dashboardTappedMessage': 'Works List tapped',
-      'addNewWorkTappedMessage': 'Add New Work tapped',
       'attendanceHistoryTappedMessage': 'Attendance History tapped',
-      'contractWorkTappedMessage': 'Contract Work tapped',
       'helpSupportTappedMessage': 'Help & Support tapped',
       'workA': 'Work A',
       'workB': 'Work B',
@@ -75,9 +72,6 @@ class AppLocalizations {
       'workNameHint': 'Ex Restaurant, Warehouse',
       'hourlySalaryLabel': 'Hourly Salary',
       'hourlySalaryHint': '\$ 0.00',
-      'contractWorkHeader': 'Contract Work (if have)',
-      'addContractWorkButton': 'Add Contract Work',
-      'contractWorkDescription': 'Piece-rate work: Watermelon, Carrot, Ravanello, Orange, etc.',
       'cancelButton': 'Cancel',
       'saveWorkButton': 'Save Work',
       'workNameRequiredMessage': 'Please enter a work name.',
@@ -165,7 +159,6 @@ class AppLocalizations {
       'dashboardLabel': 'कार्य सूची',
       'addNewWorkLabel': 'नया कार्य जोड़ें',
       'attendanceHistoryLabel': 'उपस्थिति इतिहास',
-      'contractWorkLabel': 'ठेका कार्य',
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
       'logoutLabel': 'लॉग आउट',
@@ -184,9 +177,7 @@ class AppLocalizations {
       'shareWhatsappFailed': 'WhatsApp नहीं खोल सके।',
       'shareMessage': 'AttendancePro देखें: {link}',
       'dashboardTappedMessage': 'कार्य सूची चुनी गई',
-      'addNewWorkTappedMessage': 'नया कार्य चुना गया',
       'attendanceHistoryTappedMessage': 'उपस्थिति इतिहास चुना गया',
-      'contractWorkTappedMessage': 'ठेका कार्य चुना गया',
       'helpSupportTappedMessage': 'मदद और समर्थन चुना गया',
       'workA': 'कार्य A',
       'workB': 'कार्य B',
@@ -207,9 +198,6 @@ class AppLocalizations {
       'workNameHint': 'उदाहरण: रेस्टोरेंट, गोदाम',
       'hourlySalaryLabel': 'घंटे की मजदूरी',
       'hourlySalaryHint': '₹ 0.00',
-      'contractWorkHeader': 'ठेका कार्य (यदि हो)',
-      'addContractWorkButton': 'ठेका कार्य जोड़ें',
-      'contractWorkDescription': 'पीस-रेट कार्य: तरबूज, गाजर, रावनेलो, संतरा आदि।',
       'cancelButton': 'रद्द करें',
       'saveWorkButton': 'कार्य सहेजें',
       'workNameRequiredMessage': 'कृपया कार्य का नाम दर्ज करें।',
@@ -297,7 +285,6 @@ class AppLocalizations {
       'dashboardLabel': 'ਕੰਮਾਂ ਦੀ ਸੂਚੀ',
       'addNewWorkLabel': 'ਨਵਾਂ ਕੰਮ ਜੋੜੋ',
       'attendanceHistoryLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ',
-      'contractWorkLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ',
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
       'logoutLabel': 'ਲੌਗ ਆਉਟ',
@@ -316,9 +303,7 @@ class AppLocalizations {
       'shareWhatsappFailed': 'WhatsApp ਨਹੀਂ ਖੋਲ੍ਹ ਸਕੇ।',
       'shareMessage': 'AttendancePro ਨੂੰ ਵੇਖੋ: {link}',
       'dashboardTappedMessage': 'ਕੰਮਾਂ ਦੀ ਸੂਚੀ ਚੁਣੀ ਗਈ',
-      'addNewWorkTappedMessage': 'ਨਵਾਂ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'attendanceHistoryTappedMessage': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਚੁਣਿਆ ਗਿਆ',
-      'contractWorkTappedMessage': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'helpSupportTappedMessage': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ ਚੁਣਿਆ ਗਿਆ',
       'workA': 'ਕੰਮ A',
       'workB': 'ਕੰਮ B',
@@ -339,9 +324,6 @@ class AppLocalizations {
       'workNameHint': 'ਉਦਾਹਰਣ: ਰੈਸਟੋਰੈਂਟ, ਗੋਦਾਮ',
       'hourlySalaryLabel': 'ਘੰਟਾਵਾਰੀ ਮਜ਼ਦੂਰੀ',
       'hourlySalaryHint': '₹ 0.00',
-      'contractWorkHeader': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ (ਜੇ ਹੋਵੇ)',
-      'addContractWorkButton': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ',
-      'contractWorkDescription': 'ਪੀਸ-ਰੇਟ ਕੰਮ: ਤਰਬੂਜ, ਗਾਜਰ, ਰਾਵੇਨੇਲੋ, ਸੰਤਰਾ ਆਦਿ।',
       'cancelButton': 'ਰੱਦ ਕਰੋ',
       'saveWorkButton': 'ਕੰਮ ਸੰਭਾਲੋ',
       'workNameRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਕੰਮ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ।',
@@ -433,7 +415,6 @@ class AppLocalizations {
       'dashboardLabel': 'Elenco lavori',
       'addNewWorkLabel': 'Aggiungi nuovo lavoro',
       'attendanceHistoryLabel': 'Storico presenze',
-      'contractWorkLabel': 'Lavoro a contratto',
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',
       'logoutLabel': 'Esci',
@@ -452,9 +433,7 @@ class AppLocalizations {
       'shareWhatsappFailed': 'Impossibile aprire WhatsApp.',
       'shareMessage': 'Scopri AttendancePro: {link}',
       'dashboardTappedMessage': 'Elenco lavori selezionato',
-      'addNewWorkTappedMessage': 'Nuovo lavoro selezionato',
       'attendanceHistoryTappedMessage': 'Storico presenze selezionato',
-      'contractWorkTappedMessage': 'Lavoro a contratto selezionato',
       'helpSupportTappedMessage': 'Assistenza selezionata',
       'workA': 'Lavoro A',
       'workB': 'Lavoro B',
@@ -475,9 +454,6 @@ class AppLocalizations {
       'workNameHint': 'Es. Ristorante, Magazzino',
       'hourlySalaryLabel': 'Paga Oraria',
       'hourlySalaryHint': '€ 0,00',
-      'contractWorkHeader': 'Lavoro a Contratto (se disponibile)',
-      'addContractWorkButton': 'Aggiungi Lavoro a Contratto',
-      'contractWorkDescription': 'Lavoro a cottimo: Anguria, Carota, Ravanello, Arancia, ecc.',
       'cancelButton': 'Annulla',
       'saveWorkButton': 'Salva Lavoro',
       'workNameRequiredMessage': 'Inserisci il nome del lavoro.',
@@ -584,7 +560,6 @@ class AppLocalizations {
   String get dashboardLabel => _value('dashboardLabel');
   String get addNewWorkLabel => _value('addNewWorkLabel');
   String get attendanceHistoryLabel => _value('attendanceHistoryLabel');
-  String get contractWorkLabel => _value('contractWorkLabel');
   String get changeLanguageLabel => _value('changeLanguageLabel');
   String get helpSupportLabel => _value('helpSupportLabel');
   String get logoutLabel => _value('logoutLabel');
@@ -605,11 +580,8 @@ class AppLocalizations {
   String shareMessage(String link) =>
       _valueWithArgs('shareMessage', {'link': link});
   String get dashboardTappedMessage => _value('dashboardTappedMessage');
-  String get addNewWorkTappedMessage => _value('addNewWorkTappedMessage');
   String get attendanceHistoryTappedMessage =>
       _value('attendanceHistoryTappedMessage');
-  String get contractWorkTappedMessage =>
-      _value('contractWorkTappedMessage');
   String get helpSupportTappedMessage =>
       _value('helpSupportTappedMessage');
   String get workA => _value('workA');
@@ -629,9 +601,6 @@ class AppLocalizations {
   String get workNameHint => _value('workNameHint');
   String get hourlySalaryLabel => _value('hourlySalaryLabel');
   String get hourlySalaryHint => _value('hourlySalaryHint');
-  String get contractWorkHeader => _value('contractWorkHeader');
-  String get addContractWorkButton => _value('addContractWorkButton');
-  String get contractWorkDescription => _value('contractWorkDescription');
   String get cancelButton => _value('cancelButton');
   String get saveWorkButton => _value('saveWorkButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
