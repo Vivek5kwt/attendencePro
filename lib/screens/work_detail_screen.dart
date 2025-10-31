@@ -2763,23 +2763,36 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final hasSummaryContent =
         _isSummaryLoading || _summaryError != null || summaryStats.isNotEmpty;
 
-    final contentWidgets = <Widget>[
-      _WorkHeaderCard(
-        work: widget.work,
-        workTypeLabel: workTypeLabel,
-        rateDescription: rateDescription,
-      ),
-      if (shouldShowActiveWork) ...[
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: _ActiveWorkIndicator(
-            workName: activeWorkName,
-          ),
+    List<Widget> buildHeaderSectionWidgets() {
+      final widgets = <Widget>[
+        _WorkHeaderCard(
+          work: widget.work,
+          workTypeLabel: workTypeLabel,
+          rateDescription: rateDescription,
         ),
-      ],
-      const SizedBox(height: 20),
-      if (_pendingMissedDates.isNotEmpty) ...[
+      ];
+
+      if (shouldShowActiveWork) {
+        widgets.addAll([
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _ActiveWorkIndicator(
+              workName: activeWorkName,
+            ),
+          ),
+        ]);
+      }
+
+      return widgets;
+    }
+
+    List<Widget> buildPendingSectionWidgets() {
+      if (_pendingMissedDates.isEmpty) {
+        return <Widget>[];
+      }
+
+      return <Widget>[
         _PendingAttendanceCard(
           title: l.attendanceMissedEntriesTitle,
           description: l.attendanceMissedEntriesDescription,
@@ -2792,9 +2805,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           ),
           onReview: _handlePendingAttendanceReview,
         ),
-        const SizedBox(height: 20),
-      ],
-      _AttendanceSection(
+      ];
+    }
+
+    Widget buildAttendanceSection() {
+      return _AttendanceSection(
         dateLabel: dateLabel,
         onDateTap: _handleDateTap,
         dateSelectionEnabled: _pendingMissedDates.isEmpty,
@@ -2828,12 +2843,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         breakValidator: _validateBreakMinutes,
         statusMessage: _attendanceStatusMessage,
         isStatusError: _attendanceStatusIsError,
-      ),
-      if (hasSummaryContent) ...[
-        const SizedBox(height: 24),
-        summarySection,
-      ],
-    ];
+      );
+    }
 
       return Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
@@ -2913,10 +2924,95 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                 sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: contentWidgets,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final availableWidth = constraints.maxWidth;
+                      final isWideLayout = availableWidth >= 900;
+
+                      final headerSectionWidgets = buildHeaderSectionWidgets();
+                      final pendingSectionWidgets = buildPendingSectionWidgets();
+                      final summaryWidgets = hasSummaryContent
+                          ? <Widget>[
+                              const SizedBox(height: 24),
+                              summarySection,
+                            ]
+                          : <Widget>[];
+                      final attendanceSection = buildAttendanceSection();
+
+                      Widget content;
+
+                      if (!isWideLayout) {
+                        final children = <Widget>[
+                          ...headerSectionWidgets,
+                          const SizedBox(height: 20),
+                          if (pendingSectionWidgets.isNotEmpty) ...[
+                            ...pendingSectionWidgets,
+                            const SizedBox(height: 20),
+                          ],
+                          attendanceSection,
+                          ...summaryWidgets,
+                        ];
+
+                        content = Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: children,
+                        );
+                      } else {
+                        final leftColumnChildren = <Widget>[
+                          ...headerSectionWidgets,
+                        ];
+
+                        if (pendingSectionWidgets.isNotEmpty) {
+                          leftColumnChildren.add(const SizedBox(height: 20));
+                          leftColumnChildren.addAll(pendingSectionWidgets);
+                        }
+
+                        content = Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: leftColumnChildren,
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  flex: 6,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      attendanceSection,
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            ...summaryWidgets,
+                          ],
+                        );
+                      }
+
+                      final maxContentWidth = isWideLayout ? 1100.0 : 720.0;
+                      if (availableWidth > maxContentWidth) {
+                        content = Align(
+                          alignment: Alignment.topCenter,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: maxContentWidth,
+                            ),
+                            child: content,
+                          ),
+                        );
+                      }
+
+                      return content;
+                    },
                   ),
                 ),
               ),
