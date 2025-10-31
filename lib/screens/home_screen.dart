@@ -777,28 +777,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           _onDrawerOptionSelected(l.dashboardTappedMessage),
                     ),
                     _drawerItem(
-                      icon: Icons.work_outline,
-                      label: l.addNewWorkLabel,
-                      bgColor: const Color(0xFFE8F8F0),
-                      iconColor: const Color(0xFF34C759),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.addNewWorkTappedMessage),
-                    ),
-                    _drawerItem(
                       icon: Icons.access_time,
                       label: l.attendanceHistoryLabel,
                       bgColor: const Color(0xFFFFF2F2),
                       iconColor: const Color(0xFFFF3B30),
                       onTap: () =>
                           _onDrawerOptionSelected(l.attendanceHistoryTappedMessage),
-                    ),
-                    _drawerItem(
-                      icon: Icons.assignment_outlined,
-                      label: l.contractWorkLabel,
-                      bgColor: const Color(0xFFEDEBFF),
-                      iconColor: const Color(0xFF5856D6),
-                      onTap: () =>
-                          _onDrawerOptionSelected(l.contractWorkTappedMessage),
                     ),
                     _drawerItem(
                       icon: Icons.language,
