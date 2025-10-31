@@ -403,6 +403,7 @@ class AppLocalizations {
   String get saveButtonLabel => _value('saveButtonLabel');
   String get saveWorkButton => _value('saveWorkButton');
   String get saveChangesButton => _value('saveChangesButton');
+  String get deleteWorkButton => _value('deleteWorkButton');
   String get workNameRequiredMessage => _value('workNameRequiredMessage');
   String get workAddedMessage => _value('workAddedMessage');
   String get workUpdatedMessage => _value('workUpdatedMessage');

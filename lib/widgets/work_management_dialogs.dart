@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -533,6 +535,209 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         );
   }
 
+  Future<void> _handleDeleteWork(BuildContext dialogContext) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final l = AppLocalizations.of(widget.rootContext);
+    final bloc = widget.rootContext.read<WorkBloc>();
+
+    if (bloc.state.deletingWorkId != null &&
+        bloc.state.deletingWorkId != widget.work.id) {
+      return;
+    }
+
+    final shouldDelete = await _showDeleteConfirmationDialog(dialogContext, l);
+    if (!shouldDelete || !mounted) {
+      return;
+    }
+
+    final completer = Completer<bool>();
+    bloc.add(WorkDeleted(work: widget.work, completer: completer));
+    final result = await completer.future;
+
+    if (!mounted) {
+      return;
+    }
+
+    if (result) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<bool> _showDeleteConfirmationDialog(
+    BuildContext dialogContext,
+    AppLocalizations l,
+  ) async {
+    final theme = Theme.of(dialogContext);
+    final result = await showDialog<bool>(
+      context: dialogContext,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.35),
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1FDC2626),
+                  blurRadius: 40,
+                  offset: Offset(0, 20),
+                  spreadRadius: -12,
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEE2E2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.delete_forever_rounded,
+                          color: Color(0xFFB91C1C),
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l.workDeleteConfirmationTitle,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ) ??
+                                  const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 20,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l.workDeleteConfirmationMessage,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF6B7280),
+                                height: 1.5,
+                              ) ??
+                                  const TextStyle(
+                                    color: Color(0xFF6B7280),
+                                    height: 1.5,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        icon: const Icon(Icons.close),
+                        splashRadius: 20,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: Color(0xFFF97316),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l.workDeleteIrreversibleMessage,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF9A3412),
+                              height: 1.4,
+                            ) ??
+                                const TextStyle(
+                                  color: Color(0xFF9A3412),
+                                  height: 1.4,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(color: theme.colorScheme.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          child: Text(
+                            l.workDeleteCancelButton,
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB91C1C),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          child: Text(
+                            l.workDeleteConfirmButton,
+                            style:
+                                Theme.of(context).textTheme.labelLarge?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ) ??
+                                    const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(widget.rootContext);
@@ -550,6 +755,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       },
       builder: (blocContext, state) {
         final isSaving = state.updateStatus == WorkActionStatus.inProgress;
+        final isDeleting = state.deletingWorkId == widget.work.id;
+        final isProcessing = isSaving || isDeleting;
         final theme = Theme.of(context);
 
         return Dialog(
@@ -881,16 +1088,69 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                 ),
                               ),
                               const SizedBox(height: 24),
+                              SizedBox(
+                                width: double.infinity,
+                                child: TextButton(
+                                  onPressed: isProcessing
+                                      ? null
+                                      : () => _handleDeleteWork(context),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFFB91C1C),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  child: isDeleting
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Color(0xFFB91C1C),
+                                            ),
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.delete_outline),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              l.deleteWorkButton,
+                                              style: theme
+                                                      .textTheme
+                                                      .labelLarge
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ) ??
+                                                  const TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
                               Row(
                                 children: [
                                   Expanded(
                                     child: OutlinedButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                        blocContext
-                                            .read<WorkBloc>()
-                                            .add(const WorkUpdateStatusCleared());
-                                      },
+                                      onPressed: isProcessing
+                                          ? null
+                                          : () {
+                                              Navigator.of(context).pop();
+                                              blocContext
+                                                  .read<WorkBloc>()
+                                                  .add(const WorkUpdateStatusCleared());
+                                            },
                                       style: OutlinedButton.styleFrom(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 16,
@@ -914,7 +1174,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: isSaving
+                                      onPressed: isProcessing
                                           ? null
                                           : () async {
                                               if (_formKey.currentState

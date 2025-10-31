@@ -242,6 +242,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleDrawerButtonPressed(BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final scaffoldState = Scaffold.maybeOf(context);
+    if (scaffoldState == null) {
+      return;
+    }
+    if (scaffoldState.isDrawerOpen) {
+      scaffoldState.closeDrawer();
+    } else {
+      scaffoldState.openDrawer();
+    }
+  }
+
   void _maybeNavigateToDashboard(WorkState state) {
     if (_hasOpenedDashboard) {
       return;
@@ -606,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 24,
                       height: 24,
                     ),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
+                    onPressed: () => _handleDrawerButtonPressed(context),
                   );
                 },
               ),
