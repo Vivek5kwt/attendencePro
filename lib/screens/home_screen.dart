@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../apis/auth_api.dart' show ApiException;
@@ -27,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _workNameController = TextEditingController();
   final TextEditingController _hourlySalaryController = TextEditingController();
+  final TextEditingController _editWorkNameController = TextEditingController();
   final WorkApi _workApi = WorkApi();
   static const String _shareLink = 'https://attendancepro.app';
   final SessionManager _sessionManager = const SessionManager();
@@ -527,6 +527,110 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showEditWorkDialog(Student student) {
+    final l = AppLocalizations.of(context);
+    _editWorkNameController.text = student.name;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l.editWorkTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _editWorkNameController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: l.workNameLabel,
+                  hintText: l.workNameHint,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l.cancelButton),
+            ),
+            TextButton(
+              onPressed: () => _handleDeleteWork(dialogContext, student, l),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(l.deleteWorkButton),
+            ),
+            ElevatedButton(
+              onPressed: () => _handleUpdateWork(dialogContext, student, l),
+              child: Text(l.saveWorkButton),
+            ),
+          ],
+        );
+      },
+    ).whenComplete(_editWorkNameController.clear);
+  }
+
+  void _handleUpdateWork(
+      BuildContext dialogContext, Student student, AppLocalizations l) {
+    final messenger = ScaffoldMessenger.of(context);
+    final newName = _editWorkNameController.text.trim();
+
+    if (newName.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.workNameRequiredMessage)),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    context.read<AttendanceBloc>().add(UpdateStudent(student.id, newName));
+    Navigator.of(dialogContext).pop();
+    messenger.showSnackBar(
+      SnackBar(content: Text(l.workUpdatedMessage)),
+    );
+  }
+
+  Future<void> _handleDeleteWork(
+      BuildContext dialogContext, Student student, AppLocalizations l) async {
+    final shouldDelete = await _showDeleteWorkConfirmation(dialogContext, l);
+    if (!shouldDelete) {
+      return;
+    }
+
+    if (!mounted) return;
+    context.read<AttendanceBloc>().add(DeleteStudent(student.id));
+    Navigator.of(dialogContext).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l.workDeletedMessage)),
+    );
+  }
+
+  Future<bool> _showDeleteWorkConfirmation(
+      BuildContext context, AppLocalizations l) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (confirmContext) {
+        return AlertDialog(
+          title: Text(l.deleteWorkConfirmationTitle),
+          content: Text(l.deleteWorkConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(confirmContext).pop(false),
+              child: Text(l.deleteWorkCancelButton),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(confirmContext).pop(true),
+              child: Text(l.deleteWorkConfirmButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
   Future<void> _handleSaveWork(
       BuildContext dialogContext, AppLocalizations l) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -888,6 +992,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           student: s,
                           onToggle: () =>
                               context.read<AttendanceBloc>().add(ToggleAttendance(s.id)),
+                          onEdit: () => _showEditWorkDialog(s),
                         );
                       },
                     );
@@ -978,6 +1083,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _workNameController.dispose();
     _hourlySalaryController.dispose();
+    _editWorkNameController.dispose();
     super.dispose();
   }
 }

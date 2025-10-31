@@ -15,6 +15,8 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
     on<ToggleAttendance>(_onToggleAttendance);
     on<MarkAllPresent>(_onMarkAllPresent);
     on<MarkAllAbsent>(_onMarkAllAbsent);
+    on<UpdateStudent>(_onUpdateStudent);
+    on<DeleteStudent>(_onDeleteStudent);
     on<SaveAttendance>(_onSaveAttendance);
   }
 
@@ -63,6 +65,24 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
     if (current is AttendanceLoaded) {
       final newStudents = current.students.map((s) => s.copyWith(isPresent: false)).toList();
       emit(current.copyWith(students: newStudents));
+    }
+  }
+
+  Future<void> _onUpdateStudent(UpdateStudent event, Emitter<AttendanceState> emit) async {
+    final current = state;
+    if (current is AttendanceLoaded) {
+      final updated = current.students
+          .map((s) => s.id == event.studentId ? s.copyWith(name: event.newName) : s)
+          .toList();
+      emit(current.copyWith(students: updated));
+    }
+  }
+
+  Future<void> _onDeleteStudent(DeleteStudent event, Emitter<AttendanceState> emit) async {
+    final current = state;
+    if (current is AttendanceLoaded) {
+      final updated = current.students.where((s) => s.id != event.studentId).toList();
+      emit(current.copyWith(students: updated));
     }
   }
 
