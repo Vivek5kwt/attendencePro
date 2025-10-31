@@ -1664,6 +1664,8 @@ class _HoursHistoryList extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = _groupEntriesByDay(entries);
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: grouped.entries
           .map(
             (entry) => Padding(
@@ -2008,6 +2010,8 @@ class _ContractHistoryList extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = _groupEntriesByDay(entries);
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: grouped.entries
           .map(
             (entry) => Padding(
