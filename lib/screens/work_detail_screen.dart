@@ -454,6 +454,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     );
   }
 
+  void _handleDrawerButtonPressed(BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final scaffoldState = Scaffold.maybeOf(context);
+    if (scaffoldState == null) {
+      return;
+    }
+    if (scaffoldState.isDrawerOpen) {
+      scaffoldState.closeDrawer();
+    } else {
+      scaffoldState.openDrawer();
+    }
+  }
+
   Future<void> _handleDrawerDashboardTap() async {
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -2837,7 +2850,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
                   width: 24,
                   height: 24,
                 ),
-                onPressed: () => Scaffold.of(context).openDrawer(),
+                onPressed: () => _handleDrawerButtonPressed(context),
               );
             },
           ),
