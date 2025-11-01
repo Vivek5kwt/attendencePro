@@ -46,6 +46,27 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   ];
 
+  static const List<_ContractSummaryRow> _summaryRows = <_ContractSummaryRow>[
+    _ContractSummaryRow(
+      index: 1,
+      workName: 'Water melon',
+      units: '100/Bin',
+      payment: '500 Euro',
+    ),
+    _ContractSummaryRow(
+      index: 2,
+      workName: 'Ravanello 10',
+      units: '5000/Bunches',
+      payment: '1500 Euro',
+    ),
+    _ContractSummaryRow(
+      index: 3,
+      workName: 'Orange',
+      units: '100/Crate',
+      payment: '500 Euro',
+    ),
+  ];
+
   bool _isLoading = true;
   String? _errorMessage;
   bool _isDeleteMode = false;
@@ -410,7 +431,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       defaultTypesLabel: l.contractWorkDefaultTypesTitle,
                       customTypesLabel: l.contractWorkCustomTypesTitle,
                     ),
-                    SizedBox(height: responsive.scale(16)),
+                    SizedBox(height: responsive.scale(20)),
+                    _ContractSummaryTable(
+                      title: l.contractWorkSummaryTitle,
+                      rows: _summaryRows,
+                    ),
+                    SizedBox(height: responsive.scale(20)),
                     Wrap(
                       spacing: responsive.scale(12),
                       runSpacing: responsive.scale(12),
@@ -1652,6 +1678,164 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   }
 }
 
+class _ContractSummaryTable extends StatelessWidget {
+  const _ContractSummaryTable({
+    required this.title,
+    required this.rows,
+  });
+
+  final String title;
+  final List<_ContractSummaryRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final theme = Theme.of(context);
+    final hasRows = rows.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(responsive.scale(20)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(responsive.scale(18)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x143B82F6),
+            blurRadius: 18,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                  fontSize: responsive.scaleText(16),
+                ) ??
+                TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                  fontSize: responsive.scaleText(16),
+                ),
+          ),
+          SizedBox(height: responsive.scale(16)),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(responsive.scale(14)),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Column(
+              children: [
+                const _ContractSummaryTableRow.header(),
+                if (hasRows) const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                if (hasRows)
+                  for (var i = 0; i < rows.length; i++) ...[
+                    _ContractSummaryTableRow(
+                      index: rows[i].index,
+                      workName: rows[i].workName,
+                      units: rows[i].units,
+                      payment: rows[i].payment,
+                    ),
+                    if (i != rows.length - 1)
+                      const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                  ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractSummaryTableRow extends StatelessWidget {
+  const _ContractSummaryTableRow({
+    super.key,
+    required this.index,
+    required this.workName,
+    required this.units,
+    required this.payment,
+  }) : isHeader = false;
+
+  const _ContractSummaryTableRow.header({super.key})
+      : index = null,
+        workName = 'Work Name',
+        units = 'Units',
+        payment = 'Payment',
+        isHeader = true;
+
+  final int? index;
+  final String workName;
+  final String units;
+  final String payment;
+  final bool isHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final baseStyle = TextStyle(
+      fontWeight: isHeader ? FontWeight.w700 : FontWeight.w600,
+      fontSize: responsive.scaleText(13),
+      color: isHeader ? const Color(0xFF111827) : const Color(0xFF1F2937),
+    );
+    final secondaryStyle = baseStyle.copyWith(
+      fontWeight: isHeader ? FontWeight.w700 : FontWeight.w500,
+      color: isHeader ? const Color(0xFF111827) : const Color(0xFF4B5563),
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.scale(16),
+        vertical: responsive.scale(isHeader ? 12 : 14),
+      ),
+      decoration: BoxDecoration(
+        color: isHeader ? const Color(0xFFEFF2F7) : Colors.transparent,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: responsive.scale(32),
+            child: Text(
+              isHeader ? '#' : '${index ?? ''}.',
+              style: secondaryStyle,
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              workName,
+              style: baseStyle,
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              units,
+              style: secondaryStyle,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              payment,
+              textAlign: TextAlign.right,
+              style: secondaryStyle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SummaryHeader extends StatelessWidget {
   const _SummaryHeader({
     required this.title,
@@ -2795,4 +2979,18 @@ class _ContractEntry {
     final month = monthNames[date.month - 1];
     return '$month ${date.day.toString().padLeft(2, '0')}, ${date.year}';
   }
+}
+
+class _ContractSummaryRow {
+  const _ContractSummaryRow({
+    required this.index,
+    required this.workName,
+    required this.units,
+    required this.payment,
+  });
+
+  final int index;
+  final String workName;
+  final String units;
+  final String payment;
 }
