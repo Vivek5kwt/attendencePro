@@ -773,10 +773,6 @@ class _SummaryLoadedContent extends StatelessWidget {
           hourlySalary: summary.hourlySummary.hourlySalary,
           workingDaysLabel: localization.reportsWorkingDaysLabel,
           workingDays: summary.hourlySummary.workingDays,
-          averageHoursLabel: localization.reportsAverageHoursPerDayLabel,
-          averageHours: summary.hourlySummary.averageHoursPerDay,
-          lastPayoutLabel: localization.reportsLastPayoutLabel,
-          lastPayout: summary.hourlySummary.lastPayout,
           currencySymbol: currency,
         ),
         const SizedBox(height: 24),
@@ -1289,28 +1285,6 @@ class _CombinedSalaryCard extends StatelessWidget {
                       ),
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.verified, color: Colors.white, size: 18),
-                    SizedBox(width: 6),
-                    Text(
-                      'Updated',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 18),
@@ -1388,10 +1362,6 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
     required this.hourlySalary,
     required this.workingDaysLabel,
     required this.workingDays,
-    required this.averageHoursLabel,
-    required this.averageHours,
-    required this.lastPayoutLabel,
-    required this.lastPayout,
     required this.currencySymbol,
   });
 
@@ -1401,10 +1371,6 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
   final double hourlySalary;
   final String workingDaysLabel;
   final int workingDays;
-  final String averageHoursLabel;
-  final double averageHours;
-  final String lastPayoutLabel;
-  final double lastPayout;
   final String currencySymbol;
 
   @override
@@ -1426,15 +1392,15 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-          children: [
-            Expanded(
-              child: _SummaryValueTile(
-                label: totalHoursLabel,
-                value: '${_formatHoursValue(totalHours)} h',
-                icon: Icons.schedule,
-                iconColor: const Color(0xFF2563EB),
+            children: [
+              Expanded(
+                child: _SummaryValueTile(
+                  label: totalHoursLabel,
+                  value: '${_formatHoursValue(totalHours)} h',
+                  icon: Icons.schedule,
+                  iconColor: const Color(0xFF2563EB),
+                ),
               ),
-            ),
               const SizedBox(width: 16),
               Expanded(
                 child: _SummaryValueTile(
@@ -1448,33 +1414,11 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _SummaryDetailTile(
-                  label: workingDaysLabel,
-                  value: workingDays.toString(),
-                  icon: Icons.calendar_month,
-                  color: const Color(0xFF7C3AED),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SummaryDetailTile(
-                  label: averageHoursLabel,
-                  value: '${_formatHoursValue(averageHours)} h',
-                  icon: Icons.timer,
-                  color: const Color(0xFFF59E0B),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           _SummaryDetailTile(
-            label: lastPayoutLabel,
-            value: _formatCurrencyValue(lastPayout, currencySymbol),
-            icon: Icons.account_balance_wallet_outlined,
-            color: const Color(0xFF2563EB),
+            label: workingDaysLabel,
+            value: workingDays.toString(),
+            icon: Icons.calendar_month,
+            color: const Color(0xFF7C3AED),
           ),
         ],
       ),
