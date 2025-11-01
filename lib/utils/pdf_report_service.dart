@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -73,7 +74,8 @@ class PdfReportService {
       throw ArgumentError('rows must not be empty');
     }
 
-    final document = pw.Document();
+    final fonts = await _resolveFonts();
+    final document = pw.Document(theme: fonts.theme);
     final totalSalary = rows.fold<double>(
       0,
       (previousValue, element) => previousValue + element.salary,
@@ -96,6 +98,7 @@ class PdfReportService {
         margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         build: (context) => <pw.Widget>[
           _buildHeader(
+            fonts: fonts,
             title: 'Monthly Contract Report',
             workName: workName,
             periodLabel: monthLabel,
@@ -104,12 +107,13 @@ class PdfReportService {
           _buildStripedTable(
             headers: const <String>['Date', 'Contract type', 'Units', 'Rate', 'Amount'],
             data: tableData,
-            headerStyle: pw.TextStyle(
-              color: PdfColors.white,
-              fontWeight: pw.FontWeight.bold,
+            headerStyle: _textStyle(
+              fonts,
+              font: fonts.bold,
               fontSize: 11,
+              color: PdfColors.white,
             ),
-            cellStyle: const pw.TextStyle(fontSize: 10),
+            cellStyle: _textStyle(fonts, fontSize: 10),
             headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
             border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
             cellAlignments: const <int, pw.Alignment>{
@@ -133,16 +137,18 @@ class PdfReportService {
               children: <pw.Widget>[
                 pw.Text(
                   'Total earned',
-                  style: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
+                  style: _textStyle(
+                    fonts,
+                    font: fonts.bold,
                     fontSize: 12,
                     color: PdfColor.fromHex('#047857'),
                   ),
                 ),
                 pw.Text(
                   _formatCurrency(currencySymbol, totalSalary),
-                  style: pw.TextStyle(
-                    fontWeight: pw.FontWeight.bold,
+                  style: _textStyle(
+                    fonts,
+                    font: fonts.bold,
                     fontSize: 12,
                     color: PdfColor.fromHex('#065F46'),
                   ),
@@ -171,7 +177,8 @@ class PdfReportService {
       throw ArgumentError('days must not be empty');
     }
 
-    final document = pw.Document();
+    final fonts = await _resolveFonts();
+    final document = pw.Document(theme: fonts.theme);
     final totalSalary = days.fold<double>(
       0,
       (previousValue, day) => previousValue +
@@ -187,6 +194,7 @@ class PdfReportService {
         build: (context) {
           final widgets = <pw.Widget>[
             _buildHeader(
+              fonts: fonts,
               title: 'Attendance History Report',
               workName: workName,
               periodLabel: monthLabel,
@@ -225,8 +233,9 @@ class PdfReportService {
                     children: <pw.Widget>[
                       pw.Text(
                         _formatDate(day.date),
-                        style: pw.TextStyle(
-                          fontWeight: pw.FontWeight.bold,
+                        style: _textStyle(
+                          fonts,
+                          font: fonts.bold,
                           fontSize: 12,
                           color: PdfColors.blueGrey800,
                         ),
@@ -235,12 +244,13 @@ class PdfReportService {
                       _buildStripedTable(
                         headers: const <String>['Type', 'Work', 'Details', 'Amount'],
                         data: tableData,
-                        headerStyle: pw.TextStyle(
-                          color: PdfColors.white,
-                          fontWeight: pw.FontWeight.bold,
+                        headerStyle: _textStyle(
+                          fonts,
+                          font: fonts.bold,
                           fontSize: 10,
+                          color: PdfColors.white,
                         ),
-                        cellStyle: const pw.TextStyle(fontSize: 9),
+                        cellStyle: _textStyle(fonts, fontSize: 9),
                         headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
                         border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
                         cellAlignments: const <int, pw.Alignment>{
@@ -255,8 +265,9 @@ class PdfReportService {
                         alignment: pw.Alignment.centerRight,
                         child: pw.Text(
                           'Day total: ${_formatCurrency(currencySymbol, dayTotal)}',
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
+                          style: _textStyle(
+                            fonts,
+                            font: fonts.bold,
                             fontSize: 10,
                             color: PdfColors.blueGrey800,
                           ),
@@ -283,16 +294,18 @@ class PdfReportService {
                   children: <pw.Widget>[
                     pw.Text(
                       'Monthly total',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
+                      style: _textStyle(
+                        fonts,
+                        font: fonts.bold,
                         fontSize: 12,
                         color: PdfColor.fromHex('#4338CA'),
                       ),
                     ),
                     pw.Text(
                       _formatCurrency(currencySymbol, totalSalary),
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
+                      style: _textStyle(
+                        fonts,
+                        font: fonts.bold,
                         fontSize: 12,
                         color: PdfColor.fromHex('#312E81'),
                       ),
@@ -315,6 +328,7 @@ class PdfReportService {
   }
 
   static pw.Widget _buildHeader({
+    required _PdfFontAssets fonts,
     required String title,
     required String workName,
     required String periodLabel,
@@ -324,20 +338,29 @@ class PdfReportService {
       children: <pw.Widget>[
         pw.Text(
           title,
-          style: pw.TextStyle(
+          style: _textStyle(
+            fonts,
+            font: fonts.bold,
             fontSize: 20,
-            fontWeight: pw.FontWeight.bold,
             color: PdfColors.blueGrey900,
           ),
         ),
         pw.SizedBox(height: 6),
         pw.Text(
           'Work: $workName',
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.blueGrey600),
+          style: _textStyle(
+            fonts,
+            fontSize: 11,
+            color: PdfColors.blueGrey600,
+          ),
         ),
         pw.Text(
           'Period: $periodLabel',
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.blueGrey600),
+          style: _textStyle(
+            fonts,
+            fontSize: 11,
+            color: PdfColors.blueGrey600,
+          ),
         ),
       ],
     );
@@ -456,4 +479,75 @@ class PdfReportService {
       child: pw.Text(text, style: style),
     );
   }
+
+  static Future<_PdfFontAssets> _resolveFonts() async {
+    final cached = _cachedFonts;
+    if (cached != null) {
+      return cached;
+    }
+
+    final regular = pw.Font.ttf(
+      await rootBundle.load('fonts/Inter_24pt-Regular.ttf'),
+    );
+    final medium = pw.Font.ttf(
+      await rootBundle.load('fonts/Inter_24pt-Medium.ttf'),
+    );
+    final semiBold = pw.Font.ttf(
+      await rootBundle.load('fonts/Inter_24pt-SemiBold.ttf'),
+    );
+    final bold = pw.Font.ttf(
+      await rootBundle.load('fonts/Inter_24pt-Bold.ttf'),
+    );
+
+    final fonts = _PdfFontAssets(
+      regular: regular,
+      medium: medium,
+      semiBold: semiBold,
+      bold: bold,
+    );
+    _cachedFonts = fonts;
+    return fonts;
+  }
+
+  static pw.TextStyle _textStyle(
+    _PdfFontAssets fonts, {
+    double? fontSize,
+    PdfColor? color,
+    pw.FontWeight? fontWeight,
+    pw.Font? font,
+  }) {
+    return pw.TextStyle(
+      fontSize: fontSize,
+      color: color,
+      fontWeight: fontWeight,
+      font: font,
+      fontFallback: fonts.fallback,
+    );
+  }
+
+  static _PdfFontAssets? _cachedFonts;
+}
+
+class _PdfFontAssets {
+  _PdfFontAssets({
+    required this.regular,
+    required this.medium,
+    required this.semiBold,
+    required this.bold,
+  })  : fallback = List<pw.Font>.unmodifiable(
+          <pw.Font>{regular, medium, semiBold, bold}.toList(),
+        ),
+        theme = pw.ThemeData.withFont(
+          base: regular,
+          bold: bold,
+          italic: regular,
+          boldItalic: bold,
+        );
+
+  final pw.Font regular;
+  final pw.Font medium;
+  final pw.Font semiBold;
+  final pw.Font bold;
+  final List<pw.Font> fallback;
+  final pw.ThemeData theme;
 }
