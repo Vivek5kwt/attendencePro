@@ -115,6 +115,13 @@ abstract final class AppString {
       'attendanceHistoryOvertimeEntryLabel': 'Overtime',
       'attendanceHistoryLoggedHoursLabel': 'Logged Hours',
       'attendanceHistoryReasonLabel': 'Reason',
+      'contractReportDownloadLabel': 'Download contract report (PDF)',
+      'historyReportDownloadLabel': 'Download attendance history (PDF)',
+      'reportDownloadNoEntriesMessage':
+          'No records are available for the selected view.',
+      'reportDownloadSuccessMessage': 'PDF saved to {path}',
+      'reportDownloadFailedMessage':
+          'Unable to generate PDF report. Please try again.',
       'contractWorkLabel': 'Contract Work',
       'contractWorkActiveRatesTitle': 'Active contract rates',
       'contractWorkDefaultTypesTitle': 'Contract types',
@@ -529,6 +536,13 @@ abstract final class AppString {
       'attendanceHistoryOvertimeEntryLabel': 'अतिरिक्त समय',
       'attendanceHistoryLoggedHoursLabel': 'लॉग किए गए घंटे',
       'attendanceHistoryReasonLabel': 'कारण',
+      'contractReportDownloadLabel': 'Download contract report (PDF)',
+      'historyReportDownloadLabel': 'Download attendance history (PDF)',
+      'reportDownloadNoEntriesMessage':
+          'No records are available for the selected view.',
+      'reportDownloadSuccessMessage': 'PDF saved to {path}',
+      'reportDownloadFailedMessage':
+          'Unable to generate PDF report. Please try again.',
       'contractWorkLabel': 'ठेका कार्य',
       'contractWorkActiveRatesTitle': 'सक्रिय कॉन्ट्रैक्ट दरें',
       'contractWorkDefaultTypesTitle': 'कॉन्ट्रैक्ट प्रकार',
@@ -944,6 +958,13 @@ abstract final class AppString {
       'attendanceHistoryOvertimeEntryLabel': 'ਵਾਧੂ ਸਮਾਂ',
       'attendanceHistoryLoggedHoursLabel': 'ਲਾਗ ਕੀਤੇ ਘੰਟੇ',
       'attendanceHistoryReasonLabel': 'ਕਾਰਨ',
+      'contractReportDownloadLabel': 'Download contract report (PDF)',
+      'historyReportDownloadLabel': 'Download attendance history (PDF)',
+      'reportDownloadNoEntriesMessage':
+          'No records are available for the selected view.',
+      'reportDownloadSuccessMessage': 'PDF saved to {path}',
+      'reportDownloadFailedMessage':
+          'Unable to generate PDF report. Please try again.',
       'contractWorkLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ',
       'contractWorkActiveRatesTitle': 'ਸਰਗਰਮ ਕਾਂਟ੍ਰੈਕਟ ਦਰਾਂ',
       'contractWorkDefaultTypesTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ',
@@ -1364,6 +1385,13 @@ abstract final class AppString {
       'attendanceHistoryOvertimeEntryLabel': 'Straordinari',
       'attendanceHistoryLoggedHoursLabel': 'Ore registrate',
       'attendanceHistoryReasonLabel': 'Motivo',
+      'contractReportDownloadLabel': 'Scarica rapporto contratti (PDF)',
+      'historyReportDownloadLabel': 'Scarica storico presenze (PDF)',
+      'reportDownloadNoEntriesMessage':
+          'Nessun record disponibile per la vista selezionata.',
+      'reportDownloadSuccessMessage': 'PDF salvato in {path}',
+      'reportDownloadFailedMessage':
+          'Impossibile generare il report PDF. Riprova.',
       'contractWorkLabel': 'Lavoro a contratto',
       'contractWorkActiveRatesTitle': 'Tariffe contratto attive',
       'contractWorkDefaultTypesTitle': 'Tipi di contratto',
