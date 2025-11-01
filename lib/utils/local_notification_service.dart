@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_filex/open_filex.dart';
 
@@ -131,16 +132,18 @@ class LocalNotificationService {
     }
 
     try {
-      await OpenFilex.open(payload);
-    } catch (_) {
-      // Ignore failures to open the file; the download is still saved locally.
+      await OpenFilex.open(payload, type: 'application/pdf');
+    } catch (error, stackTrace) {
+      debugPrint('Failed to open downloaded report from notification: $error');
+      debugPrint('$stackTrace');
     }
   }
 
   @pragma('vm:entry-point')
   static Future<void> _handleBackgroundNotificationResponse(
     NotificationResponse response,
-  ) {
-    return _handleNotificationResponse(response);
+  ) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await _handleNotificationResponse(response);
   }
 }

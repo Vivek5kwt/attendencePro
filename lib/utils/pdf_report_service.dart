@@ -520,7 +520,7 @@ class PdfReportService {
       fontSize: fontSize,
       color: color,
       fontWeight: fontWeight,
-      font: font,
+      font: font ?? fonts.regular,
       fontFallback: fonts.fallback,
     );
   }
