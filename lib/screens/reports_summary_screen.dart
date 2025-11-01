@@ -725,10 +725,6 @@ class _SummaryLoadedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currency = summary.currencySymbol;
-    final resolvedUnitsCompleted = _resolveIntMetric(
-      summary.combinedSalary.unitsCompleted,
-      summary.contractSummary.totalUnits,
-    );
     final resolvedContractTotal = _resolveDoubleMetric(
       summary.breakdown.contractTotal,
       summary.contractSummary.salaryAmount,
@@ -753,8 +749,6 @@ class _SummaryLoadedContent extends StatelessWidget {
         _CombinedSalaryCard(
           title: localization.reportsCombinedSalaryTitle,
           amount: summary.combinedSalary.amount,
-          unitsCompleted: resolvedUnitsCompleted,
-          unitsLabel: localization.reportsUnitsCompletedSuffix,
           currencySymbol: currency,
         ),
         const SizedBox(height: 24),
@@ -1214,15 +1208,11 @@ class _CombinedSalaryCard extends StatelessWidget {
   const _CombinedSalaryCard({
     required this.title,
     required this.amount,
-    required this.unitsCompleted,
-    required this.unitsLabel,
     required this.currencySymbol,
   });
 
   final String title;
   final double amount;
-  final int unitsCompleted;
-  final String unitsLabel;
   final String currencySymbol;
 
   @override
@@ -1290,43 +1280,6 @@ class _CombinedSalaryCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 36,
                 ),
-          ),
-          const SizedBox(height: 16),
-          _MetricChip(
-            icon: Icons.task_alt,
-            label: '$unitsCompleted $unitsLabel',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricChip extends StatelessWidget {
-  const _MetricChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: Colors.white),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
           ),
         ],
       ),
@@ -3289,13 +3242,6 @@ String _formatHoursValue(double value) {
 
 double _resolveDoubleMetric(double primary, double fallback) {
   if (_isEffectivelyZero(primary) && !_isEffectivelyZero(fallback)) {
-    return fallback;
-  }
-  return primary;
-}
-
-int _resolveIntMetric(int primary, int fallback) {
-  if (primary <= 0 && fallback > 0) {
     return fallback;
   }
   return primary;
