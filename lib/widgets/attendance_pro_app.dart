@@ -65,9 +65,10 @@ class AttendanceProApp extends StatelessWidget {
                   fontFamily: AppString.fontFamily,
                 );
 
-                final textTheme = _applyFontFamily(baseTheme.textTheme);
-                final primaryTextTheme =
-                    _applyFontFamily(baseTheme.primaryTextTheme);
+                final textTheme =
+                    baseTheme.textTheme.apply(fontFamily: AppString.fontFamily);
+                final primaryTextTheme = baseTheme.primaryTextTheme
+                    .apply(fontFamily: AppString.fontFamily);
 
                 return MaterialApp.router(
                   debugShowCheckedModeBanner: false,
@@ -92,7 +93,10 @@ class AttendanceProApp extends StatelessWidget {
                       data: media.copyWith(
                         textScaleFactor: responsive.textScaleFactor,
                       ),
-                      child: child ?? const SizedBox.shrink(),
+                      child: DefaultTextStyle.merge(
+                        style: const TextStyle(fontFamily: AppString.fontFamily),
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     );
                   },
                 );
@@ -103,31 +107,4 @@ class AttendanceProApp extends StatelessWidget {
       ),
     );
   }
-}
-
-TextTheme _applyFontFamily(TextTheme base) {
-  return base.copyWith(
-    displayLarge:
-        base.displayLarge?.copyWith(fontFamily: AppString.fontFamily),
-    displayMedium:
-        base.displayMedium?.copyWith(fontFamily: AppString.fontFamily),
-    displaySmall:
-        base.displaySmall?.copyWith(fontFamily: AppString.fontFamily),
-    headlineLarge:
-        base.headlineLarge?.copyWith(fontFamily: AppString.fontFamily),
-    headlineMedium:
-        base.headlineMedium?.copyWith(fontFamily: AppString.fontFamily),
-    headlineSmall:
-        base.headlineSmall?.copyWith(fontFamily: AppString.fontFamily),
-    titleLarge: base.titleLarge?.copyWith(fontFamily: AppString.fontFamily),
-    titleMedium:
-        base.titleMedium?.copyWith(fontFamily: AppString.fontFamily),
-    titleSmall: base.titleSmall?.copyWith(fontFamily: AppString.fontFamily),
-    bodyLarge: base.bodyLarge?.copyWith(fontFamily: AppString.fontFamily),
-    bodyMedium: base.bodyMedium?.copyWith(fontFamily: AppString.fontFamily),
-    bodySmall: base.bodySmall?.copyWith(fontFamily: AppString.fontFamily),
-    labelLarge: base.labelLarge?.copyWith(fontFamily: AppString.fontFamily),
-    labelMedium: base.labelMedium?.copyWith(fontFamily: AppString.fontFamily),
-    labelSmall: base.labelSmall?.copyWith(fontFamily: AppString.fontFamily),
-  );
 }
