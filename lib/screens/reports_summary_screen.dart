@@ -725,10 +725,6 @@ class _SummaryLoadedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currency = summary.currencySymbol;
-    final resolvedHoursWorked = _resolveDoubleMetric(
-      summary.combinedSalary.hoursWorked,
-      summary.hourlySummary.totalHours,
-    );
     final resolvedUnitsCompleted = _resolveIntMetric(
       summary.combinedSalary.unitsCompleted,
       summary.contractSummary.totalUnits,
@@ -757,9 +753,7 @@ class _SummaryLoadedContent extends StatelessWidget {
         _CombinedSalaryCard(
           title: localization.reportsCombinedSalaryTitle,
           amount: summary.combinedSalary.amount,
-          hoursWorked: resolvedHoursWorked,
           unitsCompleted: resolvedUnitsCompleted,
-          hoursLabel: localization.reportsHoursWorkedSuffix,
           unitsLabel: localization.reportsUnitsCompletedSuffix,
           currencySymbol: currency,
         ),
@@ -1220,18 +1214,14 @@ class _CombinedSalaryCard extends StatelessWidget {
   const _CombinedSalaryCard({
     required this.title,
     required this.amount,
-    required this.hoursWorked,
     required this.unitsCompleted,
-    required this.hoursLabel,
     required this.unitsLabel,
     required this.currencySymbol,
   });
 
   final String title;
   final double amount;
-  final double hoursWorked;
   final int unitsCompleted;
-  final String hoursLabel;
   final String unitsLabel;
   final String currencySymbol;
 
@@ -1302,19 +1292,9 @@ class _CombinedSalaryCard extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _MetricChip(
-                icon: Icons.access_time,
-                label: '${_formatHoursValue(hoursWorked)} $hoursLabel',
-              ),
-              _MetricChip(
-                icon: Icons.task_alt,
-                label: '$unitsCompleted $unitsLabel',
-              ),
-            ],
+          _MetricChip(
+            icon: Icons.task_alt,
+            label: '$unitsCompleted $unitsLabel',
           ),
         ],
       ),
