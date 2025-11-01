@@ -3,14 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../core/constants/app_assets.dart';
-import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
 import '../bloc/work_state.dart';
+import '../core/constants/app_assets.dart';
+import '../core/localization/app_localizations.dart';
+import '../models/attendance_history.dart';
 import '../models/monthly_report.dart';
 import '../models/report_summary.dart';
 import '../models/work.dart';
+import '../repositories/attendance_history_repository.dart';
 import '../repositories/reports_repository.dart';
+import '../utils/local_notification_service.dart';
+import '../utils/pdf_report_service.dart';
 import '../widgets/work_selection_dialog.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
@@ -23,6 +27,8 @@ class ReportsSummaryScreen extends StatefulWidget {
 }
 
 class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
+  final AttendanceHistoryRepository _historyRepository =
+      AttendanceHistoryRepository();
   static const List<String> _monthNames = <String>[
     'January',
     'February',
@@ -62,6 +68,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   String? _monthlyReportError;
   int _monthlyRequestId = 0;
   bool _hasAttemptedMonthlyReportLoad = false;
+  bool _isDownloadingContractReport = false;
 
   @override
   void initState() {
@@ -303,6 +310,142 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       _selectedWorkName = selected.name;
     });
     _loadSummary();
+  }
+
+  bool _hasContractSummaryData(ReportSummary summary) {
+    final contract = summary.contractSummary;
+    if (contract.items.isNotEmpty) {
+      return true;
+    }
+    if (contract.totalUnits > 0) {
+      return true;
+    }
+    if (contract.salaryAmount > 0) {
+      return true;
+    }
+    return false;
+  }
+
+  void _showDownloadSnackBar(String message, {Color? backgroundColor}) {
+    if (!mounted) {
+      return;
+    }
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(trimmed),
+        backgroundColor: backgroundColor,
+      ),
+    );
+  }
+
+  Future<void> _downloadMonthlyContractReport() async {
+    if (_isDownloadingContractReport) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final workId = _selectedWorkId;
+    final targetDate = _parseMonth(_selectedMonth);
+    final workState = context.read<WorkBloc>().state;
+    final storedWorkName = _selectedWorkName?.trim() ?? '';
+    final resolvedWorkName = storedWorkName.isNotEmpty
+        ? storedWorkName
+        : (_resolveSelectedWork(workState)?.name ?? '').trim();
+
+    if (workId == null || targetDate == null) {
+      _showDownloadSnackBar(
+        l.reportDownloadFailedMessage,
+        backgroundColor: const Color(0xFFB91C1C),
+      );
+      return;
+    }
+
+    setState(() {
+      _isDownloadingContractReport = true;
+    });
+
+    try {
+      final history = await _historyRepository.fetchHistory(
+        workId: workId,
+        workName: resolvedWorkName,
+        month: targetDate.month,
+        year: targetDate.year,
+      );
+
+      final contractEntries = history.entries
+          .where((entry) => entry.type == AttendanceHistoryEntryType.contract)
+          .toList(growable: false);
+
+      if (contractEntries.isEmpty) {
+        _showDownloadSnackBar(l.reportDownloadNoEntriesMessage);
+        return;
+      }
+
+      final workLabel = resolvedWorkName.isEmpty
+          ? l.attendanceHistoryAllWorks
+          : resolvedWorkName;
+
+      final rows = contractEntries
+          .map(
+            (entry) => ContractReportRow(
+              date: entry.date,
+              contractType: entry.contractType ?? '',
+              unitsCompleted: entry.unitsCompleted ?? 0,
+              ratePerUnit: entry.ratePerUnit ?? 0,
+              salary: entry.salary,
+            ),
+          )
+          .toList(growable: false);
+
+      final reportFile = await PdfReportService.generateMonthlyContractReport(
+        workName: workLabel,
+        monthLabel: _selectedMonth,
+        currencySymbol: history.currencySymbol,
+        rows: rows,
+      );
+
+      _showDownloadSnackBar(
+        l.reportDownloadSuccessMessage(reportFile.path),
+        backgroundColor: const Color(0xFF15803D),
+      );
+
+      final fileName = reportFile.uri.pathSegments.isNotEmpty
+          ? reportFile.uri.pathSegments.last
+          : reportFile.path;
+
+      await LocalNotificationService.showDownloadNotification(
+        fileName: fileName,
+        filePath: reportFile.path,
+      );
+    } on AttendanceHistoryAuthException {
+      _showDownloadSnackBar(
+        l.reportDownloadFailedMessage,
+        backgroundColor: const Color(0xFFB91C1C),
+      );
+    } on AttendanceHistoryRepositoryException catch (e) {
+      final trimmed = e.message.trim();
+      final message = trimmed.isEmpty ? l.reportDownloadFailedMessage : e.message;
+      _showDownloadSnackBar(
+        message,
+        backgroundColor: const Color(0xFFB91C1C),
+      );
+    } catch (_) {
+      _showDownloadSnackBar(
+        l.reportDownloadFailedMessage,
+        backgroundColor: const Color(0xFFB91C1C),
+      );
+    } finally {
+      if (!mounted) {
+        _isDownloadingContractReport = false;
+      } else {
+        setState(() {
+          _isDownloadingContractReport = false;
+        });
+      }
+    }
   }
 
   Work? _findActiveWorkFromState(WorkState state) {
@@ -554,6 +697,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         localization: l,
         selectedMonth: selectedMonth,
         contractItems: contractItems,
+        canDownloadContractReport: _hasContractSummaryData(summary),
+        isDownloadingContractReport: _isDownloadingContractReport,
+        onDownloadContractReport: _downloadMonthlyContractReport,
       );
     } else {
       summaryBody = _SummaryEmptyView(
@@ -715,12 +861,18 @@ class _SummaryLoadedContent extends StatelessWidget {
     required this.localization,
     required this.selectedMonth,
     required this.contractItems,
+    required this.canDownloadContractReport,
+    required this.isDownloadingContractReport,
+    required this.onDownloadContractReport,
   });
 
   final ReportSummary summary;
   final AppLocalizations localization;
   final String selectedMonth;
   final List<_ContractWorkItem> contractItems;
+  final bool canDownloadContractReport;
+  final bool isDownloadingContractReport;
+  final VoidCallback onDownloadContractReport;
 
   @override
   Widget build(BuildContext context) {
@@ -775,6 +927,30 @@ class _SummaryLoadedContent extends StatelessWidget {
           items: contractItems,
           emptyMessage: localization.notAvailableLabel,
         ),
+        if (canDownloadContractReport || isDownloadingContractReport) ...[
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: isDownloadingContractReport
+                  ? null
+                  : onDownloadContractReport,
+              icon: isDownloadingContractReport
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    )
+                  : const Icon(Icons.download),
+              label: Text(localization.contractReportDownloadLabel),
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         _SectionTitle(
           text: '$selectedMonth ${localization.reportsBreakdownSuffix}',

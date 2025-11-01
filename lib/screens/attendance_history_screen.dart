@@ -11,6 +11,7 @@ import '../repositories/attendance_entry_repository.dart';
 import '../repositories/attendance_history_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
+import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/responsive.dart';
 
@@ -653,6 +654,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _showSuccessSnackBar(
           l.reportDownloadSuccessMessage(reportFile.path),
         );
+        final fileName = reportFile.uri.pathSegments.isNotEmpty
+            ? reportFile.uri.pathSegments.last
+            : reportFile.path;
+        await LocalNotificationService.showDownloadNotification(
+          fileName: fileName,
+          filePath: reportFile.path,
+        );
       } else {
         final grouped = _groupEntriesByDay(targetEntries);
         final days = grouped.entries
@@ -686,6 +694,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         }
         _showSuccessSnackBar(
           l.reportDownloadSuccessMessage(reportFile.path),
+        );
+        final fileName = reportFile.uri.pathSegments.isNotEmpty
+            ? reportFile.uri.pathSegments.last
+            : reportFile.path;
+        await LocalNotificationService.showDownloadNotification(
+          fileName: fileName,
+          filePath: reportFile.path,
         );
       }
     } on UnsupportedError catch (error) {
