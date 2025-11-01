@@ -101,7 +101,7 @@ class PdfReportService {
             periodLabel: monthLabel,
           ),
           pw.SizedBox(height: 20),
-          pw.Table.fromTextArray(
+          _buildStripedTable(
             headers: const <String>['Date', 'Contract type', 'Units', 'Rate', 'Amount'],
             data: tableData,
             headerStyle: pw.TextStyle(
@@ -109,19 +109,16 @@ class PdfReportService {
               fontWeight: pw.FontWeight.bold,
               fontSize: 11,
             ),
-            headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
             cellStyle: const pw.TextStyle(fontSize: 10),
-            cellAlignments: <int, pw.Alignment>{
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
+            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+            cellAlignments: const <int, pw.Alignment>{
               0: pw.Alignment.centerLeft,
               1: pw.Alignment.centerLeft,
               2: pw.Alignment.center,
               3: pw.Alignment.centerRight,
               4: pw.Alignment.centerRight,
             },
-            rowDecorationBuilder: (index, _) => pw.BoxDecoration(
-              color: index.isEven ? PdfColors.grey100 : PdfColors.white,
-            ),
-            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
           ),
           pw.SizedBox(height: 18),
           pw.Container(
@@ -235,7 +232,7 @@ class PdfReportService {
                         ),
                       ),
                       pw.SizedBox(height: 10),
-                      pw.Table.fromTextArray(
+                      _buildStripedTable(
                         headers: const <String>['Type', 'Work', 'Details', 'Amount'],
                         data: tableData,
                         headerStyle: pw.TextStyle(
@@ -243,18 +240,15 @@ class PdfReportService {
                           fontWeight: pw.FontWeight.bold,
                           fontSize: 10,
                         ),
-                        headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
                         cellStyle: const pw.TextStyle(fontSize: 9),
-                        cellAlignments: <int, pw.Alignment>{
+                        headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
+                        border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
+                        cellAlignments: const <int, pw.Alignment>{
                           0: pw.Alignment.centerLeft,
                           1: pw.Alignment.centerLeft,
                           2: pw.Alignment.centerLeft,
                           3: pw.Alignment.centerRight,
                         },
-                        rowDecorationBuilder: (index, _) => pw.BoxDecoration(
-                          color: index.isEven ? PdfColors.grey100 : PdfColors.white,
-                        ),
-                        border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
                       ),
                       pw.SizedBox(height: 8),
                       pw.Align(
@@ -395,5 +389,71 @@ class PdfReportService {
   static String _sanitizeFileSegment(String value) {
     final sanitized = value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
     return sanitized.replaceAll(RegExp(r'_+'), '_').replaceAll(RegExp(r'^_|_$'), '');
+  }
+
+  static pw.Widget _buildStripedTable({
+    required List<String> headers,
+    required List<List<String>> data,
+    required pw.TextStyle headerStyle,
+    required pw.TextStyle cellStyle,
+    required pw.BoxDecoration headerDecoration,
+    required pw.TableBorder border,
+    required Map<int, pw.Alignment> cellAlignments,
+    PdfColor? evenRowColor,
+    PdfColor? oddRowColor,
+  }) {
+    final resolvedEvenColor = evenRowColor ?? PdfColors.grey100;
+    final resolvedOddColor = oddRowColor ?? PdfColors.white;
+    final defaultAlignment = pw.Alignment.centerLeft;
+
+    final rows = <pw.TableRow>[
+      pw.TableRow(
+        decoration: headerDecoration,
+        children: List<pw.Widget>.generate(
+          headers.length,
+          (index) => _buildTableCell(
+            text: headers[index],
+            style: headerStyle,
+            alignment: cellAlignments[index] ?? defaultAlignment,
+          ),
+        ),
+      ),
+    ];
+
+    for (var rowIndex = 0; rowIndex < data.length; rowIndex++) {
+      final row = data[rowIndex];
+      rows.add(
+        pw.TableRow(
+          decoration: pw.BoxDecoration(
+            color: rowIndex.isEven ? resolvedEvenColor : resolvedOddColor,
+          ),
+          children: List<pw.Widget>.generate(
+            headers.length,
+            (index) => _buildTableCell(
+              text: index < row.length ? row[index] : '',
+              style: cellStyle,
+              alignment: cellAlignments[index] ?? defaultAlignment,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return pw.Table(
+      border: border,
+      children: rows,
+    );
+  }
+
+  static pw.Widget _buildTableCell({
+    required String text,
+    required pw.TextStyle style,
+    required pw.Alignment alignment,
+  }) {
+    return pw.Container(
+      alignment: alignment,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: pw.Text(text, style: style),
+    );
   }
 }
