@@ -95,6 +95,16 @@ class AppLocalizations {
       _value('attendanceHistoryLoggedHoursLabel');
   String get attendanceHistoryReasonLabel =>
       _value('attendanceHistoryReasonLabel');
+  String get contractReportDownloadLabel =>
+      _value('contractReportDownloadLabel');
+  String get historyReportDownloadLabel =>
+      _value('historyReportDownloadLabel');
+  String reportDownloadSuccessMessage(String path) =>
+      _valueWithArgs('reportDownloadSuccessMessage', {'path': path});
+  String get reportDownloadFailedMessage =>
+      _value('reportDownloadFailedMessage');
+  String get reportDownloadNoEntriesMessage =>
+      _value('reportDownloadNoEntriesMessage');
   String get contractWorkLabel => _value('contractWorkLabel');
   String get contractWorkActiveRatesTitle =>
       _value('contractWorkActiveRatesTitle');

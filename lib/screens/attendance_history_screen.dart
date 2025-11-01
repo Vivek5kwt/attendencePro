@@ -11,6 +11,7 @@ import '../repositories/attendance_entry_repository.dart';
 import '../repositories/attendance_history_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
+import '../utils/pdf_report_service.dart';
 import '../utils/responsive.dart';
 
 const List<String> _kMonthNames = <String>[
@@ -79,6 +80,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   String _currencySymbol = '€';
 
   int _entriesRequestId = 0;
+  bool _isGeneratingReport = false;
 
   @override
   void initState() {
@@ -588,6 +590,177 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     setState(() {
       _viewMode = mode;
     });
+  }
+
+  Future<void> _downloadCurrentReport() async {
+    if (_isGeneratingReport) {
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    final targetEntries = _viewMode == _HistoryViewMode.contract
+        ? _entries
+            .where((entry) => entry.type == _AttendanceEntryType.contract)
+            .toList(growable: false)
+        : _entries
+            .where(
+              (entry) => entry.type == _AttendanceEntryType.hourly ||
+                  entry.type == _AttendanceEntryType.leave,
+            )
+            .toList(growable: false);
+
+    if (targetEntries.isEmpty) {
+      _showInfoSnackBar(l.reportDownloadNoEntriesMessage);
+      return;
+    }
+
+    if (_selectedMonth.isEmpty) {
+      _showErrorSnackBar(l.reportDownloadFailedMessage);
+      return;
+    }
+
+    setState(() {
+      _isGeneratingReport = true;
+    });
+
+    try {
+      final workName = _selectedWork.trim().isEmpty
+          ? l.attendanceHistoryAllWorks
+          : _selectedWork.trim();
+      if (_viewMode == _HistoryViewMode.contract) {
+        final rows = targetEntries
+            .map(
+              (entry) => ContractReportRow(
+                date: entry.date,
+                contractType: entry.contractType ?? '',
+                unitsCompleted: entry.unitsCompleted ?? 0,
+                ratePerUnit: entry.ratePerUnit ?? 0,
+                salary: entry.salary,
+              ),
+            )
+            .toList(growable: false);
+
+        final reportFile = await PdfReportService.generateMonthlyContractReport(
+          workName: workName,
+          monthLabel: _selectedMonth,
+          currencySymbol: _currencySymbol,
+          rows: rows,
+        );
+
+        if (!mounted) {
+          return;
+        }
+        _showSuccessSnackBar(
+          l.reportDownloadSuccessMessage(reportFile.path),
+        );
+      } else {
+        final grouped = _groupEntriesByDay(targetEntries);
+        final days = grouped.entries
+            .map(
+              (entry) => HistoryReportDay(
+                date: entry.key,
+                entries: entry.value
+                    .map(
+                      (item) => HistoryReportEntry(
+                        workName: item.workName,
+                        typeLabel: _resolveEntryTypeLabel(item.type, l),
+                        detail: _buildHistoryDetail(item, l),
+                        salary: item.salary,
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+            )
+            .toList(growable: false);
+
+        final reportFile =
+            await PdfReportService.generateAttendanceHistoryReport(
+          workName: workName,
+          monthLabel: _selectedMonth,
+          currencySymbol: _currencySymbol,
+          days: days,
+        );
+
+        if (!mounted) {
+          return;
+        }
+        _showSuccessSnackBar(
+          l.reportDownloadSuccessMessage(reportFile.path),
+        );
+      }
+    } on UnsupportedError catch (error) {
+      if (!mounted) {
+        return;
+      }
+      final message = error.message?.toString().trim();
+      _showErrorSnackBar(
+        (message == null || message.isEmpty)
+            ? l.reportDownloadFailedMessage
+            : message,
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showErrorSnackBar(l.reportDownloadFailedMessage);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGeneratingReport = false;
+        });
+      }
+    }
+  }
+
+  String _resolveEntryTypeLabel(
+    _AttendanceEntryType type,
+    AppLocalizations localization,
+  ) {
+    switch (type) {
+      case _AttendanceEntryType.hourly:
+        return localization.attendanceHistoryHourlyEntry;
+      case _AttendanceEntryType.contract:
+        return localization.attendanceHistoryContractEntry;
+      case _AttendanceEntryType.leave:
+        return localization.attendanceHistoryLeaveEntry;
+    }
+  }
+
+  String _buildHistoryDetail(
+    _AttendanceEntry entry,
+    AppLocalizations localization,
+  ) {
+    switch (entry.type) {
+      case _AttendanceEntryType.hourly:
+        final start = entry.startTime?.trim().isEmpty ?? true
+            ? '--'
+            : entry.startTime!.trim();
+        final end = entry.endTime?.trim().isEmpty ?? true
+            ? '--'
+            : entry.endTime!.trim();
+        final hours = _formatHours(entry.hoursWorked);
+        final overtime = entry.overtimeHours > 0
+            ? ' (+${_formatHours(entry.overtimeHours)} overtime)'
+            : '';
+        final breakLabel = entry.breakMinutes > 0
+            ? ', Break: ${entry.breakMinutes}m'
+            : '';
+        return '$start - $end ($hours$overtime$breakLabel)';
+      case _AttendanceEntryType.contract:
+        final units = entry.unitsCompleted ?? 0;
+        final rate = entry.ratePerUnit ?? 0;
+        final typeLabel = entry.contractType?.trim().isEmpty ?? true
+            ? localization.contractWorkUnitFallback
+            : entry.contractType!.trim();
+        final rateLabel = _formatCurrencyValue(_currencySymbol, rate);
+        return '$units $typeLabel @ $rateLabel';
+      case _AttendanceEntryType.leave:
+        final reason = entry.leaveReason?.trim();
+        if (reason == null || reason.isEmpty) {
+          return localization.attendanceHistoryLeaveEntry;
+        }
+        return reason;
+    }
   }
 
   Future<void> _showWorkPicker() async {
@@ -1295,6 +1468,33 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               onChange: _availableWorks.length > 1 ? _showWorkPicker : null,
             ),
             SizedBox(height: responsive.scale(24)),
+            if (viewEntries.isNotEmpty) ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                  onPressed:
+                      _isGeneratingReport ? null : _downloadCurrentReport,
+                  icon: _isGeneratingReport
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.download),
+                  label: Text(
+                    _viewMode == _HistoryViewMode.contract
+                        ? l.contractReportDownloadLabel
+                        : l.historyReportDownloadLabel,
+                  ),
+                ),
+              ),
+              SizedBox(height: responsive.scale(16)),
+            ],
             historyWidget,
           ],
         ),
