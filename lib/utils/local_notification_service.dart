@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:open_filex/open_filex.dart';
 
 class LocalNotificationService {
   LocalNotificationService._();
@@ -30,7 +31,18 @@ class LocalNotificationService {
       macOS: darwinSettings,
     );
 
-    await _plugin.initialize(initializationSettings);
+    await _plugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: _handleNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          LocalNotificationService._handleBackgroundNotificationResponse,
+    );
+
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    final response = launchDetails?.notificationResponse;
+    if (response != null) {
+      await _handleNotificationResponse(response);
+    }
 
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
@@ -104,5 +116,31 @@ class LocalNotificationService {
       notificationDetails,
       payload: filePath,
     );
+  }
+
+  static Future<void> _handleNotificationResponse(
+    NotificationResponse response,
+  ) async {
+    if (kIsWeb) {
+      return;
+    }
+
+    final payload = response.payload?.trim();
+    if (payload == null || payload.isEmpty) {
+      return;
+    }
+
+    try {
+      await OpenFilex.open(payload);
+    } catch (_) {
+      // Ignore failures to open the file; the download is still saved locally.
+    }
+  }
+
+  @pragma('vm:entry-point')
+  static Future<void> _handleBackgroundNotificationResponse(
+    NotificationResponse response,
+  ) {
+    return _handleNotificationResponse(response);
   }
 }
