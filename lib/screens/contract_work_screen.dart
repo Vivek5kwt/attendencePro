@@ -52,6 +52,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   int _summaryTotalUnits = 0;
   double _summarySalaryAmount = 0;
 
+  final Set<String> _pendingDeletionIds = <String>{};
+
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -91,6 +93,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             isUserDefined: true,
           )));
         _syncAvailableRoles();
+        _pendingDeletionIds.clear();
         _isLoading = false;
       });
     } on ContractTypeRepositoryException catch (error) {
@@ -336,6 +339,77 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     );
   }
 
+  Future<void> _handleDeleteContractType(_ContractType type) async {
+    final l = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: Text(l.contractWorkDeleteConfirmationTitle),
+              content: Text(l.contractWorkDeleteConfirmationMessage),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l.cancelButton),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(l.contractWorkDeleteButton),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!confirmed) {
+      return;
+    }
+
+    setState(() {
+      _pendingDeletionIds.add(type.id);
+    });
+
+    try {
+      await _repository.deleteContractType(id: type.id);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _pendingDeletionIds.remove(type.id);
+        _defaultContractTypes.removeWhere((item) => item.id == type.id);
+        _userContractTypes.removeWhere((item) => item.id == type.id);
+        _syncAvailableRoles();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
+      );
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _pendingDeletionIds.remove(type.id);
+      });
+      final message = error.message.trim().isEmpty
+          ? l.contractWorkTypeDeleteFailedMessage
+          : error.message;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _pendingDeletionIds.remove(type.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -469,31 +543,93 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       onRetry:
                           widget.work == null ? null : () => _loadContractSummary(),
                     ),
-                    SizedBox(height: responsive.scale(20)),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showContractTypeDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2563EB),
-                          foregroundColor: Colors.white,
-                          padding: responsive.scaledSymmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(responsive.scale(16)),
-                          ),
-                          textStyle: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: responsive.scaleText(14),
-                          ),
-                        ),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text(l.contractWorkAddTypeTitle),
+                    SizedBox(height: responsive.scale(24)),
+                    if (_defaultContractTypes.isNotEmpty) ...[
+                      Text(
+                        l.contractWorkDefaultTypesTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                              fontSize: responsive.scaleText(16),
+                            ) ??
+                            TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                              fontSize: responsive.scaleText(16),
+                            ),
                       ),
+                      SizedBox(height: responsive.scale(12)),
+                      Column(
+                        children: [
+                          for (var i = 0; i < _defaultContractTypes.length; i++)
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom: i == _defaultContractTypes.length - 1
+                                    ? 0
+                                    : responsive.scale(16),
+                              ),
+                              child: _ContractTypeTile(
+                                type: _defaultContractTypes[i],
+                                lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
+                                editLabel: l.contractWorkEditRateButton,
+                                onEdit: _pendingDeletionIds
+                                        .contains(_defaultContractTypes[i].id)
+                                    ? null
+                                    : () => _showContractTypeDialog(
+                                          type: _defaultContractTypes[i],
+                                        ),
+                                defaultTag: l.contractWorkDefaultTag,
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: responsive.scale(24)),
+                    ],
+                    _ContractTypesHeader(
+                      title: l.contractWorkCustomTypesTitle,
+                      buttonLabel: l.contractWorkAddTypeTitle,
+                      onAdd: () => _showContractTypeDialog(),
                     ),
+                    SizedBox(height: responsive.scale(16)),
+                    if (_userContractTypes.isNotEmpty)
+                      Column(
+                        children: [
+                          for (var i = 0; i < _userContractTypes.length; i++)
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom: i == _userContractTypes.length - 1
+                                    ? 0
+                                    : responsive.scale(16),
+                              ),
+                              child: _ContractTypeTile(
+                                type: _userContractTypes[i],
+                                lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
+                                editLabel: l.contractWorkEditRateButton,
+                                onEdit: _pendingDeletionIds
+                                        .contains(_userContractTypes[i].id)
+                                    ? null
+                                    : () => _showContractTypeDialog(
+                                          type: _userContractTypes[i],
+                                        ),
+                                onDelete: _pendingDeletionIds
+                                        .contains(_userContractTypes[i].id)
+                                    ? null
+                                    : () => _handleDeleteContractType(
+                                          _userContractTypes[i],
+                                        ),
+                                deleteLabel: l.contractWorkDeleteButton,
+                                showDeleteAction: true,
+                                defaultTag: l.contractWorkDefaultTag,
+                              ),
+                            ),
+                        ],
+                      )
+                    else
+                      _ContractTypesEmptyState(
+                        message: l.contractWorkNoCustomTypesLabel,
+                        buttonLabel: l.contractWorkAddTypeTitle,
+                        onAdd: () => _showContractTypeDialog(),
+                      ),
                     SizedBox(height: responsive.scale(28)),
                   ],
                 ),
@@ -2158,6 +2294,131 @@ class _SummaryItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ContractTypesHeader extends StatelessWidget {
+  const _ContractTypesHeader({
+    required this.title,
+    required this.buttonLabel,
+    required this.onAdd,
+  });
+
+  final String title;
+  final String buttonLabel;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                  fontSize: responsive.scaleText(16),
+                ) ??
+                TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                  fontSize: responsive.scaleText(16),
+                ),
+          ),
+        ),
+        SizedBox(width: responsive.scale(12)),
+        ElevatedButton.icon(
+          onPressed: onAdd,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2563EB),
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.scale(18),
+              vertical: responsive.scale(10),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(responsive.scale(16)),
+            ),
+            textStyle: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: responsive.scaleText(14),
+            ),
+          ),
+          icon: const Icon(Icons.add_circle_outline),
+          label: Text(buttonLabel),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContractTypesEmptyState extends StatelessWidget {
+  const _ContractTypesEmptyState({
+    required this.message,
+    required this.buttonLabel,
+    required this.onAdd,
+  });
+
+  final String message;
+  final String buttonLabel;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = context.responsive;
+    final theme = Theme.of(context);
+    final messageStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF6B7280),
+        ) ??
+        TextStyle(
+          color: const Color(0xFF6B7280),
+          fontSize: responsive.scaleText(14),
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(responsive.scale(20)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(responsive.scale(22)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: messageStyle,
+          ),
+          SizedBox(height: responsive.scale(16)),
+          OutlinedButton.icon(
+            onPressed: onAdd,
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: responsive.scale(18),
+                vertical: responsive.scale(12),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(responsive.scale(16)),
+              ),
+              side: const BorderSide(color: Color(0xFF2563EB)),
+              foregroundColor: const Color(0xFF2563EB),
+              textStyle: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: responsive.scaleText(14),
+              ),
+            ),
+            icon: const Icon(Icons.add_circle_outline),
+            label: Text(buttonLabel),
+          ),
+        ],
+      ),
     );
   }
 }
