@@ -2545,9 +2545,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   Future<bool> _showAttendancePreviewDialog({
     required Map<String, dynamic>? previewResponse,
     required DateTime date,
-    required String startTime,
-    required String endTime,
-    required int breakMinutes,
+    String? startTime,
+    String? endTime,
+    int? breakMinutes,
     required bool isContractEntry,
     int? units,
     double? ratePerUnit,
@@ -2567,13 +2567,36 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       l.attendanceEntryTypeLabel,
       isContractEntry ? l.contractWorkLabel : l.hourlyWorkLabel,
     );
-    _addPreviewEntry(infoEntries, l.startTimeLabel, startTime);
-    _addPreviewEntry(infoEntries, l.endTimeLabel, endTime);
-    _addPreviewEntry(
-      infoEntries,
-      l.breakLabel,
-      _formatBreakMinutesDisplay(breakMinutes),
-    );
+    final startTimeDisplay = startTime ??
+        _resolvePreviewDisplayValue(previewData, const [
+          'start_time',
+          'startTime',
+          'start',
+          'in_time',
+          'inTime',
+        ]);
+    _addPreviewEntry(infoEntries, l.startTimeLabel, startTimeDisplay);
+
+    final endTimeDisplay = endTime ??
+        _resolvePreviewDisplayValue(previewData, const [
+          'end_time',
+          'endTime',
+          'end',
+          'out_time',
+          'outTime',
+        ]);
+    _addPreviewEntry(infoEntries, l.endTimeLabel, endTimeDisplay);
+
+    final breakDisplay = breakMinutes != null
+        ? _formatBreakMinutesDisplay(breakMinutes)
+        : _resolvePreviewDisplayValue(previewData, const [
+            'break_minutes',
+            'breakMinutes',
+            'break_duration',
+            'breakDuration',
+            'break',
+          ]);
+    _addPreviewEntry(infoEntries, l.breakLabel, breakDisplay);
 
     if (isContractEntry) {
       if (bundles.isNotEmpty) {
