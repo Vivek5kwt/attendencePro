@@ -123,10 +123,12 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          insetPadding:
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: LayoutBuilder(
             builder: (ctx, constraints) {
-              final maxWidth = constraints.maxWidth.clamp(0.0, 420.0).toDouble();
+              final maxWidth =
+              constraints.maxWidth.clamp(0.0, 420.0).toDouble();
               return Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
@@ -205,7 +207,8 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   width: 2,
                                 ),
                               ),
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                              padding:
+                              const EdgeInsets.fromLTRB(16, 16, 16, 20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -395,7 +398,8 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   width: 2,
                                 ),
                               ),
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                              padding:
+                              const EdgeInsets.fromLTRB(16, 16, 16, 20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -412,7 +416,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                       Flexible(
                                         child: Text(
                                           l.contractWorkHeader,
-                                          // expects something like "Contract Work (if have)"
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium
@@ -445,8 +448,8 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                           begin: Alignment.centerLeft,
                                           end: Alignment.centerRight,
                                           colors: [
-                                            Color(0xFF1E40AF), // deep blue
-                                            Color(0xFF0EA5E9), // cyan-ish
+                                            Color(0xFF1E40AF),
+                                            Color(0xFF0EA5E9),
                                           ],
                                         ),
                                         borderRadius:
@@ -480,7 +483,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                           Flexible(
                                             child: Text(
                                               l.addContractWorkButton,
-                                              // e.g. "Add Contract Work"
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.w700,
@@ -506,7 +508,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                             // ========== FOOTER BUTTONS ==========
                             Row(
                               children: [
-                                // Cancel button (black pill)
                                 Expanded(
                                   child: OutlinedButton(
                                     onPressed: () {
@@ -538,8 +539,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-
-                                // Save Work button (blue pill)
                                 Expanded(
                                   child: ElevatedButton(
                                     onPressed: isSaving
@@ -564,12 +563,10 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                         ? const SizedBox(
                                       height: 20,
                                       width: 20,
-                                      child:
-                                      CircularProgressIndicator(
+                                      child: CircularProgressIndicator(
                                         strokeWidth: 2.5,
                                         valueColor:
-                                        AlwaysStoppedAnimation<
-                                            Color>(
+                                        AlwaysStoppedAnimation<Color>(
                                           Colors.white,
                                         ),
                                       ),
@@ -721,20 +718,100 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     }
     final symbol = _resolveCurrencySymbol();
     final formatted = rate.toDouble().toStringAsFixed(2);
-    final prefix = symbol ?? '€';
+    final prefix = symbol ?? '£';
     return '$prefix$formatted/hour';
   }
 
-  String _formatContractRate(ContractType type) {
-    final symbol = _resolveCurrencySymbol(type.additionalData) ??
-        _resolveCurrencySymbol() ??
-        '€';
-    final formatted = type.rate.toStringAsFixed(2);
-    final unit = type.unitLabel.trim();
-    if (unit.isEmpty) {
-      return '$symbol$formatted';
+  /// Build the best possible unit watermark string for the contract item.
+  /// Priority:
+  /// 1) Explicit watermark fields in additionalData.
+  /// 2) quantity + unitName combination from additionalData.
+  /// 3) Non-generic unitLabel ("per unit" is considered generic and ignored).
+  /// 4) Fallback "per unit".
+  String _deriveUnitWatermark(ContractType type) {
+    final data = type.additionalData;
+
+    // 1) Direct watermark value if present.
+    final watermarkKeys = <String>[
+      'watermark',
+      'unitWatermark',
+      'unit_watermark',
+      'unit_display',
+      'unitDisplay',
+      'unit_label_display',
+    ];
+    for (final k in watermarkKeys) {
+      final v = data[k];
+      if (v is String && v.trim().isNotEmpty) {
+        return v.trim();
+      }
     }
-    return '$symbol$formatted/${unit.toLowerCase()}';
+
+    // 2) Build from quantity + name.
+    num? qty;
+    final qtyKeys = <String>[
+      'unit_quantity',
+      'quantity',
+      'qty',
+      'per_count',
+      'count',
+      'units',
+    ];
+    for (final k in qtyKeys) {
+      final v = data[k];
+      if (v is num) {
+        qty = v;
+        break;
+      } else if (v is String) {
+        final parsed = num.tryParse(v);
+        if (parsed != null) {
+          qty = parsed;
+          break;
+        }
+      }
+    }
+
+    String? unitName;
+    final unitKeys = <String>[
+      'unit_name',
+      'unit',
+      'role',
+      'type',
+      'role_name',
+    ];
+    for (final k in unitKeys) {
+      final v = data[k];
+      if (v is String && v.trim().isNotEmpty) {
+        unitName = v.trim();
+        break;
+      }
+    }
+
+    if (qty != null && unitName != null && unitName.isNotEmpty) {
+      // Keep the casing from backend; client examples are lowercase nouns.
+      final qtyInt = qty % 1 == 0 ? qty.toInt() : qty;
+      return 'per $qtyInt $unitName';
+    }
+
+    // 3) Use non-generic unitLabel if available.
+    final label = (type.unitLabel ?? '').trim();
+    if (label.isNotEmpty && label.toLowerCase() != 'per unit') {
+      return label;
+    }
+
+    // 4) Fallback.
+    return 'per unit';
+  }
+
+  /// FINAL RATE STRING for contract tile (client spec):
+  /// "<currency><rate> / <watermark>"
+  /// e.g. "£3.00 / per 100 bunches"
+  String _formatContractRate(ContractType type) {
+    final symbol =
+        _resolveCurrencySymbol(type.additionalData) ?? _resolveCurrencySymbol() ?? '£';
+    final formattedRate = type.rate.toStringAsFixed(2);
+    final watermark = _deriveUnitWatermark(type);
+    return '$symbol$formattedRate / $watermark';
   }
 
   Future<void> _navigateToContractWorkScreen() async {
@@ -881,10 +958,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF), // very light blue fill
+        color: const Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF93C5FD), // light blue border
+          color: const Color(0xFF93C5FD),
           width: 1,
         ),
       ),
@@ -892,19 +969,17 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Work name bold blue
           Text(
             widget.work.name,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1D4ED8), // strong blue title
+              color: Color(0xFF1D4ED8),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
-          // Hourly rate grey/blue small
           Text(
             hourlyText,
             style: const TextStyle(
@@ -933,10 +1008,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED), // soft cream / light orange
+        color: const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFFACC15), // warm orange/yellow border
+          color: const Color(0xFFFACC15),
           width: 1,
         ),
       ),
@@ -944,30 +1019,27 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Texts (name + rate)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Contract item name (e.g. "Orange")
                 Text(
                   type.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF7C2D12), // dark orange/brown-ish title
+                    color: Color(0xFF7C2D12),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
-                // Rate per unit (e.g. "€5/crate")
                 Text(
                   _formatContractRate(type),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF6B7280), // gray text
+                    color: Color(0xFF6B7280),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -975,10 +1047,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
-          // Trailing delete "X"
           if (isDeleting)
             const SizedBox(
               height: 20,
@@ -999,7 +1068,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                 child: Icon(
                   Icons.close_rounded,
                   size: 20,
-                  color: Color(0xFFB91C1C), // red X
+                  color: Color(0xFFB91C1C),
                 ),
               ),
             ),
@@ -1018,13 +1087,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 12),
-
-        // Blue workplace info card
         _buildWorkInfoSection(context),
-
         const SizedBox(height: 16),
-
-        // "Add Contract Work" themed button (primary color pill)
         GestureDetector(
           onTap: _navigateToContractWorkScreen,
           child: Container(
@@ -1038,32 +1102,23 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withOpacity(0.25),
+                  color:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.25),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  '📑',
-                  style: TextStyle(fontSize: 18),
-                ),
+                const Text('📑', style: TextStyle(fontSize: 18)),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     'Add Contract Work',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.3,
@@ -1082,10 +1137,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             ),
           ),
         ),
-
         const SizedBox(height: 16),
-
-        // Contract items list / loading / error
         if (_isLoadingContractTypes)
           const Center(
             child: SizedBox(
@@ -1110,10 +1162,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
               OutlinedButton(
                 onPressed: _loadContractTypes,
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
@@ -1315,8 +1365,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () =>
-                              Navigator.of(context).pop(true),
+                          onPressed: () => Navigator.of(context).pop(true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFB91C1C),
                             padding: const EdgeInsets.symmetric(
@@ -1397,15 +1446,13 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(28),
                       child: SingleChildScrollView(
-                        padding:
-                        const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 const SizedBox(width: 16),
                                 Expanded(
@@ -1424,8 +1471,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                           fontSize: 20,
                                         ) ??
                                             const TextStyle(
-                                              fontWeight:
-                                              FontWeight.w700,
+                                              fontWeight: FontWeight.w700,
                                               fontSize: 20,
                                             ),
                                       ),
@@ -1444,13 +1490,11 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                               child: TextButton(
                                 onPressed: isDeleting
                                     ? null
-                                    : () =>
-                                    _handleDeleteWork(context),
+                                    : () => _handleDeleteWork(context),
                                 style: TextButton.styleFrom(
                                   foregroundColor:
                                   const Color(0xFFB91C1C),
-                                  padding:
-                                  const EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                     vertical: 14,
                                   ),
                                   shape: RoundedRectangleBorder(
@@ -1462,36 +1506,28 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                     ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child:
-                                  CircularProgressIndicator(
+                                  child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
                                     valueColor:
-                                    AlwaysStoppedAnimation<
-                                        Color>(
+                                    AlwaysStoppedAnimation<Color>(
                                       Color(0xFFB91C1C),
                                     ),
                                   ),
                                 )
                                     : Row(
-                                  mainAxisSize:
-                                  MainAxisSize.min,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
-                                        Icons.delete_outline),
+                                    const Icon(Icons.delete_outline),
                                     const SizedBox(width: 8),
                                     Text(
                                       l.deleteWorkButton,
-                                      style: theme
-                                          .textTheme
-                                          .labelLarge
+                                      style: theme.textTheme.labelLarge
                                           ?.copyWith(
                                         fontWeight:
-                                        FontWeight
-                                            .w600,
+                                        FontWeight.w600,
                                       ) ??
                                           const TextStyle(
-                                            fontWeight:
-                                            FontWeight.w600,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                     ),
                                   ],
@@ -1507,18 +1543,13 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                               child: ElevatedButton(
                                 onPressed: isDeleting
                                     ? null
-                                    : () => Navigator.of(context)
-                                    .pop(),
+                                    : () => Navigator.of(context).pop(),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                  const Color(0xFF2563EB),
+                                  backgroundColor: const Color(0xFF2563EB),
                                   padding:
-                                  const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
+                                  const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                    BorderRadius.circular(24),
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                   elevation: 0,
                                 ),
