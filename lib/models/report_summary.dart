@@ -177,9 +177,61 @@ class ContractSummaryData {
   });
 
   factory ContractSummaryData.fromJson(Map<String, dynamic> json) {
+    Iterable<dynamic>? _normalizeItems(dynamic source) {
+      if (source == null) {
+        return null;
+      }
+      if (source is List) {
+        return source;
+      }
+      if (source is Set) {
+        return source;
+      }
+      if (source is Iterable) {
+        return source;
+      }
+      if (source is Map) {
+        final flattened = <dynamic>[];
+        for (final value in source.values) {
+          final normalized = _normalizeItems(value);
+          if (normalized == null) {
+            continue;
+          }
+          flattened.addAll(normalized);
+        }
+        return flattened;
+      }
+      return null;
+    }
+
     final items = <ContractWorkItemData>[];
-    final rawItems = json['items'] ?? json['contracts'] ?? json['entries'];
-    if (rawItems is List) {
+    Iterable<dynamic>? rawItems =
+        _normalizeItems(json['items'] ?? json['contracts'] ?? json['entries']);
+    if (rawItems == null) {
+      final contractTypes =
+          json['contract_types'] ?? json['contractTypes'] ?? json['types'];
+      rawItems = _normalizeItems(contractTypes);
+    }
+    if (rawItems == null) {
+      final combined = <dynamic>[];
+      void append(dynamic source) {
+        final normalized = _normalizeItems(source);
+        if (normalized != null) {
+          combined.addAll(normalized);
+        }
+      }
+
+      append(json['default_contracts'] ?? json['defaultContracts']);
+      append(json['global_contracts'] ?? json['globalContracts']);
+      append(json['user_contracts'] ?? json['userContracts']);
+      append(json['contract_types'] ?? json['contractTypes']);
+
+      if (combined.isNotEmpty) {
+        rawItems = combined;
+      }
+    }
+
+    if (rawItems != null) {
       for (final entry in rawItems) {
         final map = _ensureMap(entry);
         if (map == null) {
