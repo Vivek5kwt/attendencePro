@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf/fonts.dart' show PdfGoogleFonts;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -486,18 +486,17 @@ class PdfReportService {
       return cached;
     }
 
-    final regular = await PdfGoogleFonts.openSansRegular();
-    final medium = await PdfGoogleFonts.openSansMedium();
-    final semiBold = await PdfGoogleFonts.openSansSemiBold();
-    final bold = await PdfGoogleFonts.openSansBold();
-    final symbols = await PdfGoogleFonts.notoSansSymbols2Regular();
+    final regular = pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-Regular.ttf'));
+    final medium = pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-Medium.ttf'));
+    final semiBold =
+        pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-SemiBold.ttf'));
+    final bold = pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-Bold.ttf'));
 
     final fonts = _PdfFontAssets(
       regular: regular,
       medium: medium,
       semiBold: semiBold,
       bold: bold,
-      fallbackFonts: <pw.Font>[symbols],
     );
     _cachedFonts = fonts;
     return fonts;
