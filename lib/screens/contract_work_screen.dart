@@ -84,15 +84,26 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       setState(() {
         _defaultContractTypes
           ..clear()
-          ..addAll(result.globalTypes
-              .map((type) => _ContractType.fromModel(type: type)));
+          ..addAll(
+            result.globalTypes.map(
+                  (type) => _ContractType.fromModel(type: type),
+            ),
+          );
+
         _userContractTypes
           ..clear()
-          ..addAll(result.userTypes.map((type) => _ContractType.fromModel(
-            type: type,
-            isUserDefined: true,
-          )));
+          ..addAll(
+            result.userTypes.map(
+                  (type) =>
+                  _ContractType.fromModel(type: type, isUserDefined: true),
+            ),
+          );
+
         _syncAvailableRoles();
+
+        _summaryRows = _buildSummaryRowsFromTypes(_userContractTypes);
+        _summaryError = null;
+
         _pendingDeletionIds.clear();
         _isLoading = false;
       });
@@ -115,11 +126,10 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     final work = widget.work;
     if (work == null) {
       setState(() {
-        _summaryRows = const <_ContractSummaryRow>[];
-        _summaryError = null;
         _summaryTotalUnits = 0;
         _summarySalaryAmount = 0;
         _isLoadingSummary = false;
+        _summaryError = null;
       });
       return;
     }
@@ -137,58 +147,58 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         year: now.year,
       );
 
-      if (!mounted) {
-        return;
-      }
-
-      final l = AppLocalizations.of(context);
-      final rows = _buildSummaryRows(summary, l);
+      if (!mounted) return;
 
       setState(() {
-        _summaryRows = rows;
-        _summaryError = null;
         _summaryTotalUnits = summary.contractSummary.totalUnits;
         _summarySalaryAmount = summary.contractSummary.salaryAmount;
         _isLoadingSummary = false;
       });
     } on ReportsRepositoryException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       final l = AppLocalizations.of(context);
       final message = error.message.trim().isEmpty
           ? l.contractWorkLoadError
           : error.message;
       setState(() {
-        _summaryRows = const <_ContractSummaryRow>[];
-        _summaryError = message;
         _summaryTotalUnits = 0;
         _summarySalaryAmount = 0;
         _isLoadingSummary = false;
+        _summaryError = message;
       });
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       final l = AppLocalizations.of(context);
       setState(() {
-        _summaryRows = const <_ContractSummaryRow>[];
-        _summaryError = l.contractWorkLoadError;
         _summaryTotalUnits = 0;
         _summarySalaryAmount = 0;
         _isLoadingSummary = false;
+        _summaryError = l.contractWorkLoadError;
       });
     }
   }
 
+  List<_ContractSummaryRow> _buildSummaryRowsFromTypes(
+      List<_ContractType> types,
+      ) {
+    if (types.isEmpty) return const <_ContractSummaryRow>[];
+    return List<_ContractSummaryRow>.generate(types.length, (i) {
+      final t = types[i];
+      return _ContractSummaryRow(
+        index: i + 1,
+        workName: t.name,
+        units: t.unitLabel,
+        payment: t.displayRate,
+      );
+    });
+  }
+
   List<_ContractSummaryRow> _buildSummaryRows(
-    ReportSummary summary,
-    AppLocalizations l,
-  ) {
+      ReportSummary summary,
+      AppLocalizations l,
+      ) {
     final items = summary.contractSummary.items;
-    if (items.isEmpty) {
-      return const <_ContractSummaryRow>[];
-    }
+    if (items.isEmpty) return const <_ContractSummaryRow>[];
 
     final currencySymbol = summary.currencySymbol;
     return List<_ContractSummaryRow>.generate(items.length, (index) {
@@ -204,9 +214,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   String _formatUnitsLabel(ContractWorkItemData item, AppLocalizations l) {
     final subtitle = item.subtitle.trim();
-    if (subtitle.isNotEmpty) {
-      return subtitle;
-    }
+    if (subtitle.isNotEmpty) return subtitle;
 
     final completed = item.unitsCompleted;
     final total = item.unitsTotal;
@@ -214,19 +222,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     if (completed != null && total != null && total > 0) {
       return '$completed / $total ${l.contractWorkUnitsLabel}';
     }
-
     if (completed != null) {
       return '$completed ${l.contractWorkUnitsLabel}';
     }
-
     return l.notAvailableLabel;
   }
 
   Future<void> _handleRefresh() async {
-    await Future.wait<void>([
-      _loadContractTypes(),
-      _loadContractSummary(),
-    ]);
+    await Future.wait<void>([_loadContractTypes(), _loadContractSummary()]);
   }
 
   List<_ContractType> get _allContractTypes => <_ContractType>[
@@ -245,6 +248,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         targetList[index] = type;
       }
       _syncAvailableRoles();
+      _summaryRows = _buildSummaryRowsFromTypes(_userContractTypes);
     });
   }
 
@@ -253,9 +257,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
     void addRole(String? rawValue) {
       final value = rawValue?.trim();
-      if (value == null || value.isEmpty) {
-        return;
-      }
+      if (value == null || value.isEmpty) return;
       final key = value.toLowerCase();
       unique.putIfAbsent(key, () => _formatRoleDisplay(value));
     }
@@ -276,9 +278,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   String _formatRoleDisplay(String value) {
     final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return trimmed;
-    }
+    if (trimmed.isEmpty) return trimmed;
 
     switch (trimmed.toLowerCase()) {
       case 'bin':
@@ -294,22 +294,17 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   void _showComingSoonSnackBar(BuildContext context) {
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l.helpSupportComingSoon)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l.helpSupportComingSoon)));
   }
 
   double get _totalUnits => _summaryTotalUnits.toDouble();
 
   double get _totalContractSalary => _summarySalaryAmount;
 
-
-  Future<void> _showContractTypeDialog({
-    _ContractType? type,
-  }) async {
-    final l = AppLocalizations.of(context);
+  Future<void> _showContractTypeDialog({_ContractType? type}) async {
     final rootContext = context;
-
     final result = await showModalBottomSheet<_ContractType>(
       context: rootContext,
       isScrollControlled: true,
@@ -328,20 +323,20 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       },
     );
 
-    if (!mounted || result == null) {
-      return;
-    }
+    if (!mounted || result == null) return;
+    final l = AppLocalizations.of(context);
 
     _upsertContractType(result);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l.contractWorkTypeSavedMessage)));
   }
 
   Future<void> _handleDeleteContractType(_ContractType type) async {
     final l = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) {
             return AlertDialog(
@@ -360,11 +355,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             );
           },
         ) ??
-        false;
+            false;
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setState(() {
       _pendingDeletionIds.add(type.id);
@@ -372,35 +365,30 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
     try {
       await _repository.deleteContractType(id: type.id);
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _pendingDeletionIds.remove(type.id);
         _defaultContractTypes.removeWhere((item) => item.id == type.id);
         _userContractTypes.removeWhere((item) => item.id == type.id);
         _syncAvailableRoles();
+        _summaryRows = _buildSummaryRowsFromTypes(_userContractTypes);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.contractWorkTypeDeletedMessage)));
     } on ContractTypeRepositoryException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _pendingDeletionIds.remove(type.id);
       });
-      final message = error.message.trim().isEmpty
-          ? l.contractWorkTypeDeleteFailedMessage
-          : error.message;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      final message = error.message.trim().isNotEmpty
+          ? error.message
+          : l.contractWorkTypeDeleteFailedMessage;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _pendingDeletionIds.remove(type.id);
       });
@@ -410,13 +398,133 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
   }
 
+  Future<void> _showManageTypesDialog() async {
+    // This dialog is stateful so it will refresh after delete
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final responsive = context.responsive;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx2, setStateDialog) {
+            return LayoutBuilder(
+              builder: (ctx3, constraints) {
+                final isCompact = constraints.maxWidth < 420;
+                return AlertDialog(
+                  titlePadding: EdgeInsets.fromLTRB(
+                    responsive.scale(20),
+                    responsive.scale(18),
+                    responsive.scale(20),
+                    0,
+                  ),
+                  contentPadding: EdgeInsets.fromLTRB(
+                    responsive.scale(20),
+                    responsive.scale(12),
+                    responsive.scale(20),
+                    responsive.scale(8),
+                  ),
+                  actionsPadding: EdgeInsets.fromLTRB(
+                    responsive.scale(16),
+                    0,
+                    responsive.scale(16),
+                    responsive.scale(12),
+                  ),
+                  title: Text(
+                    l.contractWorkCustomTypesTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ) ??
+                        TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: responsive.scaleText(16),
+                        ),
+                  ),
+                  content: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: isCompact ? 520 : 640,
+                      maxHeight: responsive.scale(460),
+                    ),
+                    child: _userContractTypes.isEmpty
+                        ? Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: responsive.scale(8),
+                      ),
+                      child: Text(
+                        l.contractWorkNoCustomTypesLabel,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    )
+                        : Scrollbar(
+                      thumbVisibility: true,
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: _userContractTypes.length,
+                        separatorBuilder: (_, __) =>
+                        const Divider(height: 1),
+                        itemBuilder: (_, i) {
+                          final t = _userContractTypes[i];
+                          final isBusy = _pendingDeletionIds.contains(
+                            t.id,
+                          );
+                          return _ManageTypeRow(
+                            name: t.name,
+                            subtitle:
+                            '${t.displayRate} · ${t.unitLabel}${t.displayRole == null ? '' : ' · ${t.displayRole}'}',
+                            isBusy: isBusy,
+                            onEdit: isBusy
+                                ? null
+                                : () async {
+                              Navigator.of(ctx).pop();
+                              await _showContractTypeDialog(
+                                type: t,
+                              );
+                            },
+                            onDelete: isBusy
+                                ? null
+                                : () async {
+                              await _handleDeleteContractType(t);
+                              if (mounted) {
+                                setStateDialog(() {});
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(l.close),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        await _showContractTypeDialog();
+                      },
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(l.addContractWorkButton),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final responsive = context.responsive;
     final deviceType = responsive.deviceType;
-    final totalTypes = _allContractTypes.length;
     final theme = Theme.of(context);
+
     double maxContentWidth;
     switch (deviceType) {
       case DeviceType.small:
@@ -433,7 +541,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         break;
     }
 
-    final Widget bodyContent;
+    Widget bodyContent;
+
     if (_isLoading) {
       bodyContent = const Center(
         key: ValueKey('contract-types-loading'),
@@ -470,9 +579,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: const Color(0xFF6B7280),
                   ) ??
-                      const TextStyle(
-                        color: Color(0xFF6B7280),
-                      ),
+                      const TextStyle(color: Color(0xFF6B7280)),
                 ),
               ],
               SizedBox(height: responsive.scale(16)),
@@ -482,11 +589,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   elevation: 0,
                   backgroundColor: const Color(0xFF4C6EF5),
                   foregroundColor: Colors.white,
-                  padding:
-                  responsive.scaledSymmetric(horizontal: 24, vertical: 12),
+                  padding: responsive.scaledSymmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius.circular(responsive.scale(14)),
+                    borderRadius: BorderRadius.circular(responsive.scale(14)),
                   ),
                 ),
                 child: Text(l.retryButtonLabel),
@@ -496,146 +604,107 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         ),
       );
     } else {
+      // scrollable content with refresh, no extra gap after pull
       bodyContent = RefreshIndicator(
         key: const ValueKey('contract-types-content'),
         color: const Color(0xFF4C6EF5),
         backgroundColor: Colors.white,
         onRefresh: _handleRefresh,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxContentWidth),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  responsive.scale(16),
-                  responsive.scale(16),
-                  responsive.scale(16),
-                  responsive.scale(32),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: responsive.scale(12)),
-                    _SummaryHeader(
-                      title: l.contractWorkActiveRatesTitle,
-                      totalTypes: totalTypes,
-                      totalUnits: _totalUnits,
-                      totalAmount: _totalContractSalary,
-                      activeTypesLabel: l.contractWorkActiveTypesLabel,
-                      totalUnitsLabel: l.contractWorkTotalUnitsLabel,
-                      totalSalaryLabel: l.contractWorkTotalSalaryLabel,
-                      defaultCount: _defaultContractTypes.length,
-                      userDefinedCount: _userContractTypes.length,
-                      defaultTypesLabel: l.contractWorkDefaultTypesTitle,
-                      customTypesLabel: l.contractWorkCustomTypesTitle,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      responsive.scale(16),
+                      responsive.scale(8),
+                      responsive.scale(16),
+                      responsive.scale(32),
                     ),
-                    SizedBox(height: responsive.scale(20)),
-                    _ContractSummaryTable(
-                      title: l.contractWorkSummaryTitle,
-                      rows: _summaryRows,
-                      isLoading: _isLoadingSummary,
-                      error: _summaryError,
-                      emptyMessage: widget.work == null
-                          ? l.contractWorkSelectWorkHint
-                          : l.contractWorkNoEntriesLabel,
-                      onRetry:
-                          widget.work == null ? null : () => _loadContractSummary(),
-                    ),
-                    SizedBox(height: responsive.scale(24)),
-                    if (_defaultContractTypes.isNotEmpty) ...[
-                      Text(
-                        l.contractWorkDefaultTypesTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                              fontSize: responsive.scaleText(16),
-                            ) ??
-                            TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                              fontSize: responsive.scaleText(16),
-                            ),
-                      ),
-                      SizedBox(height: responsive.scale(12)),
-                      Column(
-                        children: [
-                          for (var i = 0; i < _defaultContractTypes.length; i++)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom: i == _defaultContractTypes.length - 1
-                                    ? 0
-                                    : responsive.scale(16),
-                              ),
-                              child: _ContractTypeTile(
-                                type: _defaultContractTypes[i],
-                                lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
-                                editLabel: l.contractWorkEditRateButton,
-                                onEdit: _pendingDeletionIds
-                                        .contains(_defaultContractTypes[i].id)
-                                    ? null
-                                    : () => _showContractTypeDialog(
-                                          type: _defaultContractTypes[i],
-                                        ),
-                                defaultTag: l.contractWorkDefaultTag,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // actions row
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () => _showContractTypeDialog(),
+                              icon: const Icon(Icons.add_circle_outline),
+                              label: Text(l.addContractWorkButton),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    responsive.scale(14),
+                                  ),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.scale(16),
+                                  vertical: responsive.scale(10),
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: responsive.scaleText(14),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                        ],
-                      ),
-                      SizedBox(height: responsive.scale(24)),
-                    ],
-                    _ContractTypesHeader(
-                      title: l.contractWorkCustomTypesTitle,
-                      buttonLabel: l.contractWorkAddTypeTitle,
-                      onAdd: () => _showContractTypeDialog(),
-                    ),
-                    SizedBox(height: responsive.scale(16)),
-                    if (_userContractTypes.isNotEmpty)
-                      Column(
-                        children: [
-                          for (var i = 0; i < _userContractTypes.length; i++)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom: i == _userContractTypes.length - 1
-                                    ? 0
-                                    : responsive.scale(16),
-                              ),
-                              child: _ContractTypeTile(
-                                type: _userContractTypes[i],
-                                lastUpdatedLabel: l.contractWorkLastUpdatedLabel,
-                                editLabel: l.contractWorkEditRateButton,
-                                onEdit: _pendingDeletionIds
-                                        .contains(_userContractTypes[i].id)
-                                    ? null
-                                    : () => _showContractTypeDialog(
-                                          type: _userContractTypes[i],
-                                        ),
-                                onDelete: _pendingDeletionIds
-                                        .contains(_userContractTypes[i].id)
-                                    ? null
-                                    : () => _handleDeleteContractType(
-                                          _userContractTypes[i],
-                                        ),
-                                deleteLabel: l.contractWorkDeleteButton,
-                                showDeleteAction: true,
-                                defaultTag: l.contractWorkDefaultTag,
+                            SizedBox(width: responsive.scale(10)),
+                            OutlinedButton.icon(
+                              onPressed: _showManageTypesDialog,
+                              icon: const Icon(Icons.tune_rounded),
+                              label: Text(l.editWorkTitle),
+                              style: OutlinedButton.styleFrom(
+                                side:
+                                const BorderSide(color: Color(0xFF2563EB)),
+                                foregroundColor: const Color(0xFF2563EB),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    responsive.scale(14),
+                                  ),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.scale(14),
+                                  vertical: responsive.scale(10),
+                                ),
+                                textStyle: TextStyle(
+                                  fontSize: responsive.scaleText(14),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                        ],
-                      )
-                    else
-                      _ContractTypesEmptyState(
-                        message: l.contractWorkNoCustomTypesLabel,
-                        buttonLabel: l.contractWorkAddTypeTitle,
-                        onAdd: () => _showContractTypeDialog(),
-                      ),
-                    SizedBox(height: responsive.scale(28)),
-                  ],
+                          ],
+                        ),
+
+                        SizedBox(height: responsive.scale(16)),
+
+                        // table of user's contract types / entries
+                        _ContractSummaryTable(
+                          title: l.contractWorkSummaryTitle,
+                          rows: _summaryRows,
+                          isLoading:
+                          _isLoadingSummary && _summaryRows.isEmpty,
+                          error: _summaryError,
+                          emptyMessage: _userContractTypes.isEmpty
+                              ? l.contractWorkNoCustomTypesLabel
+                              : l.contractWorkNoEntriesLabel,
+                          onRetry: _handleRefresh,
+                        ),
+
+                        SizedBox(height: responsive.scale(28)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       );
     }
@@ -658,22 +727,26 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
-          toolbarHeight: responsive.scale(72),
+          toolbarHeight: context.responsive.scale(72),
           titleSpacing: 0,
           title: Padding(
-            padding: EdgeInsets.symmetric(horizontal: responsive.scale(16)),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.responsive.scale(16),
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  padding: EdgeInsets.all(responsive.scale(12)),
+                  padding: EdgeInsets.all(context.responsive.scale(12)),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(responsive.scale(18)),
+                    borderRadius: BorderRadius.circular(
+                      context.responsive.scale(18),
+                    ),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x1A3C4BC8),
@@ -684,70 +757,86 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                   ),
                   child: Image.asset(
                     AppAssets.contractWork,
-                    width: responsive.scale(26),
-                    height: responsive.scale(26),
+                    width: context.responsive.scale(26),
+                    height: context.responsive.scale(26),
                   ),
                 ),
-                SizedBox(width: responsive.scale(14)),
+                SizedBox(width: context.responsive.scale(14)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        l.contractWorkLabel,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        AppLocalizations.of(context).contractWorkLabel,
+                        style:
+                        Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
-                          fontSize: responsive.scaleText(20),
+                          fontSize:
+                          context.responsive.scaleText(20),
                           color: const Color(0xFF0F172A),
                         ) ??
                             TextStyle(
                               fontWeight: FontWeight.w800,
-                              fontSize: responsive.scaleText(20),
+                              fontSize:
+                              context.responsive.scaleText(20),
                               color: const Color(0xFF0F172A),
                             ),
                       ),
                       if (widget.work != null) ...[
-                        SizedBox(height: responsive.scale(2)),
+                        SizedBox(height: context.responsive.scale(2)),
                         Text(
                           widget.work!.name,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1F2937),
-                                fontSize: responsive.scaleText(13),
-                              ) ??
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1F2937),
+                            fontSize: context.responsive
+                                .scaleText(13),
+                          ) ??
                               TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF1F2937),
-                                fontSize: responsive.scaleText(13),
+                                fontSize:
+                                context.responsive.scaleText(13),
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      SizedBox(height: responsive.scale(4)),
+                      SizedBox(height: context.responsive.scale(4)),
                       Text(
-                        l.contractWorkSetupSubtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        AppLocalizations.of(context)
+                            .contractWorkSetupSubtitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
                           color: const Color(0xFF475467),
-                          fontSize: responsive.scaleText(12),
+                          fontSize: context.responsive
+                              .scaleText(12),
                         ) ??
                             TextStyle(
                               color: const Color(0xFF475467),
-                              fontSize: responsive.scaleText(12),
+                              fontSize:
+                              context.responsive.scaleText(12),
                             ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(width: responsive.scale(12)),
+                SizedBox(width: context.responsive.scale(12)),
                 SizedBox(
-                  height: responsive.scale(44),
-                  width: responsive.scale(44),
+                  height: context.responsive.scale(44),
+                  width: context.responsive.scale(44),
                   child: Material(
                     color: Colors.white,
                     elevation: 0,
-                    borderRadius: BorderRadius.circular(responsive.scale(14)),
+                    borderRadius: BorderRadius.circular(
+                      context.responsive.scale(14),
+                    ),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () => Navigator.of(context).maybePop(),
@@ -755,7 +844,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                         child: Icon(
                           Icons.close_rounded,
                           color: const Color(0xFF1F2937),
-                          size: responsive.scale(20),
+                          size: context.responsive.scale(20),
                         ),
                       ),
                     ),
@@ -777,6 +866,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 }
 
+/* ------------------------- Bottom Sheet: Add/Edit Type ------------------------- */
 
 class _ContractTypeSheet extends StatefulWidget {
   const _ContractTypeSheet({
@@ -806,17 +896,16 @@ class _ContractTypeSheet extends StatefulWidget {
 
 class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   static const String _customWorkOptionKey = 'custom work';
-  static const List<String> _typeValues = <String>['fixed', 'bundle'];
 
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
   late final List<String> _workNameOptions;
   late final List<String> _roleOptions;
-  String? _selectedRoleValue;
-  late String _selectedTypeValue;
+
+  String? _selectedRoleValue; // This will now be shown under label "Type"
   String? _selectedWorkName;
+
   bool _isSaving = false;
-  bool _isSelected = true;
 
   @override
   void initState() {
@@ -829,13 +918,11 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     _workNameOptions = List<String>.from(widget.workNameOptions);
 
-    final existingType = type?.type.trim().toLowerCase();
-    _selectedTypeValue = existingType == 'bundle' ? 'bundle' : 'fixed';
-
+    // Preselect work name
     final existingName = type?.name.trim();
     if (existingName != null && existingName.isNotEmpty) {
       final matchIndex = _workNameOptions.indexWhere(
-        (option) => option.toLowerCase() == existingName.toLowerCase(),
+            (option) => option.toLowerCase() == existingName.toLowerCase(),
       );
       if (matchIndex != -1) {
         _selectedWorkName = _workNameOptions[matchIndex];
@@ -845,19 +932,19 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       }
     }
 
+    // Build the "Type" dropdown options (previously role options)
     final seenRoleOptions = <String>{};
     final options = <String>[];
 
     void addRoleOption(String option, {bool prepend = false}) {
       final formatted = widget.formatRoleDisplay(option);
-      if (formatted.isEmpty) {
-        return;
-      }
+      if (formatted.isEmpty) return;
       final key = formatted.toLowerCase();
       if (seenRoleOptions.contains(key)) {
         if (prepend) {
-          final existingIndex =
-              options.indexWhere((item) => item.toLowerCase() == key);
+          final existingIndex = options.indexWhere(
+                (item) => item.toLowerCase() == key,
+          );
           if (existingIndex > 0) {
             final existingValue = options.removeAt(existingIndex);
             options.insert(0, existingValue);
@@ -875,7 +962,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     }
 
     final existingRole = type?.role?.trim();
-    final existingRoleDisplay = existingRole != null && existingRole.isNotEmpty
+    final existingRoleDisplay =
+    (existingRole != null && existingRole.isNotEmpty)
         ? widget.formatRoleDisplay(existingRole)
         : null;
     if (existingRoleDisplay != null) {
@@ -891,8 +979,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     _roleOptions = options;
     _selectedRoleValue = existingRoleDisplay;
-    _selectedRoleValue ??=
-        _roleOptions.isNotEmpty ? _roleOptions.first : null;
+    _selectedRoleValue ??= _roleOptions.isNotEmpty ? _roleOptions.first : null;
   }
 
   @override
@@ -904,29 +991,23 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
   String _resolveCustomWorkLabel() {
     final index = _workNameOptions.indexWhere(
-      (option) => option.toLowerCase() == _customWorkOptionKey,
+          (option) => option.toLowerCase() == _customWorkOptionKey,
     );
-    if (index != -1) {
-      return _workNameOptions[index];
-    }
+    if (index != -1) return _workNameOptions[index];
     const fallback = 'Custom Work';
     _workNameOptions.add(fallback);
     return fallback;
   }
 
   bool _isCustomWorkOptionValue(String? value) {
-    if (value == null) {
-      return false;
-    }
+    if (value == null) return false;
     return value.trim().toLowerCase() == _customWorkOptionKey;
   }
 
   bool get _isCustomWorkSelected => _isCustomWorkOptionValue(_selectedWorkName);
 
   void _handleWorkNameChanged(String? value) {
-    if (value == null) {
-      return;
-    }
+    if (value == null) return;
 
     FocusScope.of(context).unfocus();
     final previousSelection = _selectedWorkName;
@@ -945,6 +1026,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   }
 
   String _resolveRateHint(AppLocalizations l) {
+    // We still use the "type" (= role) selection to build hint text
     final selection = _selectedRoleValue?.toLowerCase();
     switch (selection) {
       case 'bin':
@@ -958,16 +1040,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     }
   }
 
-  String _typeLabel(String value, AppLocalizations l) {
-    switch (value) {
-      case 'bundle':
-        return l.contractWorkTypeBundleOption;
-      case 'fixed':
-      default:
-        return l.contractWorkTypeFixedOption;
-    }
-  }
-
   Future<void> _handleSave() async {
     final l = AppLocalizations.of(context);
 
@@ -975,9 +1047,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     final name = _nameController.text.trim();
     final rate = double.tryParse(_rateController.text.trim());
     final resolvedRole = _selectedRoleValue?.trim() ?? '';
-    final resolvedType = _selectedTypeValue.trim().isEmpty
-        ? 'fixed'
-        : _selectedTypeValue.trim().toLowerCase();
+
+    // we now treat contract "type" as fixed always, client removed this field
+    const resolvedContractKind = 'fixed';
 
     final type = widget.type;
 
@@ -988,28 +1060,29 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       );
       return;
     }
+    if (resolvedRole.isEmpty) {
+      // still required, it's the new "Type" dropdown
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(l.contractWorkRoleRequiredMessage)),
+      );
+      return;
+    }
     if (rate == null || rate <= 0) {
       ScaffoldMessenger.of(widget.rootContext).showSnackBar(
         SnackBar(content: Text(l.contractWorkRateRequiredMessage)),
       );
       return;
     }
-    if (resolvedRole.isEmpty) {
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(l.contractWorkRoleRequiredMessage)),
-      );
-      return;
-    }
 
     final existingUnitLabel = type?.unitLabel?.trim();
-    final resolvedUnitLabel = (existingUnitLabel != null && existingUnitLabel.isNotEmpty)
+    final resolvedUnitLabel =
+    (existingUnitLabel != null && existingUnitLabel.isNotEmpty)
         ? existingUnitLabel
         : l.contractWorkUnitFallback;
-    final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
+    final resolvedName =
+    type == null || widget.isNameEditable ? name : type!.name;
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     setState(() {
       _isSaving = true;
@@ -1017,61 +1090,55 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     Future<_ContractType?> future;
     if (type == null || type.id.startsWith('local-')) {
+      // create
       future = widget.repository
           .createContractType(
         name: resolvedName,
-        type: resolvedType,
+        type: resolvedContractKind, // always "fixed"
+        role: resolvedRole, // user's chosen "Type" (Bin/Crate/etc.)
+        ratePerUnit: rate,
+        unitLabel: resolvedUnitLabel,
+      )
+          .then((created) => _ContractType.fromModel(type: created));
+    } else {
+      // update
+      future = widget.repository
+          .updateContractType(
+        id: type.id,
+        name: resolvedName,
+        type: resolvedContractKind,
         role: resolvedRole,
         ratePerUnit: rate,
         unitLabel: resolvedUnitLabel,
       )
           .then(
-        (created) => _ContractType.fromModel(type: created),
-      );
-    } else {
-      future = widget.repository
-          .updateContractType(
-            id: type.id,
-            name: resolvedName,
-            type: resolvedType,
-            role: resolvedRole,
-            ratePerUnit: rate,
-            unitLabel: resolvedUnitLabel,
-          )
-          .then(
             (updated) => _ContractType.fromModel(
-              type: updated,
-              isUserDefined: type.isUserDefined,
-            ),
-          );
+          type: updated,
+          isUserDefined: type.isUserDefined,
+        ),
+      );
     }
 
     try {
       final updatedType = await future;
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       Navigator.of(context).pop(updatedType);
     } on ContractTypeRepositoryException catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        widget.rootContext,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        widget.rootContext,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     }
   }
 
@@ -1080,9 +1147,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     final mediaQuery = MediaQuery.of(context);
     final textTheme = Theme.of(context).textTheme;
     final l = AppLocalizations.of(context);
-    final isEditing = widget.type != null;
-    final headerTitle =
-        isEditing ? l.contractWorkEditTypeTitle : l.contractWorkAddTypeTitle;
+
+    // As per client: header always "Add Contract Work"
+    final headerTitle = l.addContractWorkButton;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 200),
@@ -1100,9 +1167,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
               ),
               decoration: const BoxDecoration(
                 color: Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(32),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -1132,9 +1197,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                               Text(
                                 headerTitle,
                                 style: textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF111827),
-                                    ) ??
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF111827),
+                                ) ??
                                     const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF111827),
@@ -1145,8 +1210,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                               Text(
                                 l.contractWorkSetupSubtitle,
                                 style: textTheme.bodyMedium?.copyWith(
-                                      color: const Color(0xFF6B7280),
-                                    ) ??
+                                  color: const Color(0xFF6B7280),
+                                ) ??
                                     const TextStyle(
                                       color: Color(0xFF6B7280),
                                     ),
@@ -1167,6 +1232,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                       ],
                     ),
                     const SizedBox(height: 24),
+
+                    // Main white card
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -1184,518 +1251,413 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Transform.translate(
-                                offset: const Offset(-4, 0),
-                                child: Checkbox(
-                                  value: _isSelected,
-                                  activeColor: const Color(0xFF2563EB),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _isSelected = value ?? true;
-                                    });
-                                  },
+                          // WORK NAME
+                          Text(
+                            l.workNameLabel,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
+                            ) ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1F2937),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l.workNameLabel,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1F2937),
-                                          ) ??
-                                          const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1F2937),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF9FAFB),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: const Color(0xFFE5E7EB),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 4,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 36,
-                                            height: 36,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFFFF1F2),
-                                              borderRadius: BorderRadius.circular(14),
-                                            ),
-                                            alignment: Alignment.center,
-                                            child: const Text(
-                                              '📦',
-                                              style: TextStyle(fontSize: 20),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: DropdownButtonHideUnderline(
-                                              child: DropdownButton<String>(
-                                                value: _selectedWorkName,
-                                                isExpanded: true,
-                                                icon: const Icon(
-                                                  Icons.keyboard_arrow_down_rounded,
-                                                ),
-                                                hint: Text(
-                                                  l.contractWorkSelectWorkHint,
-                                                  style: textTheme.bodyLarge?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color:
-                                                            const Color(0xFF9CA3AF),
-                                                      ) ??
-                                                      const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color:
-                                                            Color(0xFF9CA3AF),
-                                                      ),
-                                                ),
-                                                disabledHint: Text(
-                                                  _nameController.text.isNotEmpty
-                                                      ? _nameController.text
-                                                      : l.contractWorkSelectWorkHint,
-                                                  style: textTheme.bodyLarge?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color:
-                                                            const Color(0xFF9CA3AF),
-                                                      ) ??
-                                                      const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        color:
-                                                            Color(0xFF9CA3AF),
-                                                      ),
-                                                ),
-                                                style: textTheme.bodyLarge?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color:
-                                                          const Color(0xFF111827),
-                                                    ) ??
-                                                    const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: Color(0xFF111827),
-                                                    ),
-                                                selectedItemBuilder:
-                                                    (BuildContext context) {
-                                                  return _workNameOptions.map((option) {
-                                                    final isCustom =
-                                                        _isCustomWorkOptionValue(
-                                                      option,
-                                                    );
-                                                    final displayText = isCustom
-                                                        ? (_nameController.text
-                                                                    .trim()
-                                                                    .isNotEmpty
-                                                                ? _nameController
-                                                                    .text
-                                                                    .trim()
-                                                                : l.contractWorkCustomOption)
-                                                        : option;
-                                                    return Align(
-                                                      alignment:
-                                                          Alignment.centerLeft,
-                                                      child: Text(
-                                                        displayText,
-                                                        style: textTheme
-                                                                .bodyLarge
-                                                                ?.copyWith(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              color: const Color(
-                                                                  0xFF111827),
-                                                            ) ??
-                                                            const TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              color:
-                                                                  Color(0xFF111827),
-                                                            ),
-                                                      ),
-                                                    );
-                                                  }).toList();
-                                                },
-                                                items: _workNameOptions
-                                                    .map(
-                                                      (option) =>
-                                                          DropdownMenuItem<String>(
-                                                        value: option,
-                                                        child: Text(
-                                                          _isCustomWorkOptionValue(
-                                                                  option)
-                                                              ? l
-                                                                  .contractWorkCustomOption
-                                                              : option,
-                                                          style: textTheme
-                                                                  .bodyLarge
-                                                                  ?.copyWith(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w700,
-                                                                color:
-                                                                    const Color(
-                                                                        0xFF111827),
-                                                              ) ??
-                                                              const TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w700,
-                                                                color: Color(
-                                                                    0xFF111827),
-                                                              ),
-                                                        ),
-                                                      ),
-                                                    )
-                                                    .toList(),
-                                                onChanged: widget.isNameEditable
-                                                    ? _handleWorkNameChanged
-                                                    : null,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (_isCustomWorkSelected) ...[
-                                      const SizedBox(height: 12),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF9FAFB),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          border: Border.all(
-                                            color: const Color(0xFFE5E7EB),
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              width: 36,
-                                              height: 36,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFFFF8EB),
-                                                borderRadius:
-                                                    BorderRadius.circular(14),
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: const Text(
-                                                '✍️',
-                                                style: TextStyle(fontSize: 20),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: TextField(
-                                                controller: _nameController,
-                                                enabled: widget.isNameEditable,
-                                                decoration: InputDecoration(
-                                                  border: InputBorder.none,
-                                                  hintText:
-                                                      AppString.contractNameHint,
-                                                  hintStyle:
-                                                      textTheme.bodyMedium
-                                                              ?.copyWith(
-                                                        color: const Color(
-                                                            0xFF9CA3AF),
-                                                      ) ??
-                                                      const TextStyle(
-                                                        color:
-                                                            Color(0xFF9CA3AF),
-                                                      ),
-                                                ),
-                                                style: textTheme.bodyLarge
-                                                        ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color:
-                                                          const Color(0xFF111827),
-                                                    ) ??
-                                                    const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color:
-                                                          Color(0xFF111827),
-                                                      fontSize: 16,
-                                                    ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l.contractWorkTypeLabel,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1F2937),
-                                          ) ??
-                                          const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1F2937),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF9FAFB),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: const Color(0xFFE5E7EB),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 4,
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: _selectedTypeValue,
-                                          isExpanded: true,
-                                          icon: const Icon(
-                                              Icons.keyboard_arrow_down_rounded),
-                                          style: textTheme.bodyLarge?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: const Color(0xFF111827),
-                                              ) ??
-                                              const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xFF111827),
-                                              ),
-                                          items: _typeValues
-                                              .map(
-                                                (value) => DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(
-                                                    _typeLabel(value, l),
-                                                    style:
-                                                        textTheme.bodyLarge?.copyWith(
-                                                              fontWeight:
-                                                                  FontWeight.w600,
-                                                              color: const Color(
-                                                                  0xFF111827),
-                                                            ) ??
-                                                            const TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight.w600,
-                                                              color:
-                                                                  Color(0xFF111827),
-                                                            ),
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
-                                          onChanged: (value) {
-                                            if (value == null) {
-                                              return;
-                                            }
-                                            setState(() {
-                                              _selectedTypeValue = value;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l.contractWorkRoleLabel,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1F2937),
-                                          ) ??
-                                          const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1F2937),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF9FAFB),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: const Color(0xFFE5E7EB),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 4,
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: _selectedRoleValue,
-                                          isExpanded: true,
-                                          icon: const Icon(
-                                              Icons.keyboard_arrow_down_rounded),
-                                          style: textTheme.bodyLarge?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: const Color(0xFF111827),
-                                              ) ??
-                                              const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xFF111827),
-                                              ),
-                                          hint: Text(
-                                            l.contractWorkRoleHint,
-                                            style: textTheme.bodyLarge?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(0xFF9CA3AF),
-                                                ) ??
-                                                const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF9CA3AF),
-                                                ),
-                                          ),
-                                          items: _roleOptions
-                                              .map(
-                                                (option) =>
-                                                    DropdownMenuItem<String>(
-                                                  value: option,
-                                                  child: Text(
-                                                    option,
-                                                    style:
-                                                        textTheme.bodyLarge?.copyWith(
-                                                              fontWeight:
-                                                                  FontWeight.w600,
-                                                              color: const Color(
-                                                                  0xFF111827),
-                                                            ) ??
-                                                            const TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight.w600,
-                                                              color:
-                                                                  Color(0xFF111827),
-                                                            ),
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
-                                          onChanged: _roleOptions.isEmpty
-                                              ? null
-                                              : (value) {
-                                                  if (value == null) {
-                                                    return;
-                                                  }
-                                                  setState(() {
-                                                    _selectedRoleValue = value;
-                                                  });
-                                                },
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    Text(
-                                      '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
-                                      style: textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF1F2937),
-                                          ) ??
-                                          const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1F2937),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF9FAFB),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: const Color(0xFFE5E7EB),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 36,
-                                            height: 36,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFEFF6FF),
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                            alignment: Alignment.center,
-                                            child: const Text(
-                                              '💶',
-                                              style: TextStyle(fontSize: 20),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: TextField(
-                                              controller: _rateController,
-                                              keyboardType:
-                                                  const TextInputType.numberWithOptions(
-                                                decimal: true,
-                                              ),
-                                              decoration: InputDecoration(
-                                                border: InputBorder.none,
-                                                hintText: _resolveRateHint(l),
-                                                hintStyle:
-                                                    textTheme.bodyMedium?.copyWith(
-                                                          color: const Color(0xFF9CA3AF),
-                                                        ) ??
-                                                        const TextStyle(
-                                                          color: Color(0xFF9CA3AF),
-                                                        ),
-                                              ),
-                                              style: textTheme.bodyLarge?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF111827),
-                                                  ) ??
-                                                  const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF111827),
-                                                    fontSize: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                           ),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF1F2),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    '📦',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _selectedWorkName,
+                                      isExpanded: true,
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                      ),
+                                      hint: Text(
+                                        l.contractWorkSelectWorkHint,
+                                        style: textTheme.bodyLarge?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color:
+                                          const Color(0xFF9CA3AF),
+                                        ) ??
+                                            const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF9CA3AF),
+                                            ),
+                                      ),
+                                      disabledHint: Text(
+                                        _nameController.text.isNotEmpty
+                                            ? _nameController.text
+                                            : l.contractWorkSelectWorkHint,
+                                        style: textTheme.bodyLarge?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color:
+                                          const Color(0xFF9CA3AF),
+                                        ) ??
+                                            const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF9CA3AF),
+                                            ),
+                                      ),
+                                      style: textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF111827),
+                                      ) ??
+                                          const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF111827),
+                                          ),
+                                      selectedItemBuilder:
+                                          (BuildContext context) {
+                                        return _workNameOptions.map((option) {
+                                          final isCustom =
+                                          _isCustomWorkOptionValue(
+                                            option,
+                                          );
+                                          final displayText = isCustom
+                                              ? (_nameController.text
+                                              .trim()
+                                              .isNotEmpty
+                                              ? _nameController.text.trim()
+                                              : l.contractWorkCustomOption)
+                                              : option;
+                                          return Align(
+                                            alignment:
+                                            Alignment.centerLeft,
+                                            child: Text(
+                                              displayText,
+                                              style: textTheme.bodyLarge
+                                                  ?.copyWith(
+                                                fontWeight:
+                                                FontWeight.w700,
+                                                color: const Color(
+                                                  0xFF111827,
+                                                ),
+                                              ) ??
+                                                  const TextStyle(
+                                                    fontWeight:
+                                                    FontWeight.w700,
+                                                    color:
+                                                    Color(0xFF111827),
+                                                  ),
+                                            ),
+                                          );
+                                        }).toList();
+                                      },
+                                      items: _workNameOptions
+                                          .map(
+                                            (option) =>
+                                            DropdownMenuItem<String>(
+                                              value: option,
+                                              child: Text(
+                                                _isCustomWorkOptionValue(
+                                                  option,
+                                                )
+                                                    ? l.contractWorkCustomOption
+                                                    : option,
+                                                style: textTheme.bodyLarge
+                                                    ?.copyWith(
+                                                  fontWeight:
+                                                  FontWeight.w700,
+                                                  color: const Color(
+                                                    0xFF111827,
+                                                  ),
+                                                ) ??
+                                                    const TextStyle(
+                                                      fontWeight:
+                                                      FontWeight.w700,
+                                                      color: Color(
+                                                        0xFF111827,
+                                                      ),
+                                                    ),
+                                              ),
+                                            ),
+                                      )
+                                          .toList(),
+                                      onChanged: widget.isNameEditable
+                                          ? _handleWorkNameChanged
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          if (_isCustomWorkSelected) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9FAFB),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFFE5E7EB),
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF8EB),
+                                      borderRadius:
+                                      BorderRadius.circular(14),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      '✍️',
+                                      style: TextStyle(fontSize: 20),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _nameController,
+                                      enabled: widget.isNameEditable,
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText:
+                                        AppString.contractNameHint,
+                                        hintStyle: textTheme.bodyMedium
+                                            ?.copyWith(
+                                          color: const Color(
+                                            0xFF9CA3AF,
+                                          ),
+                                        ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF9CA3AF),
+                                            ),
+                                      ),
+                                      style: textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(
+                                          0xFF111827,
+                                        ),
+                                      ) ??
+                                          const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF111827),
+                                            fontSize: 16,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 16),
+
+                          // TYPE  (this used to be "Role", now client wants this called Type)
+                          Text(
+                            // We'll label this dropdown "Type"
+                            l.contractWorkTypeLabel,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
+                            ) ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1F2937),
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedRoleValue,
+                                isExpanded: true,
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                ),
+                                style: textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111827),
+                                ) ??
+                                    const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF111827),
+                                    ),
+                                hint: Text(
+                                  // reuse localization hint
+                                  l.contractWorkRoleHint,
+                                  style: textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(
+                                      0xFF9CA3AF,
+                                    ),
+                                  ) ??
+                                      const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF9CA3AF),
+                                      ),
+                                ),
+                                items: _roleOptions
+                                    .map(
+                                      (option) =>
+                                      DropdownMenuItem<String>(
+                                        value: option,
+                                        child: Text(
+                                          option,
+                                          style: textTheme.bodyLarge
+                                              ?.copyWith(
+                                            fontWeight:
+                                            FontWeight.w600,
+                                            color: const Color(
+                                              0xFF111827,
+                                            ),
+                                          ) ??
+                                              const TextStyle(
+                                                fontWeight:
+                                                FontWeight.w600,
+                                                color: Color(0xFF111827),
+                                              ),
+                                        ),
+                                      ),
+                                )
+                                    .toList(),
+                                onChanged: _roleOptions.isEmpty
+                                    ? null
+                                    : (value) {
+                                  if (value == null) return;
+                                  setState(() {
+                                    _selectedRoleValue = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+
                           const SizedBox(height: 20),
+
+                          // RATE / PRICE
+                          Text(
+                            '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
+                            ) ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1F2937),
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    '💶',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _rateController,
+                                    keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: _resolveRateHint(l),
+                                      hintStyle:
+                                      textTheme.bodyMedium?.copyWith(
+                                        color:
+                                        const Color(0xFF9CA3AF),
+                                      ) ??
+                                          const TextStyle(
+                                            color: Color(0xFF9CA3AF),
+                                          ),
+                                    ),
+                                    style:
+                                    textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(
+                                        0xFF111827,
+                                      ),
+                                    ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF111827),
+                                          fontSize: 16,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
                           Text(
                             l.contractWorkRatesNote,
                             style: textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFF6B7280),
-                                ) ??
+                              color: const Color(0xFF6B7280),
+                            ) ??
                                 const TextStyle(
                                   color: Color(0xFF6B7280),
                                 ),
@@ -1703,7 +1665,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 24),
+
                     Row(
                       children: [
                         Expanded(
@@ -1712,7 +1676,9 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(50),
                               foregroundColor: const Color(0xFF374151),
-                              side: const BorderSide(color: Color(0xFFE5E7EB)),
+                              side: const BorderSide(
+                                color: Color(0xFFE5E7EB),
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -1734,16 +1700,16 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                             ),
                             child: _isSaving
                                 ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
                                 : Text(l.saveButtonLabel),
                           ),
                         ),
@@ -1759,6 +1725,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     );
   }
 }
+
+/* ------------------------------ Summary Table ------------------------------ */
 
 class _ContractSummaryTable extends StatelessWidget {
   const _ContractSummaryTable({
@@ -1799,10 +1767,10 @@ class _ContractSummaryTable extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF4B5563),
-                    fontWeight: FontWeight.w600,
-                    fontSize: responsive.scaleText(13),
-                  ) ??
+                color: const Color(0xFF4B5563),
+                fontWeight: FontWeight.w600,
+                fontSize: responsive.scaleText(13),
+              ) ??
                   TextStyle(
                     color: const Color(0xFF4B5563),
                     fontWeight: FontWeight.w600,
@@ -1823,9 +1791,7 @@ class _ContractSummaryTable extends StatelessWidget {
     if (isLoading) {
       tableRows.add(
         Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: responsive.scale(24),
-          ),
+          padding: EdgeInsets.symmetric(vertical: responsive.scale(24)),
           child: const SizedBox(
             height: 32,
             width: 32,
@@ -1840,17 +1806,17 @@ class _ContractSummaryTable extends StatelessWidget {
           action: onRetry == null
               ? null
               : TextButton.icon(
-                  onPressed: onRetry,
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF2563EB),
-                    textStyle: TextStyle(
-                      fontSize: responsive.scaleText(13),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(l.retryButtonLabel),
-                ),
+            onPressed: onRetry,
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF2563EB),
+              textStyle: TextStyle(
+                fontSize: responsive.scaleText(13),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            icon: const Icon(Icons.refresh, size: 18),
+            label: Text(l.retryButtonLabel),
+          ),
         ),
       );
     } else if (hasRows) {
@@ -1893,10 +1859,10 @@ class _ContractSummaryTable extends StatelessWidget {
           Text(
             title,
             style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
-                  fontSize: responsive.scaleText(16),
-                ) ??
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+              fontSize: responsive.scaleText(16),
+            ) ??
                 TextStyle(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0F172A),
@@ -1976,6 +1942,8 @@ class _ContractSummaryTableRow extends StatelessWidget {
             child: Text(
               workName,
               style: baseStyle,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
           Expanded(
@@ -1983,14 +1951,21 @@ class _ContractSummaryTableRow extends StatelessWidget {
             child: Text(
               units,
               style: secondaryStyle,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              payment,
-              textAlign: TextAlign.right,
-              style: secondaryStyle,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                payment,
+                textAlign: TextAlign.right,
+                style: secondaryStyle,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
           ),
         ],
@@ -1999,6 +1974,12 @@ class _ContractSummaryTableRow extends StatelessWidget {
   }
 }
 
+/* ------------------------------- Summary Head ------------------------------- */
+/*
+  NOTE:
+  _SummaryHeader is kept here so code compiles,
+  but it is NO LONGER USED in build()
+*/
 class _SummaryHeader extends StatelessWidget {
   const _SummaryHeader({
     required this.title,
@@ -2029,32 +2010,40 @@ class _SummaryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final stats = [
+      _SummaryItem(label: activeTypesLabel, value: totalTypes.toString()),
+      _SummaryItem(
+        label: totalUnitsLabel,
+        value: totalUnits.toStringAsFixed(0),
+      ),
+      _SummaryItem(
+        label: totalSalaryLabel,
+        value: '€${totalAmount.toStringAsFixed(2)}',
+      ),
+    ];
+    final activeTypesText =
+    totalTypes > 0 ? '$totalTypes $activeTypesLabel' : activeTypesLabel;
+    final progress =
+    totalTypes == 0 ? 0.0 : (userDefinedCount / totalTypes).clamp(0.0, 1.0);
+    final ratioText = totalTypes == 0
+        ? customTypesLabel
+        : '$userDefinedCount / $totalTypes $customTypesLabel';
+
+    final countChips = <Widget>[];
+    if (defaultCount > 0) {
+      countChips.add(
+        _SummaryCountChip(label: defaultTypesLabel, count: defaultCount),
+      );
+    }
+    if (userDefinedCount > 0) {
+      countChips.add(
+        _SummaryCountChip(label: customTypesLabel, count: userDefinedCount),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 380;
-        final stats = [
-          _SummaryItem(
-            label: activeTypesLabel,
-            value: totalTypes.toString(),
-          ),
-          _SummaryItem(
-            label: totalUnitsLabel,
-            value: totalUnits.toStringAsFixed(0),
-          ),
-          _SummaryItem(
-            label: totalSalaryLabel,
-            value: '€${totalAmount.toStringAsFixed(2)}',
-          ),
-        ];
-        final activeTypesText = totalTypes > 0
-            ? '$totalTypes $activeTypesLabel'
-            : activeTypesLabel;
-        final progress = totalTypes == 0
-            ? 0.0
-            : (userDefinedCount / totalTypes).clamp(0.0, 1.0);
-        final ratioText = totalTypes == 0
-            ? customTypesLabel
-            : '$userDefinedCount / $totalTypes $customTypesLabel';
 
         Widget statsLayout;
         if (isCompact) {
@@ -2077,24 +2066,6 @@ class _SummaryHeader extends StatelessWidget {
                   SizedBox(width: responsive.scale(20)),
               ],
             ],
-          );
-        }
-
-        final countChips = <Widget>[];
-        if (defaultCount > 0) {
-          countChips.add(
-            _SummaryCountChip(
-              label: defaultTypesLabel,
-              count: defaultCount,
-            ),
-          );
-        }
-        if (userDefinedCount > 0) {
-          countChips.add(
-            _SummaryCountChip(
-              label: customTypesLabel,
-              count: userDefinedCount,
-            ),
           );
         }
 
@@ -2152,16 +2123,20 @@ class _SummaryHeader extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style:
-                          Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
-                            fontSize: responsive.scaleText(18),
+                            fontSize:
+                            responsive.scaleText(18),
                           ) ??
                               TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w800,
-                                fontSize: responsive.scaleText(18),
+                                fontSize:
+                                responsive.scaleText(18),
                               ),
                         ),
                         SizedBox(height: responsive.scale(6)),
@@ -2195,9 +2170,8 @@ class _SummaryHeader extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: responsive.scale(6),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFF93C5FD),
-                  ),
+                  valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFF93C5FD)),
                   backgroundColor: Colors.white.withOpacity(0.25),
                 ),
               ),
@@ -2217,10 +2191,7 @@ class _SummaryHeader extends StatelessWidget {
 }
 
 class _SummaryCountChip extends StatelessWidget {
-  const _SummaryCountChip({
-    required this.label,
-    required this.count,
-  });
+  const _SummaryCountChip({required this.label, required this.count});
 
   final String label;
   final int count;
@@ -2236,9 +2207,7 @@ class _SummaryCountChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.14),
         borderRadius: BorderRadius.circular(responsive.scale(40)),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.28),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.28)),
       ),
       child: RichText(
         text: TextSpan(
@@ -2298,434 +2267,7 @@ class _SummaryItem extends StatelessWidget {
   }
 }
 
-class _ContractTypesHeader extends StatelessWidget {
-  const _ContractTypesHeader({
-    required this.title,
-    required this.buttonLabel,
-    required this.onAdd,
-  });
-
-  final String title;
-  final String buttonLabel;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF111827),
-                  fontSize: responsive.scaleText(16),
-                ) ??
-                TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF111827),
-                  fontSize: responsive.scaleText(16),
-                ),
-          ),
-        ),
-        SizedBox(width: responsive.scale(12)),
-        ElevatedButton.icon(
-          onPressed: onAdd,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2563EB),
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(
-              horizontal: responsive.scale(18),
-              vertical: responsive.scale(10),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(responsive.scale(16)),
-            ),
-            textStyle: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: responsive.scaleText(14),
-            ),
-          ),
-          icon: const Icon(Icons.add_circle_outline),
-          label: Text(buttonLabel),
-        ),
-      ],
-    );
-  }
-}
-
-class _ContractTypesEmptyState extends StatelessWidget {
-  const _ContractTypesEmptyState({
-    required this.message,
-    required this.buttonLabel,
-    required this.onAdd,
-  });
-
-  final String message;
-  final String buttonLabel;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    final theme = Theme.of(context);
-    final messageStyle = theme.textTheme.bodyMedium?.copyWith(
-          color: const Color(0xFF6B7280),
-        ) ??
-        TextStyle(
-          color: const Color(0xFF6B7280),
-          fontSize: responsive.scaleText(14),
-        );
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(responsive.scale(20)),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(responsive.scale(22)),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: messageStyle,
-          ),
-          SizedBox(height: responsive.scale(16)),
-          OutlinedButton.icon(
-            onPressed: onAdd,
-            style: OutlinedButton.styleFrom(
-              padding: EdgeInsets.symmetric(
-                horizontal: responsive.scale(18),
-                vertical: responsive.scale(12),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(responsive.scale(16)),
-              ),
-              side: const BorderSide(color: Color(0xFF2563EB)),
-              foregroundColor: const Color(0xFF2563EB),
-              textStyle: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: responsive.scaleText(14),
-              ),
-            ),
-            icon: const Icon(Icons.add_circle_outline),
-            label: Text(buttonLabel),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ContractTypeTile extends StatelessWidget {
-  const _ContractTypeTile({
-    required this.type,
-    required this.lastUpdatedLabel,
-    this.onEdit,
-    this.editLabel,
-    required this.defaultTag,
-    this.onDelete,
-    this.deleteLabel,
-    this.showDeleteAction = false,
-    this.showEditAction = true,
-  });
-
-  final _ContractType type;
-  final String lastUpdatedLabel;
-  final VoidCallback? onEdit;
-  final String? editLabel;
-  final String defaultTag;
-  final VoidCallback? onDelete;
-  final String? deleteLabel;
-  final bool showDeleteAction;
-  final bool showEditAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    final l = AppLocalizations.of(context);
-    final List<Widget> chips = [
-      _InfoChip(
-        icon: Icons.euro_symbol_rounded,
-        label: l.contractWorkRateLabel,
-        value: type.displayRate,
-        backgroundColor: const Color(0xFFEFF6FF),
-        borderColor: const Color(0xFFD6DBFF),
-        labelColor: const Color(0xFF1E3A8A),
-        valueColor: const Color(0xFF0F172A),
-      ),
-      _InfoChip(
-        icon: Icons.speed_rounded,
-        label: l.contractWorkUnitsLabel,
-        value: type.unitLabel,
-        backgroundColor: const Color(0xFFEFF6FF),
-        borderColor: const Color(0xFFD6DBFF),
-        labelColor: const Color(0xFF1E3A8A),
-        valueColor: const Color(0xFF0F172A),
-      ),
-      if (type.displayRole != null)
-        _InfoChip(
-          icon: Icons.layers_outlined,
-          label: l.contractWorkContractTypeLabel,
-          value: type.displayRole!,
-          backgroundColor: const Color(0xFFEFF6FF),
-          borderColor: const Color(0xFFD6DBFF),
-          labelColor: const Color(0xFF1E3A8A),
-          valueColor: const Color(0xFF0F172A),
-        ),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFFFF), Color(0xFFF5F9FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(responsive.scale(22)),
-        border: Border.all(color: const Color(0xFFE0E7FF)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F1E3A8A),
-            blurRadius: 18,
-            offset: Offset(0, 14),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.fromLTRB(
-        responsive.scale(20),
-        responsive.scale(22),
-        responsive.scale(20),
-        responsive.scale(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: responsive.scale(48),
-                height: responsive.scale(48),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(responsive.scale(16)),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.inventory_2_rounded,
-                  color: Colors.white,
-                  size: responsive.scale(22),
-                ),
-              ),
-              SizedBox(width: responsive.scale(14)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      type.name,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
-                        fontSize: responsive.scaleText(16),
-                      ) ??
-                          TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
-                            fontSize: responsive.scaleText(16),
-                          ),
-                    ),
-                    SizedBox(height: responsive.scale(6)),
-                    Text(
-                      '${type.displayRate} · ${type.unitLabel}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF4B5563),
-                        fontSize: responsive.scaleText(13),
-                      ) ??
-                          TextStyle(
-                            color: const Color(0xFF4B5563),
-                            fontSize: responsive.scaleText(13),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              if (type.isDefault)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: responsive.scale(12),
-                    vertical: responsive.scale(6),
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(responsive.scale(40)),
-                  ),
-                  child: Text(
-                    defaultTag,
-                    style: TextStyle(
-                      color: const Color(0xFF166534),
-                      fontWeight: FontWeight.w700,
-                      fontSize: responsive.scaleText(12),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: responsive.scale(18)),
-          Wrap(
-            spacing: responsive.scale(10),
-            runSpacing: responsive.scale(10),
-            children: chips,
-          ),
-          SizedBox(height: responsive.scale(18)),
-          Divider(
-            height: 1,
-            color: const Color(0xFFE2E8F0),
-          ),
-          SizedBox(height: responsive.scale(18)),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final shouldStack = constraints.maxWidth < 360;
-              final dateColumn = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lastUpdatedLabel,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF6B7280),
-                      fontSize: responsive.scaleText(12),
-                    ) ??
-                        TextStyle(
-                          color: const Color(0xFF6B7280),
-                          fontSize: responsive.scaleText(12),
-                        ),
-                  ),
-                  SizedBox(height: responsive.scale(4)),
-                  Text(
-                    type.formattedUpdatedDate,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0F172A),
-                      fontSize: responsive.scaleText(14),
-                    ) ??
-                        TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0F172A),
-                          fontSize: responsive.scaleText(14),
-                        ),
-                  ),
-                ],
-              );
-              final actions = <Widget>[];
-              if (showEditAction && onEdit != null && editLabel != null) {
-                actions.add(
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFEFF6FF),
-                      foregroundColor: const Color(0xFF312E81),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: responsive.scale(18),
-                        vertical: responsive.scale(10),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(responsive.scale(16)),
-                      ),
-                      textStyle: TextStyle(
-                        fontSize: responsive.scaleText(14),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: Text(editLabel!),
-                  ),
-                );
-              }
-              if (showDeleteAction && onDelete != null) {
-                actions.add(
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFF1F2),
-                      foregroundColor: const Color(0xFFB91C1C),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: responsive.scale(18),
-                        vertical: responsive.scale(10),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(responsive.scale(16)),
-                      ),
-                      textStyle: TextStyle(
-                        fontSize: responsive.scaleText(14),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    label: Text(deleteLabel ?? l.contractWorkDeleteButton),
-                  ),
-                );
-              }
-
-              if (shouldStack) {
-                if (actions.isEmpty) {
-                  return dateColumn;
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    dateColumn,
-                    SizedBox(height: responsive.scale(12)),
-                    if (actions.length == 1)
-                      actions.first
-                    else
-                      Wrap(
-                        spacing: responsive.scale(10),
-                        runSpacing: responsive.scale(10),
-                        children: actions,
-                      ),
-                  ],
-                );
-              }
-
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(child: dateColumn),
-                  if (actions.isEmpty)
-                    const SizedBox.shrink()
-                  else
-                    Wrap(
-                      spacing: responsive.scale(10),
-                      runSpacing: responsive.scale(10),
-                      children: actions,
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
+/* ------------------------------- Tiles/Chips ------------------------------- */
 
 class _ContractEntryTile extends StatelessWidget {
   const _ContractEntryTile({
@@ -2786,7 +2328,9 @@ class _ContractEntryTile extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(responsive.scale(16)),
+                    borderRadius: BorderRadius.circular(
+                      responsive.scale(16),
+                    ),
                   ),
                   alignment: Alignment.center,
                   child: Icon(
@@ -2827,7 +2371,8 @@ class _ContractEntryTile extends StatelessWidget {
                               .bodySmall
                               ?.copyWith(
                             color: const Color(0xFF6B7280),
-                            fontSize: responsive.scaleText(12),
+                            fontSize:
+                            responsive.scaleText(12),
                           ) ??
                               TextStyle(
                                 color: const Color(0xFF6B7280),
@@ -2840,10 +2385,14 @@ class _ContractEntryTile extends StatelessWidget {
                 );
                 final amountText = Text(
                   '€${entry.totalAmount.toStringAsFixed(2)}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF111827),
-                    fontSize: responsive.scaleText(16),
+                    fontSize:
+                    responsive.scaleText(16),
                   ) ??
                       TextStyle(
                         fontWeight: FontWeight.w700,
@@ -2858,10 +2407,7 @@ class _ContractEntryTile extends StatelessWidget {
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          leading,
-                          titleColumn,
-                        ],
+                        children: [leading, titleColumn],
                       ),
                       SizedBox(height: responsive.scale(12)),
                       amountText,
@@ -2871,11 +2417,7 @@ class _ContractEntryTile extends StatelessWidget {
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    leading,
-                    titleColumn,
-                    amountText,
-                  ],
+                  children: [leading, titleColumn, amountText],
                 );
               },
             ),
@@ -2886,7 +2428,7 @@ class _ContractEntryTile extends StatelessWidget {
               children: [
                 _InfoChip(
                   icon: Icons.assignment_turned_in_outlined,
-                  label: contractLabel,
+                  label: 'Contract',
                   value: entry.contractName,
                   backgroundColor: const Color(0xFFEFF6FF),
                   borderColor: const Color(0xFFD6DBFF),
@@ -2895,16 +2437,16 @@ class _ContractEntryTile extends StatelessWidget {
                 ),
                 _InfoChip(
                   icon: Icons.stacked_line_chart_rounded,
-                  label: unitsLabel,
+                  label: 'Units',
                   value: entry.unitsCompleted.toStringAsFixed(0),
                   backgroundColor: const Color(0xFFEFF6FF),
-                  borderColor: const Color(0xFFD6DBFF),
+                  borderColor: const Color(0xD6DBFF),
                   labelColor: const Color(0xFF1E3A8A),
                   valueColor: const Color(0xFF111827),
                 ),
                 _InfoChip(
                   icon: Icons.payments_outlined,
-                  label: rateLabel,
+                  label: 'Rate',
                   value: '€${entry.rate.toStringAsFixed(2)}',
                   backgroundColor: const Color(0xFFEFF6FF),
                   borderColor: const Color(0xFFD6DBFF),
@@ -2968,11 +2510,7 @@ class _InfoChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: responsive.scale(16),
-              color: resolvedLabelColor,
-            ),
+            Icon(icon, size: responsive.scale(16), color: resolvedLabelColor),
             SizedBox(width: responsive.scale(6)),
           ],
           Text(
@@ -2996,6 +2534,8 @@ class _InfoChip extends StatelessWidget {
     );
   }
 }
+
+/* ------------------------------ Data Models ------------------------------ */
 
 class _ContractType {
   const _ContractType({
@@ -3032,8 +2572,8 @@ class _ContractType {
   final String name;
   final double rate;
   final String unitLabel;
-  final String type;
-  final String? role;
+  final String type; // backend kind (fixed/bundle but now we always send fixed)
+  final String? role; // Bin / Crate / Bunches etc.
   final bool isDefault;
   final bool isUserDefined;
   final DateTime? lastUpdated;
@@ -3119,4 +2659,145 @@ class _ContractSummaryRow {
   final String workName;
   final String units;
   final String payment;
+}
+
+/* -------------------------- Manage Types Row -------------------------- */
+
+class _ManageTypeRow extends StatelessWidget {
+  const _ManageTypeRow({
+    required this.name,
+    required this.subtitle,
+    required this.isBusy,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final String name;
+  final String subtitle;
+  final bool isBusy;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = context.responsive;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: r.scale(10)),
+      child: LayoutBuilder(
+        builder: (ctx, cons) {
+          final isNarrow = cons.maxWidth < 420;
+
+          final titleStyle =
+              Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: r.scaleText(14),
+                color: const Color(0xFF111827),
+              ) ??
+                  TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: r.scaleText(14),
+                    color: const Color(0xFF111827),
+                  );
+
+          final subtitleStyle =
+              Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: r.scaleText(12),
+                color: const Color(0xFF6B7280),
+              ) ??
+                  TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: r.scaleText(12),
+                    color: const Color(0xFF6B7280),
+                  );
+
+          final infoContent = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: titleStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: r.scale(4)),
+              Text(
+                subtitle,
+                style: subtitleStyle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          );
+
+          final actions = Wrap(
+            alignment: isNarrow ? WrapAlignment.start : WrapAlignment.end,
+            spacing: r.scale(8),
+            runSpacing: r.scale(8),
+            children: [
+              OutlinedButton(
+                onPressed: isBusy ? null : onEdit,
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: r.scale(12),
+                    vertical: r.scale(8),
+                  ),
+                  foregroundColor: const Color(0xFF2563EB),
+                  side: const BorderSide(color: Color(0xFF2563EB)),
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: r.scaleText(12),
+                  ),
+                  minimumSize: Size(r.scale(64), r.scale(36)),
+                ),
+                child: Text(
+                  AppLocalizations.of(context).contractWorkEditRateButton,
+                ),
+              ),
+              TextButton(
+                onPressed: isBusy ? null : onDelete,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: r.scale(12),
+                    vertical: r.scale(8),
+                  ),
+                  foregroundColor: const Color(0xFFB91C1C),
+                  textStyle: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: r.scaleText(12),
+                  ),
+                  minimumSize: Size(r.scale(64), r.scale(36)),
+                ),
+                child: Text(
+                  AppLocalizations.of(context).contractWorkDeleteButton,
+                ),
+              ),
+            ],
+          );
+
+          if (isNarrow) {
+            // Column layout for narrow widths (no Expanded)
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                infoContent,
+                SizedBox(height: r.scale(8)),
+                actions,
+              ],
+            );
+          }
+
+          // Row layout for wide widths (Expanded used here)
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: infoContent),
+              SizedBox(width: r.scale(12)),
+              actions,
+            ],
+          );
+        },
+      ),
+    );
+  }
 }

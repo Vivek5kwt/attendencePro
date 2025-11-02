@@ -6019,7 +6019,7 @@ class _ContractEntryForm extends StatelessWidget {
                   ),
                 );
               }).toList(growable: false),
-              if (onAddEntry != null)
+          /*    if (onAddEntry != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Row(
@@ -6044,7 +6044,7 @@ class _ContractEntryForm extends StatelessWidget {
 
                     ],
                   ),
-                ),
+                ),*/
             ],
           ],
       ),
