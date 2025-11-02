@@ -425,11 +425,103 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final l = AppLocalizations.of(context);
+    final previousWorkIds = works.map((work) => work.id).toSet();
+    final initialActiveWorkId =
+        _findActiveWorkFromState(workBloc.state)?.id ?? widget.work.id;
+    var addWorkRequested = false;
+    final addDialogCompletion = Completer<void>();
+
+    Future<void> startAddWorkFlow() async {
+      addWorkRequested = true;
+      try {
+        await showAddWorkDialog(context: context);
+      } finally {
+        if (!addDialogCompletion.isCompleted) {
+          addDialogCompletion.complete();
+        }
+      }
+    }
+
     final selected = await showWorkSelectionDialog(
       context: context,
       works: works,
       localization: l,
       initialSelectedWorkId: widget.work.id,
+      onAddNewWork: () {
+        if (!mounted) {
+          if (!addDialogCompletion.isCompleted) {
+            addDialogCompletion.complete();
+          }
+          return;
+        }
+        unawaited(startAddWorkFlow());
+      },
+      onEditWork: (work) {
+        if (!mounted) {
+          return;
+        }
+        showEditWorkDialog(context: context, work: work);
+      },
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (selected != null) {
+      if (selected.id == widget.work.id) {
+        return;
+      }
+      _navigateToWorkDashboard(selected);
+      return;
+    }
+
+    if (!addWorkRequested) {
+      return;
+    }
+
+    await addDialogCompletion.future;
+    if (!mounted) {
+      return;
+    }
+
+    final updatedState = workBloc.state;
+    final updatedWorks = updatedState.works;
+    Work? createdWork;
+    for (final work in updatedWorks) {
+      if (!previousWorkIds.contains(work.id)) {
+        createdWork = work;
+        break;
+      }
+    }
+
+    final bool newWorkAdded =
+        createdWork != null || updatedWorks.length > previousWorkIds.length;
+    if (!newWorkAdded) {
+      return;
+    }
+
+    final activeWork = _findActiveWorkFromState(updatedState);
+    final targetWork = createdWork ??
+        (activeWork != null && activeWork.id != initialActiveWorkId
+            ? activeWork
+            : null);
+
+    if (targetWork != null && targetWork.id != widget.work.id) {
+      _navigateToWorkDashboard(targetWork);
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('New work created successfully.')),
+    );
+
+    final fallbackSelected = await showWorkSelectionDialog(
+      context: context,
+      works: updatedWorks,
+      localization: l,
+      initialSelectedWorkId:
+          createdWork?.id ?? activeWork?.id ?? widget.work.id,
       onAddNewWork: () {
         if (!mounted) {
           return;
@@ -444,13 +536,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       },
     );
 
-    if (!mounted || selected == null || selected.id == widget.work.id) {
+    if (!mounted || fallbackSelected == null) {
       return;
     }
 
+    if (fallbackSelected.id != widget.work.id) {
+      _navigateToWorkDashboard(fallbackSelected);
+    }
+  }
+
+  void _navigateToWorkDashboard(Work work) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (context) => WorkDetailScreen(work: selected),
+        builder: (context) => WorkDetailScreen(work: work),
       ),
     );
   }
