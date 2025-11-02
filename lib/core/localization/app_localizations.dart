@@ -165,6 +165,8 @@ class AppLocalizations {
       _value('contractWorkTypeSavedMessage');
   String get contractWorkSaveAllButton =>
       _value('contractWorkSaveAllButton');
+  String get contractWorkRemoveEntryButton =>
+      _value('contractWorkRemoveEntryButton');
   String get contractWorkDeleteConfirmationTitle =>
       _value('contractWorkDeleteConfirmationTitle');
   String get contractWorkDeleteConfirmationMessage =>
@@ -409,6 +411,11 @@ class AppLocalizations {
       _value('attendanceEntryTypeLabel');
   String get submitButton => _value('submitButton');
   String get markAsWorkOffButton => _value('markAsWorkOffButton');
+  String get workOffConfirmationTitle =>
+      _value('workOffConfirmationTitle');
+  String get workOffConfirmationMessage =>
+      _value('workOffConfirmationMessage');
+  String get workOffConfirmButton => _value('workOffConfirmButton');
   String get contractWorkSummaryTitle => _value('contractWorkSummaryTitle');
   String get summaryLabel => _value('summaryLabel');
   String get totalHoursLabel => _value('totalHoursLabel');
