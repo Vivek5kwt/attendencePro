@@ -371,6 +371,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       <_ContractBundleFormEntry>[];
   int _bundleEntryCounter = 0;
   bool _contractFieldsEnabled = false;
+  bool _previousContractFieldsEnabled = false;
   bool _markAsWorkOff = false;
   bool _isTodayAttendanceMarked = false;
   String? _previousStartTime;
@@ -396,7 +397,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     super.initState();
     _initializeAttendanceControllers();
     if (widget.work.isContract) {
-      _contractFieldsEnabled = !_markAsWorkOff;
       final initialContractTypeId =
           _extractContractTypeIdFromAdditionalData()?.toString();
       _ensurePrimaryBundleEntry(initialContractTypeId: initialContractTypeId);
@@ -1017,6 +1017,32 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
   }
 
+  bool _hasContractBundleUnitsInput() {
+    if (!widget.work.isContract || !_contractFieldsEnabled ||
+        _contractBundleEntries.isEmpty) {
+      return false;
+    }
+    for (final entry in _contractBundleEntries) {
+      if (entry.controller.text.trim().isNotEmpty) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _shouldValidateHourlyFields() {
+    if (_markAsWorkOff) {
+      return false;
+    }
+    final hasContractInput = _hasContractBundleUnitsInput();
+    if (!hasContractInput) {
+      return true;
+    }
+    final startFilled = _startTimeController.text.trim().isNotEmpty;
+    final endFilled = _endTimeController.text.trim().isNotEmpty;
+    return startFilled || endFilled;
+  }
+
   void _applyAttendanceDetailsFromSummary(DashboardAttendanceEntry? entry) {
     if (entry == null) {
       return;
@@ -1600,6 +1626,35 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _handleAttendanceFieldChanged();
   }
 
+  void _handleContractEntryEnable() {
+    if (!widget.work.isContract || _contractFieldsEnabled) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _contractFieldsEnabled = true;
+      _ensurePrimaryBundleEntry();
+    });
+    if (_contractTypes.isEmpty && !_isLoadingContractTypes) {
+      _loadContractTypes();
+    }
+    _handleAttendanceFieldChanged();
+  }
+
+  void _handleContractEntryDisable() {
+    if (!widget.work.isContract || !_contractFieldsEnabled) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _contractFieldsEnabled = false;
+      for (final entry in _contractBundleEntries) {
+        entry.controller.clear();
+      }
+    });
+    _handleAttendanceFieldChanged();
+  }
+
   String _generateBundleEntryId() {
     _bundleEntryCounter += 1;
     return 'bundle_${DateTime.now().microsecondsSinceEpoch}_$_bundleEntryCounter';
@@ -1865,6 +1920,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _previousEndTime = _endTimeController.text;
         _previousBreakMinutes = _breakMinutesController.text;
         _markAsWorkOff = true;
+        _previousContractFieldsEnabled = _contractFieldsEnabled;
         _contractFieldsEnabled = false;
         for (final entry in _contractBundleEntries) {
           entry.controller.clear();
@@ -1888,9 +1944,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _previousEndTime = null;
         _previousBreakMinutes = null;
         if (widget.work.isContract) {
-          _contractFieldsEnabled = true;
-          _ensurePrimaryBundleEntry();
+          _contractFieldsEnabled = _previousContractFieldsEnabled;
+          if (_contractFieldsEnabled) {
+            _ensurePrimaryBundleEntry();
+          }
         }
+        _previousContractFieldsEnabled = false;
       }
     });
     _handleAttendanceFieldChanged();
@@ -1909,7 +1968,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String? _validateStartTime(String? value) {
-    if (_markAsWorkOff) {
+    if (!_shouldValidateHourlyFields()) {
       return null;
     }
     final l = AppLocalizations.of(context);
@@ -1923,7 +1982,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String? _validateEndTime(String? value) {
-    if (_markAsWorkOff) {
+    if (!_shouldValidateHourlyFields()) {
       return null;
     }
     final l = AppLocalizations.of(context);
@@ -1937,7 +1996,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String? _validateBreakMinutes(String? value) {
-    if (_markAsWorkOff) {
+    if (!_shouldValidateHourlyFields()) {
       return null;
     }
     final trimmed = value?.trim();
@@ -2124,7 +2183,33 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Future<void> _submitWorkOffAttendance() async {
+    final l = AppLocalizations.of(context);
     final wasWorkOff = _markAsWorkOff;
+    if (!wasWorkOff) {
+      final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text(l.workOffConfirmationTitle),
+                content: Text(l.workOffConfirmationMessage),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(l.cancelButton),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(l.workOffConfirmButton),
+                  ),
+                ],
+              );
+            },
+          ) ??
+          false;
+      if (!confirmed) {
+        return;
+      }
+    }
     if (!wasWorkOff) {
       _handleWorkOffToggle(true);
     }
@@ -2249,13 +2334,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    final startTime = _startTimeController.text.trim();
-    final endTime = _endTimeController.text.trim();
-    final breakMinutes = _resolveBreakMinutes(_breakMinutesController.text);
-    final bool isContractEntryEnabled =
+    final startTimeText = _startTimeController.text.trim();
+    final endTimeText = _endTimeController.text.trim();
+    final String? startTime = startTimeText.isNotEmpty ? startTimeText : null;
+    final String? endTime = endTimeText.isNotEmpty ? endTimeText : null;
+    final bool hasHourlyInput = startTime != null || endTime != null;
+    final int? breakMinutes = hasHourlyInput
+        ? _resolveBreakMinutes(_breakMinutesController.text)
+        : null;
+
+    final bool contractSectionVisible =
         widget.work.isContract && _contractFieldsEnabled;
-    final bool? contractEntryPayloadValue = isContractEntryEnabled;
-    if (isContractEntryEnabled && _contractTypes.isEmpty) {
+    final bool hasContractInput = contractSectionVisible &&
+        _hasContractBundleUnitsInput();
+    if (contractSectionVisible && hasContractInput && _contractTypes.isEmpty) {
       final message = l.contractWorkLoadError;
       _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2269,7 +2361,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     int? units;
     double? ratePerUnit;
     List<_PreviewBundleInfo> previewBundles = const <_PreviewBundleInfo>[];
-    if (isContractEntryEnabled) {
+    bool includeContractEntry = false;
+    if (contractSectionVisible && hasContractInput) {
       final collectionResult = _collectContractBundles();
       if (collectionResult.errorMessage != null) {
         final message = collectionResult.errorMessage!;
@@ -2297,7 +2390,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         final selectedContractType = _findContractTypeById(contractTypeId);
         ratePerUnit = selectedContractType?.rate;
       }
+      includeContractEntry = true;
     }
+
+    final bool? contractEntryPayloadValue = includeContractEntry ? true : null;
 
     setState(() {
       _isSubmittingAttendance = true;
@@ -2337,7 +2433,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         startTime: startTime,
         endTime: endTime,
         breakMinutes: breakMinutes,
-        isContractEntry: isContractEntryEnabled,
+        isContractEntry: includeContractEntry,
         units: units,
         ratePerUnit: ratePerUnit,
         bundles: previewBundles,
@@ -2908,6 +3004,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isSubmitting: _isSubmittingAttendance,
         isWorkOff: _markAsWorkOff,
         showContractFields: widget.work.isContract,
+        showContractWorkButton: widget.work.isContract && !_contractFieldsEnabled,
+        onContractWorkTap:
+            widget.work.isContract ? _handleContractEntryEnable : null,
         contractFieldsEnabled: _contractFieldsEnabled,
         isContractFieldsLoading: _isLoadingContractTypes,
         contractFieldsError: _contractTypesError,
@@ -2919,6 +3018,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onAddContractBundle: _handleAddContractBundle,
         onRemoveContractBundle: _handleRemoveContractBundle,
         onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
+        onContractEntryRemove:
+            widget.work.isContract ? _handleContractEntryDisable : null,
         bundleUnitsValidator: _validateBundleUnits,
         startTimeValidator: _validateStartTime,
         endTimeValidator: _validateEndTime,
@@ -4464,6 +4565,7 @@ class _AttendanceSection extends StatelessWidget {
     this.onAddContractBundle,
     this.onRemoveContractBundle,
     this.onContractBundleUnitsChanged,
+    this.onContractEntryRemove,
     required this.bundleUnitsValidator,
     this.statusMessage,
     this.isStatusError = false,
@@ -4499,6 +4601,7 @@ class _AttendanceSection extends StatelessWidget {
   final VoidCallback? onAddContractBundle;
   final void Function(_ContractBundleFormEntry)? onRemoveContractBundle;
   final void Function(_ContractBundleFormEntry)? onContractBundleUnitsChanged;
+  final VoidCallback? onContractEntryRemove;
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final String? statusMessage;
   final bool isStatusError;
@@ -4704,6 +4807,7 @@ class _AttendanceSection extends StatelessWidget {
                 onRemoveEntry: onRemoveContractBundle,
                 onAddEntry: onAddContractBundle,
                 onUnitsChanged: onContractBundleUnitsChanged,
+                onRemoveAll: onContractEntryRemove,
                 bundleUnitsValidator: bundleUnitsValidator,
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
@@ -4825,7 +4929,7 @@ class _AttendanceSection extends StatelessWidget {
     return SizedBox(
       height: resolvedHeight,
       child: OutlinedButton(
-        onPressed: isSubmitting ? null : onContractWorkTap,
+        onPressed: (isSubmitting || isWorkOff) ? null : onContractWorkTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFEFF6FF),
           foregroundColor: const Color(0xFF1D4ED8),
@@ -5788,6 +5892,7 @@ class _ContractEntryForm extends StatelessWidget {
     this.onRemoveEntry,
     this.onAddEntry,
     this.onUnitsChanged,
+    this.onRemoveAll,
     this.trailingAction,
   });
 
@@ -5803,6 +5908,7 @@ class _ContractEntryForm extends StatelessWidget {
   final bool isSubmitting;
   final bool isWorkOff;
   final String? errorMessage;
+  final VoidCallback? onRemoveAll;
   final Widget? trailingAction;
 
   @override
@@ -5823,6 +5929,18 @@ class _ContractEntryForm extends StatelessWidget {
       return null;
     }
 
+    final removeButton = onRemoveAll != null
+        ? TextButton.icon(
+            onPressed:
+                disableInteractions ? null : () => onRemoveAll?.call(),
+            icon: const Icon(Icons.close_rounded),
+            label: Text(l.contractWorkRemoveEntryButton),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF1F2937),
+            ),
+          )
+        : null;
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF5F9FF),
@@ -5833,10 +5951,15 @@ class _ContractEntryForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (trailingAction != null) ...[
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(height: 48, child: trailingAction),
+          if (trailingAction != null || removeButton != null) ...[
+            Row(
+              children: [
+                if (removeButton != null) removeButton,
+                if (trailingAction != null) ...[
+                  const Spacer(),
+                  SizedBox(height: 48, child: trailingAction),
+                ],
+              ],
             ),
             const SizedBox(height: 16),
           ] else
