@@ -4992,7 +4992,15 @@ class _AttendanceSection extends StatelessWidget {
           children: [
             const Icon(Icons.work_outline_rounded, size: 18),
             const SizedBox(width: 6),
-            Text(l.contractWorkLabel),
+            Flexible(
+              child: Text(
+                l.contractWorkLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       ),
@@ -5080,7 +5088,15 @@ class _AttendanceSection extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : Text(l.attendanceSubmitButton),
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  l.attendanceSubmitButton,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
       ),
     );
   }
