@@ -1,3 +1,5 @@
+import 'attendance_request.dart' show AttendanceContractBundle;
+
 class AttendanceHistoryData {
   const AttendanceHistoryData({
     required this.entries,
@@ -63,6 +65,7 @@ class AttendanceHistoryEntryData {
     required this.date,
     required this.workName,
     required this.type,
+    this.attendanceId,
     this.startTime,
     this.endTime,
     this.breakDuration,
@@ -74,11 +77,13 @@ class AttendanceHistoryEntryData {
     this.leaveReason,
     required this.salary,
     this.detectedCurrencySymbol,
+    this.contractBundles = const <AttendanceContractBundle>[],
   });
 
   final DateTime date;
   final String workName;
   final AttendanceHistoryEntryType type;
+  final int? attendanceId;
   final String? startTime;
   final String? endTime;
   final String? breakDuration;
@@ -90,11 +95,13 @@ class AttendanceHistoryEntryData {
   final String? leaveReason;
   final double salary;
   final String? detectedCurrencySymbol;
+  final List<AttendanceContractBundle> contractBundles;
 
   AttendanceHistoryEntryData copyWith({
     DateTime? date,
     String? workName,
     AttendanceHistoryEntryType? type,
+    int? attendanceId,
     String? startTime,
     String? endTime,
     String? breakDuration,
@@ -106,11 +113,13 @@ class AttendanceHistoryEntryData {
     String? leaveReason,
     double? salary,
     String? detectedCurrencySymbol,
+    List<AttendanceContractBundle>? contractBundles,
   }) {
     return AttendanceHistoryEntryData(
       date: date ?? this.date,
       workName: workName ?? this.workName,
       type: type ?? this.type,
+      attendanceId: attendanceId ?? this.attendanceId,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       breakDuration: breakDuration ?? this.breakDuration,
@@ -123,6 +132,7 @@ class AttendanceHistoryEntryData {
       salary: salary ?? this.salary,
       detectedCurrencySymbol:
           detectedCurrencySymbol ?? this.detectedCurrencySymbol,
+      contractBundles: contractBundles ?? this.contractBundles,
     );
   }
 
@@ -214,10 +224,21 @@ class AttendanceHistoryEntryData {
       'typeLabel',
     ]);
 
+    final attendanceId = _parseInt(json, const [
+      'attendance_id',
+      'attendanceId',
+      'id',
+      'entry_id',
+      'entryId',
+    ]);
+
+    final contractBundles = _parseContractBundles(json);
+
     return AttendanceHistoryEntryData(
       date: date,
       workName: workName,
       type: type,
+      attendanceId: attendanceId,
       startTime: _parseTimeLabel(json, const [
         'start_time',
         'startTime',
@@ -248,6 +269,7 @@ class AttendanceHistoryEntryData {
       salary: salaryAmount.value ?? 0,
       detectedCurrencySymbol:
           salaryAmount.symbol ?? rateAmount.symbol,
+      contractBundles: contractBundles,
     );
   }
 }
@@ -817,6 +839,114 @@ _ParsedAmount _parseAmount(dynamic value) {
     return _parseAmount(value['amount'] ?? value['value']);
   }
   return const _ParsedAmount();
+}
+
+List<AttendanceContractBundle> _parseContractBundles(
+    Map<String, dynamic> json) {
+  final bundlesList = _extractBundleList(json);
+  if (bundlesList == null || bundlesList.isEmpty) {
+    final singleTypeId = _parseInt(json, const [
+      'contract_type_id',
+      'contractTypeId',
+      'contract_type',
+      'type_id',
+      'typeId',
+    ]);
+    final singleCount = _parseInt(json, const [
+      'count',
+      'units_completed',
+      'unitsCompleted',
+      'units',
+      'quantity',
+      'value',
+    ]);
+    if (singleTypeId != null && singleCount != null && singleCount > 0) {
+      return List<AttendanceContractBundle>.unmodifiable(<AttendanceContractBundle>[
+        AttendanceContractBundle(
+          contractTypeId: singleTypeId,
+          count: singleCount,
+        ),
+      ]);
+    }
+    return const <AttendanceContractBundle>[];
+  }
+
+  final result = <AttendanceContractBundle>[];
+  for (final item in bundlesList) {
+    final map = _ensureMap(item);
+    if (map == null) {
+      continue;
+    }
+    final typeId = _parseInt(map, const [
+      'contract_type_id',
+      'contractTypeId',
+      'contract_type',
+      'type_id',
+      'typeId',
+      'id',
+    ]);
+    final count = _parseInt(map, const [
+      'count',
+      'units',
+      'quantity',
+      'value',
+    ]);
+    if (typeId == null || count == null || count <= 0) {
+      continue;
+    }
+    result.add(
+      AttendanceContractBundle(
+        contractTypeId: typeId,
+        count: count,
+      ),
+    );
+  }
+
+  if (result.isEmpty) {
+    return const <AttendanceContractBundle>[];
+  }
+  return List<AttendanceContractBundle>.unmodifiable(result);
+}
+
+List<dynamic>? _extractBundleList(Map<String, dynamic> json, [int depth = 0]) {
+  if (depth > 3) {
+    return null;
+  }
+
+  const keys = <String>[
+    'bundles',
+    'contract_bundles',
+    'contractBundles',
+    'contract_entries',
+    'contractEntries',
+    'bundle_items',
+    'bundleItems',
+  ];
+
+  for (final key in keys) {
+    final value = json[key];
+    if (value is List) {
+      return value;
+    }
+    final nestedMap = _ensureMap(value);
+    if (nestedMap != null) {
+      final nested = _extractBundleList(nestedMap, depth + 1);
+      if (nested != null && nested.isNotEmpty) {
+        return nested;
+      }
+    }
+  }
+
+  for (final value in json.values) {
+    if (value is Map<String, dynamic>) {
+      final nested = _extractBundleList(value, depth + 1);
+      if (nested != null && nested.isNotEmpty) {
+        return nested;
+      }
+    }
+  }
+
+  return null;
 }
 
 String? _parseString(Map<String, dynamic> json, List<String> keys) {

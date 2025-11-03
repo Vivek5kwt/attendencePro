@@ -315,6 +315,8 @@ abstract final class AppString {
       'attendanceAlreadyMarkedMessage':
           'Attendance already marked for today. To make changes, please use the Edit option.',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
+      'attendanceAddBundleButton': 'Add bundle',
+      'attendanceRemoveBundleTooltip': 'Remove bundle',
       'attendanceMissedEntriesTitle': 'Complete pending attendance',
       'attendanceMissedEntriesDescription':
           'You missed attendance on the following dates. Please complete these entries before adding new ones.',
@@ -748,6 +750,8 @@ abstract final class AppString {
       'attendanceAlreadyMarkedMessage':
           'आज की उपस्थिति पहले ही दर्ज की जा चुकी है। बदलाव करने के लिए कृपया संपादन विकल्प का उपयोग करें।',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
+      'attendanceAddBundleButton': 'बंडल जोड़ें',
+      'attendanceRemoveBundleTooltip': 'बंडल हटाएं',
       'attendanceMissedEntriesTitle': 'लंबित उपस्थिति पूरी करें',
       'attendanceMissedEntriesDescription':
           'आपने निम्न तिथियों पर उपस्थिति दर्ज नहीं की है। नई प्रविष्टि जोड़ने से पहले इन्हें पूरा करें।',
@@ -1178,6 +1182,8 @@ abstract final class AppString {
       'attendanceAlreadyMarkedMessage':
           'ਅੱਜ ਦੀ ਹਾਜ਼ਰੀ ਪਹਿਲਾਂ ਹੀ ਦਰਜ ਕੀਤੀ ਜਾ ਚੁੱਕੀ ਹੈ। ਤਬਦੀਲੀਆਂ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਐਡਿਟ ਵਿਕਲਪ ਵਰਤੋਂ।',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+      'attendanceAddBundleButton': 'ਬੰਡਲ ਸ਼ਾਮਲ ਕਰੋ',
+      'attendanceRemoveBundleTooltip': 'ਬੰਡਲ ਹਟਾਓ',
       'attendanceMissedEntriesTitle': 'ਬਕਾਇਆ ਹਾਜ਼ਰੀ ਪੂਰੀ ਕਰੋ',
       'attendanceMissedEntriesDescription':
           'ਤੁਸੀਂ ਹੇਠਾਂ ਦਿੱਤੀਆਂ ਤਾਰੀਆਂ ’ਤੇ ਹਾਜ਼ਰੀ ਨਹੀਂ ਭਰੀ। ਨਵੀਂ ਐਂਟਰੀ ਜੋੜਨ ਤੋਂ ਪਹਿਲਾਂ ਇਨ੍ਹਾਂ ਨੂੰ ਪੂਰਾ ਕਰੋ।',
@@ -1616,6 +1622,8 @@ abstract final class AppString {
       'attendanceAlreadyMarkedMessage':
           'Presenza già registrata per oggi. Per apportare modifiche, usa l\'opzione Modifica.',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
+      'attendanceAddBundleButton': 'Aggiungi bundle',
+      'attendanceRemoveBundleTooltip': 'Rimuovi bundle',
       'attendanceMissedEntriesTitle': 'Completa le presenze in sospeso',
       'attendanceMissedEntriesDescription':
           'Non hai registrato la presenza nelle seguenti date. Completa i giorni mancanti prima di aggiungere nuove presenze.',
