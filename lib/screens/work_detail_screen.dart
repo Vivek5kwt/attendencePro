@@ -5996,7 +5996,7 @@ class _ContractEntryForm extends StatelessWidget {
             onPressed:
                 disableInteractions ? null : () => onRemoveAll?.call(),
             icon: const Icon(Icons.close_rounded),
-            label: Text(l.contractWorkRemoveEntryButton),
+           label: Text(''),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF1F2937),
             ),
