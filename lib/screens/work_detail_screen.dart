@@ -402,7 +402,34 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    final updatedState = workBloc.state;
+    bool _hasNewWork(WorkState state) {
+      final works = state.works;
+      if (works.length > previousWorkIds.length) {
+        return true;
+      }
+      for (final work in works) {
+        if (!previousWorkIds.contains(work.id)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    WorkState updatedState = workBloc.state;
+
+    if (!_hasNewWork(updatedState)) {
+      try {
+        updatedState = await workBloc.stream
+            .firstWhere(_hasNewWork)
+            .timeout(const Duration(seconds: 3));
+      } on TimeoutException {
+        updatedState = workBloc.state;
+      }
+      if (!mounted) {
+        return;
+      }
+    }
+
     final updatedWorks = updatedState.works;
     Work? createdWork;
     for (final work in updatedWorks) {
