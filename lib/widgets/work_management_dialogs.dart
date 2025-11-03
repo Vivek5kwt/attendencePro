@@ -751,11 +751,17 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     num? qty;
     final qtyKeys = <String>[
       'unit_quantity',
+      'unitQuantity',
       'quantity',
       'qty',
       'per_count',
+      'perCount',
       'count',
       'units',
+      'unit_size',
+      'unitSize',
+      'bundle_size',
+      'bundleSize',
     ];
     for (final k in qtyKeys) {
       final v = data[k];
@@ -774,10 +780,16 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     String? unitName;
     final unitKeys = <String>[
       'unit_name',
+      'unitName',
       'unit',
+      'unit_type',
+      'unitType',
+      'unit_display',
+      'unitDisplay',
       'role',
       'type',
       'role_name',
+      'roleName',
     ];
     for (final k in unitKeys) {
       final v = data[k];
@@ -788,9 +800,38 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     }
 
     if (qty != null && unitName != null && unitName.isNotEmpty) {
-      // Keep the casing from backend; client examples are lowercase nouns.
-      final qtyInt = qty % 1 == 0 ? qty.toInt() : qty;
-      return 'per $qtyInt $unitName';
+      final formattedQty = _formatQuantity(qty);
+      final normalizedUnit = _normalizeUnitLabel(unitName, qty);
+      return 'per $formattedQty $normalizedUnit';
+    }
+
+    // Try to infer from existing labels/names when partial data is present.
+    final parsedUnitLabel = _extractQuantityAndUnitFromText(type.unitLabel);
+    qty ??= parsedUnitLabel.$1;
+    unitName ??= parsedUnitLabel.$2;
+
+    final parsedName = _extractQuantityAndUnitFromText(type.name);
+    qty ??= parsedName.$1;
+    unitName ??= parsedName.$2;
+
+    if ((unitName == null || unitName.isEmpty) && (type.role?.trim().isNotEmpty ?? false)) {
+      unitName = type.role!.trim();
+    }
+
+    if (qty == null && unitName != null && unitName.isNotEmpty) {
+      qty = 1;
+    }
+
+    if (qty != null && (unitName != null && unitName.isNotEmpty)) {
+      final formattedQty = _formatQuantity(qty);
+      final normalizedUnit = _normalizeUnitLabel(unitName, qty);
+      return 'per $formattedQty $normalizedUnit';
+    }
+
+    if (qty != null && (unitName == null || unitName.isEmpty)) {
+      final formattedQty = _formatQuantity(qty);
+      final normalizedUnit = _normalizeUnitLabel('unit', qty);
+      return 'per $formattedQty $normalizedUnit';
     }
 
     // 3) Use non-generic unitLabel if available.
@@ -799,8 +840,69 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return label;
     }
 
-    // 4) Fallback.
-    return 'per unit';
+    // 4) Fallback to a formatted unit watermark.
+    return 'per 1 ${_normalizeUnitLabel('unit', 1)}';
+  }
+
+  (num?, String?) _extractQuantityAndUnitFromText(String? source) {
+    if (source == null) {
+      return (null, null);
+    }
+    final trimmed = source.trim();
+    if (trimmed.isEmpty) {
+      return (null, null);
+    }
+    final pattern = RegExp(r'(\d+(?:[\.,]\d+)?)\s*([A-Za-z][A-Za-z\s]*)$', caseSensitive: false);
+    final match = pattern.firstMatch(trimmed);
+    if (match == null) {
+      return (null, null);
+    }
+
+    final quantityText = match.group(1)?.replaceAll(',', '.');
+    final unitText = match.group(2)?.trim();
+    if (quantityText == null || unitText == null || unitText.isEmpty) {
+      return (null, null);
+    }
+
+    final quantity = num.tryParse(quantityText);
+    if (quantity == null) {
+      return (null, null);
+    }
+
+    return (quantity, unitText);
+  }
+
+  String _formatQuantity(num quantity) {
+    if (quantity % 1 == 0) {
+      return quantity.toInt().toString();
+    }
+    final formatted = quantity.toString();
+    return formatted;
+  }
+
+  String _normalizeUnitLabel(String unit, num quantity) {
+    final trimmed = unit.trim();
+    if (trimmed.isEmpty) {
+      return quantity == 1 ? 'unit' : 'units';
+    }
+
+    final lowerCased = trimmed.toLowerCase();
+    if (quantity == 1) {
+      if (lowerCased == 'units') {
+        return 'unit';
+      }
+      return lowerCased;
+    }
+
+    if (quantity != 1 && !lowerCased.endsWith('s') && lowerCased != 'unit') {
+      return lowerCased;
+    }
+
+    if (quantity != 1 && lowerCased == 'unit') {
+      return 'units';
+    }
+
+    return lowerCased;
   }
 
   /// FINAL RATE STRING for contract tile (client spec):
