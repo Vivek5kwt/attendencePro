@@ -159,6 +159,8 @@ abstract final class AppString {
       'contractWorkUnitsHint': 'Enter units',
       'contractWorkRateRequiredMessage': 'Please enter a valid rate.',
       'contractWorkNameRequiredMessage': 'Please select or enter a work name.',
+      'contractWorkTypeLockedMessage':
+          'Type is locked to Bin after saving.',
       'contractWorkTypeSavedMessage': 'Contract type saved.',
       'contractWorkDeleteConfirmationTitle': 'Delete contract type',
       'contractWorkDeleteConfirmationMessage':
@@ -586,6 +588,8 @@ abstract final class AppString {
       'contractWorkUnitsHint': 'इकाइयों की संख्या दर्ज करें',
       'contractWorkRateRequiredMessage': 'कृपया मान्य दर दर्ज करें।',
       'contractWorkNameRequiredMessage': 'कृपया कोई कार्य नाम चुनें या दर्ज करें।',
+      'contractWorkTypeLockedMessage':
+          'सहेजे गए कॉन्ट्रैक्ट कार्यों के लिए प्रकार बिन पर लॉक रहता है।',
       'contractWorkTypeSavedMessage': 'कॉन्ट्रैक्ट प्रकार सहेजा गया।',
       'contractWorkDeleteConfirmationTitle': 'कॉन्ट्रैक्ट प्रकार हटाएं',
       'contractWorkDeleteConfirmationMessage':
@@ -1014,6 +1018,8 @@ abstract final class AppString {
       'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਦਰ ਦਰਜ ਕਰੋ।',
       'contractWorkNameRequiredMessage':
           'ਕਿਰਪਾ ਕਰਕੇ ਕੋਈ ਕੰਮ ਦਾ ਨਾਮ ਚੁਣੋ ਜਾਂ ਦਰਜ ਕਰੋ।',
+      'contractWorkTypeLockedMessage':
+          'ਸੰਭਾਲੇ ਕਾਂਟ੍ਰੈਕਟ ਕੰਮਾਂ ਲਈ ਕਿਸਮ ਬਿਨ ਲਈ ਲਾਕ ਕੀਤੀ ਗਈ ਹੈ।',
       'contractWorkTypeSavedMessage': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਸੇਵ ਕੀਤੀ ਗਈ।',
       'contractWorkDeleteConfirmationTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਓ',
       'contractWorkDeleteConfirmationMessage':
@@ -1446,6 +1452,8 @@ abstract final class AppString {
       'contractWorkRateRequiredMessage': 'Inserisci una tariffa valida.',
       'contractWorkNameRequiredMessage':
           'Seleziona o inserisci il nome del lavoro.',
+      'contractWorkTypeLockedMessage':
+          'Il tipo è bloccato su Bin dopo il salvataggio.',
       'contractWorkTypeSavedMessage': 'Tipo di contratto salvato.',
       'contractWorkDeleteConfirmationTitle': 'Elimina tipo di contratto',
       'contractWorkDeleteConfirmationMessage':

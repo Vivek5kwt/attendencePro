@@ -161,6 +161,8 @@ class AppLocalizations {
       _value('contractWorkRateRequiredMessage');
   String get contractWorkNameRequiredMessage =>
       _value('contractWorkNameRequiredMessage');
+  String get contractWorkTypeLockedMessage =>
+      _value('contractWorkTypeLockedMessage');
   String get contractWorkTypeSavedMessage =>
       _value('contractWorkTypeSavedMessage');
   String get contractWorkSaveAllButton =>
