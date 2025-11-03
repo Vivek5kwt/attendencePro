@@ -259,89 +259,6 @@ String _formatBreakOptionLabel(int minutes) {
   return '$minutes ${AppString.minutesSuffix}';
 }
 
-Widget _buildTimeDropdownField({
-  required TextEditingController controller,
-  required String label,
-  required IconData icon,
-  required bool enabled,
-  required String? Function(String?) validator,
-  VoidCallback? onChanged,
-}) {
-  final normalizedValue = _normalizeTimeDropdownValue(controller.text);
-  return DropdownButtonFormField<String?>(
-    value: normalizedValue,
-    items: _buildTimeDropdownMenuItems(),
-    onChanged: enabled
-        ? (value) {
-            final text = value ?? '';
-            controller
-              ..text = text
-              ..selection = TextSelection.collapsed(offset: text.length);
-            onChanged?.call();
-          }
-        : null,
-    validator: validator,
-    isExpanded: true,
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-      ),
-      prefixIcon: Icon(icon, color: const Color(0xFF2563EB)),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    hint: const Text(AppString.timePlaceholder),
-    dropdownColor: Colors.white,
-  );
-}
-
-Widget _buildBreakDropdownField({
-  required TextEditingController controller,
-  required String label,
-  required IconData icon,
-  required bool enabled,
-  String? Function(String?)? validator,
-  VoidCallback? onChanged,
-}) {
-  final parsed = int.tryParse(controller.text.trim());
-  final selectedValue =
-      parsed != null && _breakDurationOptions.contains(parsed) ? parsed : null;
-  return DropdownButtonFormField<int?>(
-    value: selectedValue,
-    items: _buildBreakDropdownMenuItems(),
-    onChanged: enabled
-        ? (value) {
-            final text = value?.toString() ?? '';
-            controller
-              ..text = text
-              ..selection = TextSelection.collapsed(offset: text.length);
-            onChanged?.call();
-          }
-        : null,
-    validator: validator == null ? null : (value) => validator(value?.toString()),
-    isExpanded: true,
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-      ),
-      prefixIcon: Icon(icon, color: const Color(0xFFF59E0B)),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-    ),
-    dropdownColor: Colors.white,
-  );
-}
-
 class WorkDetailScreen extends StatefulWidget {
   const WorkDetailScreen({super.key, required this.work});
 
@@ -3941,55 +3858,123 @@ class _MissedAttendanceCompletionSheetState
                 ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTimeDropdownField(
-                  controller: data.startTimeController,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 520;
+              final spacing = isCompact ? 12.0 : 16.0;
+
+              final cards = <Widget>[
+                _AttendanceTimeCard(
                   label: l.startTimeLabel,
-                  icon: Icons.play_arrow_rounded,
-                  enabled: !data.isLeave && !_isSubmitting,
+                  controller: data.startTimeController,
+                  accentColor: const Color(0xFF2563EB),
+                  hintText: AppString.timeInputHint,
+                  keyboardType: TextInputType.datetime,
+                  textInputAction: TextInputAction.next,
                   validator: (value) => _validateTime(
                     value,
                     isRequired: !data.isLeave,
                     errorMessage: l.attendanceStartTimeRequired,
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTimeDropdownField(
-                  controller: data.endTimeController,
-                  label: l.endTimeLabel,
-                  icon: Icons.stop_rounded,
+                  onChanged: (_) {},
                   enabled: !data.isLeave && !_isSubmitting,
+                  customField: _buildSharedSegmentedTimeField(
+                    controller: data.startTimeController,
+                    validator: (value) => _validateTime(
+                      value,
+                      isRequired: !data.isLeave,
+                      errorMessage: l.attendanceStartTimeRequired,
+                    ),
+                    enabled: !data.isLeave && !_isSubmitting,
+                    onValueChanged: () {
+                      setState(() {});
+                    },
+                  ),
+                  isCompact: isCompact,
+                ),
+                _AttendanceTimeCard(
+                  label: l.endTimeLabel,
+                  controller: data.endTimeController,
+                  accentColor: const Color(0xFF2563EB),
+                  hintText: AppString.timeInputHint,
+                  keyboardType: TextInputType.datetime,
+                  textInputAction: TextInputAction.next,
                   validator: (value) => _validateTime(
                     value,
                     isRequired: !data.isLeave,
                     errorMessage: l.attendanceEndTimeRequired,
                   ),
+                  onChanged: (_) {},
+                  enabled: !data.isLeave && !_isSubmitting,
+                  customField: _buildSharedSegmentedTimeField(
+                    controller: data.endTimeController,
+                    validator: (value) => _validateTime(
+                      value,
+                      isRequired: !data.isLeave,
+                      errorMessage: l.attendanceEndTimeRequired,
+                    ),
+                    enabled: !data.isLeave && !_isSubmitting,
+                    onValueChanged: () {
+                      setState(() {});
+                    },
+                  ),
+                  isCompact: isCompact,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildBreakDropdownField(
-            controller: data.breakMinutesController,
-            label: l.breakLabel,
-            icon: Icons.local_cafe_rounded,
-            enabled: !data.isLeave && !_isSubmitting,
-            validator: (value) {
-              if (!(!data.isLeave && !_isSubmitting)) {
-                return null;
-              }
-              if (value == null || value.trim().isEmpty) {
-                return null;
-              }
-              final parsed = int.tryParse(value.trim());
-              if (parsed == null || parsed < 0) {
-                return l.attendanceBreakInvalid;
-              }
-              return null;
+                _AttendanceTimeCard(
+                  label: l.breakLabel,
+                  controller: data.breakMinutesController,
+                  accentColor: const Color(0xFF2563EB),
+                  hintText: AppString.zeroInputHint,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  validator: (value) {
+                    if (!(!data.isLeave && !_isSubmitting)) {
+                      return null;
+                    }
+                    if (value == null || value.trim().isEmpty) {
+                      return null;
+                    }
+                    final parsed = int.tryParse(value.trim());
+                    if (parsed == null || parsed < 0) {
+                      return l.attendanceBreakInvalid;
+                    }
+                    return null;
+                  },
+                  onChanged: (_) {},
+                  enabled: !data.isLeave && !_isSubmitting,
+                  customField: _buildSharedBreakDurationField(
+                    controller: data.breakMinutesController,
+                    validator: (value) {
+                      if (!(!data.isLeave && !_isSubmitting)) {
+                        return null;
+                      }
+                      if (value == null || value.trim().isEmpty) {
+                        return null;
+                      }
+                      final parsed = int.tryParse(value.trim());
+                      if (parsed == null || parsed < 0) {
+                        return l.attendanceBreakInvalid;
+                      }
+                      return null;
+                    },
+                    enabled: !data.isLeave && !_isSubmitting,
+                    onValueChanged: () {
+                      setState(() {});
+                    },
+                  ),
+                  isCompact: isCompact,
+                ),
+              ];
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < cards.length; i++) ...[
+                    if (i > 0) SizedBox(height: spacing),
+                    cards[i],
+                  ],
+                ],
+              );
             },
           ),
           const SizedBox(height: 16),
@@ -5108,214 +5093,11 @@ class _AttendanceSection extends StatelessWidget {
     required bool enabled,
     required VoidCallback onValueChanged,
   }) {
-    const errorStyle = TextStyle(
-      color: Color(0xFFDC2626),
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-    );
-
-    return FormField<String>(
-      validator: (_) => validator(controller.text),
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      builder: (field) {
-        return ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
-          builder: (context, value, _) {
-            final parsedTime = _parseFlexibleTime(value.text);
-            final selectedHour = parsedTime != null
-                ? _toDisplayHour(parsedTime.hour)
-                : null;
-            final minuteOptions = parsedTime != null
-                ? _buildMinuteOptions(parsedTime.minute)
-                : List<int>.from(_timeMinuteOptions);
-            final selectedMinute = parsedTime != null
-                ? (minuteOptions.contains(parsedTime.minute)
-                    ? parsedTime.minute
-                    : minuteOptions.first)
-                : null;
-            final selectedPeriod = parsedTime?.period;
-
-            void updateValue({int? hour, int? minute, DayPeriod? period}) {
-              if (!enabled) return;
-              final resolvedHour = hour ?? selectedHour ?? _timeHourOptions.first;
-              final resolvedMinute = minute ?? selectedMinute ?? minuteOptions.first;
-              final resolvedPeriod = period ?? selectedPeriod ?? DayPeriod.am;
-              final textValue =
-                  _formatTimeDropdownValue(resolvedHour, resolvedMinute, resolvedPeriod);
-              if (controller.text != textValue) {
-                controller
-                  ..text = textValue
-                  ..selection = TextSelection.collapsed(offset: textValue.length);
-              }
-              onValueChanged();
-              field.didChange(textValue);
-            }
-
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final isNarrow = constraints.maxWidth < 360;
-                final isVeryNarrow = constraints.maxWidth < 320;
-                final spacing = isVeryNarrow ? 6.0 : (isNarrow ? 8.0 : 10.0);
-                final placeholderStyle = TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: isVeryNarrow ? 12 : (isNarrow ? 13 : 14),
-                  fontWeight: FontWeight.w600,
-                );
-                final valueStyle = TextStyle(
-                  fontSize: isVeryNarrow ? 14 : (isNarrow ? 15 : 16),
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
-                );
-                final segmentPadding = EdgeInsets.symmetric(
-                  horizontal: isVeryNarrow ? 8 : (isNarrow ? 10 : 12),
-                  vertical: isVeryNarrow ? 6 : 8,
-                );
-                final borderRadius = isVeryNarrow ? 12.0 : 14.0;
-                final iconSize = isVeryNarrow ? 18.0 : (isNarrow ? 20.0 : 24.0);
-                final dividerHeight = isVeryNarrow ? 32.0 : 38.0;
-                final colonFontSize = isVeryNarrow ? 16.0 : 20.0;
-
-                final hourSegment = _buildSelectorSegment<int>(
-                  value: selectedHour,
-                  placeholder: 'HH',
-                  items: _timeHourOptions
-                      .map(
-                        (hour) => DropdownMenuItem<int>(
-                          value: hour,
-                          child: Text(
-                            hour.toString().padLeft(2, '0'),
-                            style: valueStyle,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: enabled
-                      ? (value) {
-                          if (value == null) {
-                            controller.clear();
-                            field.didChange('');
-                            onValueChanged();
-                          } else {
-                            updateValue(hour: value);
-                          }
-                        }
-                      : null,
-                  placeholderStyle: placeholderStyle,
-                  valueStyle: valueStyle,
-                  padding: segmentPadding,
-                  borderRadius: borderRadius,
-                  iconSize: iconSize,
-                  dropdownKey: ValueKey('hour-${selectedHour ?? 'null'}'),
-                );
-
-                final minuteSegment = _buildSelectorSegment<int>(
-                  value: selectedMinute,
-                  placeholder: 'MM',
-                  items: minuteOptions
-                      .map(
-                        (minute) => DropdownMenuItem<int>(
-                          value: minute,
-                          child: Text(
-                            minute.toString().padLeft(2, '0'),
-                            style: valueStyle,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: enabled
-                      ? (value) {
-                          if (value == null) {
-                            controller.clear();
-                            field.didChange('');
-                            onValueChanged();
-                          } else {
-                            updateValue(minute: value);
-                          }
-                        }
-                      : null,
-                  placeholderStyle: placeholderStyle,
-                  valueStyle: valueStyle,
-                  padding: segmentPadding,
-                  borderRadius: borderRadius,
-                  iconSize: iconSize,
-                  dropdownKey: ValueKey(
-                    'minute-${parsedTime?.hour ?? 'null'}-${minuteOptions.length}',
-                  ),
-                );
-
-                final periodSegment = _buildSelectorSegment<DayPeriod>(
-                  value: selectedPeriod,
-                  placeholder: AppString.amLabel,
-                  items: DayPeriod.values
-                      .map(
-                        (period) => DropdownMenuItem<DayPeriod>(
-                          value: period,
-                          child: Text(
-                            period == DayPeriod.am
-                                ? AppString.amLabel
-                                : AppString.pmLabel,
-                            style: valueStyle,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: enabled
-                      ? (value) {
-                          if (value == null) {
-                            controller.clear();
-                            field.didChange('');
-                            onValueChanged();
-                          } else {
-                            updateValue(period: value);
-                          }
-                        }
-                      : null,
-                  placeholderStyle: placeholderStyle,
-                  valueStyle: valueStyle,
-                  padding: segmentPadding,
-                  borderRadius: borderRadius,
-                  iconSize: iconSize,
-                  dropdownKey: ValueKey('period-${selectedPeriod ?? 'null'}'),
-                );
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(child: hourSegment),
-                        SizedBox(width: spacing),
-                        _buildSegmentDivider(
-                          height: dividerHeight,
-                          colonFontSize: colonFontSize,
-                        ),
-                        SizedBox(width: spacing),
-                        Expanded(child: minuteSegment),
-                        SizedBox(width: spacing),
-                        _buildSegmentDivider(
-                          showColon: false,
-                          height: dividerHeight,
-                        ),
-                        SizedBox(width: spacing),
-                        Expanded(child: periodSegment),
-                      ],
-                    ),
-                    if (field.hasError)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          field.errorText ?? '',
-                          style: errorStyle,
-                        ),
-                      ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
+    return _buildSharedSegmentedTimeField(
+      controller: controller,
+      validator: validator,
+      enabled: enabled,
+      onValueChanged: onValueChanged,
     );
   }
 
@@ -5325,208 +5107,11 @@ class _AttendanceSection extends StatelessWidget {
     required bool enabled,
     required VoidCallback onValueChanged,
   }) {
-    const labelStyle = TextStyle(
-      color: Color(0xFF64748B),
-      fontWeight: FontWeight.w600,
-      fontSize: 13,
-    );
-    const errorStyle = TextStyle(
-      color: Color(0xFFDC2626),
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-    );
-
-    return FormField<String>(
-      validator: (_) => validator(controller.text),
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      builder: (field) {
-        return ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
-          builder: (context, value, _) {
-            final trimmed = value.text.trim();
-            final parsed = int.tryParse(trimmed);
-            final selectedHour = parsed != null ? parsed ~/ 60 : null;
-            final selectedMinute = parsed != null ? parsed % 60 : null;
-
-            final resolvedHour = (selectedHour != null &&
-                    _breakHourOptions.contains(selectedHour))
-                ? selectedHour
-                : null;
-            final minutesForHour = _breakMinutesForHour(
-                resolvedHour ?? _breakHourOptions.first);
-            final resolvedMinute = (selectedMinute != null &&
-                    minutesForHour.contains(selectedMinute))
-                ? selectedMinute
-                : null;
-
-            void updateBreakValue(int hour, int minute) {
-              final total = (hour * 60) + minute;
-              final textValue = total.toString();
-              if (controller.text != textValue) {
-                controller
-                  ..text = textValue
-                  ..selection = TextSelection.collapsed(offset: textValue.length);
-              }
-              onValueChanged();
-              field.didChange(textValue);
-            }
-
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final isNarrow = constraints.maxWidth < 320;
-                final placeholderStyle = TextStyle(
-                  color: const Color(0xFF94A3B8),
-                  fontSize: isNarrow ? 12 : 14,
-                  fontWeight: FontWeight.w600,
-                );
-                final valueStyle = TextStyle(
-                  fontSize: isNarrow ? 14 : 16,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
-                );
-                final segmentPadding = EdgeInsets.symmetric(
-                  horizontal: isNarrow ? 8 : 12,
-                  vertical: isNarrow ? 6 : 8,
-                );
-                final borderRadius = isNarrow ? 12.0 : 14.0;
-                final iconSize = isNarrow ? 18.0 : 24.0;
-                final dividerHeight = isNarrow ? 32.0 : 38.0;
-
-                final hourItems = _breakHourOptions
-                    .map(
-                      (hour) => DropdownMenuItem<int>(
-                        value: hour,
-                        child: Text(
-                          hour.toString().padLeft(2, '0'),
-                          style: valueStyle,
-                        ),
-                      ),
-                    )
-                    .toList();
-
-                final hourSegment = _buildSelectorSegment<int>(
-                  value: resolvedHour,
-                  placeholder: '00',
-                  items: hourItems,
-                  onChanged: enabled
-                      ? (value) {
-                          if (value == null) {
-                            controller.clear();
-                            field.didChange('');
-                            onValueChanged();
-                            return;
-                          }
-                          final minutes = _breakMinutesForHour(value).first;
-                          updateBreakValue(value, minutes);
-                        }
-                      : null,
-                  placeholderStyle: placeholderStyle,
-                  valueStyle: valueStyle,
-                  padding: segmentPadding,
-                  borderRadius: borderRadius,
-                  iconSize: iconSize,
-                  dropdownKey: const ValueKey('break-hour'),
-                );
-
-                final minuteSegment = _buildSelectorSegment<int>(
-                  value: resolvedMinute,
-                  placeholder: '00',
-                  items: minutesForHour
-                      .map(
-                        (minute) => DropdownMenuItem<int>(
-                          value: minute,
-                          child: Text(
-                            minute.toString().padLeft(2, '0'),
-                            style: valueStyle,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: enabled
-                      ? (value) {
-                          if (value == null) {
-                            controller.clear();
-                            field.didChange('');
-                            onValueChanged();
-                            return;
-                          }
-                          final hour =
-                              resolvedHour ?? _breakHourOptions.first;
-                          updateBreakValue(hour, value);
-                        }
-                      : null,
-                  placeholderStyle: placeholderStyle,
-                  valueStyle: valueStyle,
-                  padding: segmentPadding,
-                  borderRadius: borderRadius,
-                  iconSize: iconSize,
-                  dropdownKey: ValueKey(
-                    'break-minute-${resolvedHour ?? 'null'}-${minutesForHour.length}',
-                  ),
-                );
-
-                final compactLabelSpacing = isNarrow ? 6.0 : 8.0;
-                final compactDividerSpacing = isNarrow ? 10.0 : 14.0;
-
-                Widget buildWideLayout() {
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(width: 70, child: hourSegment),
-                      const SizedBox(width: 8),
-                      const Text('hr', style: labelStyle),
-                      const SizedBox(width: 14),
-                      _buildSegmentDivider(
-                        showColon: false,
-                        height: dividerHeight,
-                      ),
-                      const SizedBox(width: 14),
-                      SizedBox(width: 70, child: minuteSegment),
-                      const SizedBox(width: 8),
-                      const Text('min', style: labelStyle),
-                    ],
-                  );
-                }
-
-                Widget buildNarrowLayout() {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(child: hourSegment),
-                      SizedBox(width: compactLabelSpacing),
-                      const Text('hr', style: labelStyle),
-                      SizedBox(width: compactDividerSpacing),
-                      _buildSegmentDivider(
-                        showColon: false,
-                        height: dividerHeight,
-                      ),
-                      SizedBox(width: compactDividerSpacing),
-                      Expanded(child: minuteSegment),
-                      SizedBox(width: compactLabelSpacing),
-                      const Text('min', style: labelStyle),
-                    ],
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    isNarrow ? buildNarrowLayout() : buildWideLayout(),
-                    if (field.hasError)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          field.errorText ?? '',
-                          style: errorStyle,
-                        ),
-                      ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
+    return _buildSharedBreakDurationField(
+      controller: controller,
+      validator: validator,
+      enabled: enabled,
+      onValueChanged: onValueChanged,
     );
   }
 
@@ -5542,32 +5127,17 @@ class _AttendanceSection extends StatelessWidget {
     double? iconSize,
     Key? dropdownKey,
   }) {
-    final resolvedPadding = padding ?? const EdgeInsets.symmetric(horizontal: 12);
-    final resolvedRadius = borderRadius ?? 14.0;
-    final resolvedIconSize = iconSize ?? 24.0;
-    return Container(
-      padding: resolvedPadding,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(resolvedRadius),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          key: dropdownKey,
-          value: value,
-          isExpanded: true,
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: const Color(0xFF64748B),
-            size: resolvedIconSize,
-          ),
-          hint: Text(placeholder, style: placeholderStyle),
-          items: items,
-          onChanged: onChanged,
-          style: valueStyle,
-        ),
-      ),
+    return _buildSharedSelectorSegment<T>(
+      value: value,
+      items: items,
+      placeholder: placeholder,
+      onChanged: onChanged,
+      placeholderStyle: placeholderStyle,
+      valueStyle: valueStyle,
+      padding: padding,
+      borderRadius: borderRadius,
+      iconSize: iconSize,
+      dropdownKey: dropdownKey,
     );
   }
 
@@ -5576,25 +5146,10 @@ class _AttendanceSection extends StatelessWidget {
     double height = 38,
     double colonFontSize = 20,
   }) {
-    if (showColon) {
-      return SizedBox(
-        width: 14,
-        child: Center(
-          child: Text(
-            ':',
-            style: TextStyle(
-              fontSize: colonFontSize,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
-        ),
-      );
-    }
-    return Container(
-      width: 1,
+    return _buildSharedSegmentDivider(
+      showColon: showColon,
       height: height,
-      color: const Color(0xFFE2E8F0),
+      colonFontSize: colonFontSize,
     );
   }
 }
@@ -7298,4 +6853,500 @@ class _SummaryStat {
 String _formatMonthYearLabel(DateTime date) {
   const monthNames = AppString.fullMonthNames;
   return '${monthNames[date.month - 1]} ${date.year}';
+}
+
+
+Widget _buildSharedSegmentedTimeField({
+  required TextEditingController controller,
+  required String? Function(String?) validator,
+  required bool enabled,
+  required VoidCallback onValueChanged,
+}) {
+  const errorStyle = TextStyle(
+    color: Color(0xFFDC2626),
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+  );
+
+  return FormField<String>(
+    validator: (_) => validator(controller.text),
+    autovalidateMode: AutovalidateMode.onUserInteraction,
+    builder: (field) {
+      return ValueListenableBuilder<TextEditingValue>(
+        valueListenable: controller,
+        builder: (context, value, _) {
+          final parsedTime = _parseFlexibleTime(value.text);
+          final selectedHour = parsedTime != null
+              ? _toDisplayHour(parsedTime.hour)
+              : null;
+          final minuteOptions = parsedTime != null
+              ? _buildMinuteOptions(parsedTime.minute)
+              : List<int>.from(_timeMinuteOptions);
+          final selectedMinute = parsedTime != null
+              ? (minuteOptions.contains(parsedTime.minute)
+                  ? parsedTime.minute
+                  : minuteOptions.first)
+              : null;
+          final selectedPeriod = parsedTime?.period;
+
+          void updateValue({int? hour, int? minute, DayPeriod? period}) {
+            if (!enabled) return;
+            final resolvedHour = hour ?? selectedHour ?? _timeHourOptions.first;
+            final resolvedMinute = minute ?? selectedMinute ?? minuteOptions.first;
+            final resolvedPeriod = period ?? selectedPeriod ?? DayPeriod.am;
+            final textValue =
+                _formatTimeDropdownValue(resolvedHour, resolvedMinute, resolvedPeriod);
+            if (controller.text != textValue) {
+              controller
+                ..text = textValue
+                ..selection = TextSelection.collapsed(offset: textValue.length);
+            }
+            onValueChanged();
+            field.didChange(textValue);
+          }
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 360;
+              final isVeryNarrow = constraints.maxWidth < 320;
+              final spacing = isVeryNarrow ? 6.0 : (isNarrow ? 8.0 : 10.0);
+              final placeholderStyle = TextStyle(
+                color: const Color(0xFF94A3B8),
+                fontSize: isVeryNarrow ? 12 : (isNarrow ? 13 : 14),
+                fontWeight: FontWeight.w600,
+              );
+              final valueStyle = TextStyle(
+                fontSize: isVeryNarrow ? 14 : (isNarrow ? 15 : 16),
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F172A),
+              );
+              final segmentPadding = EdgeInsets.symmetric(
+                horizontal: isVeryNarrow ? 8 : (isNarrow ? 10 : 12),
+                vertical: isVeryNarrow ? 6 : 8,
+              );
+              final borderRadius = isVeryNarrow ? 12.0 : 14.0;
+              final iconSize = isVeryNarrow ? 18.0 : (isNarrow ? 20.0 : 24.0);
+              final dividerHeight = isVeryNarrow ? 32.0 : 38.0;
+              final colonFontSize = isVeryNarrow ? 16.0 : 20.0;
+
+              final hourSegment = _buildSharedSelectorSegment<int>(
+                value: selectedHour,
+                placeholder: 'HH',
+                items: _timeHourOptions
+                    .map(
+                      (hour) => DropdownMenuItem<int>(
+                        value: hour,
+                        child: Text(
+                          hour.toString().padLeft(2, '0'),
+                          style: valueStyle,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: enabled
+                    ? (value) {
+                        if (value == null) {
+                          controller.clear();
+                          field.didChange('');
+                          onValueChanged();
+                        } else {
+                          updateValue(hour: value);
+                        }
+                      }
+                    : null,
+                placeholderStyle: placeholderStyle,
+                valueStyle: valueStyle,
+                padding: segmentPadding,
+                borderRadius: borderRadius,
+                iconSize: iconSize,
+                dropdownKey: ValueKey('hour-${selectedHour ?? 'null'}'),
+              );
+
+              final minuteSegment = _buildSharedSelectorSegment<int>(
+                value: selectedMinute,
+                placeholder: 'MM',
+                items: minuteOptions
+                    .map(
+                      (minute) => DropdownMenuItem<int>(
+                        value: minute,
+                        child: Text(
+                          minute.toString().padLeft(2, '0'),
+                          style: valueStyle,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: enabled
+                    ? (value) {
+                        if (value == null) {
+                          controller.clear();
+                          field.didChange('');
+                          onValueChanged();
+                        } else {
+                          updateValue(minute: value);
+                        }
+                      }
+                    : null,
+                placeholderStyle: placeholderStyle,
+                valueStyle: valueStyle,
+                padding: segmentPadding,
+                borderRadius: borderRadius,
+                iconSize: iconSize,
+                dropdownKey: ValueKey(
+                  'minute-${parsedTime?.hour ?? 'null'}-${minuteOptions.length}',
+                ),
+              );
+
+              final periodSegment = _buildSharedSelectorSegment<DayPeriod>(
+                value: selectedPeriod,
+                placeholder: AppString.amLabel,
+                items: DayPeriod.values
+                    .map(
+                      (period) => DropdownMenuItem<DayPeriod>(
+                        value: period,
+                        child: Text(
+                          period == DayPeriod.am
+                              ? AppString.amLabel
+                              : AppString.pmLabel,
+                          style: valueStyle,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: enabled
+                    ? (value) {
+                        if (value == null) {
+                          controller.clear();
+                          field.didChange('');
+                          onValueChanged();
+                        } else {
+                          updateValue(period: value);
+                        }
+                      }
+                    : null,
+                placeholderStyle: placeholderStyle,
+                valueStyle: valueStyle,
+                padding: segmentPadding,
+                borderRadius: borderRadius,
+                iconSize: iconSize,
+                dropdownKey: ValueKey('period-${selectedPeriod ?? 'null'}'),
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: hourSegment),
+                      SizedBox(width: spacing),
+                      _buildSharedSegmentDivider(
+                        height: dividerHeight,
+                        colonFontSize: colonFontSize,
+                      ),
+                      SizedBox(width: spacing),
+                      Expanded(child: minuteSegment),
+                      SizedBox(width: spacing),
+                      _buildSharedSegmentDivider(
+                        showColon: false,
+                        height: dividerHeight,
+                      ),
+                      SizedBox(width: spacing),
+                      Expanded(child: periodSegment),
+                    ],
+                  ),
+                  if (field.hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        field.errorText ?? '',
+                        style: errorStyle,
+                      ),
+                    ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+Widget _buildSharedBreakDurationField({
+  required TextEditingController controller,
+  required String? Function(String?) validator,
+  required bool enabled,
+  required VoidCallback onValueChanged,
+}) {
+  const labelStyle = TextStyle(
+    color: Color(0xFF64748B),
+    fontWeight: FontWeight.w600,
+    fontSize: 13,
+  );
+  const errorStyle = TextStyle(
+    color: Color(0xFFDC2626),
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+  );
+
+  return FormField<String>(
+    validator: (_) => validator(controller.text),
+    autovalidateMode: AutovalidateMode.onUserInteraction,
+    builder: (field) {
+      return ValueListenableBuilder<TextEditingValue>(
+        valueListenable: controller,
+        builder: (context, value, _) {
+          final trimmed = value.text.trim();
+          final parsed = int.tryParse(trimmed);
+          final selectedHour = parsed != null ? parsed ~/ 60 : null;
+          final selectedMinute = parsed != null ? parsed % 60 : null;
+
+          final resolvedHour =
+              (selectedHour != null && _breakHourOptions.contains(selectedHour))
+                  ? selectedHour
+                  : null;
+          final minutesForHour =
+              _breakMinutesForHour(resolvedHour ?? _breakHourOptions.first);
+          final resolvedMinute =
+              (selectedMinute != null && minutesForHour.contains(selectedMinute))
+                  ? selectedMinute
+                  : null;
+
+          void updateBreakValue(int hour, int minute) {
+            final total = (hour * 60) + minute;
+            final textValue = total.toString();
+            if (controller.text != textValue) {
+              controller
+                ..text = textValue
+                ..selection = TextSelection.collapsed(offset: textValue.length);
+            }
+            onValueChanged();
+            field.didChange(textValue);
+          }
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 320;
+              final placeholderStyle = TextStyle(
+                color: const Color(0xFF94A3B8),
+                fontSize: isNarrow ? 12 : 14,
+                fontWeight: FontWeight.w600,
+              );
+              final valueStyle = TextStyle(
+                fontSize: isNarrow ? 14 : 16,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F172A),
+              );
+              final segmentPadding = EdgeInsets.symmetric(
+                horizontal: isNarrow ? 8 : 12,
+                vertical: isNarrow ? 6 : 8,
+              );
+              final borderRadius = isNarrow ? 12.0 : 14.0;
+              final iconSize = isNarrow ? 18.0 : 24.0;
+              final dividerHeight = isNarrow ? 32.0 : 38.0;
+
+              final hourItems = _breakHourOptions
+                  .map(
+                    (hour) => DropdownMenuItem<int>(
+                      value: hour,
+                      child: Text(
+                        hour.toString().padLeft(2, '0'),
+                        style: valueStyle,
+                      ),
+                    ),
+                  )
+                  .toList();
+
+              final hourSegment = _buildSharedSelectorSegment<int>(
+                value: resolvedHour,
+                placeholder: '00',
+                items: hourItems,
+                onChanged: enabled
+                    ? (value) {
+                        if (value == null) {
+                          controller.clear();
+                          field.didChange('');
+                          onValueChanged();
+                          return;
+                        }
+                        final minutes = _breakMinutesForHour(value).first;
+                        updateBreakValue(value, minutes);
+                      }
+                    : null,
+                placeholderStyle: placeholderStyle,
+                valueStyle: valueStyle,
+                padding: segmentPadding,
+                borderRadius: borderRadius,
+                iconSize: iconSize,
+                dropdownKey: const ValueKey('break-hour'),
+              );
+
+              final minuteSegment = _buildSharedSelectorSegment<int>(
+                value: resolvedMinute,
+                placeholder: '00',
+                items: minutesForHour
+                    .map(
+                      (minute) => DropdownMenuItem<int>(
+                        value: minute,
+                        child: Text(
+                          minute.toString().padLeft(2, '0'),
+                          style: valueStyle,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: enabled
+                    ? (value) {
+                        if (value == null) {
+                          controller.clear();
+                          field.didChange('');
+                          onValueChanged();
+                          return;
+                        }
+                        final hour = resolvedHour ?? _breakHourOptions.first;
+                        updateBreakValue(hour, value);
+                      }
+                    : null,
+                placeholderStyle: placeholderStyle,
+                valueStyle: valueStyle,
+                padding: segmentPadding,
+                borderRadius: borderRadius,
+                iconSize: iconSize,
+                dropdownKey: ValueKey(
+                  'break-minute-${resolvedHour ?? 'null'}-${minutesForHour.length}',
+                ),
+              );
+
+              const compactDividerSpacing = 6.0;
+              const compactLabelSpacing = 8.0;
+
+              Widget buildWideLayout() {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 70, child: hourSegment),
+                    const SizedBox(width: 8),
+                    const Text('hr', style: labelStyle),
+                    const SizedBox(width: 14),
+                    _buildSharedSegmentDivider(
+                      showColon: false,
+                      height: dividerHeight,
+                    ),
+                    const SizedBox(width: 14),
+                    SizedBox(width: 70, child: minuteSegment),
+                    const SizedBox(width: 8),
+                    const Text('min', style: labelStyle),
+                  ],
+                );
+              }
+
+              Widget buildNarrowLayout() {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: hourSegment),
+                    SizedBox(width: compactLabelSpacing),
+                    const Text('hr', style: labelStyle),
+                    SizedBox(width: compactDividerSpacing),
+                    _buildSharedSegmentDivider(
+                      showColon: false,
+                      height: dividerHeight,
+                    ),
+                    SizedBox(width: compactDividerSpacing),
+                    Expanded(child: minuteSegment),
+                    SizedBox(width: compactLabelSpacing),
+                    const Text('min', style: labelStyle),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  isNarrow ? buildNarrowLayout() : buildWideLayout(),
+                  if (field.hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        field.errorText ?? '',
+                        style: errorStyle,
+                      ),
+                    ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+Widget _buildSharedSegmentDivider({
+  bool showColon = true,
+  double height = 38,
+  double colonFontSize = 20,
+}) {
+  if (showColon) {
+    return SizedBox(
+      width: 14,
+      child: Center(
+        child: Text(
+          ':',
+          style: TextStyle(
+            fontSize: colonFontSize,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF94A3B8),
+          ),
+        ),
+      ),
+    );
+  }
+  return Container(
+    width: 1,
+    height: height,
+    color: const Color(0xFFE2E8F0),
+  );
+}
+
+Widget _buildSharedSelectorSegment<T>({
+  required T? value,
+  required List<DropdownMenuItem<T>> items,
+  required String placeholder,
+  required ValueChanged<T?>? onChanged,
+  required TextStyle placeholderStyle,
+  required TextStyle valueStyle,
+  EdgeInsetsGeometry? padding,
+  double? borderRadius,
+  double? iconSize,
+  Key? dropdownKey,
+}) {
+  final resolvedPadding = padding ?? const EdgeInsets.symmetric(horizontal: 12);
+  final resolvedRadius = borderRadius ?? 14.0;
+  final resolvedIconSize = iconSize ?? 24.0;
+  return Container(
+    padding: resolvedPadding,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(resolvedRadius),
+      border: Border.all(color: const Color(0xFFE2E8F0)),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<T>(
+        key: dropdownKey,
+        value: value,
+        isExpanded: true,
+        icon: Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: const Color(0xFF64748B),
+          size: resolvedIconSize,
+        ),
+        hint: Text(placeholder, style: placeholderStyle),
+        items: items,
+        onChanged: onChanged,
+        style: valueStyle,
+      ),
+    ),
+  );
 }
