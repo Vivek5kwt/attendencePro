@@ -39,7 +39,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const String _shareLink = 'https://attendancepro.app';
+  static const String _shareLink = 'https://attendencepro.com/';
 
   // currency symbol variable for hourly rate UI
   static const String _currencySymbol = '€';
