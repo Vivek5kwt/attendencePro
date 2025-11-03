@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../models/contract_type.dart';
-import '../utils/contract_type_normalizer.dart';
 import 'auth_api.dart';
 import 'logging_client.dart';
 
@@ -46,7 +45,6 @@ class ContractTypeApi {
     required String token,
     required String name,
     required String type,
-    required String role,
     required double ratePerUnit,
     required String unitLabel,
   }) async {
@@ -57,12 +55,9 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
-    final normalizedType = normalizeContractType(type);
-    final normalizedRole = normalizeContractRole(role);
     final payload = jsonEncode({
       'name': name,
-      'type': normalizedType,
-      'role': normalizedRole,
+      'type': type,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });
@@ -89,7 +84,6 @@ class ContractTypeApi {
     required String contractTypeId,
     required String name,
     required String type,
-    required String role,
     required double ratePerUnit,
     required String unitLabel,
   }) async {
@@ -101,12 +95,9 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
-    final normalizedType = normalizeContractType(type);
-    final normalizedRole = normalizeContractRole(role);
     final payload = jsonEncode({
       'name': name,
-      'type': normalizedType,
-      'role': normalizedRole,
+      'type': type,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
     });

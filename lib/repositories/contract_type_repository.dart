@@ -42,11 +42,12 @@ class ContractTypeRepository {
     try {
       final normalizedType = normalizeContractType(type);
       final normalizedRole = normalizeContractRole(role);
+      final requestType =
+          normalizedRole.isNotEmpty ? normalizedRole : normalizedType;
       return await _api.createContractType(
         token: token,
         name: name,
-        type: normalizedType,
-        role: normalizedRole,
+        type: requestType,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
       );
@@ -71,12 +72,13 @@ class ContractTypeRepository {
     try {
       final normalizedType = normalizeContractType(type);
       final normalizedRole = normalizeContractRole(role);
+      final requestType =
+          normalizedRole.isNotEmpty ? normalizedRole : normalizedType;
       return await _api.updateContractType(
         token: token,
         contractTypeId: id,
         name: name,
-        type: normalizedType,
-        role: normalizedRole,
+        type: requestType,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
       );
