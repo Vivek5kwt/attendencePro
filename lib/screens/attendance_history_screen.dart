@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/attendance_history.dart';
+import '../models/attendance_request.dart' show AttendanceContractBundle;
 import '../models/contract_type.dart';
 import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
@@ -421,6 +422,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       workName: data.workName,
       workId: workId ?? _resolveWorkId(data.workName),
       type: _mapEntryType(data.type),
+      attendanceId: data.attendanceId,
       startTime: data.startTime,
       endTime: data.endTime,
       breakDuration: data.breakDuration,
@@ -432,6 +434,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       ratePerUnit: data.ratePerUnit,
       leaveReason: data.leaveReason,
       salary: data.salary,
+      contractBundles: data.contractBundles.isEmpty
+          ? const <AttendanceContractBundle>[]
+          : List<AttendanceContractBundle>.unmodifiable(data.contractBundles),
     );
   }
 
@@ -447,6 +452,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     for (final work in _workLookup.values) {
       if (work.name.trim().toLowerCase() == normalized) {
         return work.id;
+      }
+    }
+    return null;
+  }
+
+  ContractType? _findContractTypeById(int? id) {
+    if (id == null) {
+      return null;
+    }
+    final target = id.toString();
+    for (final type in _contractTypes) {
+      if (type.id == target) {
+        return type;
       }
     }
     return null;
@@ -1017,7 +1035,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   Future<void> _openContractEditSheet(_AttendanceEntry entry) async {
     final l = AppLocalizations.of(context);
     final workId = entry.workId ?? _workLookup[_selectedWork]?.id;
-    if (workId == null) {
+    final attendanceId = entry.attendanceId;
+    if (workId == null || attendanceId == null) {
       _showErrorSnackBar(l.attendanceHistoryLoadFailedMessage);
       return;
     }
@@ -1028,26 +1047,33 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
-    ContractType? selectedType;
-    final normalized = entry.contractType?.trim().toLowerCase();
-    for (final type in _contractTypes) {
-      if (type.name.trim().toLowerCase() == normalized) {
-        selectedType = type;
-        break;
+    final bundleEntries = <_ContractBundleEditEntry>[];
+
+    void addBundleEntry({ContractType? type, int? count}) {
+      final resolvedType = type ??
+          (_contractTypes.isNotEmpty ? _contractTypes.first : null);
+      bundleEntries.add(
+        _ContractBundleEditEntry(
+          id: 'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
+          contractType: resolvedType,
+          initialCount: count,
+        ),
+      );
+    }
+
+    if (entry.contractBundles.isNotEmpty) {
+      for (final bundle in entry.contractBundles) {
+        final type = _findContractTypeById(bundle.contractTypeId);
+        addBundleEntry(type: type, count: bundle.count);
       }
     }
-    selectedType ??= _contractTypes.first;
 
-    final quantityController = TextEditingController(
-      text: entry.unitsCompleted != null && entry.unitsCompleted! > 0
-          ? entry.unitsCompleted.toString()
-          : '',
-    );
-    final rateController = TextEditingController(
-      text: entry.ratePerUnit != null && entry.ratePerUnit! > 0
-          ? entry.ratePerUnit!.toStringAsFixed(2)
-          : '',
-    );
+    if (bundleEntries.isEmpty) {
+      final fallbackCount = entry.unitsCompleted != null && entry.unitsCompleted! > 0
+          ? entry.unitsCompleted
+          : null;
+      addBundleEntry(count: fallbackCount);
+    }
 
     final formKey = GlobalKey<FormState>();
     bool isSaving = false;
@@ -1084,46 +1110,97 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<ContractType>(
-                      value: selectedType,
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkLabel,
-                      ),
-                      items: _contractTypes
-                          .map(
-                            (type) => DropdownMenuItem<ContractType>(
-                          value: type,
-                          child: Text(type.name),
+                    ...List<Widget>.generate(bundleEntries.length, (index) {
+                      final bundleEntry = bundleEntries[index];
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: index == bundleEntries.length - 1 ? 0 : 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<ContractType>(
+                                value: bundleEntry.contractType,
+                                decoration: InputDecoration(
+                                  labelText: l.contractWorkLabel,
+                                ),
+                                items: _contractTypes
+                                    .map(
+                                      (type) => DropdownMenuItem<ContractType>(
+                                    value: type,
+                                    child: Text(type.name),
+                                  ),
+                                )
+                                    .toList(),
+                                onChanged: isSaving
+                                    ? null
+                                    : (value) {
+                                  if (value == null) {
+                                    return;
+                                  }
+                                  setModalState(() {
+                                    bundleEntry.contractType = value;
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null) {
+                                    return l.contractWorkLoadError;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              width: 110,
+                              child: TextFormField(
+                                controller: bundleEntry.controller,
+                                decoration: InputDecoration(
+                                  labelText: l.contractWorkUnitsLabel,
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  final trimmed = value?.trim() ?? '';
+                                  if (trimmed.isEmpty) {
+                                    return l.attendanceUnitsRequired;
+                                  }
+                                  final parsed = int.tryParse(trimmed);
+                                  if (parsed == null || parsed <= 0) {
+                                    return l.attendanceUnitsInvalid;
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: l.attendanceRemoveBundleTooltip,
+                              onPressed: isSaving || bundleEntries.length <= 1
+                                  ? null
+                                  : () {
+                                setModalState(() {
+                                  bundleEntries.remove(bundleEntry);
+                                });
+                                bundleEntry.dispose();
+                              },
+                              icon: const Icon(Icons.delete_outline),
+                            ),
+                          ],
                         ),
-                      )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: isSaving
+                            ? null
+                            : () {
                           setModalState(() {
-                            selectedType = value;
+                            addBundleEntry();
                           });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: quantityController,
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkUnitsLabel,
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(l.attendanceAddBundleButton),
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: _validateUnitsInput,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: rateController,
-                      decoration: InputDecoration(
-                        labelText: l.contractWorkRateLabel,
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      validator: _validateRateInput,
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -1140,64 +1217,68 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                           onPressed: isSaving
                               ? null
                               : () async {
-                            if (!(formKey.currentState?.validate() ??
-                                false)) {
+                            FocusScope.of(context).unfocus();
+                            if (!(formKey.currentState?.validate() ?? false)) {
                               return;
                             }
-                            final type = selectedType;
-                            if (type == null) {
-                              _showErrorSnackBar(
-                                l.contractWorkLoadError,
-                              );
+                            if (bundleEntries.isEmpty) {
+                              _showErrorSnackBar(l.attendanceUnitsRequired);
                               return;
                             }
-                            final typeId =
-                            int.tryParse(type.id.trim());
-                            if (typeId == null) {
-                              _showErrorSnackBar(
-                                l.contractWorkLoadError,
+                            final resolvedBundles = <AttendanceContractBundle>[];
+                            for (final item in bundleEntries) {
+                              final type = item.contractType;
+                              if (type == null) {
+                                _showErrorSnackBar(l.contractWorkLoadError);
+                                return;
+                              }
+                              final typeId = int.tryParse(type.id.trim());
+                              if (typeId == null) {
+                                _showErrorSnackBar(l.contractWorkLoadError);
+                                return;
+                              }
+                              final countText = item.controller.text.trim();
+                              final count = int.tryParse(countText);
+                              if (count == null || count <= 0) {
+                                _showErrorSnackBar(l.attendanceUnitsInvalid);
+                                return;
+                              }
+                              resolvedBundles.add(
+                                AttendanceContractBundle(
+                                  contractTypeId: typeId,
+                                  count: count,
+                                ),
                               );
-                              return;
                             }
-                            final units = int.tryParse(
-                                quantityController.text.trim()) ??
-                                0;
-                            final rate = double.tryParse(
-                                rateController.text.trim());
-                            if (units <= 0 ||
-                                rate == null ||
-                                rate <= 0) {
-                              _showErrorSnackBar(
-                                l.contractWorkLoadError,
-                              );
+                            if (resolvedBundles.isEmpty) {
+                              _showErrorSnackBar(l.attendanceUnitsRequired);
                               return;
                             }
                             setModalState(() {
                               isSaving = true;
                             });
-                            final success =
-                            await _submitContractAttendance(
+                            final success = await _updateContractAttendance(
+                              attendanceId: attendanceId,
                               workId: workId,
                               date: entry.date,
-                              contractTypeId: typeId,
-                              units: units,
-                              ratePerUnit: rate,
+                              bundles: resolvedBundles,
                             );
-                            if (success && mounted) {
+                            if (!mounted) {
+                              return;
+                            }
+                            if (success) {
                               Navigator.of(context).pop();
+                              return;
                             }
-                            if (mounted) {
-                              setModalState(() {
-                                isSaving = false;
-                              });
-                            }
+                            setModalState(() {
+                              isSaving = false;
+                            });
                           },
                           child: isSaving
                               ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                               : Text(l.saveButtonLabel),
                         ),
@@ -1211,6 +1292,10 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         );
       },
     );
+
+    for (final item in bundleEntries) {
+      item.dispose();
+    }
   }
 
   Future<bool> _submitHourlyAttendance({
@@ -1276,6 +1361,49 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         contractTypeId: contractTypeId,
         units: units,
         ratePerUnit: ratePerUnit,
+      );
+      await _loadEntries();
+      _showSuccessSnackBar(
+        AppLocalizations.of(context).attendanceSubmitSuccess,
+      );
+      return true;
+    } on AttendanceAuthException {
+      _showErrorSnackBar(
+        AppLocalizations.of(context).authenticationRequiredMessage,
+      );
+    } on AttendanceRepositoryException catch (e) {
+      _showErrorSnackBar(e.message);
+    } catch (_) {
+      _showErrorSnackBar(
+        AppLocalizations.of(context).attendanceHistoryLoadFailedMessage,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingEntries = false;
+        });
+      }
+    }
+    return false;
+  }
+
+  Future<bool> _updateContractAttendance({
+    required int attendanceId,
+    required String workId,
+    required DateTime date,
+    required List<AttendanceContractBundle> bundles,
+  }) async {
+    final requestDate = DateTime(date.year, date.month, date.day);
+    try {
+      setState(() {
+        _isLoadingEntries = true;
+      });
+      await _entryRepository.updateAttendance(
+        attendanceId: attendanceId,
+        workId: workId,
+        date: requestDate,
+        isContractEntry: true,
+        bundles: bundles,
       );
       await _loadEntries();
       _showSuccessSnackBar(
@@ -2770,6 +2898,26 @@ class _ResponsiveTable extends StatelessWidget {
 /* UTIL + MODELS */
 // ─────────────────────────────────────────────────────────────────────────────
 
+class _ContractBundleEditEntry {
+  _ContractBundleEditEntry({
+    required this.id,
+    this.contractType,
+    int? initialCount,
+  }) : controller = TextEditingController(
+          text: initialCount != null && initialCount > 0
+              ? initialCount.toString()
+              : '',
+        );
+
+  final String id;
+  ContractType? contractType;
+  final TextEditingController controller;
+
+  void dispose() {
+    controller.dispose();
+  }
+}
+
 SplayTreeMap<DateTime, List<_AttendanceEntry>> _groupEntriesByDay(
     List<_AttendanceEntry> entries,
     ) {
@@ -2850,6 +2998,7 @@ class _AttendanceEntry {
     required this.date,
     required this.workName,
     this.workId,
+    this.attendanceId,
     required this.type,
     this.startTime,
     this.endTime,
@@ -2862,11 +3011,13 @@ class _AttendanceEntry {
     this.ratePerUnit,
     this.leaveReason,
     required this.salary,
+    this.contractBundles = const <AttendanceContractBundle>[],
   });
 
   final DateTime date;
   final String workName;
   final String? workId;
+  final int? attendanceId;
   final _AttendanceEntryType type;
   final String? startTime;
   final String? endTime;
@@ -2879,6 +3030,7 @@ class _AttendanceEntry {
   final double? ratePerUnit;
   final String? leaveReason;
   final double salary;
+  final List<AttendanceContractBundle> contractBundles;
 
   String get formattedDate {
     final month = _kMonthNames[date.month - 1].substring(0, 3);

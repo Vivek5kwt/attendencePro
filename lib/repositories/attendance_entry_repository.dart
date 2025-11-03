@@ -101,10 +101,55 @@ class AttendanceEntryRepository {
       units: units,
       ratePerUnit: ratePerUnit,
       bundles: bundles,
+      attendanceId: null,
     );
 
     try {
       return await _api.submitAttendance(
+        request: request,
+        token: token,
+      );
+    } on ApiException catch (e) {
+      throw AttendanceRepositoryException(e.message);
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateAttendance({
+    required int attendanceId,
+    required String workId,
+    required DateTime date,
+    bool isLeave = false,
+    String? startTime,
+    String? endTime,
+    int? breakMinutes,
+    bool? isContractEntry,
+    int? contractTypeId,
+    num? units,
+    num? ratePerUnit,
+    List<AttendanceContractBundle>? bundles,
+  }) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const AttendanceAuthException();
+    }
+
+    final request = _buildRequest(
+      workId: workId,
+      date: date,
+      isLeave: isLeave,
+      startTime: startTime,
+      endTime: endTime,
+      breakMinutes: breakMinutes,
+      isContractEntry: isContractEntry,
+      contractTypeId: contractTypeId,
+      units: units,
+      ratePerUnit: ratePerUnit,
+      bundles: bundles,
+      attendanceId: attendanceId,
+    );
+
+    try {
+      return await _api.updateAttendance(
         request: request,
         token: token,
       );
@@ -149,11 +194,13 @@ class AttendanceEntryRepository {
     num? units,
     num? ratePerUnit,
     List<AttendanceContractBundle>? bundles,
+    int? attendanceId,
   }) {
     final payloadWorkId = int.tryParse(workId) ?? workId;
     return AttendanceRequest(
       workId: payloadWorkId,
       date: date,
+      attendanceId: attendanceId,
       isLeave: isLeave,
       startTime: startTime,
       endTime: endTime,

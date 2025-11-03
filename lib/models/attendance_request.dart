@@ -2,6 +2,7 @@ class AttendanceRequest {
   const AttendanceRequest({
     required this.workId,
     required this.date,
+    this.attendanceId,
     this.startTime,
     this.endTime,
     this.breakMinutes,
@@ -15,6 +16,7 @@ class AttendanceRequest {
 
   final Object workId;
   final DateTime date;
+  final int? attendanceId;
   final String? startTime;
   final String? endTime;
   final int? breakMinutes;
@@ -31,6 +33,10 @@ class AttendanceRequest {
       'date': _formatDate(date),
       'is_leave': isLeave,
     };
+
+    if (attendanceId != null) {
+      payload['attendance_id'] = attendanceId;
+    }
 
     if (!isLeave) {
       final hasBundles = bundles != null && bundles!.isNotEmpty;

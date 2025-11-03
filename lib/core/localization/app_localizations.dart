@@ -375,6 +375,10 @@ class AppLocalizations {
   String get attendanceAlreadyMarkedMessage =>
       _value('attendanceAlreadyMarkedMessage');
   String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
+  String get attendanceAddBundleButton =>
+      _value('attendanceAddBundleButton');
+  String get attendanceRemoveBundleTooltip =>
+      _value('attendanceRemoveBundleTooltip');
   String get attendanceMissedEntriesTitle =>
       _value('attendanceMissedEntriesTitle');
   String get attendanceMissedEntriesDescription =>
