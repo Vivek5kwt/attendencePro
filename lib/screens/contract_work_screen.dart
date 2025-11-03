@@ -1004,6 +1004,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   late final TextEditingController _rateController;
   late final List<String> _workNameOptions;
   late final List<String> _roleOptions;
+  late final bool _isRoleLocked;
 
   String? _selectedRoleValue; // This will now be shown under label "Type"
   String? _selectedWorkName;
@@ -1018,6 +1019,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     _rateController = TextEditingController(
       text: type != null ? type.rate.toStringAsFixed(2) : '',
     );
+    _isRoleLocked = _shouldLockRole(type);
 
     _workNameOptions = List<String>.from(widget.workNameOptions);
 
@@ -1102,6 +1104,14 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     _roleOptions = options;
     _selectedRoleValue = initialSelection;
     _selectedRoleValue ??= _roleOptions.isNotEmpty ? _roleOptions.first : null;
+  }
+
+  bool _shouldLockRole(_ContractType? type) {
+    final role = type?.role?.trim().toLowerCase();
+    if (role == null || role.isEmpty) {
+      return false;
+    }
+    return role == 'bin';
   }
 
   @override
@@ -1681,17 +1691,31 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                       ),
                                 )
                                     .toList(),
-                                onChanged: _roleOptions.isEmpty
+                                onChanged: _roleOptions.isEmpty || _isRoleLocked
                                     ? null
                                     : (value) {
-                                  if (value == null) return;
-                                  setState(() {
-                                    _selectedRoleValue = value;
-                                  });
-                                },
+                                      if (value == null) return;
+                                      setState(() {
+                                        _selectedRoleValue = value;
+                                      });
+                                    },
                               ),
                             ),
                           ),
+
+                          if (_isRoleLocked) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              l.contractWorkTypeLockedMessage,
+                              style: textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF6B7280),
+                                  ) ??
+                                  const TextStyle(
+                                    color: Color(0xFF6B7280),
+                                    fontSize: 12,
+                                  ),
+                            ),
+                          ],
 
                           const SizedBox(height: 20),
 
