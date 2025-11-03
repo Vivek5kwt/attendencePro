@@ -1839,7 +1839,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final l = AppLocalizations.of(context);
     final bundles = <AttendanceContractBundle>[];
+    final bool hasAnyUnitsInput = _contractBundleEntries
+        .any((entry) => entry.controller.text.trim().isNotEmpty);
     for (final entry in _contractBundleEntries) {
+      final countText = entry.controller.text.trim();
+      if (countText.isEmpty) {
+        if (!hasAnyUnitsInput) {
+          continue;
+        }
+        return _BundleCollectionResult(
+          bundles: const <AttendanceContractBundle>[],
+          errorMessage: l.attendanceUnitsRequired,
+        );
+      }
       final typeIdText = entry.contractTypeId?.trim() ?? '';
       if (typeIdText.isEmpty) {
         return _BundleCollectionResult(
@@ -1855,13 +1867,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         );
       }
 
-      final countText = entry.controller.text.trim();
-      if (countText.isEmpty) {
-        return _BundleCollectionResult(
-          bundles: const <AttendanceContractBundle>[],
-          errorMessage: l.attendanceUnitsRequired,
-        );
-      }
       final parsedCount = int.tryParse(countText);
       if (parsedCount == null || parsedCount <= 0) {
         return _BundleCollectionResult(
@@ -2015,6 +2020,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     String? value,
   ) {
     if (!widget.work.isContract || !_contractFieldsEnabled) {
+      return null;
+    }
+    final hasAnyUnitsInput = _contractBundleEntries
+        .any((item) => item.controller.text.trim().isNotEmpty);
+    if (!hasAnyUnitsInput) {
       return null;
     }
     final trimmed = value?.trim() ?? '';
@@ -2213,10 +2223,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (!wasWorkOff) {
       _handleWorkOffToggle(true);
     }
+    var shouldRestoreWorkOffState = !wasWorkOff;
     try {
       await _submitAttendance();
+      shouldRestoreWorkOffState = false;
     } finally {
-      if (!wasWorkOff && mounted) {
+      if (shouldRestoreWorkOffState && mounted) {
         _handleWorkOffToggle(false);
       }
     }
@@ -3011,6 +3023,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     Widget buildAttendanceSection() {
+      final bool isFormLocked = _isSelectedDateLocked;
       return _AttendanceSection(
         dateLabel: dateLabel,
         onDateTap: _handleDateTap,
@@ -3021,15 +3034,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         breakMinutesController: _breakMinutesController,
         onSubmit: _submitAttendance,
         onWorkOffSubmit: _submitWorkOffAttendance,
-        isWorkOffLocked: _isTodayAttendanceMarked,
+        isWorkOffLocked: isFormLocked,
         onWorkOffLockedTap: _handleWorkOffLockedTap,
         onFieldChanged: _handleAttendanceFieldChanged,
         isSubmitting: _isSubmittingAttendance,
         isWorkOff: _markAsWorkOff,
+        isLocked: isFormLocked,
         showContractFields: widget.work.isContract,
-        showContractWorkButton: widget.work.isContract && !_contractFieldsEnabled,
-        onContractWorkTap:
-            widget.work.isContract ? _handleContractEntryEnable : null,
+        showContractWorkButton:
+            widget.work.isContract && !_contractFieldsEnabled && !isFormLocked,
+        onContractWorkTap: widget.work.isContract && !isFormLocked
+            ? _handleContractEntryEnable
+            : null,
         contractFieldsEnabled: _contractFieldsEnabled,
         isContractFieldsLoading: _isLoadingContractTypes,
         contractFieldsError: _contractTypesError,
@@ -3041,8 +3057,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onAddContractBundle: _handleAddContractBundle,
         onRemoveContractBundle: _handleRemoveContractBundle,
         onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
-        onContractEntryRemove:
-            widget.work.isContract ? _handleContractEntryDisable : null,
+        onContractEntryRemove: widget.work.isContract && !isFormLocked
+            ? _handleContractEntryDisable
+            : null,
         bundleUnitsValidator: _validateBundleUnits,
         startTimeValidator: _validateStartTime,
         endTimeValidator: _validateEndTime,
@@ -4572,6 +4589,7 @@ class _AttendanceSection extends StatelessWidget {
     required this.onFieldChanged,
     required this.isSubmitting,
     required this.isWorkOff,
+    this.isLocked = false,
     required this.startTimeValidator,
     required this.endTimeValidator,
     required this.breakValidator,
@@ -4608,6 +4626,7 @@ class _AttendanceSection extends StatelessWidget {
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
   final bool isWorkOff;
+  final bool isLocked;
   final String? Function(String?) startTimeValidator;
   final String? Function(String?) endTimeValidator;
   final String? Function(String?) breakValidator;
@@ -4746,7 +4765,7 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: textInputAction,
                     validator: validator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting && !isWorkOff,
+                    enabled: !isSubmitting && !isWorkOff && !isLocked,
                     customField: customField,
                     isCompact: isCompact,
                   );
@@ -4763,7 +4782,7 @@ class _AttendanceSection extends StatelessWidget {
                     customField: _buildSegmentedTimeField(
                       controller: startTimeController,
                       validator: startTimeValidator,
-                      enabled: !isSubmitting && !isWorkOff,
+                      enabled: !isSubmitting && !isWorkOff && !isLocked,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -4779,7 +4798,7 @@ class _AttendanceSection extends StatelessWidget {
                     customField: _buildSegmentedTimeField(
                       controller: endTimeController,
                       validator: endTimeValidator,
-                      enabled: !isSubmitting && !isWorkOff,
+                      enabled: !isSubmitting && !isWorkOff && !isLocked,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -4794,11 +4813,11 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: TextInputAction.done,
                     validator: breakValidator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting && !isWorkOff,
+                    enabled: !isSubmitting && !isWorkOff && !isLocked,
                     customField: _buildBreakDurationField(
                       controller: breakMinutesController,
                       validator: breakValidator,
-                      enabled: !isSubmitting && !isWorkOff,
+                      enabled: !isSubmitting && !isWorkOff && !isLocked,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -4834,6 +4853,7 @@ class _AttendanceSection extends StatelessWidget {
                 bundleUnitsValidator: bundleUnitsValidator,
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
+                isLocked: isLocked,
                 trailingAction: _buildSubmitButton(context, l),
               ),
             ],
@@ -4952,7 +4972,8 @@ class _AttendanceSection extends StatelessWidget {
     return SizedBox(
       height: resolvedHeight,
       child: OutlinedButton(
-        onPressed: (isSubmitting || isWorkOff) ? null : onContractWorkTap,
+        onPressed:
+            (isSubmitting || isWorkOff || isLocked) ? null : onContractWorkTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFEFF6FF),
           foregroundColor: const Color(0xFF1D4ED8),
@@ -5038,7 +5059,7 @@ class _AttendanceSection extends StatelessWidget {
     return SizedBox(
       height: resolvedHeight,
       child: ElevatedButton(
-        onPressed: isSubmitting ? null : onSubmit,
+        onPressed: (isSubmitting || isLocked) ? null : onSubmit,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2563EB),
           foregroundColor: Colors.white,
@@ -5910,6 +5931,7 @@ class _ContractEntryForm extends StatelessWidget {
     required this.bundleUnitsValidator,
     required this.isSubmitting,
     required this.isWorkOff,
+    this.isLocked = false,
     this.errorMessage,
     this.onRetry,
     this.onRemoveEntry,
@@ -5930,6 +5952,7 @@ class _ContractEntryForm extends StatelessWidget {
   final void Function(_ContractBundleFormEntry)? onUnitsChanged;
   final bool isSubmitting;
   final bool isWorkOff;
+  final bool isLocked;
   final String? errorMessage;
   final VoidCallback? onRemoveAll;
   final Widget? trailingAction;
@@ -5938,7 +5961,7 @@ class _ContractEntryForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final bool disableInteractions = isSubmitting || isWorkOff;
+    final bool disableInteractions = isSubmitting || isWorkOff || isLocked;
 
     ContractType? resolveType(String? id) {
       if (id == null) {
