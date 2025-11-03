@@ -292,6 +292,97 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
   }
 
+  Future<String?> _promptRoleSelection() async {
+    final l = AppLocalizations.of(context);
+    final responsive = context.responsive;
+    final theme = Theme.of(context);
+
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            l.contractWorkTypeLabel,
+            style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ) ??
+                TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: responsive.scaleText(16),
+                ),
+          ),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: responsive.scale(340),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.contractWorkTypeHint,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF6B7280),
+                      ) ??
+                      TextStyle(
+                        color: const Color(0xFF6B7280),
+                        fontSize: responsive.scaleText(14),
+                      ),
+                ),
+                SizedBox(height: responsive.scale(12)),
+                ..._defaultRoleOptions.map(
+                  (role) => Padding(
+                    padding: EdgeInsets.only(bottom: responsive.scale(8)),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(responsive.scale(14)),
+                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                      tileColor: const Color(0xFFF9FAFB),
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFFE0E7FF),
+                        foregroundColor: const Color(0xFF1D4ED8),
+                        child: Text(
+                          role.isNotEmpty ? role[0].toUpperCase() : '?',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      title: Text(
+                        _formatRoleDisplay(role),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                            ) ??
+                            TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                              fontSize: responsive.scaleText(15),
+                            ),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                      onTap: () => Navigator.of(dialogContext).pop(
+                        _formatRoleDisplay(role),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l.cancelButton),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showComingSoonSnackBar(BuildContext context) {
     final l = AppLocalizations.of(context);
     ScaffoldMessenger.of(
@@ -305,6 +396,15 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   Future<void> _showContractTypeDialog({_ContractType? type}) async {
     final rootContext = context;
+    String? initialRoleSelection;
+
+    if (type == null) {
+      initialRoleSelection = await _promptRoleSelection();
+      if (!mounted || initialRoleSelection == null) {
+        return;
+      }
+    }
+
     final result = await showModalBottomSheet<_ContractType>(
       context: rootContext,
       isScrollControlled: true,
@@ -318,6 +418,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           workNameOptions: _defaultWorkNameOptions,
           defaultRoleOptions: _defaultRoleOptions,
           availableRoles: _availableRoles,
+          initialRoleValue: initialRoleSelection,
           formatRoleDisplay: _formatRoleDisplay,
         );
       },
@@ -877,6 +978,7 @@ class _ContractTypeSheet extends StatefulWidget {
     required this.workNameOptions,
     required this.defaultRoleOptions,
     required this.availableRoles,
+    this.initialRoleValue,
     required this.formatRoleDisplay,
     super.key,
   });
@@ -888,6 +990,7 @@ class _ContractTypeSheet extends StatefulWidget {
   final List<String> workNameOptions;
   final List<String> defaultRoleOptions;
   final List<String> availableRoles;
+  final String? initialRoleValue;
   final String Function(String value) formatRoleDisplay;
 
   @override
@@ -966,19 +1069,38 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     (existingRole != null && existingRole.isNotEmpty)
         ? widget.formatRoleDisplay(existingRole)
         : null;
+    final initialRoleRaw = widget.initialRoleValue?.trim();
+    final initialRoleDisplay = (initialRoleRaw != null && initialRoleRaw.isNotEmpty)
+        ? widget.formatRoleDisplay(initialRoleRaw)
+        : null;
+
+    String? initialSelection;
     if (existingRoleDisplay != null) {
       addRoleOption(existingRoleDisplay, prepend: true);
+      initialSelection = existingRoleDisplay;
     }
+    if (initialRoleDisplay != null && initialRoleDisplay != existingRoleDisplay) {
+      addRoleOption(initialRoleDisplay, prepend: true);
+      initialSelection ??= initialRoleDisplay;
+    }
+
+    final allowedRoleKeys = widget.defaultRoleOptions
+        .map((option) => widget.formatRoleDisplay(option).toLowerCase())
+        .toSet();
 
     for (final option in widget.defaultRoleOptions) {
       addRoleOption(option);
     }
     for (final option in widget.availableRoles) {
+      final formatted = widget.formatRoleDisplay(option);
+      if (!allowedRoleKeys.contains(formatted.toLowerCase())) {
+        continue;
+      }
       addRoleOption(option);
     }
 
     _roleOptions = options;
-    _selectedRoleValue = existingRoleDisplay;
+    _selectedRoleValue = initialSelection;
     _selectedRoleValue ??= _roleOptions.isNotEmpty ? _roleOptions.first : null;
   }
 
