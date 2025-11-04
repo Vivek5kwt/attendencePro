@@ -3675,7 +3675,6 @@ class _MissedAttendanceCompletionSheetState
     extends State<_MissedAttendanceCompletionSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final List<_MissedAttendanceFormData> _entries;
-  late bool _includeContractEntry;
   bool _isSubmitting = false;
   String? _errorMessage;
 
@@ -3684,11 +3683,14 @@ class _MissedAttendanceCompletionSheetState
     super.initState();
     final sortedDates = widget.dates.toList(growable: false)
       ..sort((a, b) => a.compareTo(b));
-    _includeContractEntry =
+    final defaultContractSelection =
         widget.isContractWork && widget.contractTypeId != null;
     _entries = sortedDates
         .map((date) {
-          final entry = _MissedAttendanceFormData(date: date);
+          final entry = _MissedAttendanceFormData(
+            date: date,
+            includeContractEntry: defaultContractSelection,
+          );
           _applyInitialValues(entry);
           return entry;
         })
@@ -3826,10 +3828,6 @@ class _MissedAttendanceCompletionSheetState
                           ),
                         ),
                         const SizedBox(height: 20),
-                        if (widget.isContractWork) ...[
-                          _buildContractToggle(context),
-                          const SizedBox(height: 20),
-                        ],
                         if (_errorMessage != null) ...[
                           Container(
                             width: double.infinity,
@@ -4038,6 +4036,10 @@ class _MissedAttendanceCompletionSheetState
               );
             },
           ),
+          if (widget.isContractWork) ...[
+            const SizedBox(height: 16),
+            _buildContractToggle(context, data),
+          ],
           const SizedBox(height: 16),
           _DashedBorderCard(
             borderColor: const Color(0xFF2563EB),
@@ -4073,6 +4075,7 @@ class _MissedAttendanceCompletionSheetState
                                 data.startTimeController.clear();
                                 data.endTimeController.clear();
                                 data.breakMinutesController.text = '0';
+                                data.includeContractEntry = false;
                               }
                             });
                           },
@@ -4135,7 +4138,10 @@ class _MissedAttendanceCompletionSheetState
       return;
     }
 
-    if (_includeContractEntry && widget.contractTypeId == null) {
+    final requiresContractType = widget.isContractWork &&
+        _entries.any((entry) => entry.includeContractEntry);
+
+    if (requiresContractType && widget.contractTypeId == null) {
       setState(() {
         _errorMessage = widget.localization.contractWorkLoadError;
       });
@@ -4161,7 +4167,9 @@ class _MissedAttendanceCompletionSheetState
             breakMinutes: data.isLeave
                 ? 0
                 : _parseBreakMinutes(data.breakMinutesController.text),
-            contractTypeId: _includeContractEntry ? widget.contractTypeId : null,
+            contractTypeId: widget.isContractWork && data.includeContractEntry
+                ? widget.contractTypeId
+                : null,
             isLeave: data.isLeave,
           ),
         )
@@ -4199,9 +4207,10 @@ class _MissedAttendanceCompletionSheetState
     }
   }
 
-  Widget _buildContractToggle(BuildContext context) {
+  Widget _buildContractToggle(
+      BuildContext context, _MissedAttendanceFormData data) {
     final l = widget.localization;
-    final isActive = _includeContractEntry;
+    final isActive = data.includeContractEntry;
     final hasContractTypeLabel =
         widget.contractTypeName?.trim().isNotEmpty ?? false;
 
@@ -4214,7 +4223,9 @@ class _MissedAttendanceCompletionSheetState
     }
 
     final button = OutlinedButton(
-      onPressed: _isSubmitting ? null : _handleContractToggle,
+      onPressed: _isSubmitting || data.isLeave
+          ? null
+          : () => _handleContractToggle(data),
       style: OutlinedButton.styleFrom(
         backgroundColor: resolveBackground(),
         foregroundColor: resolveForeground(),
@@ -4282,11 +4293,11 @@ class _MissedAttendanceCompletionSheetState
     );
   }
 
-  void _handleContractToggle() {
+  void _handleContractToggle(_MissedAttendanceFormData data) {
     if (!widget.isContractWork) {
       return;
     }
-    if (!_includeContractEntry && widget.contractTypeId == null) {
+    if (!data.includeContractEntry && widget.contractTypeId == null) {
       final message = widget.localization.contractWorkLoadError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -4294,8 +4305,9 @@ class _MissedAttendanceCompletionSheetState
       return;
     }
     setState(() {
-      _includeContractEntry = !_includeContractEntry;
-      if (_errorMessage != null) {
+      data.includeContractEntry = !data.includeContractEntry;
+      if (_errorMessage != null &&
+          !_entries.any((entry) => entry.includeContractEntry)) {
         _errorMessage = null;
       }
     });
@@ -4303,7 +4315,10 @@ class _MissedAttendanceCompletionSheetState
 }
 
 class _MissedAttendanceFormData {
-  _MissedAttendanceFormData({required this.date})
+  _MissedAttendanceFormData({
+    required this.date,
+    required this.includeContractEntry,
+  })
       : startTimeController = TextEditingController(),
         endTimeController = TextEditingController(),
         breakMinutesController = TextEditingController(text: '0');
@@ -4313,6 +4328,7 @@ class _MissedAttendanceFormData {
   final TextEditingController endTimeController;
   final TextEditingController breakMinutesController;
   bool isLeave = false;
+  bool includeContractEntry;
 
   void dispose() {
     startTimeController.dispose();
