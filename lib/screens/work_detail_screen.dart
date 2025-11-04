@@ -284,6 +284,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   List<ContractType> _contractTypes = const <ContractType>[];
   bool _isLoadingContractTypes = false;
   String? _contractTypesError;
+  Future<void>? _contractTypesLoadFuture;
   final List<_ContractBundleFormEntry> _contractBundleEntries =
       <_ContractBundleFormEntry>[];
   int _bundleEntryCounter = 0;
@@ -1361,9 +1362,26 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final l = AppLocalizations.of(context);
-    final contractTypeId = _resolveContractTypeId();
-    final contractType =
-        contractTypeId != null ? _findContractTypeById(contractTypeId) : null;
+    if (widget.work.isContract && _contractTypes.isEmpty) {
+      await _loadContractTypes();
+    }
+
+    Object? contractTypeId = _resolveContractTypeId();
+    var contractType = _findContractTypeById(contractTypeId);
+    if (widget.work.isContract && contractTypeId == null) {
+      if (_contractTypes.isEmpty && _isLoadingContractTypes) {
+        await _loadContractTypes();
+      }
+      contractTypeId = _resolveContractTypeId();
+      contractType ??= _findContractTypeById(contractTypeId);
+    }
+    if (widget.work.isContract && contractTypeId == null &&
+        _contractTypes.isNotEmpty) {
+      final fallbackType = _contractTypes.first;
+      contractTypeId = fallbackType.id;
+      contractType = fallbackType;
+    }
+
     String? contractTypeName = contractType?.name;
     if (contractTypeName == null || contractTypeName.trim().isEmpty) {
       final additionalData = widget.work.additionalData;
@@ -1868,7 +1886,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return result;
   }
 
-  ContractType? _findContractTypeById(int? id) {
+  ContractType? _findContractTypeById(Object? id) {
     if (id == null) {
       return null;
     }
@@ -2086,20 +2104,21 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return double.tryParse(sanitized);
   }
 
-  int? _resolveContractTypeId() {
+  Object? _resolveContractTypeId() {
     if (_contractBundleEntries.isNotEmpty) {
       final primaryId = _contractBundleEntries.first.contractTypeId;
       if (primaryId != null) {
-        final parsed = int.tryParse(primaryId);
-        if (parsed != null) {
-          return parsed;
+        final trimmed = primaryId.trim();
+        if (trimmed.isNotEmpty) {
+          final parsed = int.tryParse(trimmed);
+          return parsed ?? trimmed;
         }
       }
     }
     return _extractContractTypeIdFromAdditionalData();
   }
 
-  int? _extractContractTypeIdFromAdditionalData() {
+  Object? _extractContractTypeIdFromAdditionalData() {
     final data = widget.work.additionalData;
     const keys = ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType'];
     for (final key in keys) {
@@ -2112,7 +2131,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return null;
   }
 
-  int? _tryParseContractTypeId(dynamic value) {
+  Object? _tryParseContractTypeId(dynamic value) {
     if (value == null) {
       return null;
     }
@@ -2128,7 +2147,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         return null;
       }
       final parsed = int.tryParse(trimmed);
-      return parsed;
+      return parsed ?? trimmed;
     }
     if (value is Map) {
       final map = value.cast<dynamic, dynamic>();
@@ -2841,7 +2860,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Future<void> _loadContractTypes() async {
-    if (!widget.work.isContract || _isLoadingContractTypes) {
+    if (!widget.work.isContract) {
+      return;
+    }
+    if (_isLoadingContractTypes) {
+      await _contractTypesLoadFuture;
       return;
     }
 
@@ -2850,39 +2873,50 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _contractTypesError = null;
     });
 
-    try {
-      final collection = await _contractTypeRepository.fetchContractTypes();
-      if (!mounted) {
-        return;
+    Future<void> loader() async {
+      try {
+        final collection = await _contractTypeRepository.fetchContractTypes();
+        if (!mounted) {
+          return;
+        }
+        final merged = _mergeContractTypes(collection);
+        setState(() {
+          _contractTypes = merged;
+          _contractTypesError = null;
+          _resolveContractBundleSelectionAfterLoad();
+        });
+      } on ContractTypeRepositoryException catch (e) {
+        if (!mounted) {
+          return;
+        }
+        final l = AppLocalizations.of(context);
+        final message = e.message.trim().isNotEmpty
+            ? e.message.trim()
+            : l.contractWorkLoadError;
+        setState(() {
+          _contractTypesError = message;
+        });
+      } catch (_) {
+        if (!mounted) {
+          return;
+        }
+        final l = AppLocalizations.of(context);
+        setState(() {
+          _contractTypesError = l.contractWorkLoadError;
+        });
+      } finally {
+        _contractTypesLoadFuture = null;
+        if (mounted) {
+          setState(() {
+            _isLoadingContractTypes = false;
+          });
+        }
       }
-      final merged = _mergeContractTypes(collection);
-      setState(() {
-        _contractTypes = merged;
-        _isLoadingContractTypes = false;
-        _contractTypesError = null;
-        _resolveContractBundleSelectionAfterLoad();
-      });
-    } on ContractTypeRepositoryException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      final l = AppLocalizations.of(context);
-      final message =
-          e.message.trim().isNotEmpty ? e.message.trim() : l.contractWorkLoadError;
-      setState(() {
-        _isLoadingContractTypes = false;
-        _contractTypesError = message;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      final l = AppLocalizations.of(context);
-      setState(() {
-        _isLoadingContractTypes = false;
-        _contractTypesError = l.contractWorkLoadError;
-      });
     }
+
+    final future = loader();
+    _contractTypesLoadFuture = future;
+    await future;
   }
 
   List<ContractType> _mergeContractTypes(ContractTypeCollection collection) {
