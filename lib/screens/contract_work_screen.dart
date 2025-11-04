@@ -500,7 +500,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   Future<void> _showManageTypesDialog() async {
-    // This dialog is stateful so it will refresh after delete
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final responsive = context.responsive;
@@ -705,7 +704,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         ),
       );
     } else {
-      // scrollable content with refresh, no extra gap after pull
       bodyContent = RefreshIndicator(
         key: const ValueKey('contract-types-content'),
         color: const Color(0xFF4C6EF5),
@@ -731,7 +729,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // actions row
                         Row(
                           children: [
                             ElevatedButton.icon(
@@ -785,7 +782,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
                         SizedBox(height: responsive.scale(16)),
 
-                        // table of user's contract types / entries
                         _ContractSummaryTable(
                           title: l.contractWorkSummaryTitle,
                           rows: _summaryRows,
@@ -967,7 +963,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 }
 
-/* ------------------------- Bottom Sheet: Add/Edit Type ------------------------- */
 
 class _ContractTypeSheet extends StatefulWidget {
   const _ContractTypeSheet({
@@ -1006,7 +1001,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   late final List<String> _roleOptions;
   late final bool _isRoleLocked;
 
-  String? _selectedRoleValue; // This will now be shown under label "Type"
+  String? _selectedRoleValue;
   String? _selectedWorkName;
 
   bool _isSaving = false;
@@ -1023,7 +1018,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     _workNameOptions = List<String>.from(widget.workNameOptions);
 
-    // Preselect work name
     final existingName = type?.name.trim();
     if (existingName != null && existingName.isNotEmpty) {
       final matchIndex = _workNameOptions.indexWhere(
@@ -1037,7 +1031,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       }
     }
 
-    // Build the "Type" dropdown options (previously role options)
     final seenRoleOptions = <String>{};
     final options = <String>[];
 
@@ -1158,7 +1151,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   }
 
   String _resolveRateHint(AppLocalizations l) {
-    // We still use the "type" (= role) selection to build hint text
     final selection = _selectedRoleValue?.toLowerCase();
     switch (selection) {
       case 'bin':
@@ -1180,7 +1172,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     final rate = double.tryParse(_rateController.text.trim());
     final resolvedRole = _selectedRoleValue?.trim() ?? '';
 
-    // we now treat contract "type" as fixed always, client removed this field
     const resolvedContractKind = 'fixed';
 
     final type = widget.type;
@@ -1193,7 +1184,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       return;
     }
     if (resolvedRole.isEmpty) {
-      // still required, it's the new "Type" dropdown
       ScaffoldMessenger.of(widget.rootContext).showSnackBar(
         SnackBar(content: Text(l.contractWorkRoleRequiredMessage)),
       );
@@ -1222,18 +1212,16 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     Future<_ContractType?> future;
     if (type == null || type.id.startsWith('local-')) {
-      // create
       future = widget.repository
           .createContractType(
         name: resolvedName,
-        type: resolvedContractKind, // always "fixed"
-        role: resolvedRole, // user's chosen "Type" (Bin/Crate/etc.)
+        type: resolvedContractKind,
+        role: resolvedRole,
         ratePerUnit: rate,
         unitLabel: resolvedUnitLabel,
       )
           .then((created) => _ContractType.fromModel(type: created));
     } else {
-      // update
       future = widget.repository
           .updateContractType(
         id: type.id,
@@ -1280,7 +1268,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     final textTheme = Theme.of(context).textTheme;
     final l = AppLocalizations.of(context);
 
-    // As per client: header always "Add Contract Work"
     final headerTitle = l.addContractWorkButton;
 
     return AnimatedPadding(
@@ -1365,7 +1352,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Main white card
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -1383,7 +1369,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // WORK NAME
                           Text(
                             l.workNameLabel,
                             style: textTheme.bodyMedium?.copyWith(
@@ -1609,12 +1594,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                               ),
                             ),
                           ],
-
                           const SizedBox(height: 16),
-
-                          // TYPE  (this used to be "Role", now client wants this called Type)
                           Text(
-                            // We'll label this dropdown "Type"
                             l.contractWorkTypeLabel,
                             style: textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
@@ -1654,7 +1635,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                       color: Color(0xFF111827),
                                     ),
                                 hint: Text(
-                                  // reuse localization hint
                                   l.contractWorkRoleHint,
                                   style: textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
@@ -1718,8 +1698,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                           ],
 
                           const SizedBox(height: 20),
-
-                          // RATE / PRICE
                           Text(
                             '${l.contractWorkRateLabel} (${AppString.euroPrefix.trim()})',
                             style: textTheme.bodyMedium?.copyWith(
@@ -1872,7 +1850,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   }
 }
 
-/* ------------------------------ Summary Table ------------------------------ */
 
 class _ContractSummaryTable extends StatelessWidget {
   const _ContractSummaryTable({
@@ -2120,222 +2097,6 @@ class _ContractSummaryTableRow extends StatelessWidget {
   }
 }
 
-/* ------------------------------- Summary Head ------------------------------- */
-/*
-  NOTE:
-  _SummaryHeader is kept here so code compiles,
-  but it is NO LONGER USED in build()
-*/
-class _SummaryHeader extends StatelessWidget {
-  const _SummaryHeader({
-    required this.title,
-    required this.totalTypes,
-    required this.totalUnits,
-    required this.totalAmount,
-    required this.activeTypesLabel,
-    required this.totalUnitsLabel,
-    required this.totalSalaryLabel,
-    required this.defaultCount,
-    required this.userDefinedCount,
-    required this.defaultTypesLabel,
-    required this.customTypesLabel,
-  });
-
-  final String title;
-  final int totalTypes;
-  final double totalUnits;
-  final double totalAmount;
-  final String activeTypesLabel;
-  final String totalUnitsLabel;
-  final String totalSalaryLabel;
-  final int defaultCount;
-  final int userDefinedCount;
-  final String defaultTypesLabel;
-  final String customTypesLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    final stats = [
-      _SummaryItem(label: activeTypesLabel, value: totalTypes.toString()),
-      _SummaryItem(
-        label: totalUnitsLabel,
-        value: totalUnits.toStringAsFixed(0),
-      ),
-      _SummaryItem(
-        label: totalSalaryLabel,
-        value: '€${totalAmount.toStringAsFixed(2)}',
-      ),
-    ];
-    final activeTypesText =
-    totalTypes > 0 ? '$totalTypes $activeTypesLabel' : activeTypesLabel;
-    final progress =
-    totalTypes == 0 ? 0.0 : (userDefinedCount / totalTypes).clamp(0.0, 1.0);
-    final ratioText = totalTypes == 0
-        ? customTypesLabel
-        : '$userDefinedCount / $totalTypes $customTypesLabel';
-
-    final countChips = <Widget>[];
-    if (defaultCount > 0) {
-      countChips.add(
-        _SummaryCountChip(label: defaultTypesLabel, count: defaultCount),
-      );
-    }
-    if (userDefinedCount > 0) {
-      countChips.add(
-        _SummaryCountChip(label: customTypesLabel, count: userDefinedCount),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 380;
-
-        Widget statsLayout;
-        if (isCompact) {
-          statsLayout = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var i = 0; i < stats.length; i++) ...[
-                stats[i],
-                if (i != stats.length - 1)
-                  SizedBox(height: responsive.scale(14)),
-              ],
-            ],
-          );
-        } else {
-          statsLayout = Row(
-            children: [
-              for (var i = 0; i < stats.length; i++) ...[
-                Expanded(child: stats[i]),
-                if (i != stats.length - 1)
-                  SizedBox(width: responsive.scale(20)),
-              ],
-            ],
-          );
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(responsive.scale(26)),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF4C6EF5), Color(0xFF7C3AED)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A312E81),
-                blurRadius: 24,
-                offset: Offset(0, 18),
-              ),
-            ],
-          ),
-          padding: EdgeInsets.fromLTRB(
-            responsive.scale(26),
-            responsive.scale(26),
-            responsive.scale(26),
-            responsive.scale(28),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: responsive.scale(52),
-                    height: responsive.scale(52),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      borderRadius:
-                      BorderRadius.circular(responsive.scale(18)),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.24),
-                        width: 1.2,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.auto_graph_rounded,
-                      color: Colors.white,
-                      size: responsive.scale(26),
-                    ),
-                  ),
-                  SizedBox(width: responsive.scale(16)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize:
-                            responsive.scaleText(18),
-                          ) ??
-                              TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize:
-                                responsive.scaleText(18),
-                              ),
-                        ),
-                        SizedBox(height: responsive.scale(6)),
-                        Text(
-                          activeTypesText,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontWeight: FontWeight.w600,
-                            fontSize: responsive.scaleText(13),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: responsive.scale(22)),
-              statsLayout,
-              SizedBox(height: responsive.scale(24)),
-              Text(
-                ratioText,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
-                  fontWeight: FontWeight.w600,
-                  fontSize: responsive.scaleText(13),
-                ),
-              ),
-              SizedBox(height: responsive.scale(10)),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(responsive.scale(12)),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: responsive.scale(6),
-                  valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF93C5FD)),
-                  backgroundColor: Colors.white.withOpacity(0.25),
-                ),
-              ),
-              SizedBox(height: responsive.scale(18)),
-              if (countChips.isNotEmpty)
-                Wrap(
-                  spacing: responsive.scale(12),
-                  runSpacing: responsive.scale(12),
-                  children: countChips,
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _SummaryCountChip extends StatelessWidget {
   const _SummaryCountChip({required this.label, required this.count});
 
@@ -2413,276 +2174,6 @@ class _SummaryItem extends StatelessWidget {
   }
 }
 
-/* ------------------------------- Tiles/Chips ------------------------------- */
-
-class _ContractEntryTile extends StatelessWidget {
-  const _ContractEntryTile({
-    required this.entry,
-    required this.contractLabel,
-    required this.unitsLabel,
-    required this.rateLabel,
-    required this.onTap,
-  });
-
-  final _ContractEntry entry;
-  final String contractLabel;
-  final String unitsLabel;
-  final String rateLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFFFFF), Color(0xFFF8F5FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(responsive.scale(20)),
-          border: Border.all(color: const Color(0xFFE0E7FF)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0F312E81),
-              blurRadius: 18,
-              offset: Offset(0, 14),
-            ),
-          ],
-        ),
-        padding: EdgeInsets.fromLTRB(
-          responsive.scale(18),
-          responsive.scale(18),
-          responsive.scale(18),
-          responsive.scale(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final shouldWrap = constraints.maxWidth < 360;
-                final leading = Container(
-                  width: responsive.scale(46),
-                  height: responsive.scale(46),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      responsive.scale(16),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.assignment_outlined,
-                    color: Colors.white,
-                    size: responsive.scale(22),
-                  ),
-                );
-                final titleColumn = Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: responsive.scale(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.workName,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
-                              ?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF111827),
-                            fontSize: responsive.scaleText(16),
-                          ) ??
-                              TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF111827),
-                                fontSize: responsive.scaleText(16),
-                              ),
-                        ),
-                        SizedBox(height: responsive.scale(4)),
-                        Text(
-                          entry.formattedDate,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                            color: const Color(0xFF6B7280),
-                            fontSize:
-                            responsive.scaleText(12),
-                          ) ??
-                              TextStyle(
-                                color: const Color(0xFF6B7280),
-                                fontSize: responsive.scaleText(12),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-                final amountText = Text(
-                  '€${entry.totalAmount.toStringAsFixed(2)}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF111827),
-                    fontSize:
-                    responsive.scaleText(16),
-                  ) ??
-                      TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF111827),
-                        fontSize: responsive.scaleText(16),
-                      ),
-                );
-
-                if (shouldWrap) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [leading, titleColumn],
-                      ),
-                      SizedBox(height: responsive.scale(12)),
-                      amountText,
-                    ],
-                  );
-                }
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [leading, titleColumn, amountText],
-                );
-              },
-            ),
-            SizedBox(height: responsive.scale(16)),
-            Wrap(
-              spacing: responsive.scale(8),
-              runSpacing: responsive.scale(8),
-              children: [
-                _InfoChip(
-                  icon: Icons.assignment_turned_in_outlined,
-                  label: 'Contract',
-                  value: entry.contractName,
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  borderColor: const Color(0xFFD6DBFF),
-                  labelColor: const Color(0xFF1E3A8A),
-                  valueColor: const Color(0xFF111827),
-                ),
-                _InfoChip(
-                  icon: Icons.stacked_line_chart_rounded,
-                  label: 'Units',
-                  value: entry.unitsCompleted.toStringAsFixed(0),
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  borderColor: const Color(0xD6DBFF),
-                  labelColor: const Color(0xFF1E3A8A),
-                  valueColor: const Color(0xFF111827),
-                ),
-                _InfoChip(
-                  icon: Icons.payments_outlined,
-                  label: 'Rate',
-                  value: '€${entry.rate.toStringAsFixed(2)}',
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  borderColor: const Color(0xFFD6DBFF),
-                  labelColor: const Color(0xFF1E3A8A),
-                  valueColor: const Color(0xFF111827),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.label,
-    required this.value,
-    this.icon,
-    this.backgroundColor,
-    this.labelColor,
-    this.valueColor,
-    this.borderColor,
-  });
-
-  final String label;
-  final String value;
-  final IconData? icon;
-  final Color? backgroundColor;
-  final Color? labelColor;
-  final Color? valueColor;
-  final Color? borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    final resolvedBackground = backgroundColor ?? const Color(0xFFF3F4F6);
-    final resolvedLabelColor = labelColor ?? const Color(0xFF6B7280);
-    final resolvedValueColor = valueColor ?? const Color(0xFF111827);
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: responsive.scale(12),
-        vertical: responsive.scale(8),
-      ),
-      decoration: BoxDecoration(
-        color: resolvedBackground,
-        borderRadius: BorderRadius.circular(responsive.scale(16)),
-        border: borderColor != null ? Border.all(color: borderColor!) : null,
-        boxShadow: borderColor != null
-            ? const [
-          BoxShadow(
-            color: Color(0x0F1E3A8A),
-            blurRadius: 12,
-            offset: Offset(0, 8),
-          ),
-        ]
-            : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: responsive.scale(16), color: resolvedLabelColor),
-            SizedBox(width: responsive.scale(6)),
-          ],
-          Text(
-            '$label: ',
-            style: TextStyle(
-              color: resolvedLabelColor,
-              fontWeight: FontWeight.w600,
-              fontSize: responsive.scaleText(12),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: resolvedValueColor,
-              fontWeight: FontWeight.w700,
-              fontSize: responsive.scaleText(12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/* ------------------------------ Data Models ------------------------------ */
-
 class _ContractType {
   const _ContractType({
     required this.id,
@@ -2718,8 +2209,8 @@ class _ContractType {
   final String name;
   final double rate;
   final String unitLabel;
-  final String type; // backend kind (fixed/bundle but now we always send fixed)
-  final String? role; // Bin / Crate / Bunches etc.
+  final String type;
+  final String? role;
   final bool isDefault;
   final bool isUserDefined;
   final DateTime? lastUpdated;
@@ -2806,8 +2297,6 @@ class _ContractSummaryRow {
   final String units;
   final String payment;
 }
-
-/* -------------------------- Manage Types Row -------------------------- */
 
 class _ManageTypeRow extends StatelessWidget {
   const _ManageTypeRow({
@@ -2922,7 +2411,6 @@ class _ManageTypeRow extends StatelessWidget {
           );
 
           if (isNarrow) {
-            // Column layout for narrow widths (no Expanded)
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2933,7 +2421,6 @@ class _ManageTypeRow extends StatelessWidget {
             );
           }
 
-          // Row layout for wide widths (Expanded used here)
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

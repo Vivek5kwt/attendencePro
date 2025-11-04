@@ -5,12 +5,6 @@ import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../utils/responsive.dart';
 
-/// The CreatePasswordScreen allows the user to create/reset a password.
-/// The back button behavior has been updated so that if there is no
-/// previous route to pop to (which could result in a blank/black screen),
-/// it will instead try to route the app via AppCubit to a safe state
-/// (e.g., showAuth). If AppCubit is not available in the context, it will
-/// simply do nothing rather than popping into a blank screen.
 class CreatePasswordScreen extends StatefulWidget {
   final String phone;
   const CreatePasswordScreen({super.key, required this.phone});
@@ -35,11 +29,6 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     }
   }
 
-  /// Improved back behavior:
-  /// - If Navigator can pop, pop as usual.
-  /// - If there's nothing to pop to (popping would reveal a blank/black screen),
-  ///   try to use AppCubit to navigate to a safe app state (e.g., Auth screen).
-  /// - If AppCubit is not available, do nothing (prevents showing a black screen).
   Future<void> _back() async {
     if (!mounted) return;
     final navigator = Navigator.of(context);
@@ -52,8 +41,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
       final appCubit = context.read<AppCubit>();
       appCubit.showAuth();
     } on ProviderNotFoundException {
-      // If AppCubit is not available in the widget tree, just stay on the
-      // current screen instead of navigating to a blank page.
+
     }
   }
 

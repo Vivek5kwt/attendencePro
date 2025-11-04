@@ -46,16 +46,13 @@ class HelpSupportScreen extends StatelessWidget {
                 color: const Color(0xFFE6F3FF),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Image.asset(
-                AppAssets.helpSupport,
-                width: 24,
-                height: 24,
-              ),
+              child: Image.asset(AppAssets.helpSupport, width: 24, height: 24),
             ),
             const SizedBox(width: 12),
             Text(
               l.helpSupportLabel,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style:
+                  Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 20,
                     color: const Color(0xFF111827),
@@ -81,31 +78,6 @@ class HelpSupportScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            /*Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _QuickActionCard(
-                  icon: Icons.help_outline,
-                  label: l.helpSupportFaqsLabel,
-                  description: l.helpSupportFaqsSubtitle,
-                  onTap: () => _showComingSoonMessage(context),
-                ),
-                _QuickActionCard(
-                  icon: Icons.menu_book_outlined,
-                  label: l.helpSupportGuidesLabel,
-                  description: l.helpSupportGuidesSubtitle,
-                  onTap: () => _showComingSoonMessage(context),
-                ),
-                _QuickActionCard(
-                  icon: Icons.report_problem_outlined,
-                  label: l.helpSupportReportIssueLabel,
-                  description: l.helpSupportReportIssueSubtitle,
-                  onTap: () => _showComingSoonMessage(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),*/
             _SectionTitle(text: l.helpSupportContactTitle),
             const SizedBox(height: 12),
             _ContactCard(
@@ -132,8 +104,10 @@ class HelpSupportScreen extends StatelessWidget {
                 context,
                 Uri(
                   scheme: 'tel',
-                  path:
-                      l.helpSupportPhoneValue.replaceAll(RegExp(r'[^0-9+]'), ''),
+                  path: l.helpSupportPhoneValue.replaceAll(
+                    RegExp(r'[^0-9+]'),
+                    '',
+                  ),
                 ),
               ),
             ),
@@ -153,7 +127,6 @@ class HelpSupportScreen extends StatelessWidget {
   }
 }
 
-
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.text});
 
@@ -163,7 +136,8 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+      style:
+          Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 18,
             color: const Color(0xFF111827),
@@ -223,7 +197,8 @@ class _QuickActionCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              style:
+                  Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF111827),
                   ) ??
@@ -236,13 +211,11 @@ class _QuickActionCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              style:
+                  Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF6B7280),
                   ) ??
-                  const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 13,
-                  ),
+                  const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
             ),
           ],
         ),
@@ -298,7 +271,8 @@ class _ContactCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  style:
+                      Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF111827),
                       ) ??
@@ -311,13 +285,11 @@ class _ContactCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style:
+                      Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFF4B5563),
                       ) ??
-                      const TextStyle(
-                        color: Color(0xFF4B5563),
-                        fontSize: 14,
-                      ),
+                      const TextStyle(color: Color(0xFF4B5563), fontSize: 14),
                 ),
               ],
             ),
@@ -335,7 +307,8 @@ class _ContactCard extends StatelessWidget {
             ),
             child: Text(
               buttonLabel,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              style:
+                  Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ) ??
@@ -395,7 +368,8 @@ class _InfoTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  style:
+                      Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF111827),
                       ) ??
@@ -408,13 +382,11 @@ class _InfoTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style:
+                      Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFF6B7280),
                       ) ??
-                      const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 13,
-                      ),
+                      const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                 ),
               ],
             ),

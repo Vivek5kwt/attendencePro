@@ -10,27 +10,28 @@ import 'package:url_launcher/url_launcher.dart';
 import '../apis/auth_api.dart';
 import '../apis/work_api.dart';
 import '../bloc/app_cubit.dart';
+import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
-import '../bloc/work_bloc.dart';
-import '../utils/session_manager.dart';
-import '../utils/responsive.dart';
 import '../utils/language_dialog.dart';
+import '../utils/responsive.dart';
+import '../utils/session_manager.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/work_management_dialogs.dart';
 import '../widgets/work_selection_dialog.dart';
+import 'attendance_history_screen.dart';
 import 'help_support_screen.dart';
 import 'profile_screen.dart';
 import 'reports_summary_screen.dart';
 import 'work_detail_screen.dart';
-import 'attendance_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key, this.openDashboardOnLogin = false}) : super(key: key);
+  const HomeScreen({Key? key, this.openDashboardOnLogin = false})
+    : super(key: key);
 
   final bool openDashboardOnLogin;
 
@@ -41,7 +42,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   static const String _shareLink = 'https://attendencepro.com/';
 
-  // currency symbol variable for hourly rate UI
   static const String _currencySymbol = '€';
 
   final WorkApi _workApi = WorkApi();
@@ -110,7 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) {
         return;
       }
-      final message = e.message.isNotEmpty ? e.message : l.worksLoadFailedMessage;
+      final message = e.message.isNotEmpty
+          ? e.message
+          : l.worksLoadFailedMessage;
       setState(() {
         _worksError = message;
       });
@@ -202,9 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => ReportsSummaryScreen(
-          initialWorkId: selectedWork.id,
-        ),
+        builder: (context) =>
+            ReportsSummaryScreen(initialWorkId: selectedWork.id),
       ),
     );
   }
@@ -212,9 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openHelpSupport() async {
     if (!mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const HelpSupportScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const HelpSupportScreen()),
     );
   }
 
@@ -360,7 +359,10 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
@@ -402,9 +404,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               l.workDeleteConfirmationTitle,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ) ??
+                              style:
+                                  theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ) ??
                                   const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 20,
@@ -413,10 +416,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 8),
                             Text(
                               l.workDeleteConfirmationMessage,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF6B7280),
-                                height: 1.5,
-                              ) ??
+                              style:
+                                  theme.textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF6B7280),
+                                    height: 1.5,
+                                  ) ??
                                   const TextStyle(
                                     color: Color(0xFF6B7280),
                                     height: 1.5,
@@ -450,10 +454,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         Expanded(
                           child: Text(
                             l.workDeleteIrreversibleMessage,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF9A3412),
-                              height: 1.4,
-                            ) ??
+                            style:
+                                theme.textTheme.bodySmall?.copyWith(
+                                  color: const Color(0xFF9A3412),
+                                  height: 1.4,
+                                ) ??
                                 const TextStyle(
                                   color: Color(0xFF9A3412),
                                   height: 1.4,
@@ -468,7 +473,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(false),
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: BorderSide(color: theme.colorScheme.primary),
@@ -488,7 +494,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(true),
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFB91C1C),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -498,10 +505,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: Text(
                             l.workDeleteConfirmButton,
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ) ??
+                            style:
+                                Theme.of(
+                                  context,
+                                ).textTheme.labelLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ) ??
                                 const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -555,8 +565,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (success) {
       context.read<WorkBloc>().add(const WorkCleared());
     }
-    final message =
-    success ? l.deleteAccountSuccessMessage : l.deleteAccountFailedMessage;
+    final message = success
+        ? l.deleteAccountSuccessMessage
+        : l.deleteAccountFailedMessage;
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -572,7 +583,8 @@ class _HomeScreenState extends State<HomeScreen> {
           listenWhen: (previous, current) =>
               previous.lastErrorMessage != current.lastErrorMessage ||
               previous.lastSuccessMessage != current.lastSuccessMessage ||
-              previous.requiresAuthentication != current.requiresAuthentication ||
+              previous.requiresAuthentication !=
+                  current.requiresAuthentication ||
               previous.feedbackKind != current.feedbackKind,
           listener: (context, state) {
             final l = AppLocalizations.of(context);
@@ -650,7 +662,8 @@ class _HomeScreenState extends State<HomeScreen> {
             'it': 'Italian',
           };
           final userName = state.userName ?? l.drawerUserName;
-          final userContact = state.userEmail ??
+          final userContact =
+              state.userEmail ??
               state.userPhone ??
               state.userUsername ??
               l.drawerUserPhone;
@@ -674,17 +687,14 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(
                 l.appTitle,
                 style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
+                  color: Colors.black,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               actions: [
                 IconButton(
-                  icon: Image.asset(
-                    AppAssets.language,
-                    width: 26,
-                    height: 26,
-                  ),
+                  icon: Image.asset(AppAssets.language, width: 26, height: 26),
                   onPressed: () {
                     showLanguageSelectionDialog(
                       context: context,
@@ -694,11 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 IconButton(
-                  icon: Image.asset(
-                    AppAssets.icShare,
-                    width: 34,
-                    height: 34,
-                  ),
+                  icon: Image.asset(AppAssets.icShare, width: 34, height: 34),
                   onPressed: _showShareOptions,
                 ),
               ],
@@ -773,11 +779,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     l.adPlaceholderTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1F2937),
-                      fontSize: 18,
-                    ) ??
+                    style:
+                        textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1F2937),
+                          fontSize: 18,
+                        ) ??
                         const TextStyle(
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF1F2937),
@@ -787,10 +794,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 6),
                   Text(
                     l.adPlaceholderSubtitle,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF4B5563),
-                      height: 1.4,
-                    ) ??
+                    style:
+                        textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF4B5563),
+                          height: 1.4,
+                        ) ??
                         const TextStyle(
                           color: Color(0xFF4B5563),
                           height: 1.4,
@@ -813,7 +821,6 @@ class _HomeScreenState extends State<HomeScreen> {
         state.activateStatus == WorkActionStatus.inProgress;
     final activatingWorkId = state.activatingWorkId;
 
-    // loading initial
     if (state.isLoading && works.isEmpty) {
       return _buildRefreshableList(
         l,
@@ -826,14 +833,13 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // load error + no data
     if (state.loadStatus == WorkLoadStatus.failure && works.isEmpty) {
       final message = state.requiresAuthentication
           ? l.authenticationRequiredMessage
           : (state.lastErrorMessage != null &&
-          state.lastErrorMessage!.isNotEmpty
-          ? state.lastErrorMessage!
-          : l.worksLoadFailedMessage);
+                    state.lastErrorMessage!.isNotEmpty
+                ? state.lastErrorMessage!
+                : l.worksLoadFailedMessage);
       return _buildRefreshableList(
         l,
         state,
@@ -846,7 +852,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // first-time user (no work yet)
     if (works.isEmpty) {
       return _buildRefreshableList(
         l,
@@ -860,22 +865,18 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // has at least one work
-    // show banner, then "Add New Work" card, then list of works
     return RefreshIndicator(
       onRefresh: () => _handleRefresh(state),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
-        itemCount: works.length + 2, // [0]=banner, [1]=AddWorkCard, [2..] cards
+        itemCount: works.length + 2,
         itemBuilder: (context, index) {
           if (index == 0) {
-            // top banner/ad
             return _buildHomeBanner(l);
           }
 
           if (index == 1) {
-            // our new fancy "Add New Work" quick action card
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _AddNewWorkCard(
@@ -894,7 +895,7 @@ class _HomeScreenState extends State<HomeScreen> {
               l,
               isDeleting: state.deletingWorkId == work.id,
               isActivating:
-              activatingWorkId == work.id && isActivationInProgress,
+                  activatingWorkId == work.id && isActivationInProgress,
               activationInProgress: isActivationInProgress,
             ),
           );
@@ -906,20 +907,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRefreshableList(
-      AppLocalizations l,
-      WorkState state, {
-        required List<Widget> children,
-        Future<void> Function()? onRefresh,
-      }) {
+    AppLocalizations l,
+    WorkState state, {
+    required List<Widget> children,
+    Future<void> Function()? onRefresh,
+  }) {
     return RefreshIndicator(
       onRefresh: onRefresh ?? () => _handleRefresh(state),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
-        children: [
-          _buildHomeBanner(l),
-          ...children,
-        ],
+        children: [_buildHomeBanner(l), ...children],
       ),
     );
   }
@@ -944,8 +942,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 l.startTrackingAttendance,
                 textAlign: TextAlign.center,
-                style:
-                const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -964,7 +964,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   l.addYourFirstWork,
                   style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -982,8 +984,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline,
-                color: Color(0xFFD32F2F), size: 64),
+            const Icon(Icons.error_outline, color: Color(0xFFD32F2F), size: 64),
             const SizedBox(height: 16),
             Text(
               l.worksLoadFailedTitle,
@@ -1021,25 +1022,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// WORK CARD WITH ACTIONS, ACTIVE BADGE, RATE, ACTIVATE BUTTON
   Widget _buildWorkCard(
-      Work work,
-      AppLocalizations l, {
-        required bool isDeleting,
-        required bool isActivating,
-        required bool activationInProgress,
-      }) {
+    Work work,
+    AppLocalizations l, {
+    required bool isDeleting,
+    required bool isActivating,
+    required bool activationInProgress,
+  }) {
     final isActive = _isWorkActive(work);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final description = _resolveWorkDescription(work);
 
-    final accentColor =
-    work.isContract ? colorScheme.tertiary : colorScheme.primary;
+    final accentColor = work.isContract
+        ? colorScheme.tertiary
+        : colorScheme.primary;
 
     final statusBarColor = isActive
-        ? const Color(0xFF10B981) // green if active
-        : accentColor.withOpacity(0.8); // themed color if not active
+        ? const Color(0xFF10B981)
+        : accentColor.withOpacity(0.8);
 
     final disableActivateButton =
         isDeleting || (activationInProgress && !isActivating) || isActive;
@@ -1047,7 +1048,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final activeChipMaxWidth = math.min(screenWidth * 0.45, 220.0);
 
-    // top-right quick actions (edit / delete)
     final actionsRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1060,17 +1060,10 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               color: accentColor.withOpacity(0.07),
-              border: Border.all(
-                color: accentColor.withOpacity(0.2),
-                width: 1,
-              ),
+              border: Border.all(color: accentColor.withOpacity(0.2), width: 1),
             ),
             alignment: Alignment.center,
-            child: Icon(
-              Icons.edit_outlined,
-              color: accentColor,
-              size: 17,
-            ),
+            child: Icon(Icons.edit_outlined, color: accentColor, size: 17),
           ),
         ),
         const SizedBox(width: 8),
@@ -1099,115 +1092,111 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
 
-    // CTA button bottom-right
     final activateButton = !isActive
         ? Container(
-      height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2563EB),
-            Color(0xFF4F46E5),
-          ],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x662563EB),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap:
-        disableActivateButton ? null : () => _handleSetActiveWork(work),
-        borderRadius: BorderRadius.circular(999),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isActivating)
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor:
-                  const AlwaysStoppedAnimation<Color>(Colors.white),
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x662563EB),
+                  blurRadius: 18,
+                  offset: Offset(0, 6),
                 ),
-              )
-            else
-              const Icon(
-                Icons.bolt_rounded,
-                size: 18,
-                color: Colors.white,
-              ),
-            const SizedBox(width: 6),
-            Text(
-              isActivating
-                  ? l.settingActiveWorkLabel
-                  : l.setActiveWorkButton,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                height: 1.2,
+              ],
+            ),
+            child: InkWell(
+              onTap: disableActivateButton
+                  ? null
+                  : () => _handleSetActiveWork(work),
+              borderRadius: BorderRadius.circular(999),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isActivating)
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.white,
+                        ),
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.bolt_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isActivating
+                        ? l.settingActiveWorkLabel
+                        : l.setActiveWorkButton,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    )
+          )
         : Container(
-      constraints: BoxConstraints(
-        minHeight: 34,
-        maxWidth: activeChipMaxWidth,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: const Color(0xFFECFDF5),
-        border: Border.all(
-          color: const Color(0xFF10B981),
-          width: 1,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        l.activeWorkLabel,
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.labelMedium?.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF065F46),
-              height: 1.2,
-            ) ??
-            const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF065F46),
-              height: 1.2,
+            constraints: BoxConstraints(
+              minHeight: 34,
+              maxWidth: activeChipMaxWidth,
             ),
-      ),
-    );
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: const Color(0xFFECFDF5),
+              border: Border.all(color: const Color(0xFF10B981), width: 1),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              l.activeWorkLabel,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  theme.textTheme.labelMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF065F46),
+                    height: 1.2,
+                  ) ??
+                  const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF065F46),
+                    height: 1.2,
+                  ),
+            ),
+          );
 
-    // salary row bottom-left
     final hourlySalaryRow = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l.hourlySalaryLabel,
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF64748B),
-            height: 1.3,
-          ) ??
+          style:
+              theme.textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+                height: 1.3,
+              ) ??
               const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -1218,12 +1207,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 4),
         Text(
           _formatHourlyRate(work, l),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: accentColor,
-            height: 1.2,
-          ) ??
+          style:
+              theme.textTheme.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: accentColor,
+                height: 1.2,
+              ) ??
               TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1234,31 +1224,28 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
 
-    // title + desc + footer stacked vertically
     final contentColumn = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // first row: work name + "Active" chip + edit/delete row
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // left side: work name + (active chip if active)
             Expanded(
               child: Wrap(
                 spacing: 8,
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  // Work Name (bigger font now)
                   Text(
                     work.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18, // increased to 20
-                      color: const Color(0xFF0F172A),
-                      height: 1.3,
-                    ) ??
+                    style:
+                        theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          color: const Color(0xFF0F172A),
+                          height: 1.3,
+                        ) ??
                         const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -1269,7 +1256,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (isActive)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(20),
@@ -1307,7 +1296,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        // description
         if (description != null && description.trim().isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -1315,11 +1303,12 @@ class _HomeScreenState extends State<HomeScreen> {
               description.trim(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 13,
-                color: const Color(0xFF6B7280),
-                height: 1.4,
-              ) ??
+              style:
+                  theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: const Color(0xFF6B7280),
+                    height: 1.4,
+                  ) ??
                   const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF6B7280),
@@ -1328,7 +1317,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-        // footer row: salary left / activate button right
         Padding(
           padding: const EdgeInsets.only(top: 14),
           child: Row(
@@ -1348,7 +1336,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
 
-    // visual frame with left color bar and smooth border/glow
     final framedCard = Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
@@ -1356,7 +1343,9 @@ class _HomeScreenState extends State<HomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            (isActive ? const Color(0xFF10B981) : accentColor).withOpacity(0.18),
+            (isActive ? const Color(0xFF10B981) : accentColor).withOpacity(
+              0.18,
+            ),
             Colors.white.withOpacity(0),
           ],
         ),
@@ -1378,7 +1367,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // status color bar
             Container(
               width: 5,
               decoration: BoxDecoration(
@@ -1389,7 +1377,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // inner white body
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -1408,14 +1395,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    // tap wrapper
     final interactiveCard = Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
-        onTap: (isDeleting || isActivating) ? null : () => _openWorkDetail(work),
-        onLongPress:
-        (isDeleting || isActivating) ? null : () => _showEditWorkDialog(work),
+        onTap: (isDeleting || isActivating)
+            ? null
+            : () => _openWorkDetail(work),
+        onLongPress: (isDeleting || isActivating)
+            ? null
+            : () => _showEditWorkDialog(work),
         borderRadius: BorderRadius.circular(22),
         splashFactory: NoSplash.splashFactory,
         highlightColor: Colors.transparent,
@@ -1425,7 +1414,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    // swipe to delete wrapper with loading overlay
     return Dismissible(
       key: ValueKey(work.id),
       direction: DismissDirection.endToStart,
@@ -1668,8 +1656,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (value > 1000000000) {
-      return DateTime.fromMillisecondsSinceEpoch(value * 1000, isUtc: true)
-          .toLocal();
+      return DateTime.fromMillisecondsSinceEpoch(
+        value * 1000,
+        isUtc: true,
+      ).toLocal();
     }
 
     return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true).toLocal();
@@ -1703,8 +1693,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final formatted = isWhole
         ? doubleValue.toStringAsFixed(0)
         : doubleValue.toStringAsFixed(2);
-
-    // now includes currency symbol before amount, and "/hour" after
     return '$_currencySymbol$formatted/hour';
   }
 
@@ -1736,8 +1724,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final textScaler = MediaQuery.textScalerOf(dialogContext);
 
         TextStyle scaleTextStyle(TextStyle base, {FontWeight? fontWeight}) {
-          final scaledFontSize =
-          textScaler.scale(responsive.scaleText(base.fontSize ?? 16));
+          final scaledFontSize = textScaler.scale(
+            responsive.scaleText(base.fontSize ?? 16),
+          );
           return base.copyWith(
             fontSize: scaledFontSize,
             fontWeight: fontWeight ?? base.fontWeight,
@@ -1787,18 +1776,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         constraints.maxWidth >= responsive.scaleWidth(360);
                     final availableWidth =
                         constraints.maxWidth - (horizontalPadding * 2);
-                    final safeAvailableWidth =
-                    availableWidth > 0 ? availableWidth : 0.0;
+                    final safeAvailableWidth = availableWidth > 0
+                        ? availableWidth
+                        : 0.0;
                     final buttonWidth = isWide
                         ? math.max((safeAvailableWidth - spacing) / 2, 0.0)
                         : safeAvailableWidth;
 
                     final titleStyle = scaleTextStyle(
                       (theme.textTheme.titleMedium ??
-                          const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ))
+                              const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ))
                           .copyWith(fontWeight: FontWeight.w600),
                     );
 
@@ -1838,10 +1828,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
-                                child: Text(
-                                  l.shareAppTitle,
-                                  style: titleStyle,
-                                ),
+                                child: Text(l.shareAppTitle, style: titleStyle),
                               ),
                               IconButton(
                                 onPressed: () =>
@@ -1859,10 +1846,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: shareActions
                                 .map(
                                   (button) => SizedBox(
-                                width: buttonWidth,
-                                child: button,
-                              ),
-                            )
+                                    width: buttonWidth,
+                                    child: button,
+                                  ),
+                                )
                                 .toList(),
                           ),
                           SizedBox(height: responsive.scale(18)),
@@ -1899,17 +1886,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final responsive = context.responsive;
     final textScaler = MediaQuery.textScalerOf(context);
-    final baseStyle = theme.textTheme.labelLarge?.copyWith(
-      color: textColor,
-      fontWeight: FontWeight.w600,
-    ) ??
-        TextStyle(
+    final baseStyle =
+        theme.textTheme.labelLarge?.copyWith(
           color: textColor,
-          fontSize: 16,
           fontWeight: FontWeight.w600,
-        );
-    final scaledFontSize =
-    textScaler.scale(responsive.scaleText(baseStyle.fontSize ?? 16));
+        ) ??
+        TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600);
+    final scaledFontSize = textScaler.scale(
+      responsive.scaleText(baseStyle.fontSize ?? 16),
+    );
     final textStyle = baseStyle.copyWith(fontSize: scaledFontSize);
 
     return ElevatedButton(
@@ -1917,7 +1902,8 @@ class _HomeScreenState extends State<HomeScreen> {
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
         elevation: 0,
-        padding: padding ?? EdgeInsets.symmetric(vertical: responsive.scale(14)),
+        padding:
+            padding ?? EdgeInsets.symmetric(vertical: responsive.scale(14)),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(responsive.scale(18)),
         ),
@@ -1934,11 +1920,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(width: responsive.scale(8)),
           ],
           Flexible(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: textStyle,
-            ),
+            child: Text(label, textAlign: TextAlign.center, style: textStyle),
           ),
         ],
       ),
@@ -1969,15 +1951,11 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (!launched && mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.shareWhatsappFailed)),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l.shareWhatsappFailed)));
       }
     } catch (_) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.shareWhatsappFailed)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l.shareWhatsappFailed)));
     }
   }
 
@@ -1985,9 +1963,9 @@ class _HomeScreenState extends State<HomeScreen> {
     await Clipboard.setData(ClipboardData(text: _shareLink));
     if (!mounted) return;
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l.shareLinkCopied)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l.shareLinkCopied)));
   }
 
   @override
@@ -1995,10 +1973,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 }
-
-/// --------------------------------------------
-/// "Add New Work" Quick Card
-/// --------------------------------------------
 
 class _AddNewWorkCard extends StatelessWidget {
   const _AddNewWorkCard({
@@ -2013,7 +1987,6 @@ class _AddNewWorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Card with dashed border and soft gradient badge for the +
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -2041,7 +2014,6 @@ class _AddNewWorkCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Row(
                 children: [
-                  // circular gradient + icon
                   Container(
                     width: 48,
                     height: 48,
@@ -2050,10 +2022,7 @@ class _AddNewWorkCard extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF2563EB),
-                          Color(0xFF4F46E5),
-                        ],
+                        colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
                       ),
                     ),
                     child: const Center(
@@ -2065,19 +2034,18 @@ class _AddNewWorkCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // text
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // main title
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
-                            fontSize: 16,
-                          ) ??
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                                fontSize: 16,
+                              ) ??
                               const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF0F172A),
@@ -2085,17 +2053,17 @@ class _AddNewWorkCard extends StatelessWidget {
                               ),
                         ),
                         const SizedBox(height: 4),
-                        // subtitle
                         Text(
                           subtitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 13,
-                            height: 1.4,
-                            color: const Color(0xFF6B7280),
-                            fontWeight: FontWeight.w400,
-                          ) ??
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: 13,
+                                height: 1.4,
+                                color: const Color(0xFF6B7280),
+                                fontWeight: FontWeight.w400,
+                              ) ??
                               const TextStyle(
                                 fontSize: 13,
                                 height: 1.4,
@@ -2107,7 +2075,6 @@ class _AddNewWorkCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // chevron
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
@@ -2188,10 +2155,7 @@ class _DashedBorderPainter extends CustomPainter {
         final double next = distance + dashWidth;
         final bool isLastSegment = next > metric.length;
         dashed.addPath(
-          metric.extractPath(
-            distance,
-            isLastSegment ? metric.length : next,
-          ),
+          metric.extractPath(distance, isLastSegment ? metric.length : next),
           Offset.zero,
         );
         distance += dashWidth + dashSpace;

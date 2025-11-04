@@ -153,7 +153,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// LOGIN FUNCTION (Backend API)
   Future<void> login(
     String login,
     String password, {
@@ -181,7 +180,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// FORGOT PASSWORD FLOW
   Future<void> forgotPassword(String email) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {

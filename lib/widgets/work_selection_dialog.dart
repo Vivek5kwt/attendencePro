@@ -338,7 +338,6 @@ class _WorkSelectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inner core card (white) used in both states
     final textTheme = Theme.of(context).textTheme;
 
     final Widget _innerCard = Container(
@@ -401,15 +400,14 @@ class _WorkSelectionTile extends StatelessWidget {
       ),
     );
 
-    // If selected, wrap the inner card with a thin gradient border outside.
     final Widget _tileBody = isSelected
         ? Container(
             decoration: BoxDecoration(
               gradient: _gradientBorder,
               borderRadius:
-                  BorderRadius.circular(26), // slightly larger radius
+                  BorderRadius.circular(26),
             ),
-            padding: const EdgeInsets.all(2), // gradient stroke thickness
+            padding: const EdgeInsets.all(2),
             child: _innerCard,
           )
         : _innerCard;
@@ -631,7 +629,7 @@ class _DialogCloseButton extends StatelessWidget {
         width: 36,
         alignment: Alignment.center,
         child: Image.asset(
-          AppAssets.icClose, // make sure this points to your close image
+          AppAssets.icClose,
           width: 36,
           height: 36,
           fit: BoxFit.contain,

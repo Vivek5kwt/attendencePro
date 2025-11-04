@@ -1,9 +1,5 @@
 import 'package:http/http.dart' as http;
 
-/// An [http.Client] wrapper that logs every request and response.
-///
-/// The logs are printed to the terminal so you can observe the
-/// requested URL, response status code, and status message.
 class LoggingClient extends http.BaseClient {
   LoggingClient([http.Client? inner]) : _inner = inner ?? http.Client();
 
@@ -12,8 +8,7 @@ class LoggingClient extends http.BaseClient {
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     final requestDescription = '[HTTP] ${request.method} ${request.url}';
-    // Print before sending the request.
-    // ignore: avoid_print
+
     print(requestDescription);
 
     try {
@@ -26,12 +21,9 @@ class LoggingClient extends http.BaseClient {
         responseDescription.write(' ($reason)');
       }
 
-      // Print after receiving the response.
-      // ignore: avoid_print
       print(responseDescription.toString());
       return response;
     } catch (error) {
-      // ignore: avoid_print
       print('[HTTP] ${request.method} ${request.url} → error: $error');
       rethrow;
     }

@@ -137,9 +137,6 @@ class ContractTypeApi {
         return;
       }
 
-      // Treat missing resources as a successful delete. Some backends return
-      // 404/410 when a contract type was already removed, which should not be
-      // surfaced as an error to the user because the desired state is achieved.
       if (response.statusCode == 404 || response.statusCode == 410) {
         return;
       }
@@ -332,7 +329,6 @@ class ContractTypeApi {
       }
 
       if (value is Map<String, dynamic>) {
-        // Some responses embed lists under a nested "data" key
         final nested = value['data'];
         if (nested is List) {
           return nested

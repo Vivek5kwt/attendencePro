@@ -2,15 +2,14 @@ import 'package:attendancepro/screens/signup_screen.dart';
 import 'package:attendancepro/screens/verify_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../bloc/auth_cubit.dart';
 import '../bloc/app_cubit.dart';
-import '../bloc/work_bloc.dart';
+import '../bloc/auth_cubit.dart';
 import '../bloc/locale_cubit.dart';
+import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
+import '../utils/responsive.dart';
 import 'create_password_screen.dart';
 import 'login_phone_screen.dart';
-import '../utils/responsive.dart';
 
 class AuthFlow extends StatefulWidget {
   const AuthFlow({Key? key}) : super(key: key);
@@ -104,8 +103,10 @@ class _AuthFlowState extends State<AuthFlow> {
               ? SignupScreen(initialName: effectiveState.name)
               : const LoginPhoneScreen();
         } else if (effectiveState is AuthVerifyNumber) {
-          child =
-              VerifyScreen(phone: effectiveState.phone, isSignup: effectiveState.isSignup);
+          child = VerifyScreen(
+            phone: effectiveState.phone,
+            isSignup: effectiveState.isSignup,
+          );
         } else if (effectiveState is AuthCreatePassword) {
           child = CreatePasswordScreen(phone: effectiveState.phone);
         } else {

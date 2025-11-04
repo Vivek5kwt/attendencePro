@@ -59,7 +59,6 @@ class ReportsRepository {
         userId = storedUserId.trim();
       }
     } catch (_) {
-      // Ignore retrieval errors and rely on fallback.
     }
 
     if (userId == null || userId.trim().isEmpty) {

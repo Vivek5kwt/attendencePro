@@ -153,7 +153,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Header Row (Add New Work + Close X)
                             Row(
                               children: [
                                 const SizedBox(width: 40),
@@ -196,7 +195,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                             const SizedBox(height: 16),
 
-                            // ========== HOURLY WORK CARD ==========
                             Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
@@ -212,7 +210,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Title Row: icon + "Hourly Work"
                                   Row(
                                     crossAxisAlignment:
                                     CrossAxisAlignment.center,
@@ -255,7 +252,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                                   const SizedBox(height: 20),
 
-                                  // Work Name label
                                   Text(
                                     l.workNameLabel,
                                     style: Theme.of(context)
@@ -275,7 +271,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   ),
                                   const SizedBox(height: 8),
 
-                                  // Work Name TextField (rounded pill)
                                   TextField(
                                     controller: _workNameController,
                                     textInputAction: TextInputAction.next,
@@ -318,7 +313,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                                   const SizedBox(height: 16),
 
-                                  // Hourly Salary label
                                   Text(
                                     l.hourlySalaryLabel,
                                     style: Theme.of(context)
@@ -338,7 +332,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   ),
                                   const SizedBox(height: 8),
 
-                                  // Hourly Salary TextField (rounded pill)
                                   TextField(
                                     controller: _hourlySalaryController,
                                     keyboardType:
@@ -387,7 +380,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                             const SizedBox(height: 16),
 
-                            // ========== CONTRACT WORK CARD ==========
                             Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
@@ -403,7 +395,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Title Row: briefcase emoji + title
                                   Row(
                                     crossAxisAlignment:
                                     CrossAxisAlignment.center,
@@ -438,7 +429,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                                   const SizedBox(height: 16),
 
-                                  // Gradient "Add Contract Work" pill button
                                   GestureDetector(
                                     onTap: _navigateToContractWorkScreen,
                                     child: Container(
@@ -505,7 +495,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                             const SizedBox(height: 24),
 
-                            // ========== FOOTER BUTTONS ==========
                             Row(
                               children: [
                                 Expanded(
@@ -722,16 +711,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return '$prefix$formatted/hour';
   }
 
-  /// Build the best possible unit watermark string for the contract item.
-  /// Priority:
-  /// 1) Explicit watermark fields in additionalData.
-  /// 2) quantity + unitName combination from additionalData.
-  /// 3) Non-generic unitLabel ("per unit" is considered generic and ignored).
-  /// 4) Fallback "per unit".
+
   String _deriveUnitWatermark(ContractType type) {
     final data = type.additionalData;
 
-    // 1) Direct watermark value if present.
     final watermarkKeys = <String>[
       'watermark',
       'unitWatermark',
@@ -747,7 +730,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       }
     }
 
-    // 2) Build from quantity + name.
     num? qty;
     final qtyKeys = <String>[
       'unit_quantity',
@@ -805,7 +787,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return 'per $formattedQty $normalizedUnit';
     }
 
-    // Try to infer from existing labels/names when partial data is present.
     final parsedUnitLabel = _extractQuantityAndUnitFromText(type.unitLabel);
     qty ??= parsedUnitLabel.$1;
     unitName ??= parsedUnitLabel.$2;
@@ -834,13 +815,11 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return 'per $formattedQty $normalizedUnit';
     }
 
-    // 3) Use non-generic unitLabel if available.
     final label = (type.unitLabel ?? '').trim();
     if (label.isNotEmpty && label.toLowerCase() != 'per unit') {
       return label;
     }
 
-    // 4) Fallback to a formatted unit watermark.
     return 'per 1 ${_normalizeUnitLabel('unit', 1)}';
   }
 
@@ -905,9 +884,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return lowerCased;
   }
 
-  /// FINAL RATE STRING for contract tile (client spec):
-  /// "<currency><rate> / <watermark>"
-  /// e.g. "£3.00 / per 100 bunches"
   String _formatContractRate(ContractType type) {
     final symbol =
         _resolveCurrencySymbol(type.additionalData) ?? _resolveCurrencySymbol() ?? '£';
@@ -1050,9 +1026,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     }
   }
 
-  // ——————————————————
-  // WORK HEADER CARD
-  // ——————————————————
+
   Widget _buildWorkInfoSection(BuildContext context) {
     final hourlyText =
         'Hourly Rate: ${_formatHourlyRate(AppLocalizations.of(widget.rootContext))}';
@@ -1097,9 +1071,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     );
   }
 
-  // ——————————————————
-  // CONTRACT TILE
-  // ——————————————————
+
   Widget _buildContractTypeTile(
       BuildContext context,
       AppLocalizations l,
@@ -1179,9 +1151,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     );
   }
 
-  // ——————————————————
-  // CONTRACT SECTION IN EDIT DIALOG
-  // ——————————————————
   Widget _buildContractSection(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -1638,8 +1607,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                             ),
 
                             const SizedBox(height: 12),
-
-                            // close button
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(

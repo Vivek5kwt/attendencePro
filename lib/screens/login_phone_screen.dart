@@ -16,7 +16,7 @@ import '../data/country_codes.dart';
 enum _LoginMode { phone, email }
 
 class LoginPhoneScreen extends StatefulWidget {
-  const LoginPhoneScreen({Key? key}) : super(key: key);
+  const LoginPhoneScreen({super.key});
 
   @override
   State<LoginPhoneScreen> createState() => _LoginPhoneScreenState();

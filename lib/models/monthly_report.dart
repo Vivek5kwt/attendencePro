@@ -50,16 +50,23 @@ class MonthlyReport {
   factory MonthlyReport.fromJson(Map<String, dynamic> json) {
     final data = _ensureMap(json['data']) ?? json;
 
-    final monthName = _parseString(
-      data,
-      const ['month', 'month_name', 'monthName', 'label'],
-    );
-    final year = _parseInt(data, const ['year', 'year_number', 'yearNumber'], 0);
+    final monthName = _parseString(data, const [
+      'month',
+      'month_name',
+      'monthName',
+      'label',
+    ]);
+    final year = _parseInt(data, const [
+      'year',
+      'year_number',
+      'yearNumber',
+    ], 0);
     var type = monthlyReportTypeFromString(data['type']);
-    final currencySymbol = _parseString(
-      data,
-      const ['currency_symbol', 'currencySymbol', 'currency'],
-    );
+    final currencySymbol = _parseString(data, const [
+      'currency_symbol',
+      'currencySymbol',
+      'currency',
+    ]);
 
     final days = <MonthlyReportDay>[];
     final seen = <String>{};
@@ -186,7 +193,8 @@ class MonthlyReportDay {
 
   factory MonthlyReportDay.fromJson(Map<String, dynamic> json) {
     final date = _parseDate(json);
-    final label = _parseString(json, const [
+    final label =
+        _parseString(json, const [
           'label',
           'date_label',
           'day_label',
@@ -402,9 +410,7 @@ Map<String, dynamic>? _ensureMap(dynamic value) {
     return value;
   }
   if (value is Map) {
-    return value.map(
-      (key, dynamic value) => MapEntry(key.toString(), value),
-    );
+    return value.map((key, dynamic value) => MapEntry(key.toString(), value));
   }
   return null;
 }
@@ -422,7 +428,11 @@ String _parseString(Map<String, dynamic> json, List<String> keys) {
   return '';
 }
 
-int _parseInt(Map<String, dynamic> json, List<String> keys, [int fallback = 0]) {
+int _parseInt(
+  Map<String, dynamic> json,
+  List<String> keys, [
+  int fallback = 0,
+]) {
   for (final key in keys) {
     final value = json[key];
     if (value == null) {
@@ -498,7 +508,8 @@ int? _parseNullableInt(Map<String, dynamic> json, List<String> keys) {
 }
 
 DateTime? _parseDate(Map<String, dynamic> json) {
-  final raw = json['date'] ?? json['day'] ?? json['date_value'] ?? json['dateValue'];
+  final raw =
+      json['date'] ?? json['day'] ?? json['date_value'] ?? json['dateValue'];
   if (raw is DateTime) {
     return raw;
   }
@@ -533,7 +544,6 @@ DateTime? _parseDate(Map<String, dynamic> json) {
       final second = int.tryParse(slashParts[1]);
       final third = int.tryParse(slashParts[2]);
       if (first != null && second != null && third != null) {
-        // Assume formats like DD/MM/YYYY or YYYY/MM/DD by simple heuristics.
         if (third > 1900) {
           return DateTime(third, second, first);
         }

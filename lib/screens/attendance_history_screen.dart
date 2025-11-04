@@ -1732,10 +1732,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STATUS + LOADING
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _StatusMessage extends StatelessWidget {
   const _StatusMessage({required this.message, this.isError = false});
 
@@ -1790,10 +1786,6 @@ class _LoadingOverlay extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-/* FILTER BAR (Month / View Mode pills row) */
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _HistoryFilterBar extends StatelessWidget {
   const _HistoryFilterBar({
@@ -1942,9 +1934,6 @@ class _FilterDropdown<T> extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-/* SELECTED WORK BANNER */
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _SelectedWorkBanner extends StatelessWidget {
   const _SelectedWorkBanner({
@@ -2016,10 +2005,6 @@ class _SelectedWorkBanner extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-/* HOURS HISTORY LIST */
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _HoursHistoryList extends StatelessWidget {
   const _HoursHistoryList({
@@ -2098,7 +2083,6 @@ class _HoursDayCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Day header row: "Thu, 06 Feb" + total for the day
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -2129,7 +2113,6 @@ class _HoursDayCard extends StatelessWidget {
 
           const SizedBox(height: 18),
 
-          // list of entries for that date
           Column(
             children: [
               for (int i = 0; i < entries.length; i++) ...[
@@ -2228,7 +2211,7 @@ class _HourlyEntryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isLeave
-              ? const Color(0xFFFCD34D) // leave highlight border
+              ? const Color(0xFFFCD34D)
               : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
@@ -2243,16 +2226,13 @@ class _HourlyEntryTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Row 1: Work + Leave badge + Edit button on right
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // left side (icon + work name + leave chip)
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // small icon bubble
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -2275,8 +2255,6 @@ class _HourlyEntryTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-
-                    // Work name + Leave badge
                     Expanded(
                       child: Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
@@ -2318,7 +2296,6 @@ class _HourlyEntryTile extends StatelessWidget {
                 ),
               ),
 
-              // right side edit button
               const SizedBox(width: 12),
               _EditButtonTextOnly(
                 enabled: !isLeave,
@@ -2328,8 +2305,6 @@ class _HourlyEntryTile extends StatelessWidget {
           ),
 
           const SizedBox(height: 12),
-
-          // ── Row 2: Time stats (responsive wrap)
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -2364,7 +2339,6 @@ class _HourlyEntryTile extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // ── Row 3: Salary bottom right
           Align(
             alignment: Alignment.centerRight,
             child: Text(
@@ -2379,7 +2353,6 @@ class _HourlyEntryTile extends StatelessWidget {
   }
 }
 
-// small stat chip (value on top, label below)
 class _InfoStatMiniCard extends StatelessWidget {
   const _InfoStatMiniCard({
     required this.label,
@@ -2434,7 +2407,6 @@ class _InfoStatMiniCard extends StatelessWidget {
   }
 }
 
-// EDIT pill for hourly card (TEXT ONLY, responsive-safe)
 class _EditButtonTextOnly extends StatelessWidget {
   const _EditButtonTextOnly({
     required this.onPressed,
@@ -2473,7 +2445,6 @@ class _EditButtonTextOnly extends StatelessWidget {
   }
 }
 
-// EDIT pill with icon for contract rows (unchanged for now)
 class _EditButton extends StatelessWidget {
   const _EditButton({
     required this.onPressed,
@@ -2522,10 +2493,6 @@ class _EditButton extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-/* CONTRACT HISTORY LIST */
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ContractHistoryList extends StatelessWidget {
   const _ContractHistoryList({
@@ -2603,7 +2570,6 @@ class _ContractDayCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // header line
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -2861,7 +2827,6 @@ class _ContractTableRow extends StatelessWidget {
   }
 }
 
-// Table is horizontal scrollable if screen is too narrow → responsive
 class _ResponsiveTable extends StatelessWidget {
   const _ResponsiveTable({
     required this.child,
@@ -2893,10 +2858,6 @@ class _ResponsiveTable extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-/* UTIL + MODELS */
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ContractBundleEditEntry {
   _ContractBundleEditEntry({

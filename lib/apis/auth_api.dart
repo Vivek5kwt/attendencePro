@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 
 import 'logging_client.dart';
 
-/// Exception thrown when an API request fails.
 class ApiException implements Exception {
   final String message;
 
@@ -15,12 +14,9 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
-/// Simple API client for authentication endpoints.
 class AuthApi {
-  /// Base URL of the backend. Adjust if needed.
   final String baseUrl;
 
-  /// HTTP client used for requests (helpful for testing/mockability).
   final http.Client _httpClient;
 
   AuthApi({
@@ -28,11 +24,7 @@ class AuthApi {
     http.Client? httpClient,
   }) : _httpClient = LoggingClient(httpClient);
 
-  /// Login using the API: POST /api/auth/login
-  /// Expects a JSON body: {"login": "string", "password": "string"}
-  ///
-  /// On success returns the decoded JSON response as a Map.
-  /// On failure throws an [ApiException] with a readable message.
+
   Future<Map<String, dynamic>> login(
     String login,
     String password, {
@@ -52,16 +44,6 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
-  /// Register a new user using the API: POST /api/auth/register
-  /// Body: {
-  ///   "name": "string",
-  ///   "email": "string",
-  ///   "password": "string",
-  ///   "password_confirmation": "string",
-  ///   "phone": "string",
-  ///   "country_code": "string",
-  ///   "language": "string"
-  /// }
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
@@ -86,7 +68,6 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
-  /// Logout the currently authenticated user: POST /api/auth/logout
   Future<Map<String, dynamic>> logout(String token) async {
     final uri = Uri.parse('$baseUrl/api/auth/logout');
     final headers = {
@@ -98,7 +79,6 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: jsonEncode({}));
   }
 
-  /// Delete the authenticated user's account: DELETE /api/account/delete
   Future<Map<String, dynamic>?> deleteAccount(String token) async {
     final uri = Uri.parse('$baseUrl/api/account/delete');
     final headers = {
@@ -125,7 +105,6 @@ class AuthApi {
     }
   }
 
-  /// Trigger forgot password OTP email: POST /api/auth/forgot-password
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     final uri = Uri.parse('$baseUrl/api/auth/forgot-password');
     final headers = {
@@ -137,7 +116,6 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
-  /// Verify the OTP sent to the user's email: POST /api/auth/verify-otp
   Future<Map<String, dynamic>> verifyOtp({
     required String email,
     required int otp,
@@ -155,7 +133,6 @@ class AuthApi {
     return _sendPost(uri, headers: headers, body: body);
   }
 
-  /// Reset the user's password after verifying OTP: POST /api/auth/reset-password
   Future<Map<String, dynamic>> resetPassword({
     required String email,
     required String verifyToken,
@@ -226,7 +203,6 @@ class AuthApi {
       }
     }
 
-    // Handle nested error maps like {"errors": {"email": ["The email has already been taken."]}}
     final errors = decoded['errors'];
     if (errors is Map) {
       for (final entry in errors.entries) {
