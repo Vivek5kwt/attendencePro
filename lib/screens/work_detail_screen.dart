@@ -5854,40 +5854,6 @@ class _ContractEntryForm extends StatelessWidget {
                     .map((other) => other.contractTypeId)
                     .whereType<String>()
                     .toSet();
-                final dropdownItems = contractTypes.map((type) {
-                  final isCurrentSelection = type.id == entry.contractTypeId;
-                  final isTakenElsewhere =
-                      otherSelectedIds.contains(type.id) && !isCurrentSelection;
-                  final itemTextStyle = theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            isCurrentSelection ? FontWeight.w600 : FontWeight.w500,
-                        color: isTakenElsewhere
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF1E293B),
-                      ) ??
-                      TextStyle(
-                        fontWeight:
-                            isCurrentSelection ? FontWeight.w600 : FontWeight.w500,
-                        color: isTakenElsewhere
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF1E293B),
-                      );
-                  return DropdownMenuItem<String>(
-                    value: type.id,
-                    enabled: !isTakenElsewhere,
-                    child: Text(
-                      type.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: itemTextStyle,
-                    ),
-                  );
-                }).toList(growable: false);
-                final String? resolvedTypeId = contractTypes
-                        .any((type) => type.id == entry.contractTypeId)
-                    ? entry.contractTypeId
-                    : null;
-
                 final labelStyle = theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF1E293B),
@@ -5939,55 +5905,99 @@ class _ContractEntryForm extends StatelessWidget {
                                       style: labelStyle,
                                     ),
                                     const SizedBox(height: 8),
-                                    DropdownButtonFormField<String>(
-                                      value: resolvedTypeId,
-                                      items: dropdownItems,
-                                      onChanged: typeSelectionDisabled
-                                          ? null
-                                          : (value) =>
-                                              onTypeChanged?.call(entry.id, value),
-                                      isExpanded: true,
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: l.contractWorkContractTypeHint,
-                                        hintStyle: hintStyle,
-                                        filled: true,
-                                        fillColor: const Color(0xFFF8FAFF),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                          horizontal: 12,
-                                        ),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFE0E7FF),
+                                    LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final useWrap = constraints.maxWidth >= 520;
+                                        if (useWrap) {
+                                          return Wrap(
+                                            spacing: 12,
+                                            runSpacing: 12,
+                                            children: contractTypes
+                                                .map((type) {
+                                                  final isCurrentSelection =
+                                                      type.id == entry.contractTypeId;
+                                                  final isTakenElsewhere =
+                                                      otherSelectedIds.contains(type.id) &&
+                                                          !isCurrentSelection;
+                                                  return _ContractTypeSelectionCard(
+                                                    key: ValueKey(
+                                                        'contract-${entry.id}-${type.id}'),
+                                                    type: type,
+                                                    isSelected: isCurrentSelection,
+                                                    isDisabled: typeSelectionDisabled ||
+                                                        isTakenElsewhere,
+                                                    isTakenElsewhere: isTakenElsewhere,
+                                                    onTap: typeSelectionDisabled ||
+                                                            isTakenElsewhere
+                                                        ? null
+                                                        : () => onTypeChanged?.call(
+                                                              entry.id,
+                                                              type.id,
+                                                            ),
+                                                  );
+                                                })
+                                                .toList(growable: false),
+                                          );
+                                        }
+
+                                        return SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          padding: const EdgeInsets.only(bottom: 4),
+                                          child: Row(
+                                            children: [
+                                              for (var i = 0;
+                                                  i < contractTypes.length;
+                                                  i++)
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                    right: i == contractTypes.length - 1
+                                                        ? 0
+                                                        : 12,
+                                                  ),
+                                                  child: _ContractTypeSelectionCard(
+                                                    key: ValueKey(
+                                                        'contract-${entry.id}-${contractTypes[i].id}'),
+                                                    type: contractTypes[i],
+                                                    isSelected:
+                                                        contractTypes[i].id ==
+                                                            entry.contractTypeId,
+                                                    isDisabled: typeSelectionDisabled ||
+                                                        (otherSelectedIds.contains(
+                                                              contractTypes[i].id,
+                                                            ) &&
+                                                            contractTypes[i].id !=
+                                                                entry.contractTypeId),
+                                                    isTakenElsewhere:
+                                                        otherSelectedIds.contains(
+                                                              contractTypes[i].id,
+                                                            ) &&
+                                                            contractTypes[i].id !=
+                                                                entry.contractTypeId,
+                                                    onTap: typeSelectionDisabled ||
+                                                            (otherSelectedIds.contains(
+                                                                  contractTypes[i].id,
+                                                                ) &&
+                                                                contractTypes[i].id !=
+                                                                    entry.contractTypeId)
+                                                        ? null
+                                                        : () => onTypeChanged?.call(
+                                                              entry.id,
+                                                              contractTypes[i].id,
+                                                            ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFE0E7FF),
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFF2563EB),
-                                            width: 1.4,
-                                          ),
-                                        ),
-                                        disabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFE2E8F0),
-                                          ),
-                                        ),
-                                      ),
+                                        );
+                                      },
                                     ),
+                                    if (selectedType == null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        l.contractWorkContractTypeHint,
+                                        style: hintStyle,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -6078,36 +6088,271 @@ class _ContractEntryForm extends StatelessWidget {
                   ),
                 );
               }).toList(growable: false),
-          /*    if (onAddEntry != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: disableInteractions ||
-                                onAddEntry == null ||
-                                contractTypes.length <= entries.length
-                            ? null
-                            : onAddEntry,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF2563EB),
-                          side: const BorderSide(color: Color(0xFF2563EB)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+            if (onAddEntry != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: disableInteractions ||
+                              contractTypes.length <= entries.length
+                          ? null
+                          : onAddEntry,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF2563EB),
+                        side: const BorderSide(color: Color(0xFF2563EB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
                         ),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text(l.contractWorkAddTypeTitle),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        textStyle: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ) ??
+                            const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                       ),
-
-                    ],
-                  ),
-                ),*/
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(l.contractWorkAddTypeTitle),
+                    ),
+                    if (contractTypes.length <= entries.length)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          l.contractWorkAllTypesAddedMessage,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ) ??
+                              const TextStyle(
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ],
       ),
     );
+  }
+}
+
+class _ContractTypeSelectionCard extends StatelessWidget {
+  const _ContractTypeSelectionCard({
+    super.key,
+    required this.type,
+    required this.isSelected,
+    required this.isDisabled,
+    required this.onTap,
+    this.isTakenElsewhere = false,
+  });
+
+  final ContractType type;
+  final bool isSelected;
+  final bool isDisabled;
+  final bool isTakenElsewhere;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final unitLabel = type.unitLabel.trim().isNotEmpty
+        ? type.unitLabel.trim()
+        : l.contractWorkUnitFallback;
+    final baseTextColor = isDisabled
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF1E293B);
+    final rateDescription =
+        '${l.contractWorkRateLabel}: ${type.rate.toStringAsFixed(2)} / $unitLabel';
+    final role = type.role?.trim();
+    final hasRole = role != null && role.isNotEmpty;
+
+    final cardContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked,
+              size: 20,
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : (isDisabled
+                      ? const Color(0xFFC7D2FE)
+                      : const Color(0xFF94A3B8)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                type.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: baseTextColor,
+                    ) ??
+                    TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: baseTextColor,
+                      fontSize: 14,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        if (hasRole) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              role!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                    color: const Color(0xFF1D4ED8),
+                    fontWeight: FontWeight.w600,
+                  ) ??
+                  const TextStyle(
+                    color: Color(0xFF1D4ED8),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.payments_rounded,
+                size: 18, color: Color(0xFF2563EB)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                rateDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDisabled
+                          ? const Color(0xFF9CA3AF)
+                          : const Color(0xFF475569),
+                      fontWeight: FontWeight.w600,
+                    ) ??
+                    TextStyle(
+                      color: isDisabled
+                          ? const Color(0xFF9CA3AF)
+                          : const Color(0xFF475569),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '${l.contractWorkUnitsLabel}: $unitLabel',
+          style: theme.textTheme.labelSmall?.copyWith(
+                color: const Color(0xFF94A3B8),
+                fontWeight: FontWeight.w600,
+              ) ??
+              const TextStyle(
+                color: Color(0xFF94A3B8),
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+        ),
+        if (isTakenElsewhere) ...[
+          const SizedBox(height: 8),
+          Text(
+            l.contractWorkAllTypesAddedMessage,
+            style: theme.textTheme.labelSmall?.copyWith(
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ) ??
+                const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ),
+          ),
+        ],
+      ],
+    );
+
+    final animatedCard = AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFFEFF4FF) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+          width: isSelected ? 1.6 : 1,
+        ),
+        boxShadow: [
+          if (isSelected)
+            BoxShadow(
+              color: const Color(0xFF2563EB).withOpacity(0.16),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            )
+          else
+            const BoxShadow(
+              color: Color(0x080F172A),
+              blurRadius: 12,
+              offset: Offset(0, 8),
+            ),
+        ],
+      ),
+      child: cardContent,
+    );
+
+    final opacityCard = AnimatedOpacity(
+      duration: const Duration(milliseconds: 150),
+      opacity: isDisabled && !isSelected ? 0.55 : 1,
+      child: animatedCard,
+    );
+
+    final card = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isDisabled ? null : onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: opacityCard,
+      ),
+    );
+
+    final wrappedCard = ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 180, maxWidth: 240),
+      child: card,
+    );
+
+    if (isTakenElsewhere) {
+      return Tooltip(
+        message: l.contractWorkAllTypesAddedMessage,
+        child: wrappedCard,
+      );
+    }
+
+    return wrappedCard;
   }
 }
 
