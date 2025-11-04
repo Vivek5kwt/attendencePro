@@ -1362,6 +1362,27 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final l = AppLocalizations.of(context);
     final contractTypeId = _resolveContractTypeId();
+    final contractType =
+        contractTypeId != null ? _findContractTypeById(contractTypeId) : null;
+    String? contractTypeName = contractType?.name;
+    if (contractTypeName == null || contractTypeName.trim().isEmpty) {
+      final additionalData = widget.work.additionalData;
+      const candidateKeys = <String>[
+        'contract_type_name',
+        'contractTypeName',
+        'contract_type_label',
+        'contractTypeLabel',
+        'contract_type',
+        'contractType',
+      ];
+      for (final key in candidateKeys) {
+        final value = additionalData[key];
+        if (value is String && value.trim().isNotEmpty) {
+          contractTypeName = value.trim();
+          break;
+        }
+      }
+    }
     _isCompletingMissedAttendance = true;
 
     final response = await showModalBottomSheet<Map<String, dynamic>?>(
@@ -1374,7 +1395,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           workName: widget.work.name,
           localization: l,
           dateFormatter: _formatDate,
+          isContractWork: widget.work.isContract,
           contractTypeId: contractTypeId,
+          contractTypeName: contractTypeName,
           initialStartTime: _startTimeController.text,
           initialEndTime: _endTimeController.text,
           initialBreakMinutes: _breakMinutesController.text,
@@ -3619,7 +3642,9 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
     required this.workName,
     required this.localization,
     required this.dateFormatter,
+    required this.isContractWork,
     this.contractTypeId,
+    this.contractTypeName,
     this.initialStartTime,
     this.initialEndTime,
     this.initialBreakMinutes,
@@ -3631,7 +3656,9 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
   final String workName;
   final AppLocalizations localization;
   final String Function(DateTime) dateFormatter;
+  final bool isContractWork;
   final Object? contractTypeId;
+  final String? contractTypeName;
   final String? initialStartTime;
   final String? initialEndTime;
   final String? initialBreakMinutes;
@@ -3648,6 +3675,7 @@ class _MissedAttendanceCompletionSheetState
     extends State<_MissedAttendanceCompletionSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final List<_MissedAttendanceFormData> _entries;
+  late bool _includeContractEntry;
   bool _isSubmitting = false;
   String? _errorMessage;
 
@@ -3656,6 +3684,8 @@ class _MissedAttendanceCompletionSheetState
     super.initState();
     final sortedDates = widget.dates.toList(growable: false)
       ..sort((a, b) => a.compareTo(b));
+    _includeContractEntry =
+        widget.isContractWork && widget.contractTypeId != null;
     _entries = sortedDates
         .map((date) {
           final entry = _MissedAttendanceFormData(date: date);
@@ -3796,6 +3826,10 @@ class _MissedAttendanceCompletionSheetState
                           ),
                         ),
                         const SizedBox(height: 20),
+                        if (widget.isContractWork) ...[
+                          _buildContractToggle(context),
+                          const SizedBox(height: 20),
+                        ],
                         if (_errorMessage != null) ...[
                           Container(
                             width: double.infinity,
@@ -4101,6 +4135,13 @@ class _MissedAttendanceCompletionSheetState
       return;
     }
 
+    if (_includeContractEntry && widget.contractTypeId == null) {
+      setState(() {
+        _errorMessage = widget.localization.contractWorkLoadError;
+      });
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
@@ -4120,7 +4161,7 @@ class _MissedAttendanceCompletionSheetState
             breakMinutes: data.isLeave
                 ? 0
                 : _parseBreakMinutes(data.breakMinutesController.text),
-            contractTypeId: widget.contractTypeId,
+            contractTypeId: _includeContractEntry ? widget.contractTypeId : null,
             isLeave: data.isLeave,
           ),
         )
@@ -4156,6 +4197,108 @@ class _MissedAttendanceCompletionSheetState
         });
       }
     }
+  }
+
+  Widget _buildContractToggle(BuildContext context) {
+    final l = widget.localization;
+    final isActive = _includeContractEntry;
+    final hasContractTypeLabel =
+        widget.contractTypeName?.trim().isNotEmpty ?? false;
+
+    Color resolveBackground() {
+      return isActive ? const Color(0xFF2563EB) : const Color(0xFFEFF6FF);
+    }
+
+    Color resolveForeground() {
+      return isActive ? Colors.white : const Color(0xFF1D4ED8);
+    }
+
+    final button = OutlinedButton(
+      onPressed: _isSubmitting ? null : _handleContractToggle,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: resolveBackground(),
+        foregroundColor: resolveForeground(),
+        side: const BorderSide(color: Color(0xFF2563EB)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle_rounded : Icons.work_outline_rounded,
+            size: 18,
+            color: resolveForeground(),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              l.contractWorkLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final children = <Widget>[button];
+
+    if (isActive) {
+      final detailText = hasContractTypeLabel
+          ? '${l.contractWorkContractTypeLabel}: ${widget.contractTypeName}'
+          : l.contractWorkTappedMessage;
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            detailText,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF2563EB),
+                  fontWeight: FontWeight.w600,
+                ) ??
+                const TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+  }
+
+  void _handleContractToggle() {
+    if (!widget.isContractWork) {
+      return;
+    }
+    if (!_includeContractEntry && widget.contractTypeId == null) {
+      final message = widget.localization.contractWorkLoadError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      return;
+    }
+    setState(() {
+      _includeContractEntry = !_includeContractEntry;
+      if (_errorMessage != null) {
+        _errorMessage = null;
+      }
+    });
   }
 }
 
@@ -5179,6 +5322,7 @@ class _AttendanceSection extends StatelessWidget {
       colonFontSize: colonFontSize,
     );
   }
+
 }
 
 class _DashedBorderCard extends StatelessWidget {
