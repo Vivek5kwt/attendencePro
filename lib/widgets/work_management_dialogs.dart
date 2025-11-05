@@ -236,7 +236,8 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                             .textTheme
                                             .titleMedium
                                             ?.copyWith(
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight:
+                                          FontWeight.w700,
                                           fontSize: 18,
                                           color:
                                           const Color(0xFF0F172A),
@@ -668,7 +669,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   String? _resolveCurrencySymbol([Map<String, dynamic>? source]) {
-    final data = source ?? widget.work.additionalData;
+    // Null-safe access to additionalData to avoid crashes.
+    final Map<String, dynamic> data =
+        (source ?? widget.work.additionalData as Map<String, dynamic>?) ??
+            const <String, dynamic>{};
     if (data.isEmpty) {
       return null;
     }
@@ -711,9 +715,9 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return '$prefix$formatted/hour';
   }
 
-
   String _deriveUnitWatermark(ContractType type) {
-    final data = type.additionalData;
+    final Map<String, dynamic> data =
+        type.additionalData ?? const <String, dynamic>{};
 
     final watermarkKeys = <String>[
       'watermark',
@@ -795,7 +799,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     qty ??= parsedName.$1;
     unitName ??= parsedName.$2;
 
-    if ((unitName == null || unitName.isEmpty) && (type.role?.trim().isNotEmpty ?? false)) {
+    if ((unitName == null || unitName.isEmpty) &&
+        (type.role?.trim().isNotEmpty ?? false)) {
       unitName = type.role!.trim();
     }
 
@@ -831,7 +836,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     if (trimmed.isEmpty) {
       return (null, null);
     }
-    final pattern = RegExp(r'(\d+(?:[\.,]\d+)?)\s*([A-Za-z][A-Za-z\s]*)$', caseSensitive: false);
+    final pattern = RegExp(r'(\d+(?:[\.,]\d+)?)\s*([A-Za-z][A-Za-z\s]*)$',
+        caseSensitive: false);
     final match = pattern.firstMatch(trimmed);
     if (match == null) {
       return (null, null);
@@ -1026,7 +1032,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     }
   }
 
-
   Widget _buildWorkInfoSection(BuildContext context) {
     final hourlyText =
         'Hourly Rate: ${_formatHourlyRate(AppLocalizations.of(widget.rootContext))}';
@@ -1070,7 +1075,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       ),
     );
   }
-
 
   Widget _buildContractTypeTile(
       BuildContext context,
@@ -1598,7 +1602,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                         FontWeight.w600,
                                       ) ??
                                           const TextStyle(
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight:
+                                            FontWeight.w600,
                                           ),
                                     ),
                                   ],
