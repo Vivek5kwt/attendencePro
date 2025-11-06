@@ -270,6 +270,51 @@ class WorkDetailScreen extends StatefulWidget {
 }
 
 class _WorkDetailScreenState extends State<WorkDetailScreen> {
+  static const List<String> _startTimeKeys = <String>[
+    'start_time',
+    'startTime',
+    'in_time',
+    'inTime',
+    'clock_in',
+    'clockIn',
+    'check_in',
+    'checkIn',
+    'entry_time',
+    'entryTime',
+    'punch_in',
+    'punchIn',
+  ];
+
+  static const List<String> _endTimeKeys = <String>[
+    'end_time',
+    'endTime',
+    'out_time',
+    'outTime',
+    'clock_out',
+    'clockOut',
+    'check_out',
+    'checkOut',
+    'exit_time',
+    'exitTime',
+    'punch_out',
+    'punchOut',
+  ];
+
+  static const List<String> _breakMinutesKeys = <String>[
+    'break_minutes',
+    'breakMinutes',
+    'break_time',
+    'breakTime',
+    'break_duration',
+    'breakDuration',
+    'break_length',
+    'breakLength',
+    'break_duration_minutes',
+    'breakDurationMinutes',
+    'break_time_minutes',
+    'breakTimeMinutes',
+  ];
+
   final DashboardRepository _dashboardRepository = DashboardRepository();
   final AttendanceEntryRepository _attendanceRepository =
       AttendanceEntryRepository();
@@ -729,8 +774,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   int? _extractBreakMinutes(Map<String, dynamic> data, String? fallbackText) {
-    const keys = ['break_minutes', 'breakMinutes', 'break_time', 'breakTime'];
-    for (final key in keys) {
+    for (final key in _breakMinutesKeys) {
       final value = data[key];
       if (value == null) {
         continue;
@@ -872,20 +916,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _setAttendanceIdForDate(_selectedDate, initialAttendanceId);
     }
 
-    final startTime =
-        _extractTimeFromMap(additionalData, const ['start_time', 'startTime', 'in_time']);
+    final startTime = _extractTimeFromMap(additionalData, _startTimeKeys);
     if (startTime != null) {
       _startTimeController.text = startTime;
     }
 
-    final endTime =
-        _extractTimeFromMap(additionalData, const ['end_time', 'endTime', 'out_time']);
+    final endTime = _extractTimeFromMap(additionalData, _endTimeKeys);
     if (endTime != null) {
       _endTimeController.text = endTime;
     }
 
-    final breakMinutes =
-        _extractBreakMinutes(additionalData, additionalData['breakTime']?.toString());
+    final breakMinutes = _extractBreakMinutes(
+      additionalData,
+      _findPreviewValue(additionalData, _breakMinutesKeys)?.toString(),
+    );
     if (breakMinutes != null) {
       _breakMinutesController.text = breakMinutes.toString();
     } else if (_breakMinutesController.text.trim().isEmpty) {
@@ -1058,26 +1102,25 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final attendanceId = _extractAttendanceId(entry.raw);
 
-    final startTime = _extractTimeFromMap(
-          entry.raw,
-          const ['start_time', 'startTime', 'in_time'],
-        ) ??
+    final startTime =
+        _extractTimeFromMap(entry.raw, _startTimeKeys) ??
         entry.startTimeText;
     if (startTime != null && startTime.trim().isNotEmpty) {
       _startTimeController.text = _normalizeTimeString(startTime);
     }
 
-    final endTime = _extractTimeFromMap(
-          entry.raw,
-          const ['end_time', 'endTime', 'out_time'],
-        ) ??
+    final endTime =
+        _extractTimeFromMap(entry.raw, _endTimeKeys) ??
         entry.endTimeText;
     if (endTime != null && endTime.trim().isNotEmpty) {
       _endTimeController.text = _normalizeTimeString(endTime);
     }
 
-    final breakMinutes =
-        _extractBreakMinutes(entry.raw, entry.breakDurationText ?? entry.raw['breakTime']?.toString());
+    final breakMinutes = _extractBreakMinutes(
+      entry.raw,
+      entry.breakDurationText ??
+          _findPreviewValue(entry.raw, _breakMinutesKeys)?.toString(),
+    );
     if (breakMinutes != null) {
       _breakMinutesController.text = breakMinutes.toString();
     }
