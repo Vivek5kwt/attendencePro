@@ -78,6 +78,7 @@ class AttendanceHistoryEntryData {
     required this.salary,
     this.detectedCurrencySymbol,
     this.contractBundles = const <AttendanceContractBundle>[],
+    this.isContractEntry,
   });
 
   final DateTime date;
@@ -96,6 +97,7 @@ class AttendanceHistoryEntryData {
   final double salary;
   final String? detectedCurrencySymbol;
   final List<AttendanceContractBundle> contractBundles;
+  final bool? isContractEntry;
 
   AttendanceHistoryEntryData copyWith({
     DateTime? date,
@@ -114,6 +116,7 @@ class AttendanceHistoryEntryData {
     double? salary,
     String? detectedCurrencySymbol,
     List<AttendanceContractBundle>? contractBundles,
+    bool? isContractEntry,
   }) {
     return AttendanceHistoryEntryData(
       date: date ?? this.date,
@@ -133,6 +136,7 @@ class AttendanceHistoryEntryData {
       detectedCurrencySymbol:
           detectedCurrencySymbol ?? this.detectedCurrencySymbol,
       contractBundles: contractBundles ?? this.contractBundles,
+      isContractEntry: isContractEntry ?? this.isContractEntry,
     );
   }
 
@@ -233,6 +237,10 @@ class AttendanceHistoryEntryData {
     ]);
 
     final contractBundles = _parseContractBundles(json);
+    final isContractEntry = _parseBool(json, const [
+      'is_contract_entry',
+      'isContractEntry',
+    ]);
 
     return AttendanceHistoryEntryData(
       date: date,
@@ -270,6 +278,7 @@ class AttendanceHistoryEntryData {
       detectedCurrencySymbol:
           salaryAmount.symbol ?? rateAmount.symbol,
       contractBundles: contractBundles,
+      isContractEntry: isContractEntry,
     );
   }
 }
