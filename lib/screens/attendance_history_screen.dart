@@ -442,13 +442,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     );
   }
 
-  // Safely extract `isContractEntry` from the repository model (if it exists)
-  bool? _extractIsContractEntry(dynamic data) {
-    try {
-      final v = (data as dynamic).isContractEntry;
-      if (v is bool) return v;
-    } catch (_) {}
-    return null;
+  bool? _extractIsContractEntry(AttendanceHistoryEntryData data) {
+    return data.isContractEntry;
   }
 
   String? _resolveWorkId(String workName) {
