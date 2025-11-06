@@ -2229,7 +2229,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final l = AppLocalizations.of(context);
     final normalizedSelectedDate = _normalizeDateOnly(_selectedDate);
     final normalizedToday = _normalizeDateOnly(DateTime.now());
-    if (_isSelectedDateLocked) {
+    final bool isContractUpdateAttempt =
+        widget.work.isContract && _contractFieldsEnabled;
+    if (_isSelectedDateLocked && !isContractUpdateAttempt) {
       final message = l.attendanceAlreadyMarkedMessage;
       _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context)
@@ -3025,6 +3027,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     Widget buildAttendanceSection() {
       final bool isFormLocked = _isSelectedDateLocked;
+      final bool allowContractUpdates = widget.work.isContract;
+      final bool isSubmitLocked =
+          isFormLocked && !(allowContractUpdates && _contractFieldsEnabled);
+      final bool areHourlyFieldsLocked = isFormLocked;
+      final bool contractActionsLocked = !allowContractUpdates;
       return _AttendanceSection(
         dateLabel: dateLabel,
         onDateTap: _handleDateTap,
@@ -3040,13 +3047,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onFieldChanged: _handleAttendanceFieldChanged,
         isSubmitting: _isSubmittingAttendance,
         isWorkOff: _markAsWorkOff,
-        isLocked: isFormLocked,
+        isSubmitLocked: isSubmitLocked,
+        areHourlyFieldsLocked: areHourlyFieldsLocked,
+        contractActionsLocked: contractActionsLocked,
         showContractFields: widget.work.isContract,
         showContractWorkButton:
-            widget.work.isContract && !_contractFieldsEnabled && !isFormLocked,
-        onContractWorkTap: widget.work.isContract && !isFormLocked
-            ? _handleContractEntryEnable
-            : null,
+            widget.work.isContract && !_contractFieldsEnabled,
+        onContractWorkTap:
+            widget.work.isContract ? _handleContractEntryEnable : null,
         contractFieldsEnabled: _contractFieldsEnabled,
         isContractFieldsLoading: _isLoadingContractTypes,
         contractFieldsError: _contractTypesError,
@@ -3058,9 +3066,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onAddContractBundle: _handleAddContractBundle,
         onRemoveContractBundle: _handleRemoveContractBundle,
         onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
-        onContractEntryRemove: widget.work.isContract && !isFormLocked
-            ? _handleContractEntryDisable
-            : null,
+        onContractEntryRemove:
+            widget.work.isContract ? _handleContractEntryDisable : null,
         bundleUnitsValidator: _validateBundleUnits,
         startTimeValidator: _validateStartTime,
         endTimeValidator: _validateEndTime,
@@ -4794,7 +4801,9 @@ class _AttendanceSection extends StatelessWidget {
     required this.onFieldChanged,
     required this.isSubmitting,
     required this.isWorkOff,
-    this.isLocked = false,
+    this.isSubmitLocked = false,
+    this.areHourlyFieldsLocked = false,
+    this.contractActionsLocked = false,
     required this.startTimeValidator,
     required this.endTimeValidator,
     required this.breakValidator,
@@ -4831,7 +4840,9 @@ class _AttendanceSection extends StatelessWidget {
   final VoidCallback onFieldChanged;
   final bool isSubmitting;
   final bool isWorkOff;
-  final bool isLocked;
+  final bool isSubmitLocked;
+  final bool areHourlyFieldsLocked;
+  final bool contractActionsLocked;
   final String? Function(String?) startTimeValidator;
   final String? Function(String?) endTimeValidator;
   final String? Function(String?) breakValidator;
@@ -4970,7 +4981,8 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: textInputAction,
                     validator: validator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting && !isWorkOff && !isLocked,
+                    enabled:
+                        !isSubmitting && !isWorkOff && !areHourlyFieldsLocked,
                     customField: customField,
                     isCompact: isCompact,
                   );
@@ -4987,7 +4999,9 @@ class _AttendanceSection extends StatelessWidget {
                     customField: _buildSegmentedTimeField(
                       controller: startTimeController,
                       validator: startTimeValidator,
-                      enabled: !isSubmitting && !isWorkOff && !isLocked,
+                      enabled: !isSubmitting &&
+                          !isWorkOff &&
+                          !areHourlyFieldsLocked,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -5003,7 +5017,9 @@ class _AttendanceSection extends StatelessWidget {
                     customField: _buildSegmentedTimeField(
                       controller: endTimeController,
                       validator: endTimeValidator,
-                      enabled: !isSubmitting && !isWorkOff && !isLocked,
+                      enabled: !isSubmitting &&
+                          !isWorkOff &&
+                          !areHourlyFieldsLocked,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -5018,11 +5034,14 @@ class _AttendanceSection extends StatelessWidget {
                     textInputAction: TextInputAction.done,
                     validator: breakValidator,
                     onChanged: (_) => onFieldChanged(),
-                    enabled: !isSubmitting && !isWorkOff && !isLocked,
+                    enabled:
+                        !isSubmitting && !isWorkOff && !areHourlyFieldsLocked,
                     customField: _buildBreakDurationField(
                       controller: breakMinutesController,
                       validator: breakValidator,
-                      enabled: !isSubmitting && !isWorkOff && !isLocked,
+                      enabled: !isSubmitting &&
+                          !isWorkOff &&
+                          !areHourlyFieldsLocked,
                       onValueChanged: () {
                         onFieldChanged();
                       },
@@ -5058,7 +5077,7 @@ class _AttendanceSection extends StatelessWidget {
                 bundleUnitsValidator: bundleUnitsValidator,
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
-                isLocked: isLocked,
+                isLocked: contractActionsLocked,
                 trailingAction: _buildSubmitButton(context, l),
               ),
             ],
@@ -5177,8 +5196,9 @@ class _AttendanceSection extends StatelessWidget {
     return SizedBox(
       height: resolvedHeight,
       child: OutlinedButton(
-        onPressed:
-            (isSubmitting || isWorkOff || isLocked) ? null : onContractWorkTap,
+        onPressed: (isSubmitting || isWorkOff || contractActionsLocked)
+            ? null
+            : onContractWorkTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFEFF6FF),
           foregroundColor: const Color(0xFF1D4ED8),
@@ -5272,7 +5292,7 @@ class _AttendanceSection extends StatelessWidget {
     return SizedBox(
       height: resolvedHeight,
       child: ElevatedButton(
-        onPressed: (isSubmitting || isLocked) ? null : onSubmit,
+        onPressed: (isSubmitting || isSubmitLocked) ? null : onSubmit,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2563EB),
           foregroundColor: Colors.white,
