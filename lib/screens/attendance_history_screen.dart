@@ -2182,6 +2182,7 @@ class _EntryDayCard extends StatelessWidget {
                   currencySymbol: currencySymbol,
                   localization: localization,
                   onEdit: onEdit,
+                  showTotalHours: showTotalHours,
                 ),
                 if (i != entries.length - 1) const SizedBox(height: 12),
               ],
@@ -2199,12 +2200,14 @@ class _HourlyEntryTile extends StatelessWidget {
     required this.currencySymbol,
     required this.localization,
     required this.onEdit,
+    required this.showTotalHours,
   });
 
   final _AttendanceEntry entry;
   final String currencySymbol;
   final AppLocalizations localization;
   final ValueChanged<_AttendanceEntry> onEdit;
+  final bool showTotalHours;
 
   @override
   Widget build(BuildContext context) {
