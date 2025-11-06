@@ -649,16 +649,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
     // Build filtered lists consistent with UI view
     final hoursEntries = _entries
-        .where((entry) =>
-    (entry.type == _AttendanceEntryType.hourly ||
-        entry.type == _AttendanceEntryType.leave) &&
-        entry.isContractEntry != true)
+        .where(
+          (entry) =>
+              (entry.type == _AttendanceEntryType.hourly ||
+                  entry.type == _AttendanceEntryType.leave) &&
+              entry.isContractEntry != true,
+        )
         .toList(growable: false);
 
     final contractEntries = _entries
-        .where((entry) =>
-    (entry.type == _AttendanceEntryType.contract) ||
-        entry.isContractEntry == true)
+        .where(
+          (entry) =>
+              entry.type == _AttendanceEntryType.contract ||
+              entry.isContractEntry == true,
+        )
         .toList(growable: false);
 
     final targetEntries = _viewMode == _HistoryViewMode.contract
@@ -1584,20 +1588,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
     // Build filtered arrays using the API key `is_contract_entry`
     final hoursEntries = _entries
-        .where((entry) =>
-    (entry.type == _AttendanceEntryType.hourly ||
-        entry.type == _AttendanceEntryType.leave) &&
-        entry.isContractEntry != true)
-        .toList();
+        .where(
+          (entry) =>
+              (entry.type == _AttendanceEntryType.hourly ||
+                  entry.type == _AttendanceEntryType.leave) &&
+              entry.isContractEntry != true,
+        )
+        .toList(growable: false);
 
     final contractEntries = _entries
-        .where((entry) =>
-    (entry.type == _AttendanceEntryType.contract) ||
-        entry.isContractEntry == true)
-        .toList();
+        .where(
+          (entry) =>
+              entry.type == _AttendanceEntryType.contract ||
+              entry.isContractEntry == true,
+        )
+        .toList(growable: false);
 
-    final viewEntries =
-    _viewMode == _HistoryViewMode.hours ? hoursEntries : contractEntries;
+    final viewEntries = _viewMode == _HistoryViewMode.hours
+        ? hoursEntries
+        : contractEntries;
 
     Widget content;
     if (_isLoadingWorks && _entries.isEmpty) {
