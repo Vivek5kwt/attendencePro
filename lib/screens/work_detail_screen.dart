@@ -1529,6 +1529,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           isContractWork: widget.work.isContract,
           contractTypeId: contractTypeId,
           contractTypeName: contractTypeName,
+          contractTypes: _contractTypes,
           initialStartTime: _startTimeController.text,
           initialEndTime: _endTimeController.text,
           initialBreakMinutes: _breakMinutesController.text,
@@ -3909,6 +3910,7 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
     required this.isContractWork,
     this.contractTypeId,
     this.contractTypeName,
+    this.contractTypes = const <ContractType>[],
     this.initialStartTime,
     this.initialEndTime,
     this.initialBreakMinutes,
@@ -3923,6 +3925,7 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
   final bool isContractWork;
   final Object? contractTypeId;
   final String? contractTypeName;
+  final List<ContractType> contractTypes;
   final String? initialStartTime;
   final String? initialEndTime;
   final String? initialBreakMinutes;
@@ -3939,6 +3942,7 @@ class _MissedAttendanceCompletionSheetState
     extends State<_MissedAttendanceCompletionSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final List<_MissedAttendanceFormData> _entries;
+  late final String? _defaultContractTypeId;
   bool _isSubmitting = false;
   String? _errorMessage;
 
@@ -3947,13 +3951,24 @@ class _MissedAttendanceCompletionSheetState
     super.initState();
     final sortedDates = widget.dates.toList(growable: false)
       ..sort((a, b) => a.compareTo(b));
+    final matchingContractTypeId =
+        _findMatchingContractTypeId(widget.contractTypeId);
+    final normalizedInitialContractTypeId =
+        _normalizeContractTypeId(widget.contractTypeId);
+    final fallbackContractTypeId = widget.contractTypes.isNotEmpty
+        ? widget.contractTypes.first.id
+        : null;
+    _defaultContractTypeId =
+        matchingContractTypeId ?? fallbackContractTypeId ?? normalizedInitialContractTypeId;
     final defaultContractSelection =
-        widget.isContractWork && widget.contractTypeId != null;
+        widget.isContractWork && matchingContractTypeId != null;
     _entries = sortedDates
         .map((date) {
           final entry = _MissedAttendanceFormData(
             date: date,
             includeContractEntry: defaultContractSelection,
+            selectedContractTypeId:
+                defaultContractSelection ? matchingContractTypeId : null,
           );
           _applyInitialValues(entry);
           return entry;
@@ -3967,6 +3982,42 @@ class _MissedAttendanceCompletionSheetState
       entry.dispose();
     }
     super.dispose();
+  }
+
+  String? _normalizeContractTypeId(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    final stringValue = value.toString().trim();
+    if (stringValue.isEmpty) {
+      return null;
+    }
+    return stringValue;
+  }
+
+  String? _findMatchingContractTypeId(Object? value) {
+    final normalized = _normalizeContractTypeId(value);
+    if (normalized == null) {
+      return null;
+    }
+    for (final type in widget.contractTypes) {
+      if (type.id == normalized) {
+        return type.id;
+      }
+    }
+    return null;
+  }
+
+  ContractType? _findContractType(String? id) {
+    if (id == null) {
+      return null;
+    }
+    for (final type in widget.contractTypes) {
+      if (type.id == id) {
+        return type;
+      }
+    }
+    return null;
   }
 
   void _applyInitialValues(_MissedAttendanceFormData data) {
@@ -4342,6 +4393,7 @@ class _MissedAttendanceCompletionSheetState
                                 data.endTimeController.clear();
                                 data.breakMinutesController.text = '0';
                                 data.includeContractEntry = false;
+                                data.contractUnitsController.clear();
                               }
                             });
                           },
@@ -4394,6 +4446,18 @@ class _MissedAttendanceCompletionSheetState
     return parsed;
   }
 
+  int? _parseContractUnits(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return null;
+    }
+    return parsed;
+  }
+
   Future<void> _handleSubmit() async {
     final formState = _formKey.currentState;
     if (formState == null) {
@@ -4407,7 +4471,7 @@ class _MissedAttendanceCompletionSheetState
     final requiresContractType = widget.isContractWork &&
         _entries.any((entry) => entry.includeContractEntry);
 
-    if (requiresContractType && widget.contractTypeId == null) {
+    if (requiresContractType && widget.contractTypes.isEmpty) {
       setState(() {
         _errorMessage = widget.localization.contractWorkLoadError;
       });
@@ -4421,23 +4485,34 @@ class _MissedAttendanceCompletionSheetState
 
     final entries = _entries
         .map(
-          (data) => MissedAttendanceCompletion(
-            workId: widget.workId,
-            date: data.date,
-            startTime: data.isLeave
-                ? '00:00'
-                : data.startTimeController.text.trim(),
-            endTime: data.isLeave
-                ? '00:00'
-                : data.endTimeController.text.trim(),
-            breakMinutes: data.isLeave
-                ? 0
-                : _parseBreakMinutes(data.breakMinutesController.text),
-            contractTypeId: widget.isContractWork && data.includeContractEntry
-                ? widget.contractTypeId
-                : null,
-            isLeave: data.isLeave,
-          ),
+          (data) {
+            final includeContractEntry =
+                widget.isContractWork && data.includeContractEntry;
+            final contractTypeId = includeContractEntry
+                ? _normalizeContractTypeId(
+                    data.selectedContractTypeId ?? _defaultContractTypeId)
+                : null;
+            final contractUnits = includeContractEntry
+                ? _parseContractUnits(data.contractUnitsController.text)
+                : null;
+
+            return MissedAttendanceCompletion(
+              workId: widget.workId,
+              date: data.date,
+              startTime: data.isLeave
+                  ? '00:00'
+                  : data.startTimeController.text.trim(),
+              endTime: data.isLeave
+                  ? '00:00'
+                  : data.endTimeController.text.trim(),
+              breakMinutes: data.isLeave
+                  ? 0
+                  : _parseBreakMinutes(data.breakMinutesController.text),
+              contractTypeId: contractTypeId,
+              contractUnits: contractUnits,
+              isLeave: data.isLeave,
+            );
+          },
         )
         .toList(growable: false);
 
@@ -4477,8 +4552,11 @@ class _MissedAttendanceCompletionSheetState
       BuildContext context, _MissedAttendanceFormData data) {
     final l = widget.localization;
     final isActive = data.includeContractEntry;
+    final contractTypes = widget.contractTypes;
+    final selectedType = _findContractType(data.selectedContractTypeId);
     final hasContractTypeLabel =
-        widget.contractTypeName?.trim().isNotEmpty ?? false;
+        selectedType != null || (widget.contractTypeName?.trim().isNotEmpty ?? false);
+    final bool disableInteractions = _isSubmitting || data.isLeave;
 
     Color resolveBackground() {
       return isActive ? const Color(0xFF2563EB) : const Color(0xFFEFF6FF);
@@ -4489,9 +4567,7 @@ class _MissedAttendanceCompletionSheetState
     }
 
     final button = OutlinedButton(
-      onPressed: _isSubmitting || data.isLeave
-          ? null
-          : () => _handleContractToggle(data),
+      onPressed: disableInteractions ? null : () => _handleContractToggle(data),
       style: OutlinedButton.styleFrom(
         backgroundColor: resolveBackground(),
         foregroundColor: resolveForeground(),
@@ -4530,9 +4606,11 @@ class _MissedAttendanceCompletionSheetState
     final children = <Widget>[button];
 
     if (isActive) {
-      final detailText = hasContractTypeLabel
-          ? '${l.contractWorkContractTypeLabel}: ${widget.contractTypeName}'
-          : l.contractWorkTappedMessage;
+      final detailText = selectedType != null
+          ? '${l.contractWorkContractTypeLabel}: ${selectedType.name}'
+          : hasContractTypeLabel
+              ? '${l.contractWorkContractTypeLabel}: ${widget.contractTypeName}'
+              : l.contractWorkTappedMessage;
       children.add(
         Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -4551,6 +4629,180 @@ class _MissedAttendanceCompletionSheetState
           ),
         ),
       );
+
+      if (contractTypes.isEmpty) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              widget.localization.contractWorkLoadError,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF2563EB),
+                        fontWeight: FontWeight.w600,
+                      ) ??
+                  const TextStyle(
+                    color: Color(0xFF2563EB),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+            ),
+          ),
+        );
+      } else {
+        final bool hasValidSelection = contractTypes
+            .any((type) => type.id == data.selectedContractTypeId);
+        final dropdownValue = hasValidSelection
+            ? data.selectedContractTypeId
+            : null;
+        final ContractType? effectiveType = hasValidSelection
+            ? selectedType
+            : null;
+        final unitLabel = (effectiveType?.unitLabel.trim().isNotEmpty ?? false)
+            ? effectiveType!.unitLabel.trim()
+            : l.contractWorkUnitFallback;
+        final helperText = effectiveType != null
+            ? '${l.contractWorkRateLabel}: '
+                '${effectiveType.rate.toStringAsFixed(2)} / $unitLabel'
+            : null;
+
+        children.add(const SizedBox(height: 12));
+        children.add(
+          DropdownButtonFormField<String>(
+            value: dropdownValue,
+            items: contractTypes
+                .map((type) => DropdownMenuItem<String>(
+                      value: type.id,
+                      child: Text(type.name),
+                    ))
+                .toList(growable: false),
+            onChanged: disableInteractions
+                ? null
+                : (value) {
+                    setState(() {
+                      data.selectedContractTypeId = value;
+                    });
+                  },
+            decoration: InputDecoration(
+              labelText: l.contractWorkContractTypeLabel,
+              hintText: l.contractWorkContractTypeHint,
+              filled: true,
+              fillColor: const Color(0xFFF8FAFF),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE0E7FF),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE0E7FF),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2563EB),
+                  width: 1.4,
+                ),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                ),
+              ),
+            ),
+            isExpanded: true,
+            validator: (value) {
+              if (!isActive) {
+                return null;
+              }
+              if (contractTypes.isEmpty) {
+                return widget.localization.contractWorkLoadError;
+              }
+              if (value == null || value.trim().isEmpty) {
+                return widget.localization.contractWorkContractTypeHint;
+              }
+              return null;
+            },
+          ),
+        );
+
+        children.add(const SizedBox(height: 12));
+        children.add(
+          TextFormField(
+            controller: data.contractUnitsController,
+            enabled: !disableInteractions,
+            validator: (value) {
+              if (!isActive) {
+                return null;
+              }
+              final trimmed = value?.trim() ?? '';
+              if (trimmed.isEmpty) {
+                return l.attendanceUnitsRequired;
+              }
+              final parsed = int.tryParse(trimmed);
+              if (parsed == null || parsed <= 0) {
+                return l.attendanceUnitsInvalid;
+              }
+              return null;
+            },
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: false),
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: l.contractWorkUnitsLabel,
+              hintText: l.contractWorkUnitsHint,
+              prefixIcon: const Icon(
+                Icons.inventory_2_outlined,
+                color: Color(0xFF2563EB),
+              ),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
+                child: _ContractUnitBadge(label: unitLabel),
+              ),
+              suffixIconConstraints: const BoxConstraints(
+                minHeight: 0,
+                minWidth: 0,
+              ),
+              helperText: helperText,
+              filled: true,
+              fillColor: const Color(0xFFF8FAFF),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE0E7FF),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE0E7FF),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2563EB),
+                  width: 1.4,
+                ),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     return Column(
@@ -4563,7 +4815,7 @@ class _MissedAttendanceCompletionSheetState
     if (!widget.isContractWork) {
       return;
     }
-    if (!data.includeContractEntry && widget.contractTypeId == null) {
+    if (!data.includeContractEntry && widget.contractTypes.isEmpty) {
       final message = widget.localization.contractWorkLoadError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -4571,7 +4823,15 @@ class _MissedAttendanceCompletionSheetState
       return;
     }
     setState(() {
-      data.includeContractEntry = !data.includeContractEntry;
+      final shouldEnable = !data.includeContractEntry;
+      data.includeContractEntry = shouldEnable;
+      if (shouldEnable) {
+        data.selectedContractTypeId ??= _defaultContractTypeId;
+        if (data.selectedContractTypeId == null &&
+            widget.contractTypes.isNotEmpty) {
+          data.selectedContractTypeId = widget.contractTypes.first.id;
+        }
+      }
       if (_errorMessage != null &&
           !_entries.any((entry) => entry.includeContractEntry)) {
         _errorMessage = null;
@@ -4584,22 +4844,27 @@ class _MissedAttendanceFormData {
   _MissedAttendanceFormData({
     required this.date,
     required this.includeContractEntry,
+    this.selectedContractTypeId,
   })
       : startTimeController = TextEditingController(),
         endTimeController = TextEditingController(),
-        breakMinutesController = TextEditingController(text: '0');
+        breakMinutesController = TextEditingController(text: '0'),
+        contractUnitsController = TextEditingController();
 
   final DateTime date;
   final TextEditingController startTimeController;
   final TextEditingController endTimeController;
   final TextEditingController breakMinutesController;
+  final TextEditingController contractUnitsController;
   bool isLeave = false;
   bool includeContractEntry;
+  String? selectedContractTypeId;
 
   void dispose() {
     startTimeController.dispose();
     endTimeController.dispose();
     breakMinutesController.dispose();
+    contractUnitsController.dispose();
   }
 }
 

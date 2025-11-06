@@ -6,6 +6,7 @@ class MissedAttendanceCompletion {
     required this.endTime,
     required this.breakMinutes,
     this.contractTypeId,
+    this.contractUnits,
     this.isLeave = false,
   });
 
@@ -15,6 +16,7 @@ class MissedAttendanceCompletion {
   final String endTime;
   final int breakMinutes;
   final Object? contractTypeId;
+  final int? contractUnits;
   final bool isLeave;
 
   Map<String, dynamic> toJson() {
@@ -28,6 +30,9 @@ class MissedAttendanceCompletion {
     if (contractTypeId != null) {
       payload['contract_type_id'] =
           _normalizeContractTypeId(contractTypeId!);
+    }
+    if (contractUnits != null) {
+      payload['units'] = contractUnits;
     }
     if (isLeave) {
       payload['is_leave'] = true;
