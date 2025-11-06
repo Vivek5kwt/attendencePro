@@ -979,6 +979,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_markAsWorkOff) {
       return false;
     }
+    if (_contractFieldsEnabled) {
+      return false;
+    }
     final hasContractInput = _hasContractBundleUnitsInput();
     if (!hasContractInput) {
       return true;
@@ -3030,7 +3033,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final bool allowContractUpdates = widget.work.isContract;
       final bool isSubmitLocked =
           isFormLocked && !(allowContractUpdates && _contractFieldsEnabled);
-      final bool areHourlyFieldsLocked = isFormLocked;
+      final bool areHourlyFieldsLocked =
+          isFormLocked || (allowContractUpdates && _contractFieldsEnabled);
       final bool contractActionsLocked = !allowContractUpdates;
       return _AttendanceSection(
         dateLabel: dateLabel,
@@ -3933,6 +3937,8 @@ class _MissedAttendanceCompletionSheetState
   Widget _buildEntryCard(_MissedAttendanceFormData data) {
     final l = widget.localization;
     final formattedDate = widget.dateFormatter(data.date);
+    final bool hourlyFieldsLocked =
+        widget.isContractWork && data.includeContractEntry;
 
     return Container(
       width: double.infinity,
@@ -3973,19 +3979,23 @@ class _MissedAttendanceCompletionSheetState
                   textInputAction: TextInputAction.next,
                   validator: (value) => _validateTime(
                     value,
-                    isRequired: !data.isLeave,
+                    isRequired: !data.isLeave && !hourlyFieldsLocked,
                     errorMessage: l.attendanceStartTimeRequired,
                   ),
                   onChanged: (_) {},
-                  enabled: !data.isLeave && !_isSubmitting,
+                  enabled: !data.isLeave &&
+                      !_isSubmitting &&
+                      !hourlyFieldsLocked,
                   customField: _buildSharedSegmentedTimeField(
                     controller: data.startTimeController,
                     validator: (value) => _validateTime(
                       value,
-                      isRequired: !data.isLeave,
+                      isRequired: !data.isLeave && !hourlyFieldsLocked,
                       errorMessage: l.attendanceStartTimeRequired,
                     ),
-                    enabled: !data.isLeave && !_isSubmitting,
+                    enabled: !data.isLeave &&
+                        !_isSubmitting &&
+                        !hourlyFieldsLocked,
                     onValueChanged: () {
                       setState(() {});
                     },
@@ -4001,19 +4011,23 @@ class _MissedAttendanceCompletionSheetState
                   textInputAction: TextInputAction.next,
                   validator: (value) => _validateTime(
                     value,
-                    isRequired: !data.isLeave,
+                    isRequired: !data.isLeave && !hourlyFieldsLocked,
                     errorMessage: l.attendanceEndTimeRequired,
                   ),
                   onChanged: (_) {},
-                  enabled: !data.isLeave && !_isSubmitting,
+                  enabled: !data.isLeave &&
+                      !_isSubmitting &&
+                      !hourlyFieldsLocked,
                   customField: _buildSharedSegmentedTimeField(
                     controller: data.endTimeController,
                     validator: (value) => _validateTime(
                       value,
-                      isRequired: !data.isLeave,
+                      isRequired: !data.isLeave && !hourlyFieldsLocked,
                       errorMessage: l.attendanceEndTimeRequired,
                     ),
-                    enabled: !data.isLeave && !_isSubmitting,
+                    enabled: !data.isLeave &&
+                        !_isSubmitting &&
+                        !hourlyFieldsLocked,
                     onValueChanged: () {
                       setState(() {});
                     },
@@ -4028,7 +4042,8 @@ class _MissedAttendanceCompletionSheetState
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,
                   validator: (value) {
-                    if (!(!data.isLeave && !_isSubmitting)) {
+                    if (!(!data.isLeave && !_isSubmitting) ||
+                        hourlyFieldsLocked) {
                       return null;
                     }
                     if (value == null || value.trim().isEmpty) {
@@ -4041,11 +4056,14 @@ class _MissedAttendanceCompletionSheetState
                     return null;
                   },
                   onChanged: (_) {},
-                  enabled: !data.isLeave && !_isSubmitting,
+                  enabled: !data.isLeave &&
+                      !_isSubmitting &&
+                      !hourlyFieldsLocked,
                   customField: _buildSharedBreakDurationField(
                     controller: data.breakMinutesController,
                     validator: (value) {
-                      if (!(!data.isLeave && !_isSubmitting)) {
+                      if (!(!data.isLeave && !_isSubmitting) ||
+                          hourlyFieldsLocked) {
                         return null;
                       }
                       if (value == null || value.trim().isEmpty) {
@@ -4057,7 +4075,9 @@ class _MissedAttendanceCompletionSheetState
                       }
                       return null;
                     },
-                    enabled: !data.isLeave && !_isSubmitting,
+                    enabled: !data.isLeave &&
+                        !_isSubmitting &&
+                        !hourlyFieldsLocked,
                     onValueChanged: () {
                       setState(() {});
                     },
