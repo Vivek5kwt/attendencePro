@@ -63,9 +63,34 @@ class DashboardAttendanceEntry {
 
   factory DashboardAttendanceEntry.fromJson(Map<String, dynamic> json) {
     final dateText = _firstString(json, const ['date', 'entry_date', 'attendance_date']);
-    final startTimeText =
-        _firstString(json, const ['start_time', 'startTime', 'in_time']);
-    final endTimeText = _firstString(json, const ['end_time', 'endTime', 'out_time']);
+    final startTimeText = _firstString(json, const [
+      'start_time',
+      'startTime',
+      'in_time',
+      'inTime',
+      'clock_in',
+      'clockIn',
+      'check_in',
+      'checkIn',
+      'entry_time',
+      'entryTime',
+      'punch_in',
+      'punchIn',
+    ]);
+    final endTimeText = _firstString(json, const [
+      'end_time',
+      'endTime',
+      'out_time',
+      'outTime',
+      'clock_out',
+      'clockOut',
+      'check_out',
+      'checkOut',
+      'exit_time',
+      'exitTime',
+      'punch_out',
+      'punchOut',
+    ]);
     final breakDurationText = _resolveBreakText(json);
     final totalHours =
         _parseDouble(json['total_hours'] ?? json['hours'] ?? json['totalHours']);
@@ -142,8 +167,29 @@ String? _firstString(Map<String, dynamic> json, List<String> keys) {
 }
 
 String? _resolveBreakText(Map<String, dynamic> json) {
-  final value =
-      json['break_time'] ?? json['breakTime'] ?? json['break_minutes'] ?? json['breakMinutes'];
+  dynamic value;
+  const breakKeys = [
+    'break_time',
+    'breakTime',
+    'break_minutes',
+    'breakMinutes',
+    'break_duration',
+    'breakDuration',
+    'break_length',
+    'breakLength',
+    'break_duration_minutes',
+    'breakDurationMinutes',
+    'break_time_minutes',
+    'breakTimeMinutes',
+  ];
+  for (final key in breakKeys) {
+    if (json.containsKey(key)) {
+      value = json[key];
+      if (value != null) {
+        break;
+      }
+    }
+  }
   if (value == null) {
     return null;
   }
