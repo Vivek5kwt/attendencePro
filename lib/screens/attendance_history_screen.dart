@@ -928,14 +928,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
-    final startController = TextEditingController(text: entry.startTime ?? '');
-    final endController = TextEditingController(text: entry.endTime ?? '');
-    final breakController = TextEditingController(
-        text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0');
-
-    final formKey = GlobalKey<FormState>();
-    bool isSaving = false;
-
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -943,146 +935,31 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: 24,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                ),
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${entry.workName} · ${_formatDayLabel(entry.date)}',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: startController,
-                        decoration: InputDecoration(
-                          labelText: l.startTimeLabel,
-                        ),
-                        validator: _validateTimeInput,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: endController,
-                        decoration: InputDecoration(
-                          labelText: l.endTimeLabel,
-                        ),
-                        validator: _validateTimeInput,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: breakController,
-                        decoration: InputDecoration(
-                          labelText: l.breakLabel,
-                          hintText: '0',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: _validateMinutesInput,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed:
-                                isSaving ? null : () => Navigator.of(context).pop(),
-                            child: Text(l.cancelButton),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: isSaving
-                                ? null
-                                : () async {
-                                    if (!(formKey.currentState?.validate() ??
-                                        false)) {
-                                      return;
-                                    }
-                                    final start =
-                                        _parseTimeOfDay(startController.text);
-                                    final end =
-                                        _parseTimeOfDay(endController.text);
-                                    if (start == null || end == null) {
-                                      _showErrorSnackBar(l
-                                          .attendanceHistoryLoadFailedMessage);
-                                      return;
-                                    }
-                                    final breakMinutes =
-                                        int.tryParse(breakController.text.trim()) ??
-                                            0;
-                                    final workedMinutes =
-                                        _calculateWorkedMinutes(start, end);
-                                    if (workedMinutes <= breakMinutes) {
-                                      _showErrorSnackBar(l
-                                          .attendanceHistoryLoadFailedMessage);
-                                      return;
-                                    }
-                                    setModalState(() {
-                                      isSaving = true;
-                                    });
-                                    final success =
-                                        await _submitHourlyAttendance(
-                                      workId: workId,
-                                      date: entry.date,
-                                      start: start,
-                                      end: end,
-                                      breakMinutes: breakMinutes,
-                                      attendanceId: entry.attendanceId,
-                                    );
-                                    if (success && mounted) {
-                                      Navigator.of(context).pop();
-                                    }
-                                    if (mounted) {
-                                      setModalState(() {
-                                        isSaving = false;
-                                      });
-                                    }
-                                  },
-                            child: isSaving
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
-                                  )
-                                : Text(l.saveButtonLabel),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+        return _HourlyAttendanceSheet(
+          entry: entry,
+          localization: l,
+          validateTime: _validateTimeInput,
+          validateMinutes: _validateMinutesInput,
+          parseTimeOfDay: _parseTimeOfDay,
+          calculateWorkedMinutes: _calculateWorkedMinutes,
+          onError: _showErrorSnackBar,
+          onSubmit: (start, end, breakMinutes) async {
+            final success = await _submitHourlyAttendance(
+              workId: workId,
+              date: entry.date,
+              start: start,
+              end: end,
+              breakMinutes: breakMinutes,
+              attendanceId: entry.attendanceId,
             );
+            if (!mounted) {
+              return false;
+            }
+            return success;
           },
         );
       },
     );
-
-    if (!mounted) {
-      startController.dispose();
-      endController.dispose();
-      breakController.dispose();
-      return;
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      startController.dispose();
-      endController.dispose();
-      breakController.dispose();
-    });
   }
 
   Future<void> _openContractEditSheet(_AttendanceEntry entry) async {
@@ -1100,44 +977,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
-    final startController = TextEditingController(text: entry.startTime ?? '');
-    final endController = TextEditingController(text: entry.endTime ?? '');
-    final breakController = TextEditingController(
-      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
-    );
-
-    final bundleEntries = <_ContractBundleEditEntry>[];
-
-    void addBundleEntry({ContractType? type, int? count}) {
-      final resolvedType =
-          type ?? (_contractTypes.isNotEmpty ? _contractTypes.first : null);
-      bundleEntries.add(
-        _ContractBundleEditEntry(
-          id: 'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
-          contractType: resolvedType,
-          initialCount: count,
-        ),
-      );
-    }
-
-    if (entry.contractBundles.isNotEmpty) {
-      for (final bundle in entry.contractBundles) {
-        final type = _findContractTypeById(bundle.contractTypeId);
-        addBundleEntry(type: type, count: bundle.count);
-      }
-    }
-
-    if (bundleEntries.isEmpty) {
-      final fallbackCount =
-      entry.unitsCompleted != null && entry.unitsCompleted! > 0
-          ? entry.unitsCompleted
-          : null;
-      addBundleEntry(count: fallbackCount);
-    }
-
-    final formKey = GlobalKey<FormState>();
-    bool isSaving = false;
-
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -1145,300 +984,39 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: 24,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                ),
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${entry.workName} · ${_formatDayLabel(entry.date)}',
-                        style:
-                        Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: startController,
-                        decoration: InputDecoration(
-                          labelText: l.startTimeLabel,
-                        ),
-                        validator: _validateOptionalTimeInput,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: endController,
-                        decoration: InputDecoration(
-                          labelText: l.endTimeLabel,
-                        ),
-                        validator: _validateOptionalTimeInput,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: breakController,
-                        decoration: InputDecoration(
-                          labelText: l.breakLabel,
-                          hintText: '0',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: _validateMinutesInput,
-                      ),
-                      const SizedBox(height: 16),
-                      ...List<Widget>.generate(bundleEntries.length, (index) {
-                        final bundleEntry = bundleEntries[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                              bottom: index == bundleEntries.length - 1 ? 0 : 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: DropdownButtonFormField<ContractType>(
-                                  value: bundleEntry.contractType,
-                                  decoration: InputDecoration(
-                                    labelText: l.contractWorkLabel,
-                                  ),
-                                  items: _contractTypes
-                                      .map(
-                                        (type) => DropdownMenuItem<ContractType>(
-                                      value: type,
-                                      child: Text(type.name),
-                                    ),
-                                  )
-                                      .toList(),
-                                  onChanged: isSaving
-                                      ? null
-                                      : (value) {
-                                    if (value == null) {
-                                      return;
-                                    }
-                                    setModalState(() {
-                                      bundleEntry.contractType = value;
-                                    });
-                                  },
-                                  validator: (value) {
-                                    if (value == null) {
-                                      return l.contractWorkLoadError;
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                width: 110,
-                                child: TextFormField(
-                                  controller: bundleEntry.controller,
-                                  decoration: InputDecoration(
-                                    labelText: l.contractWorkUnitsLabel,
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    final trimmed = value?.trim() ?? '';
-                                    if (trimmed.isEmpty) {
-                                      return l.attendanceUnitsRequired;
-                                    }
-                                    final parsed = int.tryParse(trimmed);
-                                    if (parsed == null || parsed <= 0) {
-                                      return l.attendanceUnitsInvalid;
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: l.attendanceRemoveBundleTooltip,
-                                onPressed: isSaving || bundleEntries.length <= 1
-                                    ? null
-                                    : () {
-                                  setModalState(() {
-                                    bundleEntries.remove(bundleEntry);
-                                  });
-                                  bundleEntry.dispose();
-                                },
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: isSaving
-                            ? null
-                            : () {
-                          setModalState(() {
-                            addBundleEntry();
-                          });
-                        },
-                        icon: const Icon(Icons.add),
-                        label: Text(l.attendanceAddBundleButton),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed:
-                          isSaving ? null : () => Navigator.of(context).pop(),
-                          child: Text(l.cancelButton),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                            FocusScope.of(context).unfocus();
-                            if (!(formKey.currentState?.validate() ??
-                                false)) {
-                              return;
-                            }
-                            if (bundleEntries.isEmpty) {
-                              _showErrorSnackBar(
-                                  l.attendanceUnitsRequired);
-                              return;
-                            }
-                            final resolvedBundles =
-                            <AttendanceContractBundle>[];
-                            for (final item in bundleEntries) {
-                              final type = item.contractType;
-                              if (type == null) {
-                                _showErrorSnackBar(
-                                    l.contractWorkLoadError);
-                                return;
-                              }
-                              final typeId =
-                              int.tryParse(type.id.trim());
-                              if (typeId == null) {
-                                _showErrorSnackBar(
-                                    l.contractWorkLoadError);
-                                return;
-                              }
-                              final countText =
-                              item.controller.text.trim();
-                              final count = int.tryParse(countText);
-                              if (count == null || count <= 0) {
-                                _showErrorSnackBar(
-                                    l.attendanceUnitsInvalid);
-                                return;
-                              }
-                              resolvedBundles.add(
-                                AttendanceContractBundle(
-                                  contractTypeId: typeId,
-                                  count: count,
-                                ),
-                              );
-                            }
-                            if (resolvedBundles.isEmpty) {
-                              _showErrorSnackBar(
-                                  l.attendanceUnitsRequired);
-                              return;
-                            }
-                            final startText = startController.text.trim();
-                            final endText = endController.text.trim();
-                            final breakMinutes =
-                                int.tryParse(breakController.text.trim()) ?? 0;
-                            final start = startText.isEmpty
-                                ? null
-                                : _parseTimeOfDay(startText);
-                            final end =
-                                endText.isEmpty ? null : _parseTimeOfDay(endText);
-                            if ((startText.isNotEmpty && start == null) ||
-                                (endText.isNotEmpty && end == null)) {
-                              _showErrorSnackBar(
-                                  l.attendanceHistoryLoadFailedMessage);
-                              return;
-                            }
-                            if ((start != null && end == null) ||
-                                (start == null && end != null)) {
-                              _showErrorSnackBar(
-                                  l.attendanceHistoryLoadFailedMessage);
-                              return;
-                            }
-                            if (start != null && end != null) {
-                              final workedMinutes =
-                                  _calculateWorkedMinutes(start, end);
-                              if (workedMinutes <= breakMinutes) {
-                                _showErrorSnackBar(
-                                    l.attendanceHistoryLoadFailedMessage);
-                                return;
-                              }
-                            }
-                            setModalState(() {
-                              isSaving = true;
-                            });
-                            final success = await _updateContractAttendance(
-                              attendanceId: attendanceId,
-                              workId: workId,
-                              date: entry.date,
-                              bundles: resolvedBundles,
-                              start: start,
-                              end: end,
-                              breakMinutes: breakMinutes,
-                            );
-                            if (!mounted) {
-                              return;
-                            }
-                            if (success) {
-                              Navigator.of(context).pop();
-                              return;
-                            }
-                            setModalState(() {
-                              isSaving = false;
-                            });
-                          },
-                          child: isSaving
-                              ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child:
-                            CircularProgressIndicator(strokeWidth: 2),
-                          )
-                              : Text(l.saveButtonLabel),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+        return _ContractAttendanceSheet(
+          entry: entry,
+          localization: l,
+          contractTypes: _contractTypes,
+          validateOptionalTime: _validateOptionalTimeInput,
+          validateMinutes: _validateMinutesInput,
+          parseTimeOfDay: _parseTimeOfDay,
+          calculateWorkedMinutes: _calculateWorkedMinutes,
+          onError: _showErrorSnackBar,
+          resolveContractType: _findContractTypeById,
+          onSubmit: ({
+            required List<AttendanceContractBundle> bundles,
+            TimeOfDay? start,
+            TimeOfDay? end,
+            required int breakMinutes,
+          }) async {
+            final success = await _updateContractAttendance(
+              attendanceId: attendanceId,
+              workId: workId,
+              date: entry.date,
+              bundles: bundles,
+              start: start,
+              end: end,
+              breakMinutes: breakMinutes,
             );
+            if (!mounted) {
+              return false;
+            }
+            return success;
           },
         );
       },
     );
-
-    if (!mounted) {
-      startController.dispose();
-      endController.dispose();
-      breakController.dispose();
-      for (final item in bundleEntries) {
-        item.dispose();
-      }
-      return;
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      startController.dispose();
-      endController.dispose();
-      breakController.dispose();
-      for (final item in bundleEntries) {
-        item.dispose();
-      }
-    });
   }
 
   Future<bool> _submitHourlyAttendance({
@@ -2701,6 +2279,532 @@ class _ContractHistoryList extends StatelessWidget {
     );
   }
 }
+
+class _HourlyAttendanceSheet extends StatefulWidget {
+  const _HourlyAttendanceSheet({
+    required this.entry,
+    required this.localization,
+    required this.validateTime,
+    required this.validateMinutes,
+    required this.parseTimeOfDay,
+    required this.calculateWorkedMinutes,
+    required this.onError,
+    required this.onSubmit,
+  });
+
+  final _AttendanceEntry entry;
+  final AppLocalizations localization;
+  final String? Function(String?) validateTime;
+  final String? Function(String?) validateMinutes;
+  final TimeOfDay? Function(String value) parseTimeOfDay;
+  final int Function(TimeOfDay start, TimeOfDay end) calculateWorkedMinutes;
+  final void Function(String message) onError;
+  final Future<bool> Function(TimeOfDay start, TimeOfDay end, int breakMinutes)
+      onSubmit;
+
+  @override
+  State<_HourlyAttendanceSheet> createState() => _HourlyAttendanceSheetState();
+}
+
+class _HourlyAttendanceSheetState extends State<_HourlyAttendanceSheet> {
+  late final TextEditingController startController;
+  late final TextEditingController endController;
+  late final TextEditingController breakController;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  bool isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final entry = widget.entry;
+    startController = TextEditingController(text: entry.startTime ?? '');
+    endController = TextEditingController(text: entry.endTime ?? '');
+    breakController = TextEditingController(
+      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
+    );
+  }
+
+  @override
+  void dispose() {
+    startController.dispose();
+    endController.dispose();
+    breakController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    FocusScope.of(context).unfocus();
+    if (!(formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    final start = widget.parseTimeOfDay(startController.text);
+    final end = widget.parseTimeOfDay(endController.text);
+    final l = widget.localization;
+    if (start == null || end == null) {
+      widget.onError(l.attendanceHistoryLoadFailedMessage);
+      return;
+    }
+    final breakMinutes = int.tryParse(breakController.text.trim()) ?? 0;
+    final workedMinutes = widget.calculateWorkedMinutes(start, end);
+    if (workedMinutes <= breakMinutes) {
+      widget.onError(l.attendanceHistoryLoadFailedMessage);
+      return;
+    }
+    setState(() {
+      isSaving = true;
+    });
+    final success = await widget.onSubmit(start, end, breakMinutes);
+    if (!mounted) {
+      return;
+    }
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() {
+      isSaving = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.localization;
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${widget.entry.workName} · ${_formatDayLabel(widget.entry.date)}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: startController,
+                decoration: InputDecoration(
+                  labelText: l.startTimeLabel,
+                ),
+                validator: widget.validateTime,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: endController,
+                decoration: InputDecoration(
+                  labelText: l.endTimeLabel,
+                ),
+                validator: widget.validateTime,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: breakController,
+                decoration: InputDecoration(
+                  labelText: l.breakLabel,
+                  hintText: '0',
+                ),
+                keyboardType: TextInputType.number,
+                validator: widget.validateMinutes,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        isSaving ? null : () => Navigator.of(context).pop(),
+                    child: Text(l.cancelButton),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: isSaving ? null : _handleSubmit,
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l.saveButtonLabel),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContractAttendanceSheet extends StatefulWidget {
+  const _ContractAttendanceSheet({
+    required this.entry,
+    required this.localization,
+    required this.contractTypes,
+    required this.validateOptionalTime,
+    required this.validateMinutes,
+    required this.parseTimeOfDay,
+    required this.calculateWorkedMinutes,
+    required this.onError,
+    required this.onSubmit,
+    required this.resolveContractType,
+  });
+
+  final _AttendanceEntry entry;
+  final AppLocalizations localization;
+  final List<ContractType> contractTypes;
+  final String? Function(String?) validateOptionalTime;
+  final String? Function(String?) validateMinutes;
+  final TimeOfDay? Function(String value) parseTimeOfDay;
+  final int Function(TimeOfDay start, TimeOfDay end) calculateWorkedMinutes;
+  final void Function(String message) onError;
+  final ContractType? Function(int? id) resolveContractType;
+  final Future<bool> Function({
+    required List<AttendanceContractBundle> bundles,
+    TimeOfDay? start,
+    TimeOfDay? end,
+    required int breakMinutes,
+  }) onSubmit;
+
+  @override
+  State<_ContractAttendanceSheet> createState() =>
+      _ContractAttendanceSheetState();
+}
+
+class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
+  late final TextEditingController startController;
+  late final TextEditingController endController;
+  late final TextEditingController breakController;
+  late final List<_ContractBundleEditEntry> bundleEntries;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  bool isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final entry = widget.entry;
+    startController = TextEditingController(text: entry.startTime ?? '');
+    endController = TextEditingController(text: entry.endTime ?? '');
+    breakController = TextEditingController(
+      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
+    );
+    bundleEntries = <_ContractBundleEditEntry>[];
+
+    void addBundle({ContractType? type, int? count}) {
+      final resolvedType = type ??
+          (widget.contractTypes.isNotEmpty ? widget.contractTypes.first : null);
+      bundleEntries.add(
+        _ContractBundleEditEntry(
+          id:
+              'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
+          contractType: resolvedType,
+          initialCount: count,
+        ),
+      );
+    }
+
+    if (entry.contractBundles.isNotEmpty) {
+      for (final bundle in entry.contractBundles) {
+        final type = widget.resolveContractType(bundle.contractTypeId);
+        addBundle(type: type, count: bundle.count);
+      }
+    }
+
+    if (bundleEntries.isEmpty) {
+      final fallbackCount = entry.unitsCompleted != null && entry.unitsCompleted! > 0
+          ? entry.unitsCompleted
+          : null;
+      addBundle(count: fallbackCount);
+    }
+  }
+
+  @override
+  void dispose() {
+    startController.dispose();
+    endController.dispose();
+    breakController.dispose();
+    for (final item in bundleEntries) {
+      item.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addBundleEntry() {
+    setState(() {
+      final resolvedType = widget.contractTypes.isNotEmpty
+          ? widget.contractTypes.first
+          : null;
+      bundleEntries.add(
+        _ContractBundleEditEntry(
+          id:
+              'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
+          contractType: resolvedType,
+        ),
+      );
+    });
+  }
+
+  Future<void> _handleSubmit() async {
+    FocusScope.of(context).unfocus();
+    if (!(formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    final l = widget.localization;
+    if (bundleEntries.isEmpty) {
+      widget.onError(l.attendanceUnitsRequired);
+      return;
+    }
+    final resolvedBundles = <AttendanceContractBundle>[];
+    for (final item in bundleEntries) {
+      final type = item.contractType;
+      if (type == null) {
+        widget.onError(l.contractWorkLoadError);
+        return;
+      }
+      final typeId = int.tryParse(type.id.trim());
+      if (typeId == null) {
+        widget.onError(l.contractWorkLoadError);
+        return;
+      }
+      final countText = item.controller.text.trim();
+      final count = int.tryParse(countText);
+      if (count == null || count <= 0) {
+        widget.onError(l.attendanceUnitsInvalid);
+        return;
+      }
+      resolvedBundles.add(
+        AttendanceContractBundle(
+          contractTypeId: typeId,
+          count: count,
+        ),
+      );
+    }
+    if (resolvedBundles.isEmpty) {
+      widget.onError(l.attendanceUnitsRequired);
+      return;
+    }
+
+    final startText = startController.text.trim();
+    final endText = endController.text.trim();
+    final breakMinutes = int.tryParse(breakController.text.trim()) ?? 0;
+    final start =
+        startText.isEmpty ? null : widget.parseTimeOfDay(startText);
+    final end = endText.isEmpty ? null : widget.parseTimeOfDay(endText);
+    if ((startText.isNotEmpty && start == null) ||
+        (endText.isNotEmpty && end == null)) {
+      widget.onError(l.attendanceHistoryLoadFailedMessage);
+      return;
+    }
+    if ((start != null && end == null) || (start == null && end != null)) {
+      widget.onError(l.attendanceHistoryLoadFailedMessage);
+      return;
+    }
+    if (start != null && end != null) {
+      final workedMinutes = widget.calculateWorkedMinutes(start, end);
+      if (workedMinutes <= breakMinutes) {
+        widget.onError(l.attendanceHistoryLoadFailedMessage);
+        return;
+      }
+    }
+
+    setState(() {
+      isSaving = true;
+    });
+    final success = await widget.onSubmit(
+      bundles: resolvedBundles,
+      start: start,
+      end: end,
+      breakMinutes: breakMinutes,
+    );
+    if (!mounted) {
+      return;
+    }
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() {
+      isSaving = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.localization;
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${widget.entry.workName} · ${_formatDayLabel(widget.entry.date)}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: startController,
+                decoration: InputDecoration(
+                  labelText: l.startTimeLabel,
+                ),
+                validator: widget.validateOptionalTime,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: endController,
+                decoration: InputDecoration(
+                  labelText: l.endTimeLabel,
+                ),
+                validator: widget.validateOptionalTime,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: breakController,
+                decoration: InputDecoration(
+                  labelText: l.breakLabel,
+                  hintText: '0',
+                ),
+                keyboardType: TextInputType.number,
+                validator: widget.validateMinutes,
+              ),
+              const SizedBox(height: 16),
+              ...List<Widget>.generate(bundleEntries.length, (index) {
+                final bundleEntry = bundleEntries[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index == bundleEntries.length - 1 ? 0 : 12,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<ContractType>(
+                          value: bundleEntry.contractType,
+                          decoration: InputDecoration(
+                            labelText: l.contractWorkLabel,
+                          ),
+                          items: widget.contractTypes
+                              .map(
+                                (type) => DropdownMenuItem<ContractType>(
+                                  value: type,
+                                  child: Text(type.name),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) {
+                                  if (value == null) {
+                                    return;
+                                  }
+                                  setState(() {
+                                    bundleEntry.contractType = value;
+                                  });
+                                },
+                          validator: (value) {
+                            if (value == null) {
+                              return l.contractWorkLoadError;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 110,
+                        child: TextFormField(
+                          controller: bundleEntry.controller,
+                          decoration: InputDecoration(
+                            labelText: l.contractWorkUnitsLabel,
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            final trimmed = value?.trim() ?? '';
+                            if (trimmed.isEmpty) {
+                              return l.attendanceUnitsRequired;
+                            }
+                            final parsed = int.tryParse(trimmed);
+                            if (parsed == null || parsed <= 0) {
+                              return l.attendanceUnitsInvalid;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l.attendanceRemoveBundleTooltip,
+                        onPressed: isSaving || bundleEntries.length <= 1
+                            ? null
+                            : () {
+                                setState(() {
+                                  bundleEntries.remove(bundleEntry);
+                                });
+                                bundleEntry.dispose();
+                              },
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: isSaving ? null : _addBundleEntry,
+                  icon: const Icon(Icons.add),
+                  label: Text(l.attendanceAddBundleButton),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        isSaving ? null : () => Navigator.of(context).pop(),
+                    child: Text(l.cancelButton),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: isSaving ? null : _handleSubmit,
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l.saveButtonLabel),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class _ContractBundleEditEntry {
   _ContractBundleEditEntry({
