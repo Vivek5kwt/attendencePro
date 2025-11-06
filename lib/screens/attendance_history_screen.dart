@@ -416,11 +416,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       AttendanceHistoryEntryData data, {
         String? workId,
       }) {
+    final resolvedIsContractEntry =
+        _extractIsContractEntry(data) ??
+            (data.type == AttendanceHistoryEntryType.contract);
+
+    final resolvedType = resolvedIsContractEntry
+        ? _AttendanceEntryType.contract
+        : _mapEntryType(data.type);
+
     return _AttendanceEntry(
       date: data.date,
       workName: data.workName,
       workId: workId ?? _resolveWorkId(data.workName),
-      type: _mapEntryType(data.type),
+      type: resolvedType,
       attendanceId: data.attendanceId,
       startTime: data.startTime,
       endTime: data.endTime,
@@ -437,8 +445,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           ? const <AttendanceContractBundle>[]
           : List<AttendanceContractBundle>.unmodifiable(data.contractBundles),
       // pull from model if available, else infer from type
-      isContractEntry: _extractIsContractEntry(data) ??
-          (data.type == AttendanceHistoryEntryType.contract),
+      isContractEntry: resolvedIsContractEntry,
     );
   }
 
