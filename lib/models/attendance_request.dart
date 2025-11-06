@@ -42,7 +42,6 @@ class AttendanceRequest {
       final hasBundles = bundles != null && bundles!.isNotEmpty;
       final isBundleContractEntry = isContractEntry == true && hasBundles;
 
-      if (!isBundleContractEntry) {
         if (startTime != null) {
           payload['start_time'] = startTime;
         }
@@ -52,7 +51,6 @@ class AttendanceRequest {
         if (breakMinutes != null) {
           payload['break_minutes'] = breakMinutes;
         }
-      }
 
       if (isContractEntry != null) {
         payload['is_contract_entry'] = isContractEntry;

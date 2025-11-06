@@ -267,9 +267,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       });
     } on WorkRepositoryException catch (e) {
       final l = AppLocalizations.of(context);
-      final message = e.message.trim().isEmpty
-          ? l.worksLoadFailedMessage
-          : e.message;
+      final message =
+      e.message.trim().isEmpty ? l.worksLoadFailedMessage : e.message;
       if (!mounted) {
         return;
       }
@@ -437,7 +436,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       contractBundles: data.contractBundles.isEmpty
           ? const <AttendanceContractBundle>[]
           : List<AttendanceContractBundle>.unmodifiable(data.contractBundles),
+      // pull from model if available, else infer from type
+      isContractEntry: _extractIsContractEntry(data) ??
+          (data.type == AttendanceHistoryEntryType.contract),
     );
+  }
+
+  // Safely extract `isContractEntry` from the repository model (if it exists)
+  bool? _extractIsContractEntry(dynamic data) {
+    try {
+      final v = (data as dynamic).isContractEntry;
+      if (v is bool) return v;
+    } catch (_) {}
+    return null;
   }
 
   String? _resolveWorkId(String workName) {
@@ -561,24 +572,42 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   }
 
   bool? _resolveBoolean(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+
     if (value is bool) {
       return value;
     }
+
     if (value is num) {
       return value != 0;
     }
+
     if (value is String) {
-      final normalized = value.toLowerCase().trim();
+      final normalized = value.trim().toLowerCase();
       if (normalized.isEmpty) {
         return null;
       }
-      if (['true', '1', 'yes', 'active', 'current'].contains(normalized)) {
+      if (<String>{
+        'true',
+        '1',
+        'yes',
+        'active',
+        'current',
+      }.contains(normalized)) {
         return true;
       }
-      if (['false', '0', 'no', 'inactive'].contains(normalized)) {
+      if (<String>{
+        'false',
+        '0',
+        'no',
+        'inactive',
+      }.contains(normalized)) {
         return false;
       }
     }
+
     return null;
   }
 
@@ -617,16 +646,24 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     final l = AppLocalizations.of(context);
+
+    // Build filtered lists consistent with UI view
+    final hoursEntries = _entries
+        .where((entry) =>
+    (entry.type == _AttendanceEntryType.hourly ||
+        entry.type == _AttendanceEntryType.leave) &&
+        entry.isContractEntry != true)
+        .toList(growable: false);
+
+    final contractEntries = _entries
+        .where((entry) =>
+    (entry.type == _AttendanceEntryType.contract) ||
+        entry.isContractEntry == true)
+        .toList(growable: false);
+
     final targetEntries = _viewMode == _HistoryViewMode.contract
-        ? _entries
-            .where((entry) => entry.type == _AttendanceEntryType.contract)
-            .toList(growable: false)
-        : _entries
-            .where(
-              (entry) => entry.type == _AttendanceEntryType.hourly ||
-                  entry.type == _AttendanceEntryType.leave,
-            )
-            .toList(growable: false);
+        ? contractEntries
+        : hoursEntries;
 
     if (targetEntries.isEmpty) {
       _showInfoSnackBar(l.reportDownloadNoEntriesMessage);
@@ -650,13 +687,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         final rows = targetEntries
             .map(
               (entry) => ContractReportRow(
-                date: entry.date,
-                contractType: entry.contractType ?? '',
-                unitsCompleted: entry.unitsCompleted ?? 0,
-                ratePerUnit: entry.ratePerUnit ?? 0,
-                salary: entry.salary,
-              ),
-            )
+            date: entry.date,
+            contractType: entry.contractType ?? '',
+            unitsCompleted: entry.unitsCompleted ?? 0,
+            ratePerUnit: entry.ratePerUnit ?? 0,
+            salary: entry.salary,
+          ),
+        )
             .toList(growable: false);
 
         final reportFile = await PdfReportService.generateMonthlyContractReport(
@@ -684,23 +721,23 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         final days = grouped.entries
             .map(
               (entry) => HistoryReportDay(
-                date: entry.key,
-                entries: entry.value
-                    .map(
-                      (item) => HistoryReportEntry(
-                        workName: item.workName,
-                        typeLabel: _resolveEntryTypeLabel(item.type, l),
-                        detail: _buildHistoryDetail(item, l),
-                        salary: item.salary,
-                      ),
-                    )
-                    .toList(growable: false),
+            date: entry.key,
+            entries: entry.value
+                .map(
+                  (item) => HistoryReportEntry(
+                workName: item.workName,
+                typeLabel: _resolveEntryTypeLabel(item.type, l),
+                detail: _buildHistoryDetail(item, l),
+                salary: item.salary,
               ),
             )
+                .toList(growable: false),
+          ),
+        )
             .toList(growable: false);
 
         final reportFile =
-            await PdfReportService.generateAttendanceHistoryReport(
+        await PdfReportService.generateAttendanceHistoryReport(
           workName: workName,
           monthLabel: _selectedMonth,
           currencySymbol: _currencySymbol,
@@ -728,14 +765,16 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       final message = error.message?.toString().trim();
       _showErrorSnackBar(
         (message == null || message.isEmpty)
-            ? l.reportDownloadFailedMessage
+            ? AppLocalizations.of(context).reportDownloadFailedMessage
             : message,
       );
     } catch (_) {
       if (!mounted) {
         return;
       }
-      _showErrorSnackBar(l.reportDownloadFailedMessage);
+      _showErrorSnackBar(
+        AppLocalizations.of(context).reportDownloadFailedMessage,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -746,9 +785,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   }
 
   String _resolveEntryTypeLabel(
-    _AttendanceEntryType type,
-    AppLocalizations localization,
-  ) {
+      _AttendanceEntryType type,
+      AppLocalizations localization,
+      ) {
     switch (type) {
       case _AttendanceEntryType.hourly:
         return localization.attendanceHistoryHourlyEntry;
@@ -760,31 +799,30 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   }
 
   String _buildHistoryDetail(
-    _AttendanceEntry entry,
-    AppLocalizations localization,
-  ) {
+      _AttendanceEntry entry,
+      AppLocalizations localization,
+      ) {
     switch (entry.type) {
       case _AttendanceEntryType.hourly:
-        final start = entry.startTime?.trim().isEmpty ?? true
-            ? '--'
-            : entry.startTime!.trim();
-        final end = entry.endTime?.trim().isEmpty ?? true
-            ? '--'
-            : entry.endTime!.trim();
+        final start = entry.startTime?.trim().isNotEmpty == true
+            ? entry.startTime!.trim()
+            : '--';
+        final end = entry.endTime?.trim().isNotEmpty == true
+            ? entry.endTime!.trim()
+            : '--';
         final hours = _formatHours(entry.hoursWorked);
         final overtime = entry.overtimeHours > 0
             ? ' (+${_formatHours(entry.overtimeHours)} overtime)'
             : '';
-        final breakLabel = entry.breakMinutes > 0
-            ? ', Break: ${entry.breakMinutes}m'
-            : '';
+        final breakLabel =
+        entry.breakMinutes > 0 ? ', Break: ${entry.breakMinutes}m' : '';
         return '$start - $end ($hours$overtime$breakLabel)';
       case _AttendanceEntryType.contract:
         final units = entry.unitsCompleted ?? 0;
         final rate = entry.ratePerUnit ?? 0;
-        final typeLabel = entry.contractType?.trim().isEmpty ?? true
-            ? localization.contractWorkUnitFallback
-            : entry.contractType!.trim();
+        final typeLabel = entry.contractType?.trim().isNotEmpty == true
+            ? entry.contractType!.trim()
+            : localization.contractWorkUnitFallback;
         final rateLabel = _formatCurrencyValue(_currencySymbol, rate);
         return '$units $typeLabel @ $rateLabel';
       case _AttendanceEntryType.leave:
@@ -815,7 +853,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context).activeWorkLabel,
+                  'All Works',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -884,12 +922,10 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
-    final startController =
-    TextEditingController(text: entry.startTime ?? '');
+    final startController = TextEditingController(text: entry.startTime ?? '');
     final endController = TextEditingController(text: entry.endTime ?? '');
     final breakController = TextEditingController(
-      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
-    );
+        text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0');
 
     final formKey = GlobalKey<FormState>();
     bool isSaving = false;
@@ -918,10 +954,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   children: [
                     Text(
                       '${entry.workName} · ${_formatDayLabel(entry.date)}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(
+                      style:
+                      Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -956,9 +990,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          onPressed: isSaving
-                              ? null
-                              : () => Navigator.of(context).pop(),
+                          onPressed:
+                          isSaving ? null : () => Navigator.of(context).pop(),
                           child: Text(l.cancelButton),
                         ),
                         const SizedBox(width: 12),
@@ -970,14 +1003,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                 false)) {
                               return;
                             }
-                            final start =
-                            _parseTimeOfDay(startController.text);
+                            final start = _parseTimeOfDay(
+                                startController.text);
                             final end =
                             _parseTimeOfDay(endController.text);
                             if (start == null || end == null) {
-                              _showErrorSnackBar(
-                                l.attendanceHistoryLoadFailedMessage,
-                              );
+                              _showErrorSnackBar(l
+                                  .attendanceHistoryLoadFailedMessage);
                               return;
                             }
                             final breakMinutes = int.tryParse(
@@ -986,9 +1018,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                             final workedMinutes =
                             _calculateWorkedMinutes(start, end);
                             if (workedMinutes <= breakMinutes) {
-                              _showErrorSnackBar(
-                                l.attendanceHistoryLoadFailedMessage,
-                              );
+                              _showErrorSnackBar(l
+                                  .attendanceHistoryLoadFailedMessage);
                               return;
                             }
                             setModalState(() {
@@ -1015,8 +1046,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                               ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2),
+                            child:
+                            CircularProgressIndicator(strokeWidth: 2),
                           )
                               : Text(l.saveButtonLabel),
                         ),
@@ -1050,8 +1081,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     final bundleEntries = <_ContractBundleEditEntry>[];
 
     void addBundleEntry({ContractType? type, int? count}) {
-      final resolvedType = type ??
-          (_contractTypes.isNotEmpty ? _contractTypes.first : null);
+      final resolvedType =
+          type ?? (_contractTypes.isNotEmpty ? _contractTypes.first : null);
       bundleEntries.add(
         _ContractBundleEditEntry(
           id: 'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
@@ -1069,7 +1100,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     if (bundleEntries.isEmpty) {
-      final fallbackCount = entry.unitsCompleted != null && entry.unitsCompleted! > 0
+      final fallbackCount =
+      entry.unitsCompleted != null && entry.unitsCompleted! > 0
           ? entry.unitsCompleted
           : null;
       addBundleEntry(count: fallbackCount);
@@ -1102,10 +1134,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                   children: [
                     Text(
                       '${entry.workName} · ${_formatDayLabel(entry.date)}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(
+                      style:
+                      Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1113,7 +1143,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     ...List<Widget>.generate(bundleEntries.length, (index) {
                       final bundleEntry = bundleEntries[index];
                       return Padding(
-                        padding: EdgeInsets.only(bottom: index == bundleEntries.length - 1 ? 0 : 12),
+                        padding: EdgeInsets.only(
+                            bottom: index == bundleEntries.length - 1 ? 0 : 12),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -1207,9 +1238,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          onPressed: isSaving
-                              ? null
-                              : () => Navigator.of(context).pop(),
+                          onPressed:
+                          isSaving ? null : () => Navigator.of(context).pop(),
                           child: Text(l.cancelButton),
                         ),
                         const SizedBox(width: 12),
@@ -1218,29 +1248,37 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                               ? null
                               : () async {
                             FocusScope.of(context).unfocus();
-                            if (!(formKey.currentState?.validate() ?? false)) {
+                            if (!(formKey.currentState?.validate() ??
+                                false)) {
                               return;
                             }
                             if (bundleEntries.isEmpty) {
-                              _showErrorSnackBar(l.attendanceUnitsRequired);
+                              _showErrorSnackBar(
+                                  l.attendanceUnitsRequired);
                               return;
                             }
-                            final resolvedBundles = <AttendanceContractBundle>[];
+                            final resolvedBundles =
+                            <AttendanceContractBundle>[];
                             for (final item in bundleEntries) {
                               final type = item.contractType;
                               if (type == null) {
-                                _showErrorSnackBar(l.contractWorkLoadError);
+                                _showErrorSnackBar(
+                                    l.contractWorkLoadError);
                                 return;
                               }
-                              final typeId = int.tryParse(type.id.trim());
+                              final typeId =
+                              int.tryParse(type.id.trim());
                               if (typeId == null) {
-                                _showErrorSnackBar(l.contractWorkLoadError);
+                                _showErrorSnackBar(
+                                    l.contractWorkLoadError);
                                 return;
                               }
-                              final countText = item.controller.text.trim();
+                              final countText =
+                              item.controller.text.trim();
                               final count = int.tryParse(countText);
                               if (count == null || count <= 0) {
-                                _showErrorSnackBar(l.attendanceUnitsInvalid);
+                                _showErrorSnackBar(
+                                    l.attendanceUnitsInvalid);
                                 return;
                               }
                               resolvedBundles.add(
@@ -1251,13 +1289,15 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                               );
                             }
                             if (resolvedBundles.isEmpty) {
-                              _showErrorSnackBar(l.attendanceUnitsRequired);
+                              _showErrorSnackBar(
+                                  l.attendanceUnitsRequired);
                               return;
                             }
                             setModalState(() {
                               isSaving = true;
                             });
-                            final success = await _updateContractAttendance(
+                            final success =
+                            await _updateContractAttendance(
                               attendanceId: attendanceId,
                               workId: workId,
                               date: entry.date,
@@ -1278,7 +1318,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                               ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child:
+                            CircularProgressIndicator(strokeWidth: 2),
                           )
                               : Text(l.saveButtonLabel),
                         ),
@@ -1540,16 +1581,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final responsive = context.responsive;
-    final filteredEntries = List<_AttendanceEntry>.from(_entries);
 
-    final hoursEntries = filteredEntries
+    // Build filtered arrays using the API key `is_contract_entry`
+    final hoursEntries = _entries
         .where((entry) =>
-    entry.type == _AttendanceEntryType.hourly ||
-        entry.type == _AttendanceEntryType.leave)
+    (entry.type == _AttendanceEntryType.hourly ||
+        entry.type == _AttendanceEntryType.leave) &&
+        entry.isContractEntry != true)
         .toList();
 
-    final contractEntries = filteredEntries
-        .where((entry) => entry.type == _AttendanceEntryType.contract)
+    final contractEntries = _entries
+        .where((entry) =>
+    (entry.type == _AttendanceEntryType.contract) ||
+        entry.isContractEntry == true)
         .toList();
 
     final viewEntries =
@@ -1616,18 +1660,18 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                 alignment: Alignment.centerRight,
                 child: FilledButton.icon(
                   onPressed:
-                      _isGeneratingReport ? null : _downloadCurrentReport,
+                  _isGeneratingReport ? null : _downloadCurrentReport,
                   icon: _isGeneratingReport
                       ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                        )
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  )
                       : const Icon(Icons.download),
                   label: Text(
                     _viewMode == _HistoryViewMode.contract
@@ -1702,20 +1746,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           ],
         ),
         actions: [
-          if (_availableWorks.length > 1)
-            IconButton(
-              icon: Icon(
-                Icons.work_outline,
-                color: colorScheme.primary,
-              ),
-              tooltip: l.changeWorkButton,
-              onPressed: _showWorkPicker,
-            ),
           IconButton(
-            icon: Icon(
-              Icons.close,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ],
@@ -1744,15 +1776,14 @@ class _StatusMessage extends StatelessWidget {
     final background = isError ? const Color(0xFFFFE4E6) : Colors.white;
     final border = isError ? const Color(0xFFFCA5A5) : const Color(0xFFE5E7EB);
 
-    final textStyle =
-        Theme.of(context).textTheme.bodyMedium?.copyWith(
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: color,
+      fontWeight: FontWeight.w600,
+    ) ??
+        TextStyle(
           color: color,
           fontWeight: FontWeight.w600,
-        ) ??
-            TextStyle(
-              color: color,
-              fontWeight: FontWeight.w600,
-            );
+        );
 
     return Center(
       child: Container(
@@ -1934,7 +1965,6 @@ class _FilterDropdown<T> extends StatelessWidget {
   }
 }
 
-
 class _SelectedWorkBanner extends StatelessWidget {
   const _SelectedWorkBanner({
     required this.workName,
@@ -1948,8 +1978,7 @@ class _SelectedWorkBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final hasWork = workName.trim().isNotEmpty;
-    final displayName =
-    hasWork ? '${l.activeWorkLabel}: $workName' : l.activeWorkLabel;
+    final displayName = hasWork ? 'Work Name:- $workName' : l.activeWorkLabel;
 
     return Container(
       decoration: BoxDecoration(
@@ -2110,9 +2139,7 @@ class _HoursDayCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 18),
-
           Column(
             children: [
               for (int i = 0; i < entries.length; i++) ...[
@@ -2149,56 +2176,50 @@ class _HourlyEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLeave = entry.type == _AttendanceEntryType.leave;
 
-    final workNameTextStyle =
-        Theme.of(context).textTheme.bodyLarge?.copyWith(
+    final workNameTextStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF111827),
+    ) ??
+        const TextStyle(
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF111827),
-        ) ??
-            const TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-            );
+          color: Color(0xFF111827),
+        );
 
-    final amountTextStyle =
-        Theme.of(context).textTheme.bodyMedium?.copyWith(
+    final amountTextStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF047857),
+    ) ??
+        const TextStyle(
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF047857),
-        ) ??
-            const TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF047857),
-            );
+          color: Color(0xFF047857),
+        );
 
-    final labelStyle =
-        Theme.of(context).textTheme.bodySmall?.copyWith(
+    final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      fontWeight: FontWeight.w500,
+      color: const Color(0xFF6B7280),
+      fontSize: 11,
+    ) ??
+        const TextStyle(
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF6B7280),
+          color: Color(0xFF6B7280),
           fontSize: 11,
-        ) ??
-            const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF6B7280),
-              fontSize: 11,
-            );
+        );
 
-    final valueStyle =
-        Theme.of(context).textTheme.bodyMedium?.copyWith(
+    final valueStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF111827),
+      fontSize: 13,
+    ) ??
+        const TextStyle(
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF111827),
+          color: Color(0xFF111827),
           fontSize: 13,
-        ) ??
-            const TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-              fontSize: 13,
-            );
+        );
 
-    final start = (entry.startTime ?? '').trim().isNotEmpty
-        ? entry.startTime!.trim()
-        : '--';
-    final end = (entry.endTime ?? '').trim().isNotEmpty
-        ? entry.endTime!.trim()
-        : '--';
+    final start =
+    (entry.startTime ?? '').trim().isNotEmpty ? entry.startTime!.trim() : '--';
+    final end =
+    (entry.endTime ?? '').trim().isNotEmpty ? entry.endTime!.trim() : '--';
     final breakLabel = (entry.breakDuration ?? '').trim().isNotEmpty
         ? entry.breakDuration!.trim()
         : '--';
@@ -2210,9 +2231,7 @@ class _HourlyEntryTile extends StatelessWidget {
         color: const Color(0xFFFDFDFE),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isLeave
-              ? const Color(0xFFFCD34D)
-              : const Color(0xFFE5E7EB),
+          color: isLeave ? const Color(0xFFFCD34D) : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -2295,7 +2314,6 @@ class _HourlyEntryTile extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(width: 12),
               _EditButtonTextOnly(
                 enabled: !isLeave,
@@ -2303,7 +2321,6 @@ class _HourlyEntryTile extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
@@ -2336,9 +2353,7 @@ class _HourlyEntryTile extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Align(
             alignment: Alignment.centerRight,
             child: Text(
@@ -2598,7 +2613,6 @@ class _ContractDayCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-
           _ResponsiveTable(
             minWidth: 620,
             child: Column(
@@ -2635,7 +2649,6 @@ class _ContractDayCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-
           Container(
             decoration: BoxDecoration(
               color: const Color(0xFFF9FAFB),
@@ -2750,9 +2763,8 @@ class _ContractTableRow extends StatelessWidget {
     final contractLabel = entry.contractType?.isNotEmpty == true
         ? entry.contractType!
         : localization.contractWorkUnitFallback;
-    final quantityLabel = units != null && units > 0
-        ? '$units ($contractLabel)'
-        : contractLabel;
+    final quantityLabel =
+    units != null && units > 0 ? '$units ($contractLabel)' : contractLabel;
 
     final workStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w700,
@@ -2865,10 +2877,10 @@ class _ContractBundleEditEntry {
     this.contractType,
     int? initialCount,
   }) : controller = TextEditingController(
-          text: initialCount != null && initialCount > 0
-              ? initialCount.toString()
-              : '',
-        );
+    text: initialCount != null && initialCount > 0
+        ? initialCount.toString()
+        : '',
+  );
 
   final String id;
   ContractType? contractType;
@@ -2973,6 +2985,7 @@ class _AttendanceEntry {
     this.leaveReason,
     required this.salary,
     this.contractBundles = const <AttendanceContractBundle>[],
+    this.isContractEntry,
   });
 
   final DateTime date;
@@ -2992,6 +3005,7 @@ class _AttendanceEntry {
   final String? leaveReason;
   final double salary;
   final List<AttendanceContractBundle> contractBundles;
+  final bool? isContractEntry; // <-- maps API key `is_contract_entry`
 
   String get formattedDate {
     final month = _kMonthNames[date.month - 1].substring(0, 3);

@@ -676,6 +676,7 @@ Future<String?> showCreativeLanguageDialog(
                                                 localizations.confirmSelectionButton,
                                                 style: textTheme.labelLarge?.copyWith(
                                                   fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
                                                   fontSize: scaledFont(
                                                     textTheme.labelLarge?.fontSize,
                                                   ),

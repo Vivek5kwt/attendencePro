@@ -157,9 +157,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     } on ReportsRepositoryException catch (error) {
       if (!mounted) return;
       final l = AppLocalizations.of(context);
-      final message = error.message.trim().isEmpty
-          ? l.contractWorkLoadError
-          : error.message;
+      final message =
+      error.message.trim().isEmpty ? l.contractWorkLoadError : error.message;
       setState(() {
         _summaryTotalUnits = 0;
         _summarySalaryAmount = 0;
@@ -292,96 +291,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
   }
 
-  Future<String?> _promptRoleSelection() async {
-    final l = AppLocalizations.of(context);
-    final responsive = context.responsive;
-    final theme = Theme.of(context);
-
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(
-            l.contractWorkTypeLabel,
-            style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ) ??
-                TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: responsive.scaleText(16),
-                ),
-          ),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: responsive.scale(340),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l.contractWorkTypeHint,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF6B7280),
-                      ) ??
-                      TextStyle(
-                        color: const Color(0xFF6B7280),
-                        fontSize: responsive.scaleText(14),
-                      ),
-                ),
-                SizedBox(height: responsive.scale(12)),
-                ..._defaultRoleOptions.map(
-                  (role) => Padding(
-                    padding: EdgeInsets.only(bottom: responsive.scale(8)),
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(responsive.scale(14)),
-                        side: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
-                      tileColor: const Color(0xFFF9FAFB),
-                      leading: CircleAvatar(
-                        backgroundColor: const Color(0xFFE0E7FF),
-                        foregroundColor: const Color(0xFF1D4ED8),
-                        child: Text(
-                          role.isNotEmpty ? role[0].toUpperCase() : '?',
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      title: Text(
-                        _formatRoleDisplay(role),
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                            ) ??
-                            TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                              fontSize: responsive.scaleText(15),
-                            ),
-                      ),
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Color(0xFF9CA3AF),
-                      ),
-                      onTap: () => Navigator.of(dialogContext).pop(
-                        _formatRoleDisplay(role),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l.cancelButton),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // REMOVED role selection dialog. We open the Add Contract Work sheet directly.
 
   void _showComingSoonSnackBar(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -395,15 +305,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   double get _totalContractSalary => _summarySalaryAmount;
 
   Future<void> _showContractTypeDialog({_ContractType? type}) async {
+    // Open the Add Contract Work sheet directly, without any pre-dialog.
     final rootContext = context;
-    String? initialRoleSelection;
-
-    if (type == null) {
-      initialRoleSelection = await _promptRoleSelection();
-      if (!mounted || initialRoleSelection == null) {
-        return;
-      }
-    }
 
     final result = await showModalBottomSheet<_ContractType>(
       context: rootContext,
@@ -418,7 +321,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           workNameOptions: _defaultWorkNameOptions,
           defaultRoleOptions: _defaultRoleOptions,
           availableRoles: _availableRoles,
-          initialRoleValue: initialRoleSelection,
+          initialRoleValue: null, // no pre-prompt; user selects inside sheet
           formatRoleDisplay: _formatRoleDisplay,
         );
       },
@@ -436,27 +339,26 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   Future<void> _handleDeleteContractType(_ContractType type) async {
     final l = AppLocalizations.of(context);
-    final confirmed =
-        await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) {
-            return AlertDialog(
-              title: Text(l.contractWorkDeleteConfirmationTitle),
-              content: Text(l.contractWorkDeleteConfirmationMessage),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(l.cancelButton),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: Text(l.contractWorkDeleteButton),
-                ),
-              ],
-            );
-          },
-        ) ??
-            false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(l.contractWorkDeleteConfirmationTitle),
+          content: Text(l.contractWorkDeleteConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l.cancelButton),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l.contractWorkDeleteButton),
+            ),
+          ],
+        );
+      },
+    ) ??
+        false;
 
     if (!confirmed) return;
 
@@ -566,9 +468,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                         const Divider(height: 1),
                         itemBuilder: (_, i) {
                           final t = _userContractTypes[i];
-                          final isBusy = _pendingDeletionIds.contains(
-                            t.id,
-                          );
+                          final isBusy =
+                          _pendingDeletionIds.contains(t.id);
                           return _ManageTypeRow(
                             name: t.name,
                             subtitle:
@@ -759,8 +660,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               icon: const Icon(Icons.tune_rounded),
                               label: Text(l.editWorkTitle),
                               style: OutlinedButton.styleFrom(
-                                side:
-                                const BorderSide(color: Color(0xFF2563EB)),
+                                side: const BorderSide(color: Color(0xFF2563EB)),
                                 foregroundColor: const Color(0xFF2563EB),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
@@ -785,8 +685,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                         _ContractSummaryTable(
                           title: l.contractWorkSummaryTitle,
                           rows: _summaryRows,
-                          isLoading:
-                          _isLoadingSummary && _summaryRows.isEmpty,
+                          isLoading: _isLoadingSummary && _summaryRows.isEmpty,
                           error: _summaryError,
                           emptyMessage: _userContractTypes.isEmpty
                               ? l.contractWorkNoCustomTypesLabel
@@ -866,17 +765,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                     children: [
                       Text(
                         AppLocalizations.of(context).contractWorkLabel,
-                        style:
-                        Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
-                          fontSize:
-                          context.responsive.scaleText(20),
+                          fontSize: context.responsive.scaleText(20),
                           color: const Color(0xFF0F172A),
                         ) ??
                             TextStyle(
                               fontWeight: FontWeight.w800,
-                              fontSize:
-                              context.responsive.scaleText(20),
+                              fontSize: context.responsive.scaleText(20),
                               color: const Color(0xFF0F172A),
                             ),
                       ),
@@ -884,20 +780,15 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                         SizedBox(height: context.responsive.scale(2)),
                         Text(
                           widget.work!.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFF1F2937),
-                            fontSize: context.responsive
-                                .scaleText(13),
+                            fontSize: context.responsive.scaleText(13),
                           ) ??
                               TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF1F2937),
-                                fontSize:
-                                context.responsive.scaleText(13),
+                                fontSize: context.responsive.scaleText(13),
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -905,20 +796,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                       ],
                       SizedBox(height: context.responsive.scale(4)),
                       Text(
-                        AppLocalizations.of(context)
-                            .contractWorkSetupSubtitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(
+                        AppLocalizations.of(context).contractWorkSetupSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: const Color(0xFF475467),
-                          fontSize: context.responsive
-                              .scaleText(12),
+                          fontSize: context.responsive.scaleText(12),
                         ) ??
                             TextStyle(
                               color: const Color(0xFF475467),
-                              fontSize:
-                              context.responsive.scaleText(12),
+                              fontSize: context.responsive.scaleText(12),
                             ),
                       ),
                     ],
@@ -962,7 +847,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     );
   }
 }
-
 
 class _ContractTypeSheet extends StatefulWidget {
   const _ContractTypeSheet({
@@ -1040,9 +924,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       final key = formatted.toLowerCase();
       if (seenRoleOptions.contains(key)) {
         if (prepend) {
-          final existingIndex = options.indexWhere(
-                (item) => item.toLowerCase() == key,
-          );
+          final existingIndex =
+          options.indexWhere((item) => item.toLowerCase() == key);
           if (existingIndex > 0) {
             final existingValue = options.removeAt(existingIndex);
             options.insert(0, existingValue);
@@ -1079,9 +962,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       initialSelection ??= initialRoleDisplay;
     }
 
-    final allowedRoleKeys = widget.defaultRoleOptions
-        .map((option) => widget.formatRoleDisplay(option).toLowerCase())
-        .toSet();
+    final allowedRoleKeys =
+    widget.defaultRoleOptions.map((option) => widget.formatRoleDisplay(option).toLowerCase()).toSet();
 
     for (final option in widget.defaultRoleOptions) {
       addRoleOption(option);
@@ -1140,8 +1022,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     setState(() {
       _selectedWorkName = value;
       if (_isCustomWorkOptionValue(value)) {
-        if (widget.isNameEditable &&
-            !_isCustomWorkOptionValue(previousSelection)) {
+        if (widget.isNameEditable && !_isCustomWorkOptionValue(previousSelection)) {
           _nameController.clear();
         }
       } else {
@@ -1176,21 +1057,22 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     final type = widget.type;
 
+    // Validation for required fields
     if ((name.isEmpty && widget.isNameEditable) ||
         (!widget.isNameEditable && (type?.name.trim().isEmpty ?? true))) {
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.contractWorkNameRequiredMessage)),
       );
       return;
     }
     if (resolvedRole.isEmpty) {
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.contractWorkRoleRequiredMessage)),
       );
       return;
     }
     if (rate == null || rate <= 0) {
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.contractWorkRateRequiredMessage)),
       );
       return;
@@ -1201,8 +1083,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     (existingUnitLabel != null && existingUnitLabel.isNotEmpty)
         ? existingUnitLabel
         : l.contractWorkUnitFallback;
-    final resolvedName =
-    type == null || widget.isNameEditable ? name : type!.name;
+    final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
 
     if (!mounted) return;
 
@@ -1212,6 +1093,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
 
     Future<_ContractType?> future;
     if (type == null || type.id.startsWith('local-')) {
+      // Creating a new contract type
       future = widget.repository
           .createContractType(
         name: resolvedName,
@@ -1222,6 +1104,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       )
           .then((created) => _ContractType.fromModel(type: created));
     } else {
+      // Updating an existing contract type
       future = widget.repository
           .updateContractType(
         id: type.id,
@@ -1231,34 +1114,54 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
         ratePerUnit: rate,
         unitLabel: resolvedUnitLabel,
       )
-          .then(
-            (updated) => _ContractType.fromModel(
-          type: updated,
-          isUserDefined: type.isUserDefined,
-        ),
-      );
+          .then((updated) => _ContractType.fromModel(
+        type: updated,
+        isUserDefined: type.isUserDefined,
+      ));
     }
 
     try {
       final updatedType = await future;
       if (!mounted) return;
+
+      // Close the bottom sheet after successful operation
+      print("Closing bottom sheet...");
       Navigator.of(context).pop(updatedType);
+
+      // Success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
+      );
     } on ContractTypeRepositoryException catch (error) {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(
-        widget.rootContext,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+
+      print("Error: ${error.message}");
+
+      if (error.message.contains("Contract type already exists.")) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Contract work type already exists. Please choose a different work name.')),
+        );
+      } else {
+        // Other repository errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(
-        widget.rootContext,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      // Generic error
+      print("An unknown error occurred: $error");
+      Navigator.of(context, rootNavigator: true).pop();  // Close the bottom sheet
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
     }
   }
 
@@ -1352,7 +1255,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                     ),
                     const SizedBox(height: 24),
 
-                    Container(
+                    Container
+                      (
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(28),
@@ -1421,8 +1325,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                         l.contractWorkSelectWorkHint,
                                         style: textTheme.bodyLarge?.copyWith(
                                           fontWeight: FontWeight.w700,
-                                          color:
-                                          const Color(0xFF9CA3AF),
+                                          color: const Color(0xFF9CA3AF),
                                         ) ??
                                             const TextStyle(
                                               fontWeight: FontWeight.w700,
@@ -1435,8 +1338,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                             : l.contractWorkSelectWorkHint,
                                         style: textTheme.bodyLarge?.copyWith(
                                           fontWeight: FontWeight.w700,
-                                          color:
-                                          const Color(0xFF9CA3AF),
+                                          color: const Color(0xFF9CA3AF),
                                         ) ??
                                             const TextStyle(
                                               fontWeight: FontWeight.w700,
@@ -1455,9 +1357,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                           (BuildContext context) {
                                         return _workNameOptions.map((option) {
                                           final isCustom =
-                                          _isCustomWorkOptionValue(
-                                            option,
-                                          );
+                                          _isCustomWorkOptionValue(option);
                                           final displayText = isCustom
                                               ? (_nameController.text
                                               .trim()
@@ -1466,23 +1366,18 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                               : l.contractWorkCustomOption)
                                               : option;
                                           return Align(
-                                            alignment:
-                                            Alignment.centerLeft,
+                                            alignment: Alignment.centerLeft,
                                             child: Text(
                                               displayText,
                                               style: textTheme.bodyLarge
                                                   ?.copyWith(
-                                                fontWeight:
-                                                FontWeight.w700,
-                                                color: const Color(
-                                                  0xFF111827,
-                                                ),
+                                                fontWeight: FontWeight.w700,
+                                                color:
+                                                const Color(0xFF111827),
                                               ) ??
                                                   const TextStyle(
-                                                    fontWeight:
-                                                    FontWeight.w700,
-                                                    color:
-                                                    Color(0xFF111827),
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFF111827),
                                                   ),
                                             ),
                                           );
@@ -1494,9 +1389,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                             DropdownMenuItem<String>(
                                               value: option,
                                               child: Text(
-                                                _isCustomWorkOptionValue(
-                                                  option,
-                                                )
+                                                _isCustomWorkOptionValue(option)
                                                     ? l.contractWorkCustomOption
                                                     : option,
                                                 style: textTheme.bodyLarge
@@ -1510,9 +1403,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                                     const TextStyle(
                                                       fontWeight:
                                                       FontWeight.w700,
-                                                      color: Color(
-                                                        0xFF111827,
-                                                      ),
+                                                      color:
+                                                      Color(0xFF111827),
                                                     ),
                                               ),
                                             ),
@@ -1549,8 +1441,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                     height: 36,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFFFF8EB),
-                                      borderRadius:
-                                      BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
                                     alignment: Alignment.center,
                                     child: const Text(
@@ -1569,9 +1460,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                         AppString.contractNameHint,
                                         hintStyle: textTheme.bodyMedium
                                             ?.copyWith(
-                                          color: const Color(
-                                            0xFF9CA3AF,
-                                          ),
+                                          color: const Color(0xFF9CA3AF),
                                         ) ??
                                             const TextStyle(
                                               color: Color(0xFF9CA3AF),
@@ -1579,9 +1468,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                       ),
                                       style: textTheme.bodyLarge?.copyWith(
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(
-                                          0xFF111827,
-                                        ),
+                                        color: const Color(0xFF111827),
                                       ) ??
                                           const TextStyle(
                                             fontWeight: FontWeight.w700,
@@ -1638,9 +1525,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                   l.contractWorkRoleHint,
                                   style: textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(
-                                      0xFF9CA3AF,
-                                    ),
+                                    color: const Color(0xFF9CA3AF),
                                   ) ??
                                       const TextStyle(
                                         fontWeight: FontWeight.w600,
@@ -1649,36 +1534,33 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                 ),
                                 items: _roleOptions
                                     .map(
-                                      (option) =>
-                                      DropdownMenuItem<String>(
-                                        value: option,
-                                        child: Text(
-                                          option,
-                                          style: textTheme.bodyLarge
-                                              ?.copyWith(
-                                            fontWeight:
-                                            FontWeight.w600,
-                                            color: const Color(
-                                              0xFF111827,
-                                            ),
-                                          ) ??
-                                              const TextStyle(
-                                                fontWeight:
-                                                FontWeight.w600,
-                                                color: Color(0xFF111827),
-                                              ),
-                                        ),
-                                      ),
+                                      (option) => DropdownMenuItem<String>(
+                                    value: option,
+                                    child: Text(
+                                      option,
+                                      style: textTheme.bodyLarge
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color:
+                                        const Color(0xFF111827),
+                                      ) ??
+                                          const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF111827),
+                                          ),
+                                    ),
+                                  ),
                                 )
                                     .toList(),
-                                onChanged: _roleOptions.isEmpty || _isRoleLocked
+                                onChanged:
+                                _roleOptions.isEmpty || _isRoleLocked
                                     ? null
                                     : (value) {
-                                      if (value == null) return;
-                                      setState(() {
-                                        _selectedRoleValue = value;
-                                      });
-                                    },
+                                  if (value == null) return;
+                                  setState(() {
+                                    _selectedRoleValue = value;
+                                  });
+                                },
                               ),
                             ),
                           ),
@@ -1688,8 +1570,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                             Text(
                               l.contractWorkTypeLockedMessage,
                               style: textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF6B7280),
-                                  ) ??
+                                color: const Color(0xFF6B7280),
+                              ) ??
                                   const TextStyle(
                                     color: Color(0xFF6B7280),
                                     fontSize: 12,
@@ -1748,21 +1630,16 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText: _resolveRateHint(l),
-                                      hintStyle:
-                                      textTheme.bodyMedium?.copyWith(
-                                        color:
-                                        const Color(0xFF9CA3AF),
+                                      hintStyle: textTheme.bodyMedium?.copyWith(
+                                        color: const Color(0xFF9CA3AF),
                                       ) ??
                                           const TextStyle(
                                             color: Color(0xFF9CA3AF),
                                           ),
                                     ),
-                                    style:
-                                    textTheme.bodyLarge?.copyWith(
+                                    style: textTheme.bodyLarge?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(
-                                        0xFF111827,
-                                      ),
+                                      color: const Color(0xFF111827),
                                     ) ??
                                         const TextStyle(
                                           fontWeight: FontWeight.w600,
@@ -1849,7 +1726,6 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     );
   }
 }
-
 
 class _ContractSummaryTable extends StatelessWidget {
   const _ContractSummaryTable({
@@ -2048,8 +1924,8 @@ class _ContractSummaryTableRow extends StatelessWidget {
         horizontal: responsive.scale(16),
         vertical: responsive.scale(isHeader ? 12 : 14),
       ),
-      decoration: BoxDecoration(
-        color: isHeader ? const Color(0xFFEFF2F7) : Colors.transparent,
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: Row(
         children: [
@@ -2322,17 +2198,16 @@ class _ManageTypeRow extends StatelessWidget {
         builder: (ctx, cons) {
           final isNarrow = cons.maxWidth < 420;
 
-          final titleStyle =
-              Theme.of(context).textTheme.titleSmall?.copyWith(
+          final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: r.scaleText(14),
+            color: const Color(0xFF111827),
+          ) ??
+              TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: r.scaleText(14),
                 color: const Color(0xFF111827),
-              ) ??
-                  TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: r.scaleText(14),
-                    color: const Color(0xFF111827),
-                  );
+              );
 
           final subtitleStyle =
               Theme.of(context).textTheme.bodySmall?.copyWith(

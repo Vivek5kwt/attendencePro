@@ -78,19 +78,19 @@ class PdfReportService {
     final document = pw.Document(theme: fonts.theme);
     final totalSalary = rows.fold<double>(
       0,
-      (previousValue, element) => previousValue + element.salary,
+          (previousValue, element) => previousValue + element.salary,
     );
 
     final tableData = rows
         .map(
           (row) => <String>[
-            _formatDate(row.date),
-            row.contractType.isEmpty ? '-' : row.contractType,
-            row.unitsCompleted.toString(),
-            _formatCurrency(currencySymbol, row.ratePerUnit),
-            _formatCurrency(currencySymbol, row.salary),
-          ],
-        )
+        _formatDate(row.date),
+        row.contractType.isEmpty ? '-' : row.contractType,
+        row.unitsCompleted.toString(),
+        _formatCurrency(currencySymbol, row.ratePerUnit),
+        _formatCurrency(currencySymbol, row.salary),
+      ],
+    )
         .toList(growable: false);
 
     document.addPage(
@@ -181,10 +181,10 @@ class PdfReportService {
     final document = pw.Document(theme: fonts.theme);
     final totalSalary = days.fold<double>(
       0,
-      (previousValue, day) => previousValue +
+          (previousValue, day) => previousValue +
           day.entries.fold<double>(
             0,
-            (dayValue, entry) => dayValue + entry.salary,
+                (dayValue, entry) => dayValue + entry.salary,
           ),
     );
 
@@ -204,18 +204,18 @@ class PdfReportService {
           for (final day in days) {
             final dayTotal = day.entries.fold<double>(
               0,
-              (previousValue, entry) => previousValue + entry.salary,
+                  (previousValue, entry) => previousValue + entry.salary,
             );
 
             final tableData = day.entries
                 .map(
                   (entry) => <String>[
-                    entry.typeLabel,
-                    entry.workName,
-                    entry.detail,
-                    _formatCurrency(currencySymbol, entry.salary),
-                  ],
-                )
+                entry.typeLabel,
+                entry.workName,
+                entry.detail,
+                _formatCurrency(currencySymbol, entry.salary),
+              ],
+            )
                 .toList(growable: false);
 
             widgets
@@ -434,7 +434,7 @@ class PdfReportService {
         decoration: headerDecoration,
         children: List<pw.Widget>.generate(
           headers.length,
-          (index) => _buildTableCell(
+              (index) => _buildTableCell(
             text: headers[index],
             style: headerStyle,
             alignment: cellAlignments[index] ?? defaultAlignment,
@@ -452,7 +452,7 @@ class PdfReportService {
           ),
           children: List<pw.Widget>.generate(
             headers.length,
-            (index) => _buildTableCell(
+                (index) => _buildTableCell(
               text: index < row.length ? row[index] : '',
               style: cellStyle,
               alignment: cellAlignments[index] ?? defaultAlignment,
@@ -489,7 +489,7 @@ class PdfReportService {
     final regular = pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-Regular.ttf'));
     final medium = pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-Medium.ttf'));
     final semiBold =
-        pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-SemiBold.ttf'));
+    pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-SemiBold.ttf'));
     final bold = pw.Font.ttf(await rootBundle.load('fonts/Inter_24pt-Bold.ttf'));
 
     final fonts = _PdfFontAssets(
@@ -503,12 +503,12 @@ class PdfReportService {
   }
 
   static pw.TextStyle _textStyle(
-    _PdfFontAssets fonts, {
-    double? fontSize,
-    PdfColor? color,
-    pw.FontWeight? fontWeight,
-    pw.Font? font,
-  }) {
+      _PdfFontAssets fonts, {
+        double? fontSize,
+        PdfColor? color,
+        pw.FontWeight? fontWeight,
+        pw.Font? font,
+      }) {
     return pw.TextStyle(
       fontSize: fontSize,
       color: color,
@@ -529,14 +529,14 @@ class _PdfFontAssets {
     required this.bold,
     List<pw.Font> fallbackFonts = const <pw.Font>[],
   })  : fallback = List<pw.Font>.unmodifiable(
-          <pw.Font>{
-            regular,
-            medium,
-            semiBold,
-            bold,
-            ...fallbackFonts,
-          }.toList(),
-        ),
+    <pw.Font>{
+      regular,
+      medium,
+      semiBold,
+      bold,
+      ...fallbackFonts,
+    }.toList(),
+  ),
         theme = pw.ThemeData.withFont(
           base: regular,
           bold: bold,

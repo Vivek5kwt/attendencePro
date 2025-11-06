@@ -11,35 +11,45 @@ class ReportSummary {
     final data = _ensureMap(json['data']) ?? json;
 
     final combinedJson = _ensureMap(
-          data['combined_salary'] ??
-              data['combinedSalary'] ??
-              data['combined_summary'] ??
-              data['combinedSummary'] ??
-              data['combined'],
-        ) ??
+      data['combined_salary'] ??
+          data['combinedSalary'] ??
+          data['combined_summary'] ??
+          data['combinedSummary'] ??
+          data['combined'],
+    ) ??
         <String, dynamic>{};
-    final hourlyJson = _ensureMap(
-          data['hourly_summary'] ?? data['hourlySummary'] ?? data['hourly'],
-        ) ??
+
+    // Start with whatever the backend places under "hourly" (or aliases)
+    Map<String, dynamic> hourlyJson = _ensureMap(
+      data['hourly_summary'] ?? data['hourlySummary'] ?? data['hourly'],
+    ) ??
         <String, dynamic>{};
+
+    // 🔧 Merge top-level working_days into hourlyJson so HourlySummaryData sees it
+    if (data.containsKey('working_days') && hourlyJson['working_days'] == null) {
+      hourlyJson = Map<String, dynamic>.from(hourlyJson);
+      hourlyJson['working_days'] = data['working_days'];
+    }
+
     final contractJson = _ensureMap(
-          data['contract_summary'] ??
-              data['contractSummary'] ??
-              data['contract'],
-        ) ??
+      data['contract_summary'] ??
+          data['contractSummary'] ??
+          data['contract'],
+    ) ??
         <String, dynamic>{};
+
     final breakdownJson = _ensureMap(
-          data['breakdown'] ??
-              data['monthly_breakdown'] ??
-              data['summary_breakdown'],
-        ) ??
+      data['breakdown'] ??
+          data['monthly_breakdown'] ??
+          data['summary_breakdown'],
+    ) ??
         <String, dynamic>{};
 
     final currencySymbol = _extractCurrencySymbol(
-          data,
-          combinedJson,
-          contractJson,
-        ) ??
+      data,
+      combinedJson,
+      contractJson,
+    ) ??
         '€';
 
     return ReportSummary(
@@ -178,26 +188,15 @@ class ContractSummaryData {
 
   factory ContractSummaryData.fromJson(Map<String, dynamic> json) {
     Iterable<dynamic>? _normalizeItems(dynamic source) {
-      if (source == null) {
-        return null;
-      }
-      if (source is List) {
-        return source;
-      }
-      if (source is Set) {
-        return source;
-      }
-      if (source is Iterable) {
-        return source;
-      }
+      if (source == null) return null;
+      if (source is List) return source;
+      if (source is Set) return source;
+      if (source is Iterable) return source;
       if (source is Map) {
         final flattened = <dynamic>[];
         for (final value in source.values) {
           final normalized = _normalizeItems(value);
-          if (normalized == null) {
-            continue;
-          }
-          flattened.addAll(normalized);
+          if (normalized != null) flattened.addAll(normalized);
         }
         return flattened;
       }
@@ -206,19 +205,19 @@ class ContractSummaryData {
 
     final items = <ContractWorkItemData>[];
     Iterable<dynamic>? rawItems =
-        _normalizeItems(json['items'] ?? json['contracts'] ?? json['entries']);
+    _normalizeItems(json['items'] ?? json['contracts'] ?? json['entries']);
+
     if (rawItems == null) {
       final contractTypes =
           json['contract_types'] ?? json['contractTypes'] ?? json['types'];
       rawItems = _normalizeItems(contractTypes);
     }
+
     if (rawItems == null) {
       final combined = <dynamic>[];
       void append(dynamic source) {
         final normalized = _normalizeItems(source);
-        if (normalized != null) {
-          combined.addAll(normalized);
-        }
+        if (normalized != null) combined.addAll(normalized);
       }
 
       append(json['default_contracts'] ?? json['defaultContracts']);
@@ -226,18 +225,13 @@ class ContractSummaryData {
       append(json['user_contracts'] ?? json['userContracts']);
       append(json['contract_types'] ?? json['contractTypes']);
 
-      if (combined.isNotEmpty) {
-        rawItems = combined;
-      }
+      if (combined.isNotEmpty) rawItems = combined;
     }
 
     if (rawItems != null) {
       for (final entry in rawItems) {
         final map = _ensureMap(entry);
-        if (map == null) {
-          continue;
-        }
-        items.add(ContractWorkItemData.fromJson(map));
+        if (map != null) items.add(ContractWorkItemData.fromJson(map));
       }
     }
 
@@ -391,9 +385,7 @@ class SummaryBreakdown {
 }
 
 Map<String, dynamic>? _ensureMap(dynamic value) {
-  if (value is Map<String, dynamic>) {
-    return value;
-  }
+  if (value is Map<String, dynamic>) return value;
   return null;
 }
 
@@ -401,21 +393,13 @@ double _parseDouble(Map<String, dynamic> json, List<String> keys,
     [double fallback = 0]) {
   for (final key in keys) {
     final value = json[key];
-    if (value == null) {
-      continue;
-    }
-    if (value is num) {
-      return value.toDouble();
-    }
+    if (value == null) continue;
+    if (value is num) return value.toDouble();
     if (value is String) {
       final cleaned = _sanitizeNumberString(value);
-      if (cleaned.isEmpty) {
-        continue;
-      }
+      if (cleaned.isEmpty) continue;
       final parsed = double.tryParse(cleaned);
-      if (parsed != null) {
-        return parsed;
-      }
+      if (parsed != null) return parsed;
     }
   }
   return fallback;
@@ -424,24 +408,14 @@ double _parseDouble(Map<String, dynamic> json, List<String> keys,
 int _parseInt(Map<String, dynamic> json, List<String> keys, [int fallback = 0]) {
   for (final key in keys) {
     final value = json[key];
-    if (value == null) {
-      continue;
-    }
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.round();
-    }
+    if (value == null) continue;
+    if (value is int) return value;
+    if (value is num) return value.round();
     if (value is String) {
       final cleaned = _sanitizeNumberString(value, allowDecimal: false);
-      if (cleaned.isEmpty) {
-        continue;
-      }
+      if (cleaned.isEmpty) continue;
       final parsed = int.tryParse(cleaned);
-      if (parsed != null) {
-        return parsed;
-      }
+      if (parsed != null) return parsed;
     }
   }
   return fallback;
@@ -450,24 +424,14 @@ int _parseInt(Map<String, dynamic> json, List<String> keys, [int fallback = 0]) 
 int? _parseNullableInt(Map<String, dynamic> json, List<String> keys) {
   for (final key in keys) {
     final value = json[key];
-    if (value == null) {
-      continue;
-    }
-    if (value is int) {
-      return value;
-    }
-    if (value is num) {
-      return value.round();
-    }
+    if (value == null) continue;
+    if (value is int) return value;
+    if (value is num) return value.round();
     if (value is String) {
       final cleaned = _sanitizeNumberString(value, allowDecimal: false);
-      if (cleaned.isEmpty) {
-        continue;
-      }
+      if (cleaned.isEmpty) continue;
       final parsed = int.tryParse(cleaned);
-      if (parsed != null) {
-        return parsed;
-      }
+      if (parsed != null) return parsed;
     }
   }
   return null;
@@ -487,39 +451,29 @@ String _parseString(Map<String, dynamic> json, List<String> keys,
 int? _parseColorValue(Map<String, dynamic> json, List<String> keys) {
   for (final key in keys) {
     final value = json[key];
-    if (value == null) {
-      continue;
-    }
-    if (value is int) {
-      return value;
-    }
+    if (value == null) continue;
+    if (value is int) return value;
     if (value is String) {
       var hex = value.trim();
-      if (hex.isEmpty) {
-        continue;
-      }
+      if (hex.isEmpty) continue;
       if (hex.startsWith('#')) {
         hex = hex.substring(1);
       } else if (hex.toLowerCase().startsWith('0x')) {
         hex = hex.substring(2);
       }
-      if (hex.length == 6) {
-        hex = 'FF$hex';
-      }
+      if (hex.length == 6) hex = 'FF$hex';
       final parsed = int.tryParse(hex, radix: 16);
-      if (parsed != null) {
-        return parsed;
-      }
+      if (parsed != null) return parsed;
     }
   }
   return null;
 }
 
 String? _extractCurrencySymbol(
-  Map<String, dynamic> root,
-  Map<String, dynamic> combined,
-  Map<String, dynamic> contract,
-) {
+    Map<String, dynamic> root,
+    Map<String, dynamic> combined,
+    Map<String, dynamic> contract,
+    ) {
   String? resolve(Map<String, dynamic> json) {
     const keys = [
       'currency_symbol',

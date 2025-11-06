@@ -160,7 +160,8 @@ class AttendanceApi {
   Future<Map<String, dynamic>?> updateAttendance({
     required AttendanceRequest request,
     required String token,
-  }) async {
+  }) async
+  {
     final uri = Uri.parse('$baseUrl/api/attendance/update');
     final headers = <String, String>{
       'Content-Type': 'application/json',
