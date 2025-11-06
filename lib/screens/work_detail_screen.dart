@@ -19,6 +19,7 @@ import '../models/work.dart';
 import '../repositories/attendance_entry_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
+import '../utils/contract_entry_cache.dart';
 import '../utils/language_dialog.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
@@ -303,6 +304,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   String? _attendanceStatusMessage;
   bool _attendanceStatusIsError = false;
   Timer? _attendanceStatusTimer;
+  Timer? _contractEntryCacheDebounce;
   DateTime _selectedDate = DateTime.now();
   String? _dateLabelOverride;
   List<DateTime> _pendingMissedDates = const <DateTime>[];
@@ -319,6 +321,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final initialContractTypeId =
           _extractContractTypeIdFromAdditionalData()?.toString();
       _ensurePrimaryBundleEntry(initialContractTypeId: initialContractTypeId);
+      unawaited(_restoreContractEntryCache());
     } else {
       _contractBundleEntries.clear();
     }
@@ -937,6 +940,56 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_markAsWorkOff) {
       _contractFieldsEnabled = false;
     }
+    _scheduleContractEntryCacheSave();
+  }
+
+  Future<void> _restoreContractEntryCache() async {
+    if (!widget.work.isContract) {
+      return;
+    }
+    final cache = await ContractEntryCache.load(widget.work.id);
+    if (!mounted || cache == null) {
+      return;
+    }
+    final hasExistingUnits = _contractBundleEntries
+        .any((entry) => entry.controller.text.trim().isNotEmpty);
+    final hasExistingSelection = _contractBundleEntries
+        .any((entry) => (entry.contractTypeId ?? '').trim().isNotEmpty);
+    if (hasExistingUnits || hasExistingSelection) {
+      return;
+    }
+    if (cache.entries.isEmpty) {
+      if (cache.isEnabled && !_contractFieldsEnabled) {
+        setState(() {
+          _contractFieldsEnabled = true;
+        });
+      }
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _contractFieldsEnabled = cache.isEnabled && cache.entries.isNotEmpty;
+      for (final entry in _contractBundleEntries) {
+        entry.dispose();
+      }
+      _contractBundleEntries
+        ..clear()
+        ..addAll(cache.entries.map((item) => _ContractBundleFormEntry(
+              id: _generateBundleEntryId(),
+              contractTypeId: item.contractTypeId,
+              initialCount: item.units,
+            )));
+      if (_contractBundleEntries.isEmpty) {
+        _ensurePrimaryBundleEntry();
+      }
+    });
+    if (_contractTypes.isNotEmpty) {
+      _resolveContractBundleSelectionAfterLoad();
+    }
+    _syncContractFieldsVisibility();
+    _scheduleContractEntryCacheSave();
   }
 
   void _syncContractFieldsVisibility({bool notify = false}) {
@@ -966,6 +1019,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     } else {
       _contractFieldsEnabled = true;
     }
+    _scheduleContractEntryCacheSave();
   }
 
   bool _hasContractBundleUnitsInput() {
@@ -1110,6 +1164,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _markAsWorkOff = shouldWorkOff;
       }
     }
+    _scheduleContractEntryCacheSave();
   }
 
   bool _hasMarkedAttendanceForToday(DashboardAttendanceEntry? entry) {
@@ -1517,6 +1572,39 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_attendanceStatusMessage != null || _attendanceStatusIsError) {
       _clearAttendanceStatus();
     }
+    _scheduleContractEntryCacheSave();
+  }
+
+  void _scheduleContractEntryCacheSave() {
+    if (!widget.work.isContract) {
+      return;
+    }
+    _contractEntryCacheDebounce?.cancel();
+    _contractEntryCacheDebounce =
+        Timer(const Duration(milliseconds: 300), () {
+      _contractEntryCacheDebounce = null;
+      if (!mounted) {
+        return;
+      }
+      unawaited(_persistContractEntryCache());
+    });
+  }
+
+  Future<void> _persistContractEntryCache() async {
+    if (!widget.work.isContract) {
+      return;
+    }
+    final items = _contractBundleEntries
+        .map((entry) => ContractEntryCacheItem(
+              contractTypeId: entry.contractTypeId,
+              units: entry.controller.text,
+            ))
+        .toList(growable: false);
+    await ContractEntryCache.save(
+      workId: widget.work.id,
+      isEnabled: _contractFieldsEnabled,
+      entries: items,
+    );
   }
 
   void _setAttendanceStatus(
@@ -1778,6 +1866,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_contractTypes.isNotEmpty) {
       _resolveContractBundleSelectionAfterLoad();
     }
+
+    _scheduleContractEntryCacheSave();
 
     return true;
   }
@@ -2841,6 +2931,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   @override
   void dispose() {
     _attendanceStatusTimer?.cancel();
+    _contractEntryCacheDebounce?.cancel();
     _startTimeController.dispose();
     _endTimeController.dispose();
     _breakMinutesController.dispose();
