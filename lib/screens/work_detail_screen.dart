@@ -309,6 +309,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   bool _missedDialogShown = false;
   bool _isCompletingMissedAttendance = false;
   final Set<DateTime> _lockedAttendanceDates = <DateTime>{};
+  final Map<DateTime, int> _attendanceIdsByDate = <DateTime, int>{};
 
   @override
   void initState() {
@@ -863,6 +864,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       _dateLabelOverride = _formatDate(initialDate);
     }
 
+    final initialAttendanceId = _extractAttendanceId(additionalData);
+    if (initialAttendanceId != null) {
+      _setAttendanceIdForDate(_selectedDate, initialAttendanceId);
+    }
+
     final startTime =
         _extractTimeFromMap(additionalData, const ['start_time', 'startTime', 'in_time']);
     if (startTime != null) {
@@ -996,6 +1002,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
+    final attendanceId = _extractAttendanceId(entry.raw);
+
     final startTime = _extractTimeFromMap(
           entry.raw,
           const ['start_time', 'startTime', 'in_time'],
@@ -1080,6 +1088,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       } else {
         _dateLabelOverride = _normalizeDateLabel(dateText);
       }
+    }
+
+    if (attendanceId != null) {
+      _setAttendanceIdForDate(_selectedDate, attendanceId);
     }
 
     _syncContractFieldsVisibility(notify: true);
@@ -2234,6 +2246,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final normalizedToday = _normalizeDateOnly(DateTime.now());
     final bool isContractUpdateAttempt =
         widget.work.isContract && _contractFieldsEnabled;
+    final bool shouldUpdateExistingAttendance =
+        isContractUpdateAttempt && _isSelectedDateLocked;
     if (_isSelectedDateLocked && !isContractUpdateAttempt) {
       final message = l.attendanceAlreadyMarkedMessage;
       _setAttendanceStatus(message, isError: true);
@@ -2455,19 +2469,47 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       });
       _clearAttendanceStatus();
 
-      final response = await _attendanceRepository.submitAttendance(
-        workId: widget.work.id,
-        date: _selectedDate,
-        isLeave: false,
-        startTime: startTime,
-        endTime: endTime,
-        breakMinutes: breakMinutes,
-        isContractEntry: contractEntryPayloadValue,
-        contractTypeId: contractTypeId,
-        units: units,
-        ratePerUnit: ratePerUnit,
-        bundles: bundles,
-      );
+      Map<String, dynamic>? response;
+      if (shouldUpdateExistingAttendance) {
+        final existingAttendanceId = _attendanceIdForDate(_selectedDate);
+        if (existingAttendanceId == null) {
+          final message = l.attendanceSubmitFailed;
+          _setAttendanceStatus(message, isError: true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+          return;
+        }
+        response = await _attendanceRepository.updateAttendance(
+          attendanceId: existingAttendanceId,
+          workId: widget.work.id,
+          date: _selectedDate,
+          isLeave: false,
+          startTime: startTime,
+          endTime: endTime,
+          breakMinutes: breakMinutes,
+          isContractEntry: contractEntryPayloadValue,
+          contractTypeId: contractTypeId,
+          units: units,
+          ratePerUnit: ratePerUnit,
+          bundles: bundles,
+        );
+        _setAttendanceIdForDate(_selectedDate, existingAttendanceId);
+      } else {
+        response = await _attendanceRepository.submitAttendance(
+          workId: widget.work.id,
+          date: _selectedDate,
+          isLeave: false,
+          startTime: startTime,
+          endTime: endTime,
+          breakMinutes: breakMinutes,
+          isContractEntry: contractEntryPayloadValue,
+          contractTypeId: contractTypeId,
+          units: units,
+          ratePerUnit: ratePerUnit,
+          bundles: bundles,
+        );
+      }
       if (!mounted) {
         return;
       }
@@ -3527,6 +3569,49 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   DateTime _normalizeDateOnly(DateTime date) {
     return DateTime(date.year, date.month, date.day);
+  }
+
+  void _setAttendanceIdForDate(DateTime date, int attendanceId) {
+    _attendanceIdsByDate[_normalizeDateOnly(date)] = attendanceId;
+  }
+
+  int? _attendanceIdForDate(DateTime date) {
+    return _attendanceIdsByDate[_normalizeDateOnly(date)];
+  }
+
+  int? _extractAttendanceId(Map<String, dynamic>? data) {
+    if (data == null) {
+      return null;
+    }
+    const keys = ['attendance_id', 'attendanceId', 'id', 'entry_id', 'entryId'];
+    for (final key in keys) {
+      final value = data[key];
+      final parsed = _parseIntValue(value);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  int? _parseIntValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return null;
+      }
+      return int.tryParse(trimmed);
+    }
+    return null;
   }
 
   bool get _isSelectedDateLocked {
