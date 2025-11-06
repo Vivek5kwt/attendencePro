@@ -2054,6 +2054,33 @@ class _HoursHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _EntryHistoryList(
+      entries: entries,
+      currencySymbol: currencySymbol,
+      localization: localization,
+      onEdit: onEdit,
+      showTotalHours: true,
+    );
+  }
+}
+
+class _EntryHistoryList extends StatelessWidget {
+  const _EntryHistoryList({
+    required this.entries,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+    required this.showTotalHours,
+  });
+
+  final List<_AttendanceEntry> entries;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+  final bool showTotalHours;
+
+  @override
+  Widget build(BuildContext context) {
     final grouped = _groupEntriesByDay(entries);
     final dayGroups = grouped.entries.toList(growable: false);
 
@@ -2065,25 +2092,27 @@ class _HoursHistoryList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final entry = dayGroups[index];
-        return _HoursDayCard(
+        return _EntryDayCard(
           date: entry.key,
           entries: entry.value,
           currencySymbol: currencySymbol,
           localization: localization,
           onEdit: onEdit,
+          showTotalHours: showTotalHours,
         );
       },
     );
   }
 }
 
-class _HoursDayCard extends StatelessWidget {
-  const _HoursDayCard({
+class _EntryDayCard extends StatelessWidget {
+  const _EntryDayCard({
     required this.date,
     required this.entries,
     required this.currencySymbol,
     required this.localization,
     required this.onEdit,
+    required this.showTotalHours,
   });
 
   final DateTime date;
@@ -2091,6 +2120,7 @@ class _HoursDayCard extends StatelessWidget {
   final String currencySymbol;
   final AppLocalizations localization;
   final ValueChanged<_AttendanceEntry> onEdit;
+  final bool showTotalHours;
 
   @override
   Widget build(BuildContext context) {
@@ -2349,12 +2379,13 @@ class _HourlyEntryTile extends StatelessWidget {
                 labelStyle: labelStyle,
                 valueStyle: valueStyle,
               ),
-              _InfoStatMiniCard(
-                label: localization.totalHoursLabel,
-                value: totalHours,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-              ),
+              if (showTotalHours)
+                _InfoStatMiniCard(
+                  label: localization.totalHoursLabel,
+                  value: totalHours,
+                  labelStyle: labelStyle,
+                  valueStyle: valueStyle,
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -2388,8 +2419,8 @@ class _InfoStatMiniCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 78,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      width: 112,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -2528,349 +2559,12 @@ class _ContractHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final grouped = _groupEntriesByDay(entries);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: grouped.entries
-          .map(
-            (entry) => Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _ContractDayCard(
-            date: entry.key,
-            entries: entry.value,
-            currencySymbol: currencySymbol,
-            localization: localization,
-            onEdit: onEdit,
-          ),
-        ),
-      )
-          .toList(),
-    );
-  }
-}
-
-class _ContractDayCard extends StatelessWidget {
-  const _ContractDayCard({
-    required this.date,
-    required this.entries,
-    required this.currencySymbol,
-    required this.localization,
-    required this.onEdit,
-  });
-
-  final DateTime date;
-  final List<_AttendanceEntry> entries;
-  final String currencySymbol;
-  final AppLocalizations localization;
-  final ValueChanged<_AttendanceEntry> onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    final dayTotal = entries.fold<double>(
-      0,
-          (previousValue, element) => previousValue + element.salary,
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatDayLabel(date),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF111827),
-                ) ??
-                    const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF111827),
-                    ),
-              ),
-              Text(
-                _formatCurrencyValue(currencySymbol, dayTotal),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2563EB),
-                ) ??
-                    const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2563EB),
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          _ResponsiveTable(
-            minWidth: 620,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: _ContractTableHeader(localization: localization),
-                ),
-                const SizedBox(height: 12),
-                if (entries.isEmpty)
-                  const SizedBox.shrink()
-                else
-                  ...List<Widget>.generate(entries.length * 2 - 1, (index) {
-                    if (index.isOdd) {
-                      return const Divider(
-                        height: 20,
-                        thickness: 1,
-                        color: Color(0xFFE5E7EB),
-                      );
-                    }
-                    final entry = entries[index ~/ 2];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: _ContractTableRow(
-                        entry: entry,
-                        currencySymbol: currencySymbol,
-                        localization: localization,
-                        onEdit: onEdit,
-                      ),
-                    );
-                  }),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  localization.contractWorkTotalSalaryLabel,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2937),
-                  ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
-                      ),
-                ),
-                Text(
-                  _formatCurrencyValue(currencySymbol, dayTotal),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF047857),
-                  ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF047857),
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ContractTableHeader extends StatelessWidget {
-  const _ContractTableHeader({required this.localization});
-
-  final AppLocalizations localization;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelLarge?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: const Color(0xFF374151),
-    ) ??
-        const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF374151),
-        );
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            localization.contractWorkNameLabel,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Text(
-            '${localization.contractWorkUnitsLabel} (${localization.contractWorkRoleLabel})',
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            localization.totalSalaryLabel,
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-        SizedBox(
-          width: 80,
-          child: Text(
-            'Edit',
-            textAlign: TextAlign.center,
-            style: style,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ContractTableRow extends StatelessWidget {
-  const _ContractTableRow({
-    required this.entry,
-    required this.currencySymbol,
-    required this.localization,
-    required this.onEdit,
-  });
-
-  final _AttendanceEntry entry;
-  final String currencySymbol;
-  final AppLocalizations localization;
-  final ValueChanged<_AttendanceEntry> onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    final units = entry.unitsCompleted;
-    final contractLabel = entry.contractType?.isNotEmpty == true
-        ? entry.contractType!
-        : localization.contractWorkUnitFallback;
-    final quantityLabel =
-    units != null && units > 0 ? '$units ($contractLabel)' : contractLabel;
-
-    final workStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: const Color(0xFF111827),
-    ) ??
-        const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF111827),
-        );
-
-    final valueStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      color: const Color(0xFF374151),
-    ) ??
-        const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF374151),
-        );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: 4,
-            child: Text(
-              entry.workName,
-              style: workStyle,
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              quantityLabel,
-              textAlign: TextAlign.center,
-              style: valueStyle,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              _formatCurrencyValue(currencySymbol, entry.salary),
-              textAlign: TextAlign.center,
-              style: valueStyle.copyWith(
-                color: const Color(0xFF047857),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 80,
-            child: _EditButton(
-              enabled: true,
-              onPressed: () => onEdit(entry),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ResponsiveTable extends StatelessWidget {
-  const _ResponsiveTable({
-    required this.child,
-    this.minWidth = 620,
-  });
-
-  final Widget child;
-  final double minWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < minWidth) {
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.antiAlias,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: minWidth,
-                maxWidth: minWidth,
-              ),
-              child: child,
-            ),
-          );
-        }
-        return child;
-      },
+    return _EntryHistoryList(
+      entries: entries,
+      currencySymbol: currencySymbol,
+      localization: localization,
+      onEdit: onEdit,
+      showTotalHours: false,
     );
   }
 }
