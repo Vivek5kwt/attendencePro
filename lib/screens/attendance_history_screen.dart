@@ -1085,6 +1085,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
+    final startController = TextEditingController(text: entry.startTime ?? '');
+    final endController = TextEditingController(text: entry.endTime ?? '');
+    final breakController = TextEditingController(
+      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
+    );
+
     final bundleEntries = <_ContractBundleEditEntry>[];
 
     void addBundleEntry({ContractType? type, int? count}) {
@@ -1145,6 +1151,32 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: startController,
+                      decoration: InputDecoration(
+                        labelText: l.startTimeLabel,
+                      ),
+                      validator: _validateOptionalTimeInput,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: endController,
+                      decoration: InputDecoration(
+                        labelText: l.endTimeLabel,
+                      ),
+                      validator: _validateOptionalTimeInput,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: breakController,
+                      decoration: InputDecoration(
+                        labelText: l.breakLabel,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: _validateMinutesInput,
                     ),
                     const SizedBox(height: 16),
                     ...List<Widget>.generate(bundleEntries.length, (index) {
@@ -1300,15 +1332,47 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                                   l.attendanceUnitsRequired);
                               return;
                             }
+                            final startText = startController.text.trim();
+                            final endText = endController.text.trim();
+                            final breakMinutes =
+                                int.tryParse(breakController.text.trim()) ?? 0;
+                            final start = startText.isEmpty
+                                ? null
+                                : _parseTimeOfDay(startText);
+                            final end =
+                                endText.isEmpty ? null : _parseTimeOfDay(endText);
+                            if ((startText.isNotEmpty && start == null) ||
+                                (endText.isNotEmpty && end == null)) {
+                              _showErrorSnackBar(
+                                  l.attendanceHistoryLoadFailedMessage);
+                              return;
+                            }
+                            if ((start != null && end == null) ||
+                                (start == null && end != null)) {
+                              _showErrorSnackBar(
+                                  l.attendanceHistoryLoadFailedMessage);
+                              return;
+                            }
+                            if (start != null && end != null) {
+                              final workedMinutes =
+                                  _calculateWorkedMinutes(start, end);
+                              if (workedMinutes <= breakMinutes) {
+                                _showErrorSnackBar(
+                                    l.attendanceHistoryLoadFailedMessage);
+                                return;
+                              }
+                            }
                             setModalState(() {
                               isSaving = true;
                             });
-                            final success =
-                            await _updateContractAttendance(
+                            final success = await _updateContractAttendance(
                               attendanceId: attendanceId,
                               workId: workId,
                               date: entry.date,
                               bundles: resolvedBundles,
+                              start: start,
+                              end: end,
+                              breakMinutes: breakMinutes,
                             );
                             if (!mounted) {
                               return;
@@ -1341,6 +1405,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       },
     );
 
+    startController.dispose();
+    endController.dispose();
+    breakController.dispose();
     for (final item in bundleEntries) {
       item.dispose();
     }
@@ -1453,6 +1520,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     required String workId,
     required DateTime date,
     required List<AttendanceContractBundle> bundles,
+    TimeOfDay? start,
+    TimeOfDay? end,
+    int? breakMinutes,
   }) async {
     final requestDate = DateTime(date.year, date.month, date.day);
     try {
@@ -1465,6 +1535,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         date: requestDate,
         isContractEntry: true,
         bundles: bundles,
+        startTime: start != null ? _formatTimeOfDay(start) : null,
+        endTime: end != null ? _formatTimeOfDay(end) : null,
+        breakMinutes: breakMinutes,
       );
       await _loadEntries();
       _showSuccessSnackBar(
@@ -1560,6 +1633,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     final startMinutes = start.hour * 60 + start.minute;
     final endMinutes = end.hour * 60 + end.minute;
     return endMinutes - startMinutes;
+  }
+
+  String? _validateOptionalTimeInput(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    return _validateTimeInput(value);
   }
 
   String? _validateTimeInput(String? value) {
