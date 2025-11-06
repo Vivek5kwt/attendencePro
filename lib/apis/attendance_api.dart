@@ -160,8 +160,7 @@ class AttendanceApi {
   Future<Map<String, dynamic>?> updateAttendance({
     required AttendanceRequest request,
     required String token,
-  }) async
-  {
+  }) async {
     final uri = Uri.parse('$baseUrl/api/attendance/update');
     final headers = <String, String>{
       'Content-Type': 'application/json',
@@ -172,7 +171,7 @@ class AttendanceApi {
     final body = jsonEncode(request.toJson());
 
     try {
-      final response = await _client.post(uri, headers: headers, body: body);
+      final response = await _client.put(uri, headers: headers, body: body);
       final decoded = _decodeBody(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
