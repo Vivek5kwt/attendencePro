@@ -945,122 +945,124 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${entry.workName} · ${_formatDayLabel(entry.date)}',
-                      style:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${entry.workName} · ${_formatDayLabel(entry.date)}',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: startController,
-                      decoration: InputDecoration(
-                        labelText: l.startTimeLabel,
-                      ),
-                      validator: _validateTimeInput,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: endController,
-                      decoration: InputDecoration(
-                        labelText: l.endTimeLabel,
-                      ),
-                      validator: _validateTimeInput,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: breakController,
-                      decoration: InputDecoration(
-                        labelText: l.breakLabel,
-                        hintText: '0',
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: _validateMinutesInput,
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed:
-                          isSaving ? null : () => Navigator.of(context).pop(),
-                          child: Text(l.cancelButton),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: startController,
+                        decoration: InputDecoration(
+                          labelText: l.startTimeLabel,
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                            if (!(formKey.currentState?.validate() ??
-                                false)) {
-                              return;
-                            }
-                            final start = _parseTimeOfDay(
-                                startController.text);
-                            final end =
-                            _parseTimeOfDay(endController.text);
-                            if (start == null || end == null) {
-                              _showErrorSnackBar(l
-                                  .attendanceHistoryLoadFailedMessage);
-                              return;
-                            }
-                            final breakMinutes = int.tryParse(
-                                breakController.text.trim()) ??
-                                0;
-                            final workedMinutes =
-                            _calculateWorkedMinutes(start, end);
-                            if (workedMinutes <= breakMinutes) {
-                              _showErrorSnackBar(l
-                                  .attendanceHistoryLoadFailedMessage);
-                              return;
-                            }
-                            setModalState(() {
-                              isSaving = true;
-                            });
-                            final success =
-                                await _submitHourlyAttendance(
-                              workId: workId,
-                              date: entry.date,
-                              start: start,
-                              end: end,
-                              breakMinutes: breakMinutes,
-                              attendanceId: entry.attendanceId,
-                            );
-                            if (success && mounted) {
-                              Navigator.of(context).pop();
-                            }
-                            if (mounted) {
-                              setModalState(() {
-                                isSaving = false;
-                              });
-                            }
-                          },
-                          child: isSaving
-                              ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child:
-                            CircularProgressIndicator(strokeWidth: 2),
-                          )
-                              : Text(l.saveButtonLabel),
+                        validator: _validateTimeInput,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: endController,
+                        decoration: InputDecoration(
+                          labelText: l.endTimeLabel,
                         ),
-                      ],
-                    ),
-                  ],
+                        validator: _validateTimeInput,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: breakController,
+                        decoration: InputDecoration(
+                          labelText: l.breakLabel,
+                          hintText: '0',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: _validateMinutesInput,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed:
+                                isSaving ? null : () => Navigator.of(context).pop(),
+                            child: Text(l.cancelButton),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (!(formKey.currentState?.validate() ??
+                                        false)) {
+                                      return;
+                                    }
+                                    final start =
+                                        _parseTimeOfDay(startController.text);
+                                    final end =
+                                        _parseTimeOfDay(endController.text);
+                                    if (start == null || end == null) {
+                                      _showErrorSnackBar(l
+                                          .attendanceHistoryLoadFailedMessage);
+                                      return;
+                                    }
+                                    final breakMinutes =
+                                        int.tryParse(breakController.text.trim()) ??
+                                            0;
+                                    final workedMinutes =
+                                        _calculateWorkedMinutes(start, end);
+                                    if (workedMinutes <= breakMinutes) {
+                                      _showErrorSnackBar(l
+                                          .attendanceHistoryLoadFailedMessage);
+                                      return;
+                                    }
+                                    setModalState(() {
+                                      isSaving = true;
+                                    });
+                                    final success =
+                                        await _submitHourlyAttendance(
+                                      workId: workId,
+                                      date: entry.date,
+                                      start: start,
+                                      end: end,
+                                      breakMinutes: breakMinutes,
+                                      attendanceId: entry.attendanceId,
+                                    );
+                                    if (success && mounted) {
+                                      Navigator.of(context).pop();
+                                    }
+                                    if (mounted) {
+                                      setModalState(() {
+                                        isSaving = false;
+                                      });
+                                    }
+                                  },
+                            child: isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : Text(l.saveButtonLabel),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -1068,6 +1070,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         );
       },
     );
+
+    if (!mounted) {
+      startController.dispose();
+      endController.dispose();
+      breakController.dispose();
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      startController.dispose();
+      endController.dispose();
+      breakController.dispose();
+    });
   }
 
   Future<void> _openContractEditSheet(_AttendanceEntry entry) async {
@@ -1132,127 +1147,128 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${entry.workName} · ${_formatDayLabel(entry.date)}',
-                      style:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${entry.workName} · ${_formatDayLabel(entry.date)}',
+                        style:
+                        Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: startController,
-                      decoration: InputDecoration(
-                        labelText: l.startTimeLabel,
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: startController,
+                        decoration: InputDecoration(
+                          labelText: l.startTimeLabel,
+                        ),
+                        validator: _validateOptionalTimeInput,
                       ),
-                      validator: _validateOptionalTimeInput,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: endController,
-                      decoration: InputDecoration(
-                        labelText: l.endTimeLabel,
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: endController,
+                        decoration: InputDecoration(
+                          labelText: l.endTimeLabel,
+                        ),
+                        validator: _validateOptionalTimeInput,
                       ),
-                      validator: _validateOptionalTimeInput,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: breakController,
-                      decoration: InputDecoration(
-                        labelText: l.breakLabel,
-                        hintText: '0',
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: breakController,
+                        decoration: InputDecoration(
+                          labelText: l.breakLabel,
+                          hintText: '0',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: _validateMinutesInput,
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: _validateMinutesInput,
-                    ),
-                    const SizedBox(height: 16),
-                    ...List<Widget>.generate(bundleEntries.length, (index) {
-                      final bundleEntry = bundleEntries[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                            bottom: index == bundleEntries.length - 1 ? 0 : 12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<ContractType>(
-                                value: bundleEntry.contractType,
-                                decoration: InputDecoration(
-                                  labelText: l.contractWorkLabel,
-                                ),
-                                items: _contractTypes
-                                    .map(
-                                      (type) => DropdownMenuItem<ContractType>(
-                                    value: type,
-                                    child: Text(type.name),
+                      const SizedBox(height: 16),
+                      ...List<Widget>.generate(bundleEntries.length, (index) {
+                        final bundleEntry = bundleEntries[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                              bottom: index == bundleEntries.length - 1 ? 0 : 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<ContractType>(
+                                  value: bundleEntry.contractType,
+                                  decoration: InputDecoration(
+                                    labelText: l.contractWorkLabel,
                                   ),
-                                )
-                                    .toList(),
-                                onChanged: isSaving
-                                    ? null
-                                    : (value) {
-                                  if (value == null) {
-                                    return;
-                                  }
-                                  setModalState(() {
-                                    bundleEntry.contractType = value;
-                                  });
-                                },
-                                validator: (value) {
-                                  if (value == null) {
-                                    return l.contractWorkLoadError;
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            SizedBox(
-                              width: 110,
-                              child: TextFormField(
-                                controller: bundleEntry.controller,
-                                decoration: InputDecoration(
-                                  labelText: l.contractWorkUnitsLabel,
+                                  items: _contractTypes
+                                      .map(
+                                        (type) => DropdownMenuItem<ContractType>(
+                                      value: type,
+                                      child: Text(type.name),
+                                    ),
+                                  )
+                                      .toList(),
+                                  onChanged: isSaving
+                                      ? null
+                                      : (value) {
+                                    if (value == null) {
+                                      return;
+                                    }
+                                    setModalState(() {
+                                      bundleEntry.contractType = value;
+                                    });
+                                  },
+                                  validator: (value) {
+                                    if (value == null) {
+                                      return l.contractWorkLoadError;
+                                    }
+                                    return null;
+                                  },
                                 ),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  final trimmed = value?.trim() ?? '';
-                                  if (trimmed.isEmpty) {
-                                    return l.attendanceUnitsRequired;
-                                  }
-                                  final parsed = int.tryParse(trimmed);
-                                  if (parsed == null || parsed <= 0) {
-                                    return l.attendanceUnitsInvalid;
-                                  }
-                                  return null;
-                                },
                               ),
-                            ),
-                            IconButton(
-                              tooltip: l.attendanceRemoveBundleTooltip,
-                              onPressed: isSaving || bundleEntries.length <= 1
-                                  ? null
-                                  : () {
-                                setModalState(() {
-                                  bundleEntries.remove(bundleEntry);
-                                });
-                                bundleEntry.dispose();
-                              },
-                              icon: const Icon(Icons.delete_outline),
-                            ),
+                              const SizedBox(width: 12),
+                              SizedBox(
+                                width: 110,
+                                child: TextFormField(
+                                  controller: bundleEntry.controller,
+                                  decoration: InputDecoration(
+                                    labelText: l.contractWorkUnitsLabel,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    final trimmed = value?.trim() ?? '';
+                                    if (trimmed.isEmpty) {
+                                      return l.attendanceUnitsRequired;
+                                    }
+                                    final parsed = int.tryParse(trimmed);
+                                    if (parsed == null || parsed <= 0) {
+                                      return l.attendanceUnitsInvalid;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: l.attendanceRemoveBundleTooltip,
+                                onPressed: isSaving || bundleEntries.length <= 1
+                                    ? null
+                                    : () {
+                                  setModalState(() {
+                                    bundleEntries.remove(bundleEntry);
+                                  });
+                                  bundleEntry.dispose();
+                                },
+                                icon: const Icon(Icons.delete_outline),
+                              ),
                           ],
                         ),
                       );
@@ -1405,12 +1421,24 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       },
     );
 
-    startController.dispose();
-    endController.dispose();
-    breakController.dispose();
-    for (final item in bundleEntries) {
-      item.dispose();
+    if (!mounted) {
+      startController.dispose();
+      endController.dispose();
+      breakController.dispose();
+      for (final item in bundleEntries) {
+        item.dispose();
+      }
+      return;
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      startController.dispose();
+      endController.dispose();
+      breakController.dispose();
+      for (final item in bundleEntries) {
+        item.dispose();
+      }
+    });
   }
 
   Future<bool> _submitHourlyAttendance({
