@@ -6078,32 +6078,31 @@ class _ContractEntryForm extends StatelessWidget {
                   ),
                 );
               }).toList(growable: false),
-          /*    if (onAddEntry != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: disableInteractions ||
-                                onAddEntry == null ||
-                                contractTypes.length <= entries.length
-                            ? null
-                            : onAddEntry,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF2563EB),
-                          side: const BorderSide(color: Color(0xFF2563EB)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+            if (onAddEntry != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: disableInteractions ||
+                              onAddEntry == null ||
+                              contractTypes.length <= entries.length
+                          ? null
+                          : onAddEntry,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF2563EB),
+                        side: const BorderSide(color: Color(0xFF2563EB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text(l.contractWorkAddTypeTitle),
                       ),
-
-                    ],
-                  ),
-                ),*/
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(l.contractWorkAddTypeTitle),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ],
       ),
