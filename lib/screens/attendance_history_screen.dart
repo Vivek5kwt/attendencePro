@@ -1025,12 +1025,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                               isSaving = true;
                             });
                             final success =
-                            await _submitHourlyAttendance(
+                                await _submitHourlyAttendance(
                               workId: workId,
                               date: entry.date,
                               start: start,
                               end: end,
                               breakMinutes: breakMinutes,
+                              attendanceId: entry.attendanceId,
                             );
                             if (success && mounted) {
                               Navigator.of(context).pop();
@@ -1344,19 +1345,32 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     required TimeOfDay start,
     required TimeOfDay end,
     required int breakMinutes,
+    int? attendanceId,
   }) async {
     final requestDate = DateTime(date.year, date.month, date.day);
     try {
       setState(() {
         _isLoadingEntries = true;
       });
-      await _entryRepository.submitAttendance(
-        workId: workId,
-        date: requestDate,
-        startTime: _formatTimeOfDay(start),
-        endTime: _formatTimeOfDay(end),
-        breakMinutes: breakMinutes,
-      );
+      if (attendanceId != null) {
+        await _entryRepository.updateAttendance(
+          attendanceId: attendanceId,
+          workId: workId,
+          date: requestDate,
+          startTime: _formatTimeOfDay(start),
+          endTime: _formatTimeOfDay(end),
+          breakMinutes: breakMinutes,
+          isContractEntry: false,
+        );
+      } else {
+        await _entryRepository.submitAttendance(
+          workId: workId,
+          date: requestDate,
+          startTime: _formatTimeOfDay(start),
+          endTime: _formatTimeOfDay(end),
+          breakMinutes: breakMinutes,
+        );
+      }
       await _loadEntries();
       _showSuccessSnackBar(
         AppLocalizations.of(context).attendanceSubmitSuccess,
