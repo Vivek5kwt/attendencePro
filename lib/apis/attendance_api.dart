@@ -169,6 +169,7 @@ class AttendanceApi {
     };
 
     final body = jsonEncode(request.toJson());
+    print('getetd the body $body');
 
     try {
       final response = await _client.put(uri, headers: headers, body: body);
