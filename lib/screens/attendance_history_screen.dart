@@ -851,48 +851,62 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final heightFactor = Responsive.isDesktop(context)
+            ? 0.55
+            : Responsive.isTablet(context)
+                ? 0.65
+                : 0.85;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'All Works',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ..._availableWorks.map(
-                      (work) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      tileColor: work == _selectedWork
-                          ? const Color(0xFFEFF6FF)
-                          : const Color(0xFFF9FAFB),
-                      title: Text(
-                        work,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
-                          fontWeight: FontWeight.w600,
+          child: FractionallySizedBox(
+            heightFactor: heightFactor,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'All Works',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: ListView.separated(
+                        itemCount: _availableWorks.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final work = _availableWorks[index];
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            tileColor: work == _selectedWork
+                                ? const Color(0xFFEFF6FF)
+                                : const Color(0xFFF9FAFB),
+                            title: Text(
+                              work,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            onTap: () => Navigator.of(context).pop(work),
+                          );
+                        },
                       ),
-                      onTap: () => Navigator.of(context).pop(work),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
