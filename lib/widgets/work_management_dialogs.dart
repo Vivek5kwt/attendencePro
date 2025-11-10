@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
@@ -14,7 +15,24 @@ import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../screens/contract_work_screen.dart';
 
+Future<void> _clearStoredAddWorkContractDrafts() async {
+  final prefs = await SharedPreferences.getInstance();
+  final keysToRemove = prefs
+      .getKeys()
+      .where(
+        (key) =>
+            key.startsWith('add_work_contract_') ||
+            key.startsWith('pending_contract_work'),
+      )
+      .toList(growable: false);
+
+  for (final key in keysToRemove) {
+    await prefs.remove(key);
+  }
+}
+
 Future<void> showAddWorkDialog({required BuildContext context}) async {
+  await _clearStoredAddWorkContractDrafts();
   await showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -39,12 +57,14 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   late final TextEditingController _hourlySalaryController;
   final List<PendingContractWork> _pendingContractWorks =
       <PendingContractWork>[];
+  bool _hasUserCreatedContractWork = false;
 
   @override
   void initState() {
     super.initState();
     _workNameController = TextEditingController();
     _hourlySalaryController = TextEditingController();
+    _resetPendingContractWorkState();
   }
 
   @override
@@ -58,7 +78,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     _workNameController.clear();
     _hourlySalaryController.clear();
     setState(() {
-      _pendingContractWorks.clear();
+      _resetPendingContractWorkState();
     });
   }
 
@@ -70,7 +90,13 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     }
     setState(() {
       _pendingContractWorks.removeAt(index);
+      _hasUserCreatedContractWork = _pendingContractWorks.isNotEmpty;
     });
+  }
+
+  void _resetPendingContractWorkState() {
+    _pendingContractWorks.clear();
+    _hasUserCreatedContractWork = false;
   }
 
   Widget _buildPendingContractWorkTile({
@@ -180,6 +206,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
       if (pending != null && mounted) {
         setState(() {
           _pendingContractWorks.add(pending);
+          _hasUserCreatedContractWork = true;
         });
         messenger.showSnackBar(
           SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
@@ -231,7 +258,11 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     }
 
     FocusScope.of(dialogContext).unfocus();
-    final pending = List<PendingContractWork>.from(_pendingContractWorks);
+    final shouldIncludeContractWorks =
+        _hasUserCreatedContractWork && _pendingContractWorks.isNotEmpty;
+    final pending = shouldIncludeContractWorks
+        ? List<PendingContractWork>.from(_pendingContractWorks)
+        : const <PendingContractWork>[];
 
     widget.rootContext.read<WorkBloc>().add(
       WorkAdded(
