@@ -11,6 +11,76 @@ import '../repositories/contract_type_repository.dart';
 import '../repositories/reports_repository.dart';
 import '../utils/responsive.dart';
 
+const List<String> kContractWorkDefaultRoleOptions = <String>[
+  'Bin',
+  'Crate',
+  'Bunches',
+];
+
+const List<String> kContractWorkDefaultWorkNameOptions = <String>[
+  'Watermelon',
+  'Orange',
+  'Radish',
+  'Carrot',
+  'Ravanello 10 Unit',
+  'Ravanello 15 Unit',
+  'Ravanello 18 Unit',
+  'Ravanello 20 Unit',
+  'Custom Work',
+];
+
+String contractWorkFormatRoleDisplay(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return trimmed;
+
+  switch (trimmed.toLowerCase()) {
+    case 'bin':
+      return 'Bin';
+    case 'crate':
+      return 'Crate';
+    case 'bunches':
+      return 'Bunches';
+    default:
+      return trimmed;
+  }
+}
+
+List<String> contractWorkBuildAvailableRoles<T>({
+  required Iterable<T> globalTypes,
+  required Iterable<T> userTypes,
+  required String? Function(T type) roleSelector,
+  Iterable<String> baseRoleOptions = kContractWorkDefaultRoleOptions,
+}) {
+  final unique = <String, String>{};
+
+  for (final option in baseRoleOptions) {
+    final formatted = contractWorkFormatRoleDisplay(option);
+    final key = formatted.toLowerCase();
+    unique.putIfAbsent(key, () => formatted);
+  }
+
+  void addRole(String? value) {
+    final roleValue = value?.trim();
+    if (roleValue == null || roleValue.isEmpty) return;
+
+    final formatted = contractWorkFormatRoleDisplay(roleValue);
+    final key = formatted.toLowerCase();
+    unique.putIfAbsent(key, () => formatted);
+  }
+
+  for (final type in globalTypes) {
+    addRole(roleSelector(type));
+  }
+
+  for (final type in userTypes) {
+    addRole(roleSelector(type));
+  }
+
+  final sorted = unique.values.toList()
+    ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  return sorted;
+}
+
 class ContractWorkScreen extends StatefulWidget {
   const ContractWorkScreen({super.key, this.work, this.allowEditing = false});
 
@@ -27,22 +97,6 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   final List<_ContractType> _defaultContractTypes = <_ContractType>[];
   final List<_ContractType> _userContractTypes = <_ContractType>[];
   final List<String> _availableRoles = <String>[];
-  static const List<String> _defaultRoleOptions = <String>[
-    'Bin',
-    'Crate',
-    'Bunches',
-  ];
-  static const List<String> _defaultWorkNameOptions = <String>[
-    'Watermelon',
-    'Orange',
-    'Radish',
-    'Carrot',
-    'Ravanello 10 Unit',
-    'Ravanello 15 Unit',
-    'Ravanello 18 Unit',
-    'Ravanello 20 Unit',
-    'Custom Work',
-  ];
 
   final ReportsRepository _reportsRepository = ReportsRepository();
 
@@ -252,43 +306,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   void _syncAvailableRoles() {
-    final unique = <String, String>{};
-
-    void addRole(String? rawValue) {
-      final value = rawValue?.trim();
-      if (value == null || value.isEmpty) return;
-      final key = value.toLowerCase();
-      unique.putIfAbsent(key, () => _formatRoleDisplay(value));
-    }
-
-    for (final type in _defaultContractTypes) {
-      addRole(type.role);
-    }
-    for (final type in _userContractTypes) {
-      addRole(type.role);
-    }
-
-    final sorted = unique.values.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final roles = contractWorkBuildAvailableRoles<_ContractType>(
+      globalTypes: _defaultContractTypes,
+      userTypes: _userContractTypes,
+      roleSelector: (type) => type.role,
+    );
     _availableRoles
       ..clear()
-      ..addAll(sorted);
-  }
-
-  String _formatRoleDisplay(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) return trimmed;
-
-    switch (trimmed.toLowerCase()) {
-      case 'bin':
-        return 'Bin';
-      case 'crate':
-        return 'Crate';
-      case 'bunches':
-        return 'Bunches';
-      default:
-        return trimmed;
-    }
+      ..addAll(roles);
   }
 
   // REMOVED role selection dialog. We open the Add Contract Work sheet directly.
@@ -313,16 +338,16 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return _ContractTypeSheet(
+        return ContractTypeSheet(
           type: type,
           repository: _repository,
           rootContext: rootContext,
           isNameEditable: !(type?.isDefault ?? false),
-          workNameOptions: _defaultWorkNameOptions,
-          defaultRoleOptions: _defaultRoleOptions,
+          workNameOptions: kContractWorkDefaultWorkNameOptions,
+          defaultRoleOptions: kContractWorkDefaultRoleOptions,
           availableRoles: _availableRoles,
           initialRoleValue: null, // no pre-prompt; user selects inside sheet
-          formatRoleDisplay: _formatRoleDisplay,
+          formatRoleDisplay: contractWorkFormatRoleDisplay,
         );
       },
     );
@@ -848,8 +873,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 }
 
-class _ContractTypeSheet extends StatefulWidget {
-  const _ContractTypeSheet({
+class ContractTypeSheet extends StatefulWidget {
+  const ContractTypeSheet({
     required this.type,
     required this.repository,
     required this.rootContext,
@@ -873,10 +898,10 @@ class _ContractTypeSheet extends StatefulWidget {
   final String Function(String value) formatRoleDisplay;
 
   @override
-  State<_ContractTypeSheet> createState() => _ContractTypeSheetState();
+  State<ContractTypeSheet> createState() => _ContractTypeSheetState();
 }
 
-class _ContractTypeSheetState extends State<_ContractTypeSheet> {
+class _ContractTypeSheetState extends State<ContractTypeSheet> {
   static const String _customWorkOptionKey = 'custom work';
 
   late final TextEditingController _nameController;
@@ -884,6 +909,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
   late final List<String> _workNameOptions;
   late final List<String> _roleOptions;
   late final bool _isRoleLocked;
+  late final bool _isRateEditable;
 
   String? _selectedRoleValue;
   String? _selectedWorkName;
@@ -899,6 +925,7 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
       text: type != null ? type.rate.toStringAsFixed(2) : '',
     );
     _isRoleLocked = _shouldLockRole(type);
+    _isRateEditable = _shouldAllowRateEditing(type);
 
     _workNameOptions = List<String>.from(widget.workNameOptions);
 
@@ -979,6 +1006,14 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
     _roleOptions = options;
     _selectedRoleValue = initialSelection;
     _selectedRoleValue ??= _roleOptions.isNotEmpty ? _roleOptions.first : null;
+  }
+
+  bool _shouldAllowRateEditing(_ContractType? type) {
+    final identifier = type?.id.trim();
+    if (identifier == null || identifier.isEmpty) {
+      return true;
+    }
+    return identifier.startsWith('local-');
   }
 
   bool _shouldLockRole(_ContractType? type) {
@@ -1623,6 +1658,8 @@ class _ContractTypeSheetState extends State<_ContractTypeSheet> {
                                 Expanded(
                                   child: TextField(
                                     controller: _rateController,
+                                    enabled: _isRateEditable,
+                                    readOnly: !_isRateEditable,
                                     keyboardType:
                                     const TextInputType.numberWithOptions(
                                       decimal: true,

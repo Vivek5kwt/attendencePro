@@ -57,14 +57,52 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   }
 
   Future<void> _navigateToContractWorkScreen() async {
-    await Navigator.of(
-      context,
-      rootNavigator: true,
-    ).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const ContractWorkScreen(),
-      ),
-    );
+    FocusScope.of(context).unfocus();
+
+    final messenger = ScaffoldMessenger.of(widget.rootContext);
+    final l = AppLocalizations.of(widget.rootContext);
+    final repository = ContractTypeRepository();
+
+    try {
+      final result = await repository.fetchContractTypes();
+      if (!mounted) return;
+
+      final availableRoles = contractWorkBuildAvailableRoles<ContractType>(
+        globalTypes: result.globalTypes,
+        userTypes: result.userTypes,
+        roleSelector: (type) => type.role,
+      );
+
+      await showModalBottomSheet<void>(
+        context: widget.rootContext,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          return ContractTypeSheet(
+            type: null,
+            repository: repository,
+            rootContext: widget.rootContext,
+            isNameEditable: true,
+            workNameOptions: kContractWorkDefaultWorkNameOptions,
+            defaultRoleOptions: kContractWorkDefaultRoleOptions,
+            availableRoles: availableRoles,
+            initialRoleValue: null,
+            formatRoleDisplay: contractWorkFormatRoleDisplay,
+          );
+        },
+      );
+    } on ContractTypeRepositoryException catch (error) {
+      final message = error.message.trim().isEmpty
+          ? l.contractWorkLoadError
+          : error.message;
+      messenger.showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.contractWorkLoadError)),
+      );
+    }
   }
 
   Future<void> _handleSaveWork(BuildContext dialogContext) async {
@@ -900,17 +938,62 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
   Future<void> _navigateToContractWorkScreen() async {
     FocusScope.of(context).unfocus();
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(
-        builder: (contractContext) {
-          return ContractWorkScreen(work: widget.work, allowEditing: false);
+    final messenger = ScaffoldMessenger.of(widget.rootContext);
+    final l = AppLocalizations.of(widget.rootContext);
+
+    try {
+      final result = await _contractTypeRepository.fetchContractTypes();
+      if (!mounted) {
+        return;
+      }
+
+      final availableRoles = contractWorkBuildAvailableRoles<ContractType>(
+        globalTypes: result.globalTypes,
+        userTypes: result.userTypes,
+        roleSelector: (type) => type.role,
+      );
+
+      await showModalBottomSheet<void>(
+        context: widget.rootContext,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) {
+          return ContractTypeSheet(
+            type: null,
+            repository: _contractTypeRepository,
+            rootContext: widget.rootContext,
+            isNameEditable: true,
+            workNameOptions: kContractWorkDefaultWorkNameOptions,
+            defaultRoleOptions: kContractWorkDefaultRoleOptions,
+            availableRoles: availableRoles,
+            initialRoleValue: null,
+            formatRoleDisplay: contractWorkFormatRoleDisplay,
+          );
         },
-      ),
-    );
-    if (!mounted) {
-      return;
+      );
+
+      if (!mounted) {
+        return;
+      }
+      await _loadContractTypes();
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      final message = error.message.trim().isEmpty
+          ? l.contractWorkLoadError
+          : error.message;
+      messenger.showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.contractWorkLoadError)),
+      );
     }
-    await _loadContractTypes();
   }
 
   Future<void> _confirmAndDeleteContractType(
