@@ -2,14 +2,19 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../models/pending_contract_work.dart';
 import '../models/work.dart';
+import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import 'work_event.dart';
 import 'work_state.dart';
 
 class WorkBloc extends Bloc<WorkEvent, WorkState> {
-  WorkBloc({required WorkRepository repository})
-      : _repository = repository,
+  WorkBloc({
+    required WorkRepository repository,
+    required ContractTypeRepository contractTypeRepository,
+  })  : _repository = repository,
+        _contractTypeRepository = contractTypeRepository,
         super(const WorkState()) {
     on<WorkStarted>(_onStarted);
     on<WorkRefreshed>(_onRefreshed);
@@ -25,6 +30,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
   }
 
   final WorkRepository _repository;
+  final ContractTypeRepository _contractTypeRepository;
 
   Future<void> _onStarted(WorkStarted event, Emitter<WorkState> emit) async {
     emit(
@@ -185,6 +191,43 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           break;
         }
       }
+      if (createdWork != null && event.pendingContractWorks.isNotEmpty) {
+        try {
+          await _createPendingContractWorks(
+            work: createdWork,
+            pending: event.pendingContractWorks,
+          );
+        } on ContractTypeAuthException {
+          emit(
+            state.copyWith(
+              addStatus: WorkActionStatus.failure,
+              requiresAuthentication: true,
+              feedbackKind: WorkFeedbackKind.add,
+            ),
+          );
+          return;
+        } on ContractTypeRepositoryException catch (error) {
+          emit(
+            state.copyWith(
+              addStatus: WorkActionStatus.failure,
+              lastErrorMessage: error.message,
+              feedbackKind: WorkFeedbackKind.add,
+            ),
+          );
+          return;
+        } catch (_) {
+          emit(
+            state.copyWith(
+              addStatus: WorkActionStatus.failure,
+              lastErrorMessage:
+                  'Unable to save contract work. Please try again.',
+              feedbackKind: WorkFeedbackKind.add,
+            ),
+          );
+          return;
+        }
+      }
+
       emit(
         state.copyWith(
           addStatus: WorkActionStatus.success,
@@ -220,6 +263,22 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           lastErrorMessage: 'Unable to save work. Please try again.',
           feedbackKind: WorkFeedbackKind.add,
         ),
+      );
+    }
+  }
+
+  Future<void> _createPendingContractWorks({
+    required Work work,
+    required List<PendingContractWork> pending,
+  }) async {
+    for (final item in pending) {
+      await _contractTypeRepository.createContractType(
+        name: item.name,
+        type: item.contractKind,
+        role: item.role,
+        ratePerUnit: item.ratePerUnit,
+        unitLabel: item.unitLabel,
+        workId: work.id,
       );
     }
   }

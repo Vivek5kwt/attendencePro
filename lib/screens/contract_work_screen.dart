@@ -5,6 +5,7 @@ import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/contract_type.dart' as models;
+import '../models/pending_contract_work.dart';
 import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
@@ -884,6 +885,7 @@ class ContractTypeSheet extends StatefulWidget {
     required this.availableRoles,
     this.initialRoleValue,
     required this.formatRoleDisplay,
+    this.deferApiCalls = false,
     super.key,
   });
 
@@ -896,6 +898,7 @@ class ContractTypeSheet extends StatefulWidget {
   final List<String> availableRoles;
   final String? initialRoleValue;
   final String Function(String value) formatRoleDisplay;
+  final bool deferApiCalls;
 
   @override
   State<ContractTypeSheet> createState() => _ContractTypeSheetState();
@@ -1115,12 +1118,24 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
 
     final existingUnitLabel = type?.unitLabel?.trim();
     final resolvedUnitLabel =
-    (existingUnitLabel != null && existingUnitLabel.isNotEmpty)
-        ? existingUnitLabel
-        : l.contractWorkUnitFallback;
+        (existingUnitLabel != null && existingUnitLabel.isNotEmpty)
+            ? existingUnitLabel
+            : l.contractWorkUnitFallback;
     final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
 
     if (!mounted) return;
+
+    if (widget.deferApiCalls) {
+      final pending = PendingContractWork(
+        name: resolvedName,
+        role: resolvedRole,
+        ratePerUnit: rate,
+        unitLabel: resolvedUnitLabel,
+        contractKind: resolvedContractKind,
+      );
+      Navigator.of(context).pop(pending);
+      return;
+    }
 
     setState(() {
       _isSaving = true;

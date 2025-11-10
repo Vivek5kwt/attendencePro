@@ -33,6 +33,7 @@ class ContractTypeRepository {
     required String role,
     required double ratePerUnit,
     required String unitLabel,
+    String? workId,
   }) async {
     final token = await _sessionManager.getToken();
     if (token == null || token.isEmpty) {
@@ -44,12 +45,19 @@ class ContractTypeRepository {
       final normalizedRole = normalizeContractRole(role);
       final requestType =
           normalizedRole.isNotEmpty ? normalizedRole : normalizedType;
+      final normalizedWorkId = () {
+        if (workId == null) return null;
+        final trimmed = workId.trim();
+        return trimmed.isEmpty ? null : trimmed;
+      }();
+
       return await _api.createContractType(
         token: token,
         name: name,
         type: requestType,
         ratePerUnit: ratePerUnit,
         unitLabel: unitLabel,
+        workId: normalizedWorkId,
       );
     } on ApiException catch (e) {
       throw ContractTypeRepositoryException(e.message);
