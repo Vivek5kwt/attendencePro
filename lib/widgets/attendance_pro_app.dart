@@ -9,6 +9,7 @@ import '../bloc/work_event.dart';
 import '../core/constants/app_strings.dart';
 import '../core/navigation/app_router.dart';
 import '../repositories/auth_repository.dart';
+import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import '../repositories/reports_repository.dart';
 import '../bloc/locale_cubit.dart';
@@ -29,6 +30,9 @@ class AttendanceProApp extends StatelessWidget {
         RepositoryProvider<AttendanceRepository>.value(value: repository),
         RepositoryProvider<AuthRepository>(create: (_) => AuthRepository()),
         RepositoryProvider<WorkRepository>(create: (_) => WorkRepository()),
+        RepositoryProvider<ContractTypeRepository>(
+          create: (_) => ContractTypeRepository(),
+        ),
         RepositoryProvider<ReportsRepository>(
           create: (_) => ReportsRepository(),
         ),
@@ -48,6 +52,7 @@ class AttendanceProApp extends StatelessWidget {
           BlocProvider<WorkBloc>(
             create: (context) => WorkBloc(
               repository: context.read<WorkRepository>(),
+              contractTypeRepository: context.read<ContractTypeRepository>(),
             )..add(const WorkStarted()),
           ),
         ],

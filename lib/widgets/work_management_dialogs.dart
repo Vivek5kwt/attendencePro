@@ -9,6 +9,7 @@ import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/contract_type.dart';
+import '../models/pending_contract_work.dart';
 import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../screens/contract_work_screen.dart';
@@ -36,6 +37,8 @@ class _AddWorkDialog extends StatefulWidget {
 class _AddWorkDialogState extends State<_AddWorkDialog> {
   late final TextEditingController _workNameController;
   late final TextEditingController _hourlySalaryController;
+  final List<PendingContractWork> _pendingContractWorks =
+      <PendingContractWork>[];
 
   @override
   void initState() {
@@ -54,6 +57,87 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   void _clearForm() {
     _workNameController.clear();
     _hourlySalaryController.clear();
+    setState(() {
+      _pendingContractWorks.clear();
+    });
+  }
+
+  bool get _hasPendingContractWorks => _pendingContractWorks.isNotEmpty;
+
+  void _removePendingContractWork(int index) {
+    if (index < 0 || index >= _pendingContractWorks.length) {
+      return;
+    }
+    setState(() {
+      _pendingContractWorks.removeAt(index);
+    });
+  }
+
+  Widget _buildPendingContractWorkTile({
+    required int index,
+    required PendingContractWork work,
+    required AppLocalizations l,
+  }) {
+    final roleDisplay = contractWorkFormatRoleDisplay(work.role);
+    final rateText = work.ratePerUnit.toStringAsFixed(2);
+    final subtitle = '$roleDisplay • $rateText / ${work.unitLabel}';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFBFDBFE),
+          width: 1.2,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  work.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF475569),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          IconButton(
+            onPressed: () => _removePendingContractWork(index),
+            icon: const Icon(
+              Icons.close,
+              size: 18,
+              color: Color(0xFF1F2937),
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+            tooltip: l.contractWorkRemoveEntryButton,
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _navigateToContractWorkScreen() async {
@@ -73,7 +157,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
         roleSelector: (type) => type.role,
       );
 
-      await showModalBottomSheet<void>(
+      final pending = await showModalBottomSheet<PendingContractWork>(
         context: widget.rootContext,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -88,9 +172,19 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
             availableRoles: availableRoles,
             initialRoleValue: null,
             formatRoleDisplay: contractWorkFormatRoleDisplay,
+            deferApiCalls: true,
           );
         },
       );
+
+      if (pending != null && mounted) {
+        setState(() {
+          _pendingContractWorks.add(pending);
+        });
+        messenger.showSnackBar(
+          SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
+        );
+      }
     } on ContractTypeRepositoryException catch (error) {
       final message = error.message.trim().isEmpty
           ? l.contractWorkLoadError
@@ -137,8 +231,15 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     }
 
     FocusScope.of(dialogContext).unfocus();
+    final pending = List<PendingContractWork>.from(_pendingContractWorks);
+
     widget.rootContext.read<WorkBloc>().add(
-      WorkAdded(name: workName, hourlyRate: hourlyRate, isContract: true),
+      WorkAdded(
+        name: workName,
+        hourlyRate: hourlyRate,
+        isContract: true,
+        pendingContractWorks: pending,
+      ),
     );
   }
 
@@ -528,6 +629,40 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   ),
 
                                   const SizedBox(height: 16),
+
+                                  if (_hasPendingContractWorks) ...[
+                                    Text(
+                                      '${l.contractWorkLabel} (${_pendingContractWorks.length})',
+                                      style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFF1F2937),
+                                              ) ??
+                                          const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF1F2937),
+                                          ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Column(
+                                      children: List.generate(
+                                        _pendingContractWorks.length,
+                                        (index) => Padding(
+                                          padding:
+                                              EdgeInsets.only(bottom: index == _pendingContractWorks.length - 1 ? 0 : 12),
+                                          child: _buildPendingContractWorkTile(
+                                            index: index,
+                                            work: _pendingContractWorks[index],
+                                            l: l,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                  ],
                                 ],
                               ),
                             ),

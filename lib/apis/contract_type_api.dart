@@ -47,6 +47,7 @@ class ContractTypeApi {
     required String type,
     required double ratePerUnit,
     required String unitLabel,
+    String? workId,
   }) async {
     final uri = Uri.parse('$baseUrl/api/contract-types');
     final headers = {
@@ -55,12 +56,17 @@ class ContractTypeApi {
       'Authorization': 'Bearer $token',
     };
 
-    final payload = jsonEncode({
+    final payloadMap = <String, dynamic>{
       'name': name,
       'type': type,
       'rate_per_unit': ratePerUnit,
       'unit_label': unitLabel,
-    });
+    };
+    if (workId != null && workId.trim().isNotEmpty) {
+      payloadMap['work_id'] = workId.trim();
+    }
+
+    final payload = jsonEncode(payloadMap);
     try {
       final response = await _client.post(uri, headers: headers, body: payload);
       final decoded = _decodeBody(response.body);

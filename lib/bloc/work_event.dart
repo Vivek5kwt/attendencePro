@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../models/pending_contract_work.dart';
 import '../models/work.dart';
 
 abstract class WorkEvent {
@@ -21,11 +22,13 @@ class WorkAdded extends WorkEvent {
     required this.name,
     required this.hourlyRate,
     this.isContract = true,
+    this.pendingContractWorks = const <PendingContractWork>[],
   });
 
   final String name;
   final num hourlyRate;
   final bool isContract;
+  final List<PendingContractWork> pendingContractWorks;
 }
 
 class WorkDeleted extends WorkEvent {
