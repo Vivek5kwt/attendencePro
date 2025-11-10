@@ -851,11 +851,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        final heightFactor = Responsive.isDesktop(context)
-            ? 0.55
-            : Responsive.isTablet(context)
-                ? 0.65
-                : 0.85;
+        final heightFactor =  0.85;
         return SafeArea(
           child: FractionallySizedBox(
             heightFactor: heightFactor,
