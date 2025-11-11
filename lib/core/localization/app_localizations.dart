@@ -194,6 +194,8 @@ class AppLocalizations {
   String get contractWorkTotalSalaryLabel =>
       _value('contractWorkTotalSalaryLabel');
   String get contractWorkDefaultTag => _value('contractWorkDefaultTag');
+  String get contractWorkUnitPerHundredBunches =>
+      _value('contractWorkUnitPerHundredBunches');
   String get contractWorkUnitFallback => _value('contractWorkUnitFallback');
   String get contractWorkCloseSheetLabel =>
       _value('contractWorkCloseSheetLabel');

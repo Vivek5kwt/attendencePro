@@ -10,6 +10,7 @@ import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/reports_repository.dart';
+import '../utils/contract_unit_label.dart';
 import '../utils/responsive.dart';
 
 const List<String> kContractWorkDefaultRoleOptions = <String>[
@@ -136,6 +137,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     try {
       final result = await _repository.fetchContractTypes();
       if (!mounted) return;
+      final localizations = AppLocalizations.of(context);
       setState(() {
         _defaultContractTypes
           ..clear()
@@ -156,7 +158,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
         _syncAvailableRoles();
 
-        _summaryRows = _buildSummaryRowsFromTypes(_userContractTypes);
+        _summaryRows =
+            _buildSummaryRowsFromTypes(_userContractTypes, localizations);
         _summaryError = null;
 
         _pendingDeletionIds.clear();
@@ -233,15 +236,20 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   List<_ContractSummaryRow> _buildSummaryRowsFromTypes(
-      List<_ContractType> types,
-      ) {
+    List<_ContractType> types,
+    AppLocalizations l,
+  ) {
     if (types.isEmpty) return const <_ContractSummaryRow>[];
     return List<_ContractSummaryRow>.generate(types.length, (i) {
       final t = types[i];
       return _ContractSummaryRow(
         index: i + 1,
         workName: t.name,
-        units: t.unitLabel,
+        units: resolveContractUnitLabel(
+          localizations: l,
+          contractName: t.name,
+          unitLabel: t.unitLabel,
+        ),
         payment: t.displayRate,
       );
     });
@@ -295,6 +303,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     final targetList =
     type.isUserDefined ? _userContractTypes : _defaultContractTypes;
     final index = targetList.indexWhere((item) => item.id == type.id);
+    final localizations = AppLocalizations.of(context);
     setState(() {
       if (index == -1) {
         targetList.add(type);
@@ -302,7 +311,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         targetList[index] = type;
       }
       _syncAvailableRoles();
-      _summaryRows = _buildSummaryRowsFromTypes(_userContractTypes);
+      _summaryRows =
+          _buildSummaryRowsFromTypes(_userContractTypes, localizations);
     });
   }
 
@@ -401,7 +411,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         _defaultContractTypes.removeWhere((item) => item.id == type.id);
         _userContractTypes.removeWhere((item) => item.id == type.id);
         _syncAvailableRoles();
-        _summaryRows = _buildSummaryRowsFromTypes(_userContractTypes);
+        _summaryRows =
+            _buildSummaryRowsFromTypes(_userContractTypes, l);
       });
       ScaffoldMessenger.of(
         context,
@@ -497,10 +508,17 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                           final t = _userContractTypes[i];
                           final isBusy =
                           _pendingDeletionIds.contains(t.id);
+                          final unitLabel = resolveContractUnitLabel(
+                            localizations: l,
+                            contractName: t.name,
+                            unitLabel: t.unitLabel,
+                          );
+                          final roleSuffix =
+                              t.displayRole == null ? '' : ' · ${t.displayRole}';
                           return _ManageTypeRow(
                             name: t.name,
                             subtitle:
-                            '${t.displayRate} · ${t.unitLabel}${t.displayRole == null ? '' : ' · ${t.displayRole}'}',
+                            '${t.displayRate} · $unitLabel$roleSuffix',
                             isBusy: isBusy,
                             onEdit: isBusy
                                 ? null

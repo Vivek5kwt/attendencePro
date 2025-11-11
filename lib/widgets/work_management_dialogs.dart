@@ -15,6 +15,7 @@ import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import '../screens/contract_work_screen.dart';
+import '../utils/contract_unit_label.dart';
 
 Future<void> _clearStoredAddWorkContractDrafts() async {
   final prefs = await SharedPreferences.getInstance();
@@ -107,7 +108,12 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   }) {
     final roleDisplay = contractWorkFormatRoleDisplay(work.role);
     final rateText = work.ratePerUnit.toStringAsFixed(2);
-    final subtitle = '$roleDisplay • $rateText / ${work.unitLabel}';
+    final unitLabel = resolveContractUnitLabel(
+      localizations: l,
+      contractName: work.name,
+      unitLabel: work.unitLabel,
+    );
+    final subtitle = '$roleDisplay • $rateText / $unitLabel';
 
     return Container(
       decoration: BoxDecoration(
