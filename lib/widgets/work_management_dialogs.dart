@@ -1646,56 +1646,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        if (_isLoadingContractTypes)
-          const Center(
-            child: SizedBox(
-              height: 28,
-              width: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.4),
-            ),
-          )
-        else if (_contractTypesError != null)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _contractTypesError!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFFB91C1C),
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: _loadContractTypes,
-                style: OutlinedButton.styleFrom(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                child: const Text('Retry'),
-              ),
-            ],
-          )
-        else
-          Column(
-            children: _contractTypes
-                .map(
-                  (type) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildContractTypeTile(
-                  context,
-                  AppLocalizations.of(widget.rootContext),
-                  type,
-                ),
-              ),
-            )
-                .toList(),
-          ),
+        const SizedBox(height: 8),
       ],
     );
   }
