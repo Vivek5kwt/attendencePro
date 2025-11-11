@@ -3115,7 +3115,182 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     addTypes(collection.userTypes);
     addTypes(collection.globalTypes);
-    return merged;
+    return _filterContractTypesForWork(merged);
+  }
+
+  List<ContractType> _filterContractTypesForWork(List<ContractType> types) {
+    if (types.isEmpty) {
+      return types;
+    }
+
+    final associatedContractTypeIds = _extractAssociatedContractTypeIds();
+    if (associatedContractTypeIds.isNotEmpty) {
+      final filteredByIds =
+          types.where((type) => associatedContractTypeIds.contains(type.id)).toList();
+      if (filteredByIds.isNotEmpty) {
+        return filteredByIds;
+      }
+    }
+
+    final filteredByWork = types.where(_contractTypeMatchesCurrentWork).toList();
+    if (filteredByWork.isNotEmpty) {
+      return filteredByWork;
+    }
+
+    return types;
+  }
+
+  bool _contractTypeMatchesCurrentWork(ContractType type) {
+    if (type.additionalData.isEmpty) {
+      return false;
+    }
+    return _mapMatchesCurrentWork(type.additionalData.cast<dynamic, dynamic>());
+  }
+
+  Set<String> _extractAssociatedContractTypeIds() {
+    final ids = <String>{};
+    final data = widget.work.additionalData;
+
+    void addId(Object? value) {
+      if (value == null) {
+        return;
+      }
+      if (value is Iterable) {
+        for (final element in value) {
+          addId(element);
+        }
+        return;
+      }
+      if (value is num) {
+        ids.add(value.toInt().toString());
+        return;
+      }
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isEmpty) {
+          return;
+        }
+        final parts = trimmed.split(RegExp(r'[\s,]+'));
+        if (parts.length > 1) {
+          for (final part in parts) {
+            addId(part);
+          }
+          return;
+        }
+        ids.add(trimmed);
+        return;
+      }
+      if (value is Map) {
+        final nestedId =
+            _extractBundleContractTypeId(value.cast<dynamic, dynamic>());
+        if (nestedId != null) {
+          ids.add(nestedId);
+        }
+      }
+    }
+
+    void collect(dynamic value) {
+      if (value is List) {
+        for (final element in value) {
+          collect(element);
+        }
+        return;
+      }
+      if (value is Map) {
+        final map = value.cast<dynamic, dynamic>();
+        if (!_mapMatchesCurrentWork(map)) {
+          return;
+        }
+        final contractId = _extractBundleContractTypeId(map);
+        if (contractId != null) {
+          ids.add(contractId);
+        }
+        for (final key in const ['contract_type', 'contractType']) {
+          if (!map.containsKey(key)) {
+            continue;
+          }
+          collect(map[key]);
+        }
+        return;
+      }
+      addId(value);
+    }
+
+    for (final key in const ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType']) {
+      addId(data[key]);
+    }
+
+    for (final key in const [
+      'contracts',
+      'contract_items',
+      'contractItems',
+      'contract_types',
+      'contractTypes',
+      'contract_bundles',
+      'contractBundles',
+      'bundles',
+      'items',
+    ]) {
+      collect(data[key]);
+    }
+
+    return ids;
+  }
+
+  bool _mapMatchesCurrentWork(Map<dynamic, dynamic> data) {
+    final workId = _extractWorkIdFromMap(data);
+    if (workId == null) {
+      return true;
+    }
+    return workId == widget.work.id;
+  }
+
+  String? _extractWorkIdFromMap(Map<dynamic, dynamic> data) {
+    const directKeys = [
+      'work_id',
+      'workId',
+      'work_uuid',
+      'workUuid',
+      'workID',
+    ];
+    for (final key in directKeys) {
+      if (!data.containsKey(key)) {
+        continue;
+      }
+      final resolved = _normalizeWorkIdValue(data[key]);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    for (final key in const ['work', 'job', 'work_details', 'workDetails']) {
+      if (!data.containsKey(key)) {
+        continue;
+      }
+      final resolved = _normalizeWorkIdValue(data[key]);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+
+    return null;
+  }
+
+  String? _normalizeWorkIdValue(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    if (value is num) {
+      return value.toInt().toString();
+    }
+    if (value is Map) {
+      return _extractWorkIdFromMap(value.cast<dynamic, dynamic>());
+    }
+    return null;
   }
 
   @override
@@ -3481,6 +3656,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final l = AppLocalizations.of(context);
     final currencyPrefix = _resolveCurrencyPrefix();
     final items = <_ContractItem>[];
+    final associatedContractTypeIds = _extractAssociatedContractTypeIds();
+    final shouldFilterByIds = associatedContractTypeIds.isNotEmpty;
 
     void addItem(String? rawTitle, String? rawPrice) {
       final title = rawTitle?.trim() ?? '';
@@ -3506,6 +3683,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           raw.forEach((key, value) {
             map[key.toString()] = value;
           });
+          final dynamicMap = map.cast<dynamic, dynamic>();
+          if (!_mapMatchesCurrentWork(dynamicMap)) {
+            continue;
+          }
+          final contractId = _extractBundleContractTypeId(dynamicMap);
+          if (shouldFilterByIds &&
+              contractId != null &&
+              !associatedContractTypeIds.contains(contractId)) {
+            continue;
+          }
 
           final name =
               _normalizeContractText(map['name']) ?? _normalizeContractText(map['title']);
@@ -3549,6 +3736,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           raw.forEach((key, value) {
             map[key.toString()] = value;
           });
+          final dynamicMap = map.cast<dynamic, dynamic>();
+          if (!_mapMatchesCurrentWork(dynamicMap)) {
+            continue;
+          }
+          final contractId = _extractBundleContractTypeId(dynamicMap);
+          if (shouldFilterByIds &&
+              contractId != null &&
+              !associatedContractTypeIds.contains(contractId)) {
+            continue;
+          }
           final title = _normalizeContractText(map['title']);
           final price = _normalizeContractText(map['price']);
           addItem(title, price);
