@@ -6741,9 +6741,7 @@ class _ContractEntryForm extends StatelessWidget {
                     .toSet();
                 final hasValidSelection = contractTypes
                     .any((type) => type.id == entry.contractTypeId);
-                final ContractType? selectedType = hasValidSelection
-                    ? resolveType(entry.contractTypeId)
-                    : null;
+
                 final resolvedTypeName = selectedType?.name ??
                     l.contractWorkContractTypeHint;
                 final resolvedTypeStyle = selectedType != null

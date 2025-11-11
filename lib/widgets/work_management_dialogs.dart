@@ -1671,7 +1671,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
       if (updatedWork != null) {
         setState(() {
-          _currentWork = updatedWork;
+          _currentWork = updatedWork!;
           _workContracts = _resolveWorkContracts(_currentWork);
           _deletingWorkContractIds.clear();
         });
