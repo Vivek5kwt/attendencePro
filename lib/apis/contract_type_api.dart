@@ -67,6 +67,7 @@ class ContractTypeApi {
     }
 
     final payload = jsonEncode(payloadMap);
+    print('dsjdsj $payloadMap');
     try {
       final response = await _client.post(uri, headers: headers, body: payload);
       final decoded = _decodeBody(response.body);
@@ -77,6 +78,7 @@ class ContractTypeApi {
 
       throw ApiException(_extractErrorMessage(decoded, response.statusCode));
     } on SocketException {
+      //
       throw ApiException('Unable to reach the server. Please check your connection.');
     } on HttpException {
       throw ApiException('A network error occurred while contacting the server.');
