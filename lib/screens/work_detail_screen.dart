@@ -3846,20 +3846,29 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final totalHours = summary.totalHours;
       final totalSalary = summary.totalSalary;
       final currencyPrefix = _resolveCurrencyPrefix(summary.raw);
-      return <_SummaryStat>[
-        _SummaryStat(
-          title: l.totalHoursLabel,
-          value: '${totalHours.toStringAsFixed(2)} h',
-          color: const Color(0xFF2563EB),
-          icon: Icons.access_time_filled,
-        ),
+      final stats = <_SummaryStat>[];
+
+      if (!_hasContractSummaryData(summaryData: summary.raw)) {
+        stats.add(
+          _SummaryStat(
+            title: l.totalHoursLabel,
+            value: '${totalHours.toStringAsFixed(2)} h',
+            color: const Color(0xFF2563EB),
+            icon: Icons.access_time_filled,
+          ),
+        );
+      }
+
+      stats.add(
         _SummaryStat(
           title: l.totalSalaryLabel,
           value: _formatCurrencyValue(totalSalary.toStringAsFixed(2), currencyPrefix),
           color: const Color(0xFF22C55E),
           icon: Icons.payments_rounded,
         ),
-      ];
+      );
+
+      return stats;
     }
     return _resolveSummaryStats(l);
   }
@@ -3890,12 +3899,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final currencyPrefix = _resolveCurrencyPrefix(summaryMap);
       final stats = <_SummaryStat>[];
 
+      final shouldShowHours = !_hasContractSummaryData(summaryData: summaryMap);
+
       final totalHours = _formatSummaryMetric(
         summaryMap,
         const ['total_hours', 'totalHours', 'hours'],
         numericSuffix: ' h',
       );
-      if (totalHours != null) {
+      if (shouldShowHours && totalHours != null) {
         stats.add(
           _SummaryStat(
             title: l.totalHoursLabel,
@@ -3960,6 +3971,160 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return stats;
     }
     return const <_SummaryStat>[];
+  }
+
+  bool _hasContractSummaryData({Map<String, dynamic>? summaryData}) {
+    if (_containsContractMetrics(summaryData)) {
+      return true;
+    }
+
+    if (_containsContractMetrics(_dashboardSummary?.raw)) {
+      return true;
+    }
+
+    if (_containsContractMetrics(widget.work.additionalData)) {
+      return true;
+    }
+
+    final additionalSummary = _normalizeDynamicMap(widget.work.additionalData['summary']);
+    if (_containsContractMetrics(additionalSummary)) {
+      return true;
+    }
+
+    if (_iterableHasEntries(widget.work.additionalData['contracts'])) {
+      return true;
+    }
+
+    if (_iterableHasEntries(widget.work.additionalData['contractItems'])) {
+      return true;
+    }
+
+    return false;
+  }
+
+  bool _containsContractMetrics(Map<String, dynamic>? data) {
+    if (data == null || data.isEmpty) {
+      return false;
+    }
+
+    const contractKeys = [
+      'contract_work',
+      'contractWork',
+      'contract_salary',
+      'contractSalary',
+      'contract_units',
+      'contractUnits',
+      'total_contract_units',
+      'totalContractUnits',
+      'total_units',
+      'totalUnits',
+      'contract_summary',
+      'contractSummary',
+      'contract',
+      'contracts',
+      'contract_items',
+      'contractItems',
+      'has_contract_attendance',
+      'hasContractAttendance',
+      'has_contract',
+      'hasContract',
+      'contract_bundles',
+      'contractBundles',
+      'bundle_contracts',
+      'bundleContracts',
+    ];
+
+    for (final key in contractKeys) {
+      if (data.containsKey(key)) {
+        if (_hasMeaningfulContractMetric(data[key])) {
+          return true;
+        }
+      }
+    }
+
+    final nestedData = _normalizeDynamicMap(data['data']);
+    if (nestedData != null && !identical(nestedData, data)) {
+      if (_containsContractMetrics(nestedData)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool _hasMeaningfulContractMetric(dynamic value) {
+    if (value == null) {
+      return false;
+    }
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value > 0;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return false;
+      }
+      final sanitized =
+          trimmed.replaceAll(RegExp(r'[^0-9.\-]'), '');
+      if (sanitized.isEmpty) {
+        return true;
+      }
+      final parsed = double.tryParse(sanitized);
+      if (parsed != null) {
+        return parsed > 0;
+      }
+      return true;
+    }
+    if (value is Map) {
+      if (value.isEmpty) {
+        return false;
+      }
+      for (final element in value.values) {
+        if (_hasMeaningfulContractMetric(element)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (value is Iterable) {
+      if (value.isEmpty) {
+        return false;
+      }
+      for (final element in value) {
+        if (_hasMeaningfulContractMetric(element)) {
+          return true;
+        }
+      }
+      return true;
+    }
+    return true;
+  }
+
+  bool _iterableHasEntries(Object? value) {
+    if (value is Iterable) {
+      return value.isNotEmpty;
+    }
+    if (value is Map) {
+      return value.isNotEmpty;
+    }
+    return false;
+  }
+
+  Map<String, dynamic>? _normalizeDynamicMap(Object? value) {
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+    if (value is Map) {
+      final result = <String, dynamic>{};
+      value.forEach((key, element) {
+        result[key.toString()] = element;
+      });
+      return result;
+    }
+    return null;
   }
 
   String _resolveCurrencyPrefix([Map<String, dynamic>? override]) {
