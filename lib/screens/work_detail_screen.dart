@@ -20,6 +20,7 @@ import '../repositories/attendance_entry_repository.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
 import '../utils/contract_entry_cache.dart';
+import '../utils/contract_unit_label.dart';
 import '../utils/language_dialog.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
@@ -5013,8 +5014,12 @@ class _MissedAttendanceCompletionSheetState
         final ContractType? effectiveType = hasValidSelection
             ? selectedType
             : null;
-        final unitLabel = (effectiveType?.unitLabel.trim().isNotEmpty ?? false)
-            ? effectiveType!.unitLabel.trim()
+        final unitLabel = effectiveType != null
+            ? resolveContractUnitLabel(
+                localizations: l,
+                contractName: effectiveType.name,
+                unitLabel: effectiveType.unitLabel,
+              )
             : l.contractWorkUnitFallback;
         final helperText = effectiveType != null
             ? '${l.contractWorkRateLabel}: '
@@ -6699,10 +6704,13 @@ class _ContractEntryForm extends StatelessWidget {
                 final entry = entryMap.value;
                 final isLast = entryMap.key == entries.length - 1;
                 final selectedType = resolveType(entry.contractTypeId);
-                final unitLabel =
-                    (selectedType?.unitLabel.trim().isNotEmpty ?? false)
-                        ? selectedType!.unitLabel.trim()
-                        : l.contractWorkUnitFallback;
+                final unitLabel = selectedType != null
+                    ? resolveContractUnitLabel(
+                        localizations: l,
+                        contractName: selectedType.name,
+                        unitLabel: selectedType.unitLabel,
+                      )
+                    : l.contractWorkUnitFallback;
                 final String? rateHelperText = selectedType != null
                     ? '${l.contractWorkRateLabel}: '
                         '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
