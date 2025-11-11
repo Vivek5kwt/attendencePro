@@ -6734,45 +6734,38 @@ class _ContractEntryForm extends StatelessWidget {
                         !disableInteractions
                     ? () => onRemoveEntry!(entry)
                     : null;
-                final bool typeSelectionDisabled =
-                    disableInteractions || onTypeChanged == null;
                 final otherSelectedIds = entries
                     .where((other) => other.id != entry.id)
                     .map((other) => other.contractTypeId)
                     .whereType<String>()
                     .toSet();
-                final dropdownItems = contractTypes.map((type) {
-                  final isCurrentSelection = type.id == entry.contractTypeId;
-                  final isTakenElsewhere =
-                      otherSelectedIds.contains(type.id) && !isCurrentSelection;
-                  final itemTextStyle = theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            isCurrentSelection ? FontWeight.w600 : FontWeight.w500,
-                        color: isTakenElsewhere
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF1E293B),
-                      ) ??
-                      TextStyle(
-                        fontWeight:
-                            isCurrentSelection ? FontWeight.w600 : FontWeight.w500,
-                        color: isTakenElsewhere
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF1E293B),
-                      );
-                  return DropdownMenuItem<String>(
-                    value: type.id,
-                    enabled: !isTakenElsewhere,
-                    child: Text(
-                      type.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: itemTextStyle,
-                    ),
-                  );
-                }).toList(growable: false);
-                final String? resolvedTypeId = contractTypes
-                        .any((type) => type.id == entry.contractTypeId)
-                    ? entry.contractTypeId
+                final hasValidSelection = contractTypes
+                    .any((type) => type.id == entry.contractTypeId);
+                final ContractType? selectedType = hasValidSelection
+                    ? resolveType(entry.contractTypeId)
+                    : null;
+                final resolvedTypeName = selectedType?.name ??
+                    l.contractWorkContractTypeHint;
+                final resolvedTypeStyle = selectedType != null
+                    ? theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ) ??
+                        const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E293B),
+                        )
+                    : theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w500,
+                        ) ??
+                        const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontWeight: FontWeight.w500,
+                        );
+                final resolvedTypeTooltip = selectedType != null &&
+                        otherSelectedIds.contains(selectedType.id)
+                    ? selectedType.name
                     : null;
 
                 final labelStyle = theme.textTheme.labelLarge?.copyWith(
@@ -6826,52 +6819,30 @@ class _ContractEntryForm extends StatelessWidget {
                                       style: labelStyle,
                                     ),
                                     const SizedBox(height: 8),
-                                    DropdownButtonFormField<String>(
-                                      value: resolvedTypeId,
-                                      items: dropdownItems,
-                                      onChanged: typeSelectionDisabled
-                                          ? null
-                                          : (value) =>
-                                              onTypeChanged?.call(entry.id, value),
-                                      isExpanded: true,
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: l.contractWorkContractTypeHint,
-                                        hintStyle: hintStyle,
-                                        filled: true,
-                                        fillColor: const Color(0xFFF8FAFF),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
+                                    Tooltip(
+                                      message: resolvedTypeTooltip,
+                                      triggerMode: resolvedTypeTooltip == null
+                                          ? TooltipTriggerMode.manual
+                                          : TooltipTriggerMode.longPress,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
                                           vertical: 16,
                                           horizontal: 12,
                                         ),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFE0E7FF),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF8FAFF),
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                          border: Border.all(
+                                            color: const Color(0xFFE0E7FF),
                                           ),
                                         ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFE0E7FF),
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFF2563EB),
-                                            width: 1.4,
-                                          ),
-                                        ),
-                                        disabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(18),
-                                          borderSide: const BorderSide(
-                                            color: Color(0xFFE2E8F0),
-                                          ),
+                                        child: Text(
+                                          resolvedTypeName,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: resolvedTypeStyle,
                                         ),
                                       ),
                                     ),
