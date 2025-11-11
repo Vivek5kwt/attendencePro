@@ -157,6 +157,8 @@ class AppLocalizations {
       _value('contractWorkRoleRequiredMessage');
   String get contractWorkUnitsLabel => _value('contractWorkUnitsLabel');
   String get contractWorkUnitsHint => _value('contractWorkUnitsHint');
+  String contractWorkQuantityHint(String unit) =>
+      _valueWithArgs('contractWorkQuantityHint', {'unit': unit});
   String get contractWorkRateRequiredMessage =>
       _value('contractWorkRateRequiredMessage');
   String get contractWorkNameRequiredMessage =>
