@@ -349,6 +349,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           availableRoles: _availableRoles,
           initialRoleValue: null, // no pre-prompt; user selects inside sheet
           formatRoleDisplay: contractWorkFormatRoleDisplay,
+          workId: widget.work?.id,
         );
       },
     );
@@ -885,6 +886,7 @@ class ContractTypeSheet extends StatefulWidget {
     required this.availableRoles,
     this.initialRoleValue,
     required this.formatRoleDisplay,
+    this.workId,
     this.deferApiCalls = false,
     super.key,
   });
@@ -898,6 +900,7 @@ class ContractTypeSheet extends StatefulWidget {
   final List<String> availableRoles;
   final String? initialRoleValue;
   final String Function(String value) formatRoleDisplay;
+  final String? workId;
   final bool deferApiCalls;
 
   @override
@@ -1151,6 +1154,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
         role: resolvedRole,
         ratePerUnit: rate,
         unitLabel: resolvedUnitLabel,
+        workId: widget.workId,
       )
           .then((created) => _ContractType.fromModel(type: created));
     } else {

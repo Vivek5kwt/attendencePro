@@ -1134,6 +1134,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             availableRoles: availableRoles,
             initialRoleValue: null,
             formatRoleDisplay: contractWorkFormatRoleDisplay,
+            workId: widget.work.id,
           );
         },
       );
