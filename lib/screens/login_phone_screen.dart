@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/auth_cubit.dart';
@@ -12,6 +13,7 @@ import '../utils/responsive.dart';
 import '../widgets/app_dialogs.dart';
 import 'forgot_password_screen.dart';
 import '../data/country_codes.dart';
+import '../data/phone_number_metadata.dart';
 
 enum _LoginMode { phone, email }
 
@@ -198,6 +200,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
           fontSize: responsive.scaleText(16),
         );
 
+    final metadata = metadataForDialCode(_selectedCountry.dialCode);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -230,6 +233,10 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
               controller: _loginController,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(metadata.maxLength),
+              ],
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
@@ -467,6 +474,16 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     setState(() {
       _selectedCountry = selected;
       _selectedCountryCode = selected.dialCode;
+      final metadata = metadataForDialCode(selected.dialCode);
+      final current = _loginController.text;
+      if (current.length > metadata.maxLength) {
+        final truncated = current.substring(0, metadata.maxLength);
+        _loginController
+          ..text = truncated
+          ..selection = TextSelection.fromPosition(
+            TextPosition(offset: truncated.length),
+          );
+      }
     });
   }
 
@@ -488,12 +505,9 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
       return null;
     }
 
-    if (digitsOnly.length < 7 || digitsOnly.length > 15) {
-      return null;
-    }
-
     final matchedCode = _matchDialCode(trimmed);
     final countryCode = matchedCode ?? _selectedCountryCode;
+    final metadata = metadataForDialCode(countryCode);
     final countryDigits = countryCode.replaceAll(RegExp(r'\D'), '');
 
     String localNumber = digitsOnly;
@@ -506,7 +520,11 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
       }
     }
 
-    if (!_isValidLocalPhone(localNumber)) {
+    if (!_isValidLocalPhone(localNumber, metadata)) {
+      return null;
+    }
+
+    if ((countryDigits + localNumber).length > 15) {
       return null;
     }
 
@@ -531,12 +549,12 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
     return match?.dialCode;
   }
 
-  bool _isValidLocalPhone(String digits) {
+  bool _isValidLocalPhone(String digits, CountryPhoneMetadata metadata) {
     if (digits.isEmpty) {
       return false;
     }
 
-    if (digits.length < 4 || digits.length > 15) {
+    if (digits.length < metadata.minLength || digits.length > metadata.maxLength) {
       return false;
     }
 
