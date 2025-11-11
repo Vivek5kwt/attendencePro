@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../apis/auth_api.dart';
+import '../data/phone_number_metadata.dart';
 import '../repositories/auth_repository.dart';
 import '../utils/session_manager.dart';
 
@@ -120,12 +121,16 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthError('Passwords do not match.'));
       return;
     }
+    if (countryCode.trim().isEmpty) {
+      emit(AuthError('Please select a country code.'));
+      return;
+    }
     if (phone.trim().isEmpty) {
       emit(AuthError('Please enter your phone number.'));
       return;
     }
-    if (countryCode.trim().isEmpty) {
-      emit(AuthError('Please select a country code.'));
+    if (!_isPhoneValidForCountry(phone, countryCode)) {
+      emit(AuthError('Please enter a valid phone number.'));
       return;
     }
     if (language.trim().isEmpty) {
@@ -151,6 +156,26 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(AuthError('Network error: $e'));
     }
+  }
+
+  bool _isPhoneValidForCountry(String phone, String countryCode) {
+    final trimmedCode = countryCode.trim();
+    if (trimmedCode.isEmpty) {
+      return false;
+    }
+    final normalizedCode = trimmedCode.startsWith('+')
+        ? trimmedCode
+        : '+$trimmedCode';
+    final metadata = metadataForDialCode(normalizedCode);
+    final digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
+    if (digitsOnly.isEmpty) {
+      return false;
+    }
+    if (digitsOnly.length < metadata.minLength ||
+        digitsOnly.length > metadata.maxLength) {
+      return false;
+    }
+    return RegExp(r'^[0-9]+$').hasMatch(digitsOnly);
   }
 
   Future<void> login(

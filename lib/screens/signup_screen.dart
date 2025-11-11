@@ -7,6 +7,7 @@ import '../bloc/locale_cubit.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../data/country_codes.dart';
+import '../data/phone_number_metadata.dart';
 import 'policy_screen.dart';
 import '../utils/responsive.dart';
 
@@ -472,6 +473,7 @@ class _SignupScreenState extends State<SignupScreen> {
           fontSize: responsive.scaleText(16),
         );
 
+    final metadata = metadataForDialCode(_selectedCountry.dialCode);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -503,7 +505,10 @@ class _SignupScreenState extends State<SignupScreen> {
             child: TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(metadata.maxLength),
+              ],
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
@@ -519,7 +524,8 @@ class _SignupScreenState extends State<SignupScreen> {
               validator: (value) {
                 final trimmed = value?.trim() ?? '';
                 if (trimmed.isEmpty) return l.phoneRequired;
-                if (trimmed.length < 6 || trimmed.length > 15) {
+                if (trimmed.length < metadata.minLength ||
+                    trimmed.length > metadata.maxLength) {
                   return l.phoneInvalid;
                 }
                 if (!RegExp(r'^[0-9]+$').hasMatch(trimmed)) {
@@ -720,6 +726,16 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() {
       _selectedCountry = selected;
       _selectedCountryCode = selected.dialCode;
+      final metadata = metadataForDialCode(selected.dialCode);
+      final current = _phoneController.text;
+      if (current.length > metadata.maxLength) {
+        final truncated = current.substring(0, metadata.maxLength);
+        _phoneController
+          ..text = truncated
+          ..selection = TextSelection.fromPosition(
+            TextPosition(offset: truncated.length),
+          );
+      }
     });
   }
 
