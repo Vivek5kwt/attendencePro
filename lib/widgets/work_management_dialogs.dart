@@ -821,6 +821,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   final ContractTypeRepository _contractTypeRepository =
   ContractTypeRepository();
   final Set<String> _deletingContractTypeIds = <String>{};
+  final Set<String> _deletingWorkContractIds = <String>{};
   List<ContractType> _contractTypes = <ContractType>[];
   bool _isLoadingContractTypes = false;
   String? _contractTypesError;
@@ -1270,6 +1271,96 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     }
   }
 
+  Future<void> _confirmAndDeleteWorkContract(
+      _WorkContractDisplay contract,
+      ) async {
+    final contractId = contract.id;
+    if (contractId == null || contractId.isEmpty ||
+        _deletingWorkContractIds.contains(contractId)) {
+      return;
+    }
+
+    final l = AppLocalizations.of(widget.rootContext);
+
+    final shouldDelete = await showDialog<bool>(
+      context: widget.rootContext,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l.contractWorkDeleteConfirmationTitle),
+          content: Text(l.contractWorkDeleteConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l.cancelButton),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB91C1C),
+              ),
+              child: Text(l.contractWorkDeleteButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _deletingWorkContractIds.add(contractId);
+    });
+
+    try {
+      await _contractTypeRepository.deleteContractType(id: contractId);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingWorkContractIds.remove(contractId);
+        _workContracts = _workContracts
+            .where((item) => item.id != contractId)
+            .toList(growable: false);
+        _contractTypes.removeWhere((item) => item.id == contractId);
+      });
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
+      );
+      unawaited(_refreshWorkDetails(showError: false));
+      unawaited(_loadContractTypes());
+    } on ContractTypeRepositoryException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingWorkContractIds.remove(contractId);
+      });
+      final message = error.message.trim().isEmpty
+          ? l.contractWorkTypeDeleteFailedMessage
+          : error.message;
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      unawaited(_refreshWorkDetails());
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingWorkContractIds.remove(contractId);
+      });
+      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
+        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
+      );
+      unawaited(_refreshWorkDetails());
+    }
+  }
+
   Future<bool> _refreshContractTypesAfterDeleteAttempt(
       String contractTypeId,
       ) async {
@@ -1576,14 +1667,22 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         setState(() {
           _currentWork = updatedWork;
           _workContracts = _resolveWorkContracts(_currentWork);
+          _deletingWorkContractIds.clear();
         });
       } else {
         setState(() {
           _workContracts = _resolveWorkContracts(_currentWork);
+          _deletingWorkContractIds.clear();
         });
       }
     } on WorkRepositoryException catch (error) {
-      if (!mounted || !showError) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingWorkContractIds.clear();
+      });
+      if (!showError) {
         return;
       }
       final message = error.message.trim().isEmpty
@@ -1593,7 +1692,13 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         SnackBar(content: Text(message)),
       );
     } on Exception {
-      if (!mounted || !showError) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _deletingWorkContractIds.clear();
+      });
+      if (!showError) {
         return;
       }
       messenger.showSnackBar(
@@ -1788,7 +1893,11 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         _buildWorkInfoSection(context),
         const SizedBox(height: 16),
         if (workContracts.isNotEmpty) ...[
-          _WorkContractList(items: workContracts),
+          _WorkContractList(
+            items: workContracts,
+            onDelete: _confirmAndDeleteWorkContract,
+            deletingIds: _deletingWorkContractIds,
+          ),
           const SizedBox(height: 16),
         ],
         GestureDetector(
@@ -2229,9 +2338,15 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 }
 
 class _WorkContractList extends StatelessWidget {
-  const _WorkContractList({required this.items});
+  const _WorkContractList({
+    required this.items,
+    this.onDelete,
+    this.deletingIds = const <String>{},
+  });
 
   final List<_WorkContractDisplay> items;
+  final void Function(_WorkContractDisplay contract)? onDelete;
+  final Set<String> deletingIds;
 
   @override
   Widget build(BuildContext context) {
@@ -2276,36 +2391,99 @@ class _WorkContractList extends StatelessWidget {
                 thickness: 1,
                 color: Color(0xFFE2E8F0),
               ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    items[i].title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    items[i].subtitle,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2563EB),
-                    ),
-                  ),
-                ),
-              ],
+            _ContractListRow(
+              item: items[i],
+              onDelete: onDelete,
+              isDeleting:
+                  items[i].id != null && deletingIds.contains(items[i].id),
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _ContractListRow extends StatelessWidget {
+  const _ContractListRow({
+    required this.item,
+    this.onDelete,
+    this.isDeleting = false,
+  });
+
+  final _WorkContractDisplay item;
+  final void Function(_WorkContractDisplay contract)? onDelete;
+  final bool isDeleting;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final contractId = item.id;
+    final canDelete =
+        onDelete != null && contractId != null && contractId.isNotEmpty;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            item.title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  item.subtitle,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+              if (canDelete) ...[
+                const SizedBox(width: 12),
+                if (isDeleting)
+                  const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFB91C1C),
+                      ),
+                    ),
+                  )
+                else
+                  IconButton(
+                    onPressed: () => onDelete?.call(item),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                    ),
+                    color: const Color(0xFFB91C1C),
+                    tooltip: l.contractWorkRemoveEntryButton,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minHeight: 32, minWidth: 32),
+                    splashRadius: 18,
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
