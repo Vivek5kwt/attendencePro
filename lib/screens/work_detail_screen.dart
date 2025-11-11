@@ -6785,6 +6785,35 @@ class _ContractEntryForm extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     );
 
+                final contractTypeField = Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFF),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: const Color(0xFFE0E7FF),
+                    ),
+                  ),
+                  child: Text(
+                    resolvedTypeName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: resolvedTypeStyle,
+                  ),
+                );
+
+                final contractTypeContent = resolvedTypeTooltip != null
+                    ? Tooltip(
+                        message: resolvedTypeTooltip,
+                        triggerMode: TooltipTriggerMode.longPress,
+                        child: contractTypeField,
+                      )
+                    : contractTypeField;
+
                 return Padding(
                   padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
                   child: DecoratedBox(
@@ -6817,33 +6846,7 @@ class _ContractEntryForm extends StatelessWidget {
                                       style: labelStyle,
                                     ),
                                     const SizedBox(height: 8),
-                                    Tooltip(
-                                      message: resolvedTypeTooltip,
-                                      triggerMode: resolvedTypeTooltip == null
-                                          ? TooltipTriggerMode.manual
-                                          : TooltipTriggerMode.longPress,
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                          horizontal: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF8FAFF),
-                                          borderRadius:
-                                              BorderRadius.circular(18),
-                                          border: Border.all(
-                                            color: const Color(0xFFE0E7FF),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          resolvedTypeName,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: resolvedTypeStyle,
-                                        ),
-                                      ),
-                                    ),
+                                    contractTypeContent,
                                   ],
                                 ),
                               ),
