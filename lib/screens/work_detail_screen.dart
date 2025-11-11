@@ -3159,6 +3159,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final summarySection = _buildSummarySection(l, summaryStats);
     final hasSummaryContent =
         _isSummaryLoading || _summaryError != null || summaryStats.isNotEmpty;
+    final contractItems = _resolveContractItems();
 
     List<Widget> buildHeaderSectionWidgets() {
       final widgets = <Widget>[
@@ -3178,6 +3179,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               workName: activeWorkName,
             ),
           ),
+        ]);
+      }
+
+      if (contractItems.isNotEmpty) {
+        widgets.addAll([
+          const SizedBox(height: 16),
+          _ContractSummarySection(items: contractItems),
         ]);
       }
 
@@ -3470,18 +3478,168 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   List<_ContractItem> _resolveContractItems() {
+    final l = AppLocalizations.of(context);
+    final currencyPrefix = _resolveCurrencyPrefix();
+    final items = <_ContractItem>[];
+
+    void addItem(String? rawTitle, String? rawPrice) {
+      final title = rawTitle?.trim() ?? '';
+      final price = rawPrice?.trim() ?? '';
+      if (title.isEmpty && price.isEmpty) {
+        return;
+      }
+      final resolvedTitle = title.isEmpty ? l.contractWorkLabel : title;
+      final resolvedPrice = price.isEmpty ? l.notAvailableLabel : price;
+      items.add(
+        _ContractItem(
+          title: resolvedTitle,
+          price: resolvedPrice,
+        ),
+      );
+    }
+
+    final rawContracts = widget.work.additionalData['contracts'];
+    if (rawContracts is List) {
+      for (final raw in rawContracts) {
+        if (raw is Map) {
+          final map = <String, dynamic>{};
+          raw.forEach((key, value) {
+            map[key.toString()] = value;
+          });
+
+          final name =
+              _normalizeContractText(map['name']) ?? _normalizeContractText(map['title']);
+          final type =
+              _normalizeContractText(map['type']) ?? _normalizeContractText(map['role']);
+          final combinedTitle = _combineContractTitle(name, type);
+          final rate = _parseContractRateValue(map);
+          final rawPrice = _normalizeContractText(map['price']);
+          final unitLabel = _extractContractUnitLabel(map);
+
+          var priceText = '';
+          if (rate != null) {
+            priceText =
+                _formatCurrencyValue(rate.toStringAsFixed(2), currencyPrefix);
+          } else if (rawPrice != null && rawPrice.isNotEmpty) {
+            priceText = rawPrice;
+          }
+
+          if (unitLabel != null && unitLabel.isNotEmpty) {
+            priceText =
+                priceText.isEmpty ? unitLabel : '$priceText ${unitLabel.trim()}';
+          }
+
+          final resolvedTitle = combinedTitle.isNotEmpty
+              ? combinedTitle
+              : (name ?? type ?? '');
+          addItem(resolvedTitle, priceText);
+        }
+      }
+    }
+
+    if (items.isNotEmpty) {
+      return items;
+    }
+
     final rawItems = widget.work.additionalData['contractItems'];
     if (rawItems is List) {
-      return rawItems
-          .whereType<Map>()
-          .map((item) => _ContractItem(
-                title: item['title']?.toString() ?? '',
-                price: item['price']?.toString() ?? '',
-              ))
-          .where((item) => item.title.isNotEmpty && item.price.isNotEmpty)
-          .toList();
+      for (final raw in rawItems) {
+        if (raw is Map) {
+          final map = <String, dynamic>{};
+          raw.forEach((key, value) {
+            map[key.toString()] = value;
+          });
+          final title = _normalizeContractText(map['title']);
+          final price = _normalizeContractText(map['price']);
+          addItem(title, price);
+        }
+      }
     }
-    return const <_ContractItem>[];
+
+    return items;
+  }
+
+  String? _normalizeContractText(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    if (value is num) {
+      return value.toString();
+    }
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  num? _parseContractRateValue(Map<String, dynamic> data) {
+    const keys = <String>['rate_per_unit', 'ratePerUnit', 'rate', 'price', 'amount'];
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) continue;
+      if (value is num) {
+        return value;
+      }
+      if (value is String) {
+        final sanitized = value.replaceAll(RegExp(r'[^0-9,.-]'), '');
+        if (sanitized.isEmpty) {
+          continue;
+        }
+        final normalized = sanitized.replaceAll(',', '');
+        final parsed = num.tryParse(normalized);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
+    }
+    return null;
+  }
+
+  String? _extractContractUnitLabel(Map<String, dynamic> data) {
+    const keys = <String>[
+      'unit_label',
+      'unitLabel',
+      'unit',
+      'unit_name',
+      'unitName',
+      'unit_display',
+      'unitDisplay',
+    ];
+    for (final key in keys) {
+      final value = _normalizeContractText(data[key]);
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  String _combineContractTitle(String? name, String? type) {
+    final nameText = name?.trim() ?? '';
+    final typeText = _formatContractTypeLabel(type);
+    if (nameText.isEmpty && typeText.isEmpty) {
+      return '';
+    }
+    if (nameText.isEmpty) {
+      return typeText;
+    }
+    if (typeText.isEmpty) {
+      return nameText;
+    }
+    return '$nameText • $typeText';
+  }
+
+  String _formatContractTypeLabel(String? value) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) {
+      return '';
+    }
+    if (text.length == 1) {
+      return text.toUpperCase();
+    }
+    return '${text[0].toUpperCase()}${text.substring(1)}';
   }
 
   List<_SummaryStat> _buildSummaryStats(AppLocalizations l) {

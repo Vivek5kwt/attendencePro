@@ -1325,6 +1325,187 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     );
   }
 
+  List<_WorkContractDisplay> _resolveWorkContracts() {
+    final l = AppLocalizations.of(widget.rootContext);
+    final currencyPrefix = _resolveCurrencySymbol() ?? '£';
+    final items = <_WorkContractDisplay>[];
+
+    void addItem(String? rawTitle, String? rawSubtitle) {
+      final title = rawTitle?.trim() ?? '';
+      final subtitle = rawSubtitle?.trim() ?? '';
+      if (title.isEmpty && subtitle.isEmpty) {
+        return;
+      }
+      final resolvedTitle = title.isEmpty ? l.contractWorkLabel : title;
+      final resolvedSubtitle =
+          subtitle.isEmpty ? l.notAvailableLabel : subtitle;
+      items.add(
+        _WorkContractDisplay(
+          title: resolvedTitle,
+          subtitle: resolvedSubtitle,
+        ),
+      );
+    }
+
+    final rawContracts = widget.work.additionalData['contracts'];
+    if (rawContracts is List) {
+      for (final raw in rawContracts) {
+        if (raw is Map) {
+          final map = <String, dynamic>{};
+          raw.forEach((key, value) {
+            map[key.toString()] = value;
+          });
+
+          final name = _normalizeWorkContractText(map['name']) ??
+              _normalizeWorkContractText(map['title']);
+          final type = _normalizeWorkContractText(map['type']) ??
+              _normalizeWorkContractText(map['role']);
+          final combinedTitle = _combineWorkContractTitle(name, type);
+          final rate = _parseWorkContractRate(map);
+          final rawPrice = _normalizeWorkContractText(map['price']);
+          final unitLabel = _extractWorkContractUnitLabel(map);
+
+          var subtitle = '';
+          if (rate != null) {
+            subtitle =
+                _formatCurrencyDisplay(rate.toStringAsFixed(2), currencyPrefix);
+          } else if (rawPrice != null && rawPrice.isNotEmpty) {
+            subtitle = rawPrice;
+          }
+
+          if (unitLabel != null && unitLabel.isNotEmpty) {
+            subtitle = subtitle.isEmpty
+                ? unitLabel
+                : '$subtitle ${unitLabel.trim()}';
+          }
+
+          final resolvedTitle = combinedTitle.isNotEmpty
+              ? combinedTitle
+              : (name ?? type ?? '');
+          addItem(resolvedTitle, subtitle);
+        }
+      }
+    }
+
+    if (items.isNotEmpty) {
+      return items;
+    }
+
+    final legacyItems = widget.work.additionalData['contractItems'];
+    if (legacyItems is List) {
+      for (final raw in legacyItems) {
+        if (raw is Map) {
+          final map = <String, dynamic>{};
+          raw.forEach((key, value) {
+            map[key.toString()] = value;
+          });
+          final title = _normalizeWorkContractText(map['title']);
+          final subtitle = _normalizeWorkContractText(map['price']);
+          addItem(title, subtitle);
+        }
+      }
+    }
+
+    return items;
+  }
+
+  String? _normalizeWorkContractText(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    if (value is num) {
+      return value.toString();
+    }
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  num? _parseWorkContractRate(Map<String, dynamic> data) {
+    const keys = <String>['rate_per_unit', 'ratePerUnit', 'rate', 'price', 'amount'];
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) continue;
+      if (value is num) {
+        return value;
+      }
+      if (value is String) {
+        final sanitized = value.replaceAll(RegExp(r'[^0-9,.-]'), '');
+        if (sanitized.isEmpty) {
+          continue;
+        }
+        final normalized = sanitized.replaceAll(',', '');
+        final parsed = num.tryParse(normalized);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
+    }
+    return null;
+  }
+
+  String? _extractWorkContractUnitLabel(Map<String, dynamic> data) {
+    const keys = <String>[
+      'unit_label',
+      'unitLabel',
+      'unit',
+      'unit_name',
+      'unitName',
+      'unit_display',
+      'unitDisplay',
+    ];
+    for (final key in keys) {
+      final value = _normalizeWorkContractText(data[key]);
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  String _combineWorkContractTitle(String? name, String? type) {
+    final nameText = name?.trim() ?? '';
+    final typeText = _formatWorkContractTypeLabel(type);
+    if (nameText.isEmpty && typeText.isEmpty) {
+      return '';
+    }
+    if (nameText.isEmpty) {
+      return typeText;
+    }
+    if (typeText.isEmpty) {
+      return nameText;
+    }
+    return '$nameText • $typeText';
+  }
+
+  String _formatWorkContractTypeLabel(String? value) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) {
+      return '';
+    }
+    if (text.length == 1) {
+      return text.toUpperCase();
+    }
+    return '${text[0].toUpperCase()}${text.substring(1)}';
+  }
+
+  String _formatCurrencyDisplay(String value, String prefix) {
+    final trimmedValue = value.trim();
+    final trimmedPrefix = prefix.trim();
+    if (trimmedValue.isEmpty) {
+      return trimmedPrefix.isEmpty ? value : trimmedPrefix;
+    }
+    if (trimmedPrefix.isEmpty) {
+      return trimmedValue;
+    }
+    final addSpace =
+        prefix.trimRight() != prefix || trimmedPrefix.length > 1;
+    return addSpace ? '$trimmedPrefix $trimmedValue' : '$trimmedPrefix$trimmedValue';
+  }
+
   Widget _buildContractTypeTile(
       BuildContext context,
       AppLocalizations l,
@@ -1405,7 +1586,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   Widget _buildContractSection(BuildContext context) {
-    final theme = Theme.of(context);
+    final workContracts = _resolveWorkContracts();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1413,6 +1594,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         const SizedBox(height: 12),
         _buildWorkInfoSection(context),
         const SizedBox(height: 16),
+        if (workContracts.isNotEmpty) ...[
+          _WorkContractList(items: workContracts),
+          const SizedBox(height: 16),
+        ],
         GestureDetector(
           onTap: _navigateToContractWorkScreen,
           child: Container(
@@ -1897,4 +2082,93 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       },
     );
   }
+}
+
+class _WorkContractList extends StatelessWidget {
+  const _WorkContractList({required this.items});
+
+  final List<_WorkContractDisplay> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A0F172A),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l.contractWorkSummaryTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ) ??
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+          ),
+          const SizedBox(height: 12),
+          for (int i = 0; i < items.length; i++) ...[
+            if (i > 0)
+              const Divider(
+                height: 20,
+                thickness: 1,
+                color: Color(0xFFE2E8F0),
+              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    items[i].title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    items[i].subtitle,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WorkContractDisplay {
+  const _WorkContractDisplay({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
 }
