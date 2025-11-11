@@ -157,6 +157,7 @@ abstract final class AppString {
       'contractWorkRoleRequiredMessage': 'Please select a role.',
       'contractWorkUnitsLabel': 'Units',
       'contractWorkUnitsHint': 'Enter units',
+      'contractWorkQuantityHint': 'Enter Quantity of {unit}',
       'contractWorkRateRequiredMessage': 'Please enter a valid rate.',
       'contractWorkNameRequiredMessage': 'Please select or enter a work name.',
       'contractWorkTypeLockedMessage':
@@ -589,6 +590,7 @@ abstract final class AppString {
       'contractWorkRoleRequiredMessage': 'कृपया भूमिका चुनें।',
       'contractWorkUnitsLabel': 'इकाइयाँ',
       'contractWorkUnitsHint': 'इकाइयों की संख्या दर्ज करें',
+      'contractWorkQuantityHint': '{unit} की संख्या दर्ज करें',
       'contractWorkRateRequiredMessage': 'कृपया मान्य दर दर्ज करें।',
       'contractWorkNameRequiredMessage': 'कृपया कोई कार्य नाम चुनें या दर्ज करें।',
       'contractWorkTypeLockedMessage':
@@ -1021,6 +1023,7 @@ abstract final class AppString {
       'contractWorkRoleRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਭੂਮਿਕਾ ਚੁਣੋ।',
       'contractWorkUnitsLabel': 'ਯੂਨਿਟ',
       'contractWorkUnitsHint': 'ਯੂਨਿਟ ਦਰਜ ਕਰੋ',
+      'contractWorkQuantityHint': '{unit} ਦੀ ਗਿਣਤੀ ਦਰਜ ਕਰੋ',
       'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਦਰ ਦਰਜ ਕਰੋ।',
       'contractWorkNameRequiredMessage':
           'ਕਿਰਪਾ ਕਰਕੇ ਕੋਈ ਕੰਮ ਦਾ ਨਾਮ ਚੁਣੋ ਜਾਂ ਦਰਜ ਕਰੋ।',
@@ -1458,6 +1461,7 @@ abstract final class AppString {
       'contractWorkRoleRequiredMessage': 'Seleziona un ruolo.',
       'contractWorkUnitsLabel': 'Unità',
       'contractWorkUnitsHint': 'Inserisci le unità',
+      'contractWorkQuantityHint': 'Inserisci la quantità di {unit}',
       'contractWorkRateRequiredMessage': 'Inserisci una tariffa valida.',
       'contractWorkNameRequiredMessage':
           'Seleziona o inserisci il nome del lavoro.',

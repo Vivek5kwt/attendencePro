@@ -5021,6 +5021,13 @@ class _MissedAttendanceCompletionSheetState
                 unitLabel: effectiveType.unitLabel,
               )
             : l.contractWorkUnitFallback;
+        final unitHint = effectiveType != null
+            ? resolveContractUnitHint(
+                localizations: l,
+                contractName: effectiveType.name,
+                unitLabel: effectiveType.unitLabel,
+              )
+            : l.contractWorkUnitsHint;
         final helperText = effectiveType != null
             ? '${l.contractWorkRateLabel}: '
                 '${effectiveType.rate.toStringAsFixed(2)} / $unitLabel'
@@ -5116,7 +5123,7 @@ class _MissedAttendanceCompletionSheetState
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               labelText: l.contractWorkUnitsLabel,
-              hintText: l.contractWorkUnitsHint,
+              hintText: unitHint,
               prefixIcon: const Icon(
                 Icons.inventory_2_outlined,
                 color: Color(0xFF2563EB),
@@ -6711,6 +6718,13 @@ class _ContractEntryForm extends StatelessWidget {
                         unitLabel: selectedType.unitLabel,
                       )
                     : l.contractWorkUnitFallback;
+                final unitHint = selectedType != null
+                    ? resolveContractUnitHint(
+                        localizations: l,
+                        contractName: selectedType.name,
+                        unitLabel: selectedType.unitLabel,
+                      )
+                    : l.contractWorkUnitsHint;
                 final String? rateHelperText = selectedType != null
                     ? '${l.contractWorkRateLabel}: '
                         '${selectedType.rate.toStringAsFixed(2)} / $unitLabel'
@@ -6895,7 +6909,7 @@ class _ContractEntryForm extends StatelessWidget {
                                 const TextInputType.numberWithOptions(
                                     decimal: false),
                             decoration: InputDecoration(
-                              hintText: l.contractWorkUnitsHint,
+                              hintText: unitHint,
                               hintStyle: hintStyle,
                               prefixIcon: const Icon(
                                 Icons.inventory_2_outlined,
