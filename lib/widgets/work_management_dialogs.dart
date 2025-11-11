@@ -13,6 +13,7 @@ import '../models/contract_type.dart';
 import '../models/pending_contract_work.dart';
 import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
+import '../repositories/work_repository.dart';
 import '../screens/contract_work_screen.dart';
 
 Future<void> _clearStoredAddWorkContractDrafts() async {
@@ -823,10 +824,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   List<ContractType> _contractTypes = <ContractType>[];
   bool _isLoadingContractTypes = false;
   String? _contractTypesError;
+  late Work _currentWork;
+  List<_WorkContractDisplay> _workContracts = <_WorkContractDisplay>[];
 
   @override
   void initState() {
     super.initState();
+    _currentWork = widget.work;
+    _workContracts = _resolveWorkContracts(_currentWork);
     unawaited(_loadContractTypes());
   }
 
@@ -875,7 +880,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   String? _resolveCurrencySymbol([Map<String, dynamic>? source]) {
     // Null-safe access to additionalData to avoid crashes.
     final Map<String, dynamic> data =
-        (source ?? widget.work.additionalData as Map<String, dynamic>?) ??
+        (source ?? _currentWork.additionalData as Map<String, dynamic>?) ??
             const <String, dynamic>{};
     if (data.isEmpty) {
       return null;
@@ -909,7 +914,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   String _formatHourlyRate(AppLocalizations l) {
-    final rate = widget.work.hourlyRate;
+    final rate = _currentWork.hourlyRate;
     if (rate == null) {
       return l.notAvailableLabel;
     }
@@ -1119,7 +1124,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         roleSelector: (type) => type.role,
       );
 
-      await showModalBottomSheet<void>(
+      final resultFromSheet = await showModalBottomSheet<dynamic>(
         context: widget.rootContext,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -1134,13 +1139,17 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             availableRoles: availableRoles,
             initialRoleValue: null,
             formatRoleDisplay: contractWorkFormatRoleDisplay,
-            workId: widget.work.id,
+            workId: _currentWork.id,
           );
         },
       );
 
       if (!mounted) {
         return;
+      }
+      final didUpdateLocally = _applyContractSheetResult(resultFromSheet);
+      if (resultFromSheet != null) {
+        unawaited(_refreshWorkDetails(showError: !didUpdateLocally));
       }
       await _loadContractTypes();
     } on ContractTypeRepositoryException catch (error) {
@@ -1301,7 +1310,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.work.name,
+            _currentWork.name,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -1326,12 +1335,12 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     );
   }
 
-  List<_WorkContractDisplay> _resolveWorkContracts() {
+  List<_WorkContractDisplay> _resolveWorkContracts(Work work) {
     final l = AppLocalizations.of(widget.rootContext);
     final currencyPrefix = _resolveCurrencySymbol() ?? '£';
     final items = <_WorkContractDisplay>[];
 
-    void addItem(String? rawTitle, String? rawSubtitle) {
+    void addItem(String? rawTitle, String? rawSubtitle, {String? id}) {
       final title = rawTitle?.trim() ?? '';
       final subtitle = rawSubtitle?.trim() ?? '';
       if (title.isEmpty && subtitle.isEmpty) {
@@ -1342,13 +1351,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           subtitle.isEmpty ? l.notAvailableLabel : subtitle;
       items.add(
         _WorkContractDisplay(
+          id: id,
           title: resolvedTitle,
           subtitle: resolvedSubtitle,
         ),
       );
     }
 
-    final rawContracts = widget.work.additionalData['contracts'];
+    final rawContracts = work.additionalData['contracts'];
     if (rawContracts is List) {
       for (final raw in rawContracts) {
         if (raw is Map) {
@@ -1365,6 +1375,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final rate = _parseWorkContractRate(map);
           final rawPrice = _normalizeWorkContractText(map['price']);
           final unitLabel = _extractWorkContractUnitLabel(map);
+          final contractId = _extractWorkContractId(map);
 
           var subtitle = '';
           if (rate != null) {
@@ -1383,7 +1394,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final resolvedTitle = combinedTitle.isNotEmpty
               ? combinedTitle
               : (name ?? type ?? '');
-          addItem(resolvedTitle, subtitle);
+          addItem(resolvedTitle, subtitle, id: contractId);
         }
       }
     }
@@ -1392,7 +1403,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return items;
     }
 
-    final legacyItems = widget.work.additionalData['contractItems'];
+    final legacyItems = work.additionalData['contractItems'];
     if (legacyItems is List) {
       for (final raw in legacyItems) {
         if (raw is Map) {
@@ -1402,12 +1413,193 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           });
           final title = _normalizeWorkContractText(map['title']);
           final subtitle = _normalizeWorkContractText(map['price']);
-          addItem(title, subtitle);
+          final contractId = _extractWorkContractId(map);
+          addItem(title, subtitle, id: contractId);
         }
       }
     }
 
     return items;
+  }
+
+  String? _extractWorkContractId(Map<String, dynamic> data) {
+    const keys = <String>[
+      'id',
+      'contract_id',
+      'contractId',
+      'contract_type_id',
+      'contractTypeId',
+      'work_contract_id',
+      'workContractId',
+      'type_id',
+      'typeId',
+    ];
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) {
+        continue;
+      }
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+    return null;
+  }
+
+  bool _applyContractSheetResult(Object? sheetResult) {
+    if (sheetResult == null || !mounted) {
+      return false;
+    }
+
+    try {
+      final dynamic result = sheetResult;
+
+      String? readString(dynamic value) {
+        if (value == null) {
+          return null;
+        }
+        final text = value.toString().trim();
+        return text.isEmpty ? null : text;
+      }
+
+      String? id;
+      String? name;
+      String? role;
+      String? type;
+      String? unitLabel;
+      num? rate;
+
+      try {
+        id = readString(result.id);
+      } catch (_) {}
+      try {
+        name = readString(result.name);
+      } catch (_) {}
+      try {
+        role = readString(result.role);
+      } catch (_) {}
+      try {
+        type = readString(result.type);
+      } catch (_) {}
+      try {
+        unitLabel = readString(result.unitLabel);
+      } catch (_) {}
+      try {
+        final dynamic rateValue = result.rate;
+        if (rateValue is num) {
+          rate = rateValue;
+        } else if (rateValue is String) {
+          rate = num.tryParse(rateValue);
+        }
+      } catch (_) {}
+
+      final l = AppLocalizations.of(widget.rootContext);
+      final currencyPrefix = _resolveCurrencySymbol() ?? '£';
+
+      var subtitle = '';
+      if (rate != null) {
+        subtitle =
+            _formatCurrencyDisplay(rate.toDouble().toStringAsFixed(2), currencyPrefix);
+      }
+      if (unitLabel != null && unitLabel.isNotEmpty) {
+        subtitle = subtitle.isEmpty
+            ? unitLabel
+            : '$subtitle ${unitLabel.trim()}';
+      }
+      if (subtitle.isEmpty) {
+        subtitle = l.notAvailableLabel;
+      }
+
+      final roleOrType = (role != null && role.isNotEmpty) ? role : type;
+      final combinedTitle = _combineWorkContractTitle(name, roleOrType);
+      final resolvedTitle = combinedTitle.isNotEmpty
+          ? combinedTitle
+          : (name ?? role ?? type ?? l.contractWorkLabel);
+
+      final display = _WorkContractDisplay(
+        id: id,
+        title: resolvedTitle,
+        subtitle: subtitle,
+      );
+
+      setState(() {
+        final updated = List<_WorkContractDisplay>.from(_workContracts);
+        if (display.id != null && display.id!.isNotEmpty) {
+          final index =
+              updated.indexWhere((item) => item.id == display.id);
+          if (index != -1) {
+            updated[index] = display;
+          } else {
+            updated.add(display);
+          }
+        } else {
+          final index = updated.indexWhere(
+            (item) => item.title.toLowerCase() == display.title.toLowerCase(),
+          );
+          if (index != -1) {
+            updated[index] = display;
+          } else {
+            updated.add(display);
+          }
+        }
+        _workContracts = updated;
+      });
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _refreshWorkDetails({bool showError = true}) async {
+    final messenger = ScaffoldMessenger.of(widget.rootContext);
+    final l = AppLocalizations.of(widget.rootContext);
+
+    try {
+      final repository = WorkRepository();
+      final works = await repository.fetchWorks();
+
+      Work? updatedWork;
+      for (final work in works) {
+        if (work.id == _currentWork.id) {
+          updatedWork = work;
+          break;
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      if (updatedWork != null) {
+        setState(() {
+          _currentWork = updatedWork;
+          _workContracts = _resolveWorkContracts(_currentWork);
+        });
+      } else {
+        setState(() {
+          _workContracts = _resolveWorkContracts(_currentWork);
+        });
+      }
+    } on WorkRepositoryException catch (error) {
+      if (!mounted || !showError) {
+        return;
+      }
+      final message = error.message.trim().isEmpty
+          ? l.contractWorkLoadError
+          : error.message;
+      messenger.showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } on Exception {
+      if (!mounted || !showError) {
+        return;
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.contractWorkLoadError)),
+      );
+    }
   }
 
   String? _normalizeWorkContractText(Object? value) {
@@ -1587,7 +1779,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   Widget _buildContractSection(BuildContext context) {
-    final workContracts = _resolveWorkContracts();
+    final workContracts = _workContracts;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1658,7 +1850,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     final bloc = widget.rootContext.read<WorkBloc>();
 
     if (bloc.state.deletingWorkId != null &&
-        bloc.state.deletingWorkId != widget.work.id) {
+        bloc.state.deletingWorkId != _currentWork.id) {
       return;
     }
 
@@ -1668,7 +1860,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     }
 
     final completer = Completer<bool>();
-    bloc.add(WorkDeleted(work: widget.work, completer: completer));
+    bloc.add(WorkDeleted(work: _currentWork, completer: completer));
     final result = await completer.future;
 
     if (!mounted) {
@@ -1871,7 +2063,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
     return BlocBuilder<WorkBloc, WorkState>(
       builder: (blocContext, state) {
-        final isDeleting = state.deletingWorkId == widget.work.id;
+        final isDeleting = state.deletingWorkId == _currentWork.id;
         final theme = Theme.of(context);
 
         return Dialog(
@@ -2119,8 +2311,9 @@ class _WorkContractList extends StatelessWidget {
 }
 
 class _WorkContractDisplay {
-  const _WorkContractDisplay({required this.title, required this.subtitle});
+  const _WorkContractDisplay({this.id, required this.title, required this.subtitle});
 
+  final String? id;
   final String title;
   final String subtitle;
 }
