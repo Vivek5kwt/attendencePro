@@ -3550,6 +3550,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         onContractBundleTypeChanged: _handleContractTypeChanged,
         onContractTypeRetry:
             widget.work.isContract ? () => _loadContractTypes() : null,
+        onCreateContractType:
+            contractActionsLocked ? null : _handleCreateContractTypeTap,
         onAddContractBundle: _handleAddContractBundle,
         onRemoveContractBundle: _handleRemoveContractBundle,
         onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
@@ -5961,6 +5963,7 @@ class _AttendanceSection extends StatelessWidget {
     this.contractBundleEntries = const <_ContractBundleFormEntry>[],
     this.onContractBundleTypeChanged,
     this.onContractTypeRetry,
+    this.onCreateContractType,
     this.onAddContractBundle,
     this.onRemoveContractBundle,
     this.onContractBundleUnitsChanged,
@@ -6000,6 +6003,7 @@ class _AttendanceSection extends StatelessWidget {
   final List<_ContractBundleFormEntry> contractBundleEntries;
   final void Function(String, String?)? onContractBundleTypeChanged;
   final VoidCallback? onContractTypeRetry;
+  final VoidCallback? onCreateContractType;
   final VoidCallback? onAddContractBundle;
   final void Function(_ContractBundleFormEntry)? onRemoveContractBundle;
   final void Function(_ContractBundleFormEntry)? onContractBundleUnitsChanged;
@@ -6215,7 +6219,7 @@ class _AttendanceSection extends StatelessWidget {
                 onTypeChanged: onContractBundleTypeChanged,
                 onRetry: onContractTypeRetry,
                 onCreateContractType:
-                    contractActionsLocked ? null : _handleCreateContractTypeTap,
+                    contractActionsLocked ? null : onCreateContractType,
                 onRemoveEntry: onRemoveContractBundle,
                 onAddEntry: onAddContractBundle,
                 onUnitsChanged: onContractBundleUnitsChanged,
