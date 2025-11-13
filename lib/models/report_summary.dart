@@ -271,6 +271,8 @@ class ContractWorkItemData {
     this.unitsTotal,
     this.unitLabel,
     this.ratePerUnit,
+    this.unitCount,
+    this.unitRole,
   });
 
   factory ContractWorkItemData.fromJson(Map<String, dynamic> json) {
@@ -281,6 +283,18 @@ class ContractWorkItemData {
       'amountText',
       'display_amount',
       'displayAmount',
+    ]);
+
+    final roleValue = _parseString(json, const [
+      'role',
+      'unit_role',
+      'unitRole',
+      'contract_role',
+      'contractRole',
+      'unit_name',
+      'unitName',
+      'role_name',
+      'roleName',
     ]);
 
     return ContractWorkItemData(
@@ -343,6 +357,18 @@ class ContractWorkItemData {
         'unitRate',
         'price',
       ]),
+      unitCount: _parseNullableDouble(json, const [
+        'count',
+        'quantity',
+        'qty',
+        'unit_count',
+        'unitCount',
+        'unit_quantity',
+        'unitQuantity',
+        'per_count',
+        'perCount',
+      ]),
+      unitRole: roleValue.isNotEmpty ? roleValue : null,
     );
   }
 
@@ -356,6 +382,8 @@ class ContractWorkItemData {
   final int? unitsTotal;
   final String? unitLabel;
   final double? ratePerUnit;
+  final double? unitCount;
+  final String? unitRole;
 
   String resolveAmountLabel(String currencySymbol) {
     if (amountLabel != null && amountLabel!.trim().isNotEmpty) {
