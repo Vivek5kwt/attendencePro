@@ -179,7 +179,7 @@ class LocalNotificationService {
 
     await _ensureTimeZoneSetup();
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         _attendanceReminderChannel.id,
         _attendanceReminderChannel.name,
