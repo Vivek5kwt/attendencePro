@@ -2517,10 +2517,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final startTimeText = _startTimeController.text.trim();
     final endTimeText = _endTimeController.text.trim();
-    final String? startTime = startTimeText.isNotEmpty ? startTimeText : null;
-    final String? endTime = endTimeText.isNotEmpty ? endTimeText : null;
+    String? startTime = startTimeText.isNotEmpty ? startTimeText : null;
+    String? endTime = endTimeText.isNotEmpty ? endTimeText : null;
     final bool hasHourlyInput = startTime != null || endTime != null;
-    final int? breakMinutes = hasHourlyInput
+    int? breakMinutes = hasHourlyInput
         ? _resolveBreakMinutes(_breakMinutesController.text)
         : null;
 
@@ -2575,6 +2575,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final bool? contractEntryPayloadValue = includeContractEntry ? true : null;
+
+    if (includeContractEntry) {
+      startTime ??= '00:00';
+      endTime ??= '00:00';
+      breakMinutes ??= 0;
+    }
 
     setState(() {
       _isSubmittingAttendance = true;
