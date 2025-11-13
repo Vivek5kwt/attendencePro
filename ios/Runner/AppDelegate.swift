@@ -8,6 +8,20 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let channel = FlutterMethodChannel(
+        name: "com.attendancepro/native_timezone",
+        binaryMessenger: controller.binaryMessenger
+      )
+
+      channel.setMethodCallHandler { call, result in
+        if call.method == "getLocalTimezone" {
+          result(TimeZone.current.identifier)
+        } else {
+          result(FlutterMethodNotImplemented)
+        }
+      }
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
