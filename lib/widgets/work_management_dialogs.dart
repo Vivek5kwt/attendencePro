@@ -1921,6 +1921,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
   Widget _buildContractSection(BuildContext context) {
     final workContracts = _workContracts;
+    final isContractWork = _currentWork.isContract;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1936,55 +1937,60 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           ),
           const SizedBox(height: 16),
         ],
-        GestureDetector(
-          onTap: _navigateToContractWorkScreen,
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
+        if (isContractWork) ...[
+          GestureDetector(
+            onTap: _navigateToContractWorkScreen,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
                   color:
-                  Theme.of(context).colorScheme.primary.withOpacity(0.25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                  width: 1.2,
                 ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('📑', style: TextStyle(fontSize: 18)),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Add Contract Work',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
-                    ) ??
-                        const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withOpacity(0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-              ],
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('📑', style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Add Contract Work',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ) ??
+                          const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
+          const SizedBox(height: 8),
+        ],
       ],
     );
   }
