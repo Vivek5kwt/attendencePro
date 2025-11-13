@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class LocalNotificationService {
   LocalNotificationService._();
@@ -9,6 +13,7 @@ class LocalNotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
+  static bool _timeZoneInitialized = false;
 
   static const AndroidNotificationChannel _downloadChannel =
       AndroidNotificationChannel(
@@ -17,6 +22,20 @@ class LocalNotificationService {
     description: 'Notifications about saved reports',
     importance: Importance.high,
   );
+
+  static const AndroidNotificationChannel _attendanceReminderChannel =
+      AndroidNotificationChannel(
+    'attendance_reminder_channel',
+    'Attendance Reminders',
+    description: 'Daily reminders to mark attendance',
+    importance: Importance.high,
+  );
+
+  static const int _attendanceReminderNotificationId = 2001;
+  static const String _lastAttendanceMarkedKey = 'last_attendance_marked_epoch';
+  static const String _attendanceReminderTitle = 'Attendance Reminder';
+  static const String _attendanceReminderBody =
+      "Don't forget to mark your attendance for today before the day ends! (Stay consistent and keep your records updated.)";
 
   static Future<void> initialize() async {
     if (_initialized || kIsWeb) {
@@ -49,6 +68,8 @@ class LocalNotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     await androidImplementation?.createNotificationChannel(_downloadChannel);
+    await androidImplementation
+        ?.createNotificationChannel(_attendanceReminderChannel);
     await androidImplementation?.requestNotificationsPermission();
 
     final iosImplementation = _plugin
@@ -145,5 +166,136 @@ class LocalNotificationService {
   ) async {
     WidgetsFlutterBinding.ensureInitialized();
     await _handleNotificationResponse(response);
+  }
+
+  static Future<void> scheduleDailyAttendanceReminder() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    if (!_initialized) {
+      await initialize();
+    }
+
+    await _ensureTimeZoneSetup();
+
+    const notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _attendanceReminderChannel.id,
+        _attendanceReminderChannel.name,
+        channelDescription: _attendanceReminderChannel.description,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: true,
+      ),
+      macOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: true,
+      ),
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastMarkedEpoch = prefs.getInt(_lastAttendanceMarkedKey);
+    final now = tz.TZDateTime.now(tz.local);
+
+    final DateTime? lastMarkedDate = lastMarkedEpoch == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(lastMarkedEpoch);
+    final bool markedToday =
+        lastMarkedDate != null && _isSameDate(lastMarkedDate, now);
+
+    var scheduledDate = _nextEightPm(now);
+    if (markedToday) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    } else if (now.isAfter(scheduledDate)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _plugin.cancel(_attendanceReminderNotificationId);
+
+    await _plugin.zonedSchedule(
+      _attendanceReminderNotificationId,
+      _attendanceReminderTitle,
+      _attendanceReminderBody,
+      scheduledDate,
+      notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.wallClockTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  static Future<void> onAttendanceMarked({DateTime? timestamp}) async {
+    if (kIsWeb) {
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final markTime = timestamp ?? DateTime.now();
+    final normalized = DateTime(markTime.year, markTime.month, markTime.day);
+    await prefs.setInt(
+      _lastAttendanceMarkedKey,
+      normalized.millisecondsSinceEpoch,
+    );
+
+    await scheduleDailyAttendanceReminder();
+  }
+
+  static Future<DateTime?> lastAttendanceMarkedDate() async {
+    if (kIsWeb) {
+      return null;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final epoch = prefs.getInt(_lastAttendanceMarkedKey);
+    if (epoch == null) {
+      return null;
+    }
+
+    final stored = DateTime.fromMillisecondsSinceEpoch(epoch);
+    return DateTime(stored.year, stored.month, stored.day);
+  }
+
+  static Future<void> _ensureTimeZoneSetup() async {
+    if (_timeZoneInitialized) {
+      return;
+    }
+
+    tz.initializeTimeZones();
+
+    try {
+      final timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (error, stackTrace) {
+      debugPrint('Failed to obtain local timezone: $error');
+      debugPrint('$stackTrace');
+      tz.setLocalLocation(tz.UTC);
+    }
+
+    _timeZoneInitialized = true;
+  }
+
+  static tz.TZDateTime _nextEightPm(tz.TZDateTime from) {
+    final scheduled = tz.TZDateTime(
+      tz.local,
+      from.year,
+      from.month,
+      from.day,
+      20,
+    );
+    if (!scheduled.isAfter(from)) {
+      return scheduled.add(const Duration(days: 1));
+    }
+    return scheduled;
+  }
+
+  static bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
