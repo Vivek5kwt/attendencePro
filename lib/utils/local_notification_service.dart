@@ -180,6 +180,8 @@ class LocalNotificationService {
 
     await _ensureTimeZoneSetup();
 
+    final scheduleMode = await _preferredAndroidScheduleMode();
+
     final notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         _attendanceReminderChannel.id,
@@ -226,13 +228,17 @@ class LocalNotificationService {
         _attendanceReminderBody,
         scheduledDate,
         notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     } on PlatformException catch (error, stackTrace) {
-      if (error.code != 'exact_alarms_not_permitted') {
+      final isExactAlarmError = error.code == 'exact_alarms_not_permitted';
+      final alreadyInexact =
+          scheduleMode == AndroidScheduleMode.inexactAllowWhileIdle;
+
+      if (!isExactAlarmError || alreadyInexact) {
         debugPrint('Failed to schedule daily attendance reminder: $error');
         debugPrint('$stackTrace');
         rethrow;
@@ -305,6 +311,33 @@ class LocalNotificationService {
     }
 
     _timeZoneInitialized = true;
+  }
+
+  static Future<AndroidScheduleMode> _preferredAndroidScheduleMode() async {
+    final androidImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation == null) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+
+    Future<bool> canScheduleExact() async {
+      final result = await androidImplementation.canScheduleExactNotifications();
+      return result ?? true;
+    }
+
+    if (await canScheduleExact()) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+
+    await androidImplementation.requestExactAlarmsPermission();
+
+    if (await canScheduleExact()) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+
+    return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
   static tz.TZDateTime _nextEightPm(tz.TZDateTime from) {
