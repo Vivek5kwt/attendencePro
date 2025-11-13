@@ -1,5 +1,7 @@
 import com.android.build.gradle.LibraryExtension
+import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.compile.JavaCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 allprojects {
     repositories {
@@ -51,6 +53,10 @@ subprojects {
         pluginManager.withPlugin("com.android.library") {
             extensions.configure<LibraryExtension>("android") {
                 namespace = "com.attendancepro.flutter_native_timezone"
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_11
+                    targetCompatibility = JavaVersion.VERSION_11
+                }
             }
         }
         val manifestFile = project.projectDir.resolve("src/main/AndroidManifest.xml")
@@ -67,6 +73,18 @@ subprojects {
                     }
                 }
             }
+        }
+    }
+}
+
+subprojects {
+    tasks.withType<JavaCompile>().configureEach {
+        sourceCompatibility = JavaVersion.VERSION_11.toString()
+        targetCompatibility = JavaVersion.VERSION_11.toString()
+    }
+    tasks.withType<KotlinCompile>().configureEach {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_11.toString()
         }
     }
 }
