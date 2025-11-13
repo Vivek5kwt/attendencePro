@@ -14,6 +14,7 @@ import '../repositories/attendance_history_repository.dart';
 import '../repositories/reports_repository.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
+import '../utils/contract_unit_label.dart';
 import '../widgets/work_selection_dialog.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
@@ -448,25 +449,55 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final colorValue = d.indicatorColorValue;
       final color =
       colorValue != null ? Color(colorValue) : _contractColorPalette[i % _contractColorPalette.length];
-      final subtitle = _buildContractSubtitle(d, l);
+      final unitsLabel = _formatContractUnitsLabel(d, l);
+      final calculation = _buildContractCalculationLabel(d, l, summary.currencySymbol);
       result.add(
         _ContractWorkItem(
           title: d.title,
-          subtitle: subtitle,
+          unitsLabel: unitsLabel,
           amount: d.resolveAmountLabel(summary.currencySymbol),
           indicatorColor: color,
+          calculationLabel: calculation,
         ),
       );
     }
     return result;
   }
 
-  String _buildContractSubtitle(ContractWorkItemData data, AppLocalizations l) {
-    if (data.subtitle.isNotEmpty) return data.subtitle;
-    if (data.unitsCompleted != null) {
-      return '${data.unitsCompleted} ${l.reportsUnitsCompletedSuffix}';
+  String _formatContractUnitsLabel(ContractWorkItemData data, AppLocalizations l) {
+    final subtitle = data.subtitle.trim();
+    if (subtitle.isNotEmpty) return subtitle;
+
+    final unitLabel = data.unitLabel?.trim();
+    return contractUnitQuantityLabel(
+      localizations: l,
+      contractName: data.title,
+      unitLabel: unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+      completedUnits: data.unitsCompleted,
+      totalUnits: data.unitsTotal,
+    );
+  }
+
+  String? _buildContractCalculationLabel(
+    ContractWorkItemData data,
+    AppLocalizations l,
+    String currencySymbol,
+  ) {
+    final units = data.unitsCompleted;
+    final rate = data.ratePerUnit;
+    if (units == null || units <= 0 || rate == null || rate <= 0) {
+      return null;
     }
-    return l.notAvailableLabel;
+
+    final unitLabel = data.unitLabel?.trim();
+    final countLabel = contractUnitCountLabel(
+      localizations: l,
+      contractName: data.title,
+      unitLabel: unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+      quantity: units,
+    );
+
+    return '$countLabel × ${_formatCurrencyValue(rate, currencySymbol)}';
   }
 
   @override
@@ -734,6 +765,9 @@ class _SummaryLoadedContent extends StatelessWidget {
             currencySymbol: currency,
             items: contractItems,
             emptyMessage: localization.notAvailableLabel,
+            workNameLabel: localization.workNameLabel,
+            unitsColumnLabel: localization.reportsTotalUnitsLabel,
+            paymentColumnLabel: localization.reportsTotalPaymentLabel,
           ),
           if (canDownloadContractReport) ...[
             const SizedBox(height: 12),
@@ -1415,6 +1449,9 @@ class _ContractWorkSummaryCard extends StatelessWidget {
     required this.currencySymbol,
     required this.items,
     required this.emptyMessage,
+    required this.workNameLabel,
+    required this.unitsColumnLabel,
+    required this.paymentColumnLabel,
   });
 
   final String totalUnitsLabel;
@@ -1424,6 +1461,9 @@ class _ContractWorkSummaryCard extends StatelessWidget {
   final String currencySymbol;
   final List<_ContractWorkItem> items;
   final String emptyMessage;
+  final String workNameLabel;
+  final String unitsColumnLabel;
+  final String paymentColumnLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1485,13 +1525,23 @@ class _ContractWorkSummaryCard extends StatelessWidget {
               ),
             )
           else
-            for (var i = 0; i < items.length; i++)
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: i == items.length - 1 ? 0 : 12,
+            Column(
+              children: [
+                _ContractSummaryHeaderRow(
+                  workNameLabel: workNameLabel,
+                  unitsLabel: unitsColumnLabel,
+                  paymentLabel: paymentColumnLabel,
                 ),
-                child: _ContractWorkTile(item: items[i]),
-              ),
+                const SizedBox(height: 12),
+                for (var i = 0; i < items.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: i == items.length - 1 ? 0 : 12,
+                    ),
+                    child: _ContractWorkTile(item: items[i]),
+                  ),
+              ],
+            ),
         ],
       ),
     );
@@ -1501,15 +1551,17 @@ class _ContractWorkSummaryCard extends StatelessWidget {
 class _ContractWorkItem {
   const _ContractWorkItem({
     required this.title,
-    required this.subtitle,
+    required this.unitsLabel,
     required this.amount,
     required this.indicatorColor,
+    this.calculationLabel,
   });
 
   final String title;
-  final String subtitle;
+  final String unitsLabel;
   final String amount;
   final Color indicatorColor;
+  final String? calculationLabel;
 }
 
 class _ContractWorkTile extends StatelessWidget {
@@ -1519,6 +1571,30 @@ class _ContractWorkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final workStyle = textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: const Color(0xFF111827),
+    ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+          color: Color(0xFF111827),
+        );
+    final detailStyle = textTheme.bodySmall?.copyWith(
+      color: const Color(0xFF6B7280),
+      fontWeight: FontWeight.w500,
+    ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
+        );
+    final calculationStyle = detailStyle.copyWith(
+      color: const Color(0xFF2563EB),
+      fontWeight: FontWeight.w600,
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1527,73 +1603,120 @@ class _ContractWorkTile extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 6,
-            height: 48,
-            decoration: BoxDecoration(
-              color: item.indicatorColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          const SizedBox(width: 14),
           Expanded(
-            child: Column(
+            flex: 4,
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF111827),
-                  ) ??
-                      const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        color: Color(0xFF111827),
-                      ),
+                Container(
+                  width: 6,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: item.indicatorColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      size: 18,
-                      color: Color(0xFF10B981),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        item.subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontWeight: FontWeight.w500,
-                        ) ??
-                            const TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    item.title,
+                    style: workStyle,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: item.indicatorColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(
-              item.amount,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: item.indicatorColor,
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.unitsLabel, style: detailStyle),
+                  if (item.calculationLabel != null) ...[
+                    const SizedBox(height: 4),
+                    Text(item.calculationLabel!, style: calculationStyle),
+                  ],
+                ],
               ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: item.indicatorColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Text(
+                  item.amount,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: item.indicatorColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractSummaryHeaderRow extends StatelessWidget {
+  const _ContractSummaryHeaderRow({
+    required this.workNameLabel,
+    required this.unitsLabel,
+    required this.paymentLabel,
+  });
+
+  final String workNameLabel;
+  final String unitsLabel;
+  final String paymentLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: const Color(0xFF6B7280),
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.6,
+    ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+          letterSpacing: 0.6,
+        );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 4,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Text(workNameLabel.toUpperCase(), style: style),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(unitsLabel.toUpperCase(), style: style),
+          ),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(paymentLabel.toUpperCase(), style: style),
             ),
           ),
         ],
