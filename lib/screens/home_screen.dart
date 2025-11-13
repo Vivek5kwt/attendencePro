@@ -322,6 +322,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showEditWorkDialog(Work work) async {
     await showEditWorkDialog(context: context, work: work);
+    if (!mounted) return;
+    unawaited(_refreshWorks());
   }
 
   void _handleSetActiveWork(Work work) {
