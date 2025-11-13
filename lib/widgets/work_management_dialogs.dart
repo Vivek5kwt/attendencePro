@@ -961,119 +961,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return '$prefix$formatted/hour';
   }
 
-  String _deriveUnitWatermark(ContractType type) {
-    final Map<String, dynamic> data =
-        type.additionalData ?? const <String, dynamic>{};
-
-    final watermarkKeys = <String>[
-      'watermark',
-      'unitWatermark',
-      'unit_watermark',
-      'unit_display',
-      'unitDisplay',
-      'unit_label_display',
-    ];
-    for (final k in watermarkKeys) {
-      final v = data[k];
-      if (v is String && v.trim().isNotEmpty) {
-        return v.trim();
-      }
-    }
-
-    num? qty;
-    final qtyKeys = <String>[
-      'unit_quantity',
-      'unitQuantity',
-      'quantity',
-      'qty',
-      'per_count',
-      'perCount',
-      'count',
-      'units',
-      'unit_size',
-      'unitSize',
-      'bundle_size',
-      'bundleSize',
-    ];
-    for (final k in qtyKeys) {
-      final v = data[k];
-      if (v is num) {
-        qty = v;
-        break;
-      } else if (v is String) {
-        final parsed = num.tryParse(v);
-        if (parsed != null) {
-          qty = parsed;
-          break;
-        }
-      }
-    }
-
-    String? unitName;
-    final unitKeys = <String>[
-      'unit_name',
-      'unitName',
-      'unit',
-      'unit_type',
-      'unitType',
-      'unit_display',
-      'unitDisplay',
-      'role',
-      'type',
-      'role_name',
-      'roleName',
-    ];
-    for (final k in unitKeys) {
-      final v = data[k];
-      if (v is String && v.trim().isNotEmpty) {
-        unitName = v.trim();
-        break;
-      }
-    }
-
-    if (qty != null && unitName != null && unitName.isNotEmpty) {
-      final formattedQty = _formatQuantity(qty);
-      final normalizedUnit = _normalizeUnitLabel(unitName, qty);
-      return 'per $formattedQty $normalizedUnit';
-    }
-
-    final parsedUnitLabel = _extractQuantityAndUnitFromText(type.unitLabel);
-    qty ??= parsedUnitLabel.$1;
-    unitName ??= parsedUnitLabel.$2;
-
-    final parsedName = _extractQuantityAndUnitFromText(type.name);
-    qty ??= parsedName.$1;
-    unitName ??= parsedName.$2;
-
-    if ((unitName == null || unitName.isEmpty) &&
-        (type.role?.trim().isNotEmpty ?? false)) {
-      unitName = type.role!.trim();
-    }
-
-    if (qty == null && unitName != null && unitName.isNotEmpty) {
-      qty = 1;
-    }
-
-    if (qty != null && (unitName != null && unitName.isNotEmpty)) {
-      final formattedQty = _formatQuantity(qty);
-      final normalizedUnit = _normalizeUnitLabel(unitName, qty);
-      return 'per $formattedQty $normalizedUnit';
-    }
-
-    if (qty != null && (unitName == null || unitName.isEmpty)) {
-      final formattedQty = _formatQuantity(qty);
-      final normalizedUnit = _normalizeUnitLabel('unit', qty);
-      return 'per $formattedQty $normalizedUnit';
-    }
-
-    final label = (type.unitLabel ?? '').trim();
-    if (label.isNotEmpty && label.toLowerCase() != 'per unit') {
-      return label;
-    }
-
-    return 'per 1 ${_normalizeUnitLabel('unit', 1)}';
-  }
-
   (num?, String?) _extractQuantityAndUnitFromText(String? source) {
     if (source == null) {
       return (null, null);
@@ -1136,12 +1023,29 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return lowerCased;
   }
 
-  String _formatContractRate(ContractType type) {
-    final symbol =
-        _resolveCurrencySymbol(type.additionalData) ?? _resolveCurrencySymbol() ?? '£';
-    final formattedRate = type.rate.toStringAsFixed(2);
-    final watermark = _deriveUnitWatermark(type);
-    return '$symbol$formattedRate / $watermark';
+  String _formatContractRate(AppLocalizations localizations, ContractType type) {
+    final Map<String, dynamic> data =
+        type.additionalData.isEmpty ? const <String, dynamic>{} : type.additionalData;
+
+    final count = _parseWorkContractCount(data);
+    final role = _extractWorkContractRole(data) ?? type.role;
+    final fallbackUnitLabel =
+        _extractWorkContractUnitLabel(data) ?? (type.unitLabel.isNotEmpty ? type.unitLabel : null);
+
+    final rawPriceText = _normalizeWorkContractText(data['price']);
+
+    final currencySymbol =
+        _resolveCurrencySymbol(type.additionalData) ?? _resolveCurrencySymbol() ?? '€';
+
+    return _buildContractSubtitleText(
+      localizations,
+      rate: type.rate,
+      rawPrice: rawPriceText,
+      count: count,
+      role: role,
+      fallbackUnitLabel: fallbackUnitLabel,
+      currencySymbol: currencySymbol,
+    );
   }
 
   Future<void> _navigateToContractWorkScreen() async {
@@ -1512,6 +1416,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             count: count,
             role: rawRole ?? rawType,
             fallbackUnitLabel: unitLabel,
+            currencySymbol: _resolveCurrencySymbol(map),
           );
 
           final resolvedTitle = combinedTitle.isNotEmpty
@@ -1664,6 +1569,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         count: count,
         role: role ?? type,
         fallbackUnitLabel: unitLabel,
+        currencySymbol: _resolveCurrencySymbol(),
       );
       if (subtitle.isEmpty) {
         subtitle = l.notAvailableLabel;
@@ -1948,6 +1854,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     num? count,
     String? role,
     String? fallbackUnitLabel,
+    String? currencySymbol,
   }) {
     final unitText = _formatContractUnitLabel(
       localizations,
@@ -1959,7 +1866,8 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     final parsedRate = rate ?? _parseNumericValue(rawPrice);
     if (parsedRate != null) {
       final rateText = _formatContractRateValue(parsedRate);
-      return '€$rateText / $unitText';
+      final prefix = currencySymbol ?? '€';
+      return '$prefix$rateText / $unitText';
     }
 
     if (rawPrice != null) {
@@ -2054,7 +1962,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _formatContractRate(type),
+                  _formatContractRate(l, type),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
