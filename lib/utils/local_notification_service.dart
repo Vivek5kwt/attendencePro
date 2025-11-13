@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -270,7 +270,7 @@ class LocalNotificationService {
     tz.initializeTimeZones();
 
     try {
-      final timeZoneName = await FlutterTimezone.getLocalTimezone();
+      final timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timeZoneName));
     } catch (error, stackTrace) {
       debugPrint('Failed to obtain local timezone: $error');
