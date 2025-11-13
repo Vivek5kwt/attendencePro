@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
@@ -326,6 +329,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     unawaited(_loadContractTypes(showLoader: false));
     if (widget.work != null) {
       unawaited(_loadContractSummary());
+      final workBloc = BlocProvider.maybeOf<WorkBloc>(context);
+      workBloc?.add(const WorkRefreshed());
     }
   }
 
