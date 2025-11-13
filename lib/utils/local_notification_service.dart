@@ -1,5 +1,6 @@
 import 'package:attendancepro/utils/native_timezone.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_filex/open_filex.dart';
@@ -218,17 +219,42 @@ class LocalNotificationService {
 
     await _plugin.cancel(_attendanceReminderNotificationId);
 
-    await _plugin.zonedSchedule(
-      _attendanceReminderNotificationId,
-      _attendanceReminderTitle,
-      _attendanceReminderBody,
-      scheduledDate,
-      notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.wallClockTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    try {
+      await _plugin.zonedSchedule(
+        _attendanceReminderNotificationId,
+        _attendanceReminderTitle,
+        _attendanceReminderBody,
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.wallClockTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } on PlatformException catch (error, stackTrace) {
+      if (error.code != 'exact_alarms_not_permitted') {
+        debugPrint('Failed to schedule daily attendance reminder: $error');
+        debugPrint('$stackTrace');
+        rethrow;
+      }
+
+      debugPrint(
+        'Exact alarm scheduling is not permitted. Falling back to inexact scheduling.',
+      );
+      debugPrint('$stackTrace');
+
+      await _plugin.zonedSchedule(
+        _attendanceReminderNotificationId,
+        _attendanceReminderTitle,
+        _attendanceReminderBody,
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.wallClockTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
   }
 
   static Future<void> onAttendanceMarked({DateTime? timestamp}) async {
