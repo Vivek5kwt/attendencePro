@@ -1496,7 +1496,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final name = _normalizeWorkContractText(map['name']) ??
               _normalizeWorkContractText(map['title']);
           final rawType = _normalizeWorkContractText(map['type']);
-          final rawRole = _normalizeWorkContractText(map['role']);
+          final rawRole = _extractWorkContractRole(map);
           final type = rawType ?? rawRole;
           final combinedTitle = _combineWorkContractTitle(name, type);
           final rate = _parseWorkContractRate(map);
@@ -1603,16 +1603,50 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       try {
         role = readString(result.role);
       } catch (_) {}
+      if (role == null) {
+        try {
+          role = readString(result.roleName);
+        } catch (_) {}
+      }
+      if (role == null) {
+        try {
+          role = readString(result.unitName);
+        } catch (_) {}
+      }
       try {
         type = readString(result.type);
       } catch (_) {}
       try {
         unitLabel = readString(result.unitLabel);
       } catch (_) {}
+      void readCount(dynamic source) {
+        try {
+          count = _parseNumericValue(source);
+        } catch (_) {}
+      }
       try {
-        final dynamic countValue = result.count;
-        count = _parseNumericValue(countValue);
+        readCount(result.count);
       } catch (_) {}
+      if (count == null) {
+        try {
+          readCount(result.unitCount);
+        } catch (_) {}
+      }
+      if (count == null) {
+        try {
+          readCount(result.quantity);
+        } catch (_) {}
+      }
+      if (count == null) {
+        try {
+          readCount(result.qty);
+        } catch (_) {}
+      }
+      if (count == null) {
+        try {
+          readCount(result.perCount);
+        } catch (_) {}
+      }
       try {
         final dynamic rateValue = result.rate;
         if (rateValue is num) {
@@ -1785,6 +1819,15 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       'qty',
       'unit_count',
       'unitCount',
+      'unit_quantity',
+      'unitQuantity',
+      'per_count',
+      'perCount',
+      'units',
+      'unit_size',
+      'unitSize',
+      'bundle_size',
+      'bundleSize',
     ];
     for (final key in keys) {
       final value = data[key];
@@ -1793,6 +1836,36 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         return parsed;
       }
     }
+    return null;
+  }
+
+  String? _extractWorkContractRole(Map<String, dynamic> data) {
+    const keys = <String>[
+      'role',
+      'contract_role',
+      'contractRole',
+      'role_name',
+      'roleName',
+      'unit_name',
+      'unitName',
+      'unit',
+      'unit_display',
+      'unitDisplay',
+      'type',
+      'contract_type',
+      'contractType',
+      'subtype',
+      'contract_subtype',
+      'contractSubtype',
+    ];
+
+    for (final key in keys) {
+      final value = _normalizeWorkContractText(data[key]);
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
     return null;
   }
 
@@ -1840,6 +1913,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     String? fallback,
   }) {
     final normalizedFallback = fallback?.trim();
+    final fallbackLower = normalizedFallback?.toLowerCase();
     final normalizedRole = role?.trim();
 
     if (count != null && normalizedRole != null && normalizedRole.isNotEmpty) {
@@ -1848,12 +1922,20 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return 'per $countText ${normalizedRole.toLowerCase()}';
     }
 
-    if (normalizedFallback != null && normalizedFallback.isNotEmpty) {
+    final hasSpecificFallback = normalizedFallback != null &&
+        normalizedFallback.isNotEmpty &&
+        fallbackLower != 'per unit';
+
+    if (hasSpecificFallback) {
       return normalizedFallback;
     }
 
     if (normalizedRole != null && normalizedRole.isNotEmpty) {
       return 'per ${normalizedRole.toLowerCase()}';
+    }
+
+    if (normalizedFallback != null && normalizedFallback.isNotEmpty) {
+      return normalizedFallback;
     }
 
     return localizations.contractWorkUnitFallback;
