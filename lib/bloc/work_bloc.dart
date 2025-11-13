@@ -307,6 +307,49 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
       );
       final successMessage = (result.message ?? '').trim();
       final works = await _repository.fetchWorks();
+      Work? updatedWork;
+      for (final work in works) {
+        if (work.id == event.work.id) {
+          updatedWork = work;
+          break;
+        }
+      }
+      if (updatedWork != null && event.pendingContractWorks.isNotEmpty) {
+        try {
+          await _createPendingContractWorks(
+            work: updatedWork,
+            pending: event.pendingContractWorks,
+          );
+        } on ContractTypeAuthException {
+          emit(
+            state.copyWith(
+              updateStatus: WorkActionStatus.failure,
+              requiresAuthentication: true,
+              feedbackKind: WorkFeedbackKind.update,
+            ),
+          );
+          return;
+        } on ContractTypeRepositoryException catch (error) {
+          emit(
+            state.copyWith(
+              updateStatus: WorkActionStatus.failure,
+              lastErrorMessage: error.message,
+              feedbackKind: WorkFeedbackKind.update,
+            ),
+          );
+          return;
+        } catch (_) {
+          emit(
+            state.copyWith(
+              updateStatus: WorkActionStatus.failure,
+              lastErrorMessage:
+                  'Unable to save contract work. Please try again.',
+              feedbackKind: WorkFeedbackKind.update,
+            ),
+          );
+          return;
+        }
+      }
       emit(
         state.copyWith(
           updateStatus: WorkActionStatus.success,
