@@ -291,6 +291,8 @@ class AppLocalizations {
       _value('reportsAverageHoursPerDayLabel');
   String get reportsLastPayoutLabel => _value('reportsLastPayoutLabel');
   String get reportsTotalUnitsLabel => _value('reportsTotalUnitsLabel');
+  String get reportsTotalPaymentLabel =>
+      _value('reportsTotalPaymentLabel');
   String get reportsContractSalaryLabel =>
       _value('reportsContractSalaryLabel');
   String get reportsBreakdownSuffix => _value('reportsBreakdownSuffix');

@@ -269,6 +269,8 @@ class ContractWorkItemData {
     this.unitsCompleted,
     this.unitsPending,
     this.unitsTotal,
+    this.unitLabel,
+    this.ratePerUnit,
   });
 
   factory ContractWorkItemData.fromJson(Map<String, dynamic> json) {
@@ -324,6 +326,23 @@ class ContractWorkItemData {
         'totalUnits',
         'units',
       ]),
+      unitLabel: _parseString(json, const [
+        'unit_label',
+        'unitLabel',
+        'unit',
+        'unit_name',
+        'unitName',
+        'unit_label_display',
+        'unitLabelDisplay',
+      ]),
+      ratePerUnit: _parseNullableDouble(json, const [
+        'rate_per_unit',
+        'ratePerUnit',
+        'rate',
+        'unit_rate',
+        'unitRate',
+        'price',
+      ]),
     );
   }
 
@@ -335,6 +354,8 @@ class ContractWorkItemData {
   final int? unitsCompleted;
   final int? unitsPending;
   final int? unitsTotal;
+  final String? unitLabel;
+  final double? ratePerUnit;
 
   String resolveAmountLabel(String currencySymbol) {
     if (amountLabel != null && amountLabel!.trim().isNotEmpty) {
@@ -431,6 +452,21 @@ int? _parseNullableInt(Map<String, dynamic> json, List<String> keys) {
       final cleaned = _sanitizeNumberString(value, allowDecimal: false);
       if (cleaned.isEmpty) continue;
       final parsed = int.tryParse(cleaned);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+}
+
+double? _parseNullableDouble(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value == null) continue;
+    if (value is num) return value.toDouble();
+    if (value is String) {
+      final cleaned = _sanitizeNumberString(value);
+      if (cleaned.isEmpty) continue;
+      final parsed = double.tryParse(cleaned);
       if (parsed != null) return parsed;
     }
   }
