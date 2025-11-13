@@ -131,73 +131,102 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     _hasUserCreatedContractWork = false;
   }
 
-  Widget _buildPendingContractWorkTile({
-    required int index,
-    required PendingContractWork work,
-    required AppLocalizations l,
-  }) {
-    final roleDisplay = contractWorkFormatRoleDisplay(work.role);
+  String _resolvePendingContractTitle(
+    PendingContractWork work,
+    AppLocalizations l,
+  ) {
+    final name = work.name.trim();
+    if (name.isNotEmpty) {
+      return name;
+    }
+
+    final role = contractWorkFormatRoleDisplay(work.role).trim();
+    if (role.isNotEmpty) {
+      return role;
+    }
+
+    return l.contractWorkLabel;
+  }
+
+  String _buildPendingContractSubtitle(
+    PendingContractWork work,
+    AppLocalizations l,
+  ) {
+    final roleDisplay = contractWorkFormatRoleDisplay(work.role).trim();
     final rateText = work.ratePerUnit.toStringAsFixed(2);
     final unitLabel = resolveContractUnitLabel(
       localizations: l,
       contractName: work.name,
       unitLabel: work.unitLabel,
     );
-    final subtitle = '$roleDisplay • $rateText / $unitLabel';
+
+    final parts = <String>[];
+    if (roleDisplay.isNotEmpty) {
+      parts.add(roleDisplay);
+    }
+    parts.add('$rateText / $unitLabel');
+
+    return parts.join(' • ');
+  }
+
+  Widget _buildPendingContractSummary(
+    BuildContext context,
+    AppLocalizations l,
+  ) {
+    if (!_hasPendingContractWorks) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFBFDBFE),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A0F172A),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  work.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E3A8A),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          Text(
+            l.contractWorkSummaryTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ) ??
+                const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF475569),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
           ),
-          const SizedBox(width: 12),
-          IconButton(
-            onPressed: () => _confirmAndRemovePendingContractWork(index),
-            icon: const Icon(
-              Icons.close,
-              size: 18,
-              color: Color(0xFF1F2937),
+          const SizedBox(height: 12),
+          for (int i = 0; i < _pendingContractWorks.length; i++) ...[
+            if (i > 0)
+              const Divider(
+                height: 20,
+                thickness: 1,
+                color: Color(0xFFE2E8F0),
+              ),
+            _PendingContractListRow(
+              title: _resolvePendingContractTitle(
+                _pendingContractWorks[i],
+                l,
+              ),
+              subtitle: _buildPendingContractSubtitle(
+                _pendingContractWorks[i],
+                l,
+              ),
+              onRemove: () => _confirmAndRemovePendingContractWork(i),
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
-            tooltip: l.contractWorkRemoveEntryButton,
-          ),
+          ],
         ],
       ),
     );
@@ -599,16 +628,16 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                 ),
                               ),
                               padding:
-                              const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                                  const EdgeInsets.fromLTRB(16, 16, 16, 20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.center,
+                                        CrossAxisAlignment.center,
                                     children: [
                                       const Text(
-                                        '💼',
+                                        '📑',
                                         style: TextStyle(fontSize: 28),
                                       ),
                                       const SizedBox(width: 12),
@@ -616,14 +645,15 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                         child: Text(
                                           l.contractWorkHeader,
                                           style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                            fontWeight:
-                                            FontWeight.w700,
-                                            fontSize: 18,
-                                            color: Color(0xFF0F172A),
-                                          ) ??
+                                                  .textTheme
+                                                  .titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w700,
+                                                    fontSize: 18,
+                                                    color:
+                                                        const Color(0xFF0F172A),
+                                                  ) ??
                                               const TextStyle(
                                                 fontWeight: FontWeight.w700,
                                                 fontSize: 18,
@@ -642,21 +672,26 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                     child: Container(
                                       width: double.infinity,
                                       decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            Color(0xFF1E40AF),
-                                            Color(0xFF0EA5E9),
-                                          ],
-                                        ),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                         borderRadius:
-                                        BorderRadius.circular(30),
-                                        boxShadow: const [
+                                            BorderRadius.circular(30),
+                                        border: Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.8),
+                                          width: 1.2,
+                                        ),
+                                        boxShadow: [
                                           BoxShadow(
-                                            color: Color(0x33000000),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withOpacity(0.25),
                                             blurRadius: 10,
-                                            offset: Offset(0, 4),
+                                            offset: const Offset(0, 4),
                                           ),
                                         ],
                                       ),
@@ -666,18 +701,17 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                       ),
                                       child: Row(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                            MainAxisAlignment.center,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Text(
-                                            '+',
+                                            '📑',
                                             style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w600,
+                                              fontSize: 18,
                                             ),
                                           ),
-                                          const SizedBox(width: 12),
+                                          const SizedBox(width: 8),
                                           Flexible(
                                             child: Text(
                                               l.addContractWorkButton,
@@ -699,36 +733,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                   const SizedBox(height: 16),
 
                                   if (_hasPendingContractWorks) ...[
-                                    Text(
-                                      '${l.contractWorkLabel} (${_pendingContractWorks.length})',
-                                      style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFF1F2937),
-                                              ) ??
-                                          const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF1F2937),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Column(
-                                      children: List.generate(
-                                        _pendingContractWorks.length,
-                                        (index) => Padding(
-                                          padding:
-                                              EdgeInsets.only(bottom: index == _pendingContractWorks.length - 1 ? 0 : 12),
-                                          child: _buildPendingContractWorkTile(
-                                            index: index,
-                                            work: _pendingContractWorks[index],
-                                            l: l,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                    _buildPendingContractSummary(context, l),
                                     const SizedBox(height: 4),
                                   ],
                                 ],
@@ -2527,6 +2532,72 @@ class _WorkContractList extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _PendingContractListRow extends StatelessWidget {
+  const _PendingContractListRow({
+    required this.title,
+    required this.subtitle,
+    required this.onRemove,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  subtitle,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(
+                  Icons.close_rounded,
+                  size: 20,
+                ),
+                color: const Color(0xFFB91C1C),
+                tooltip: l.contractWorkRemoveEntryButton,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+                splashRadius: 18,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
