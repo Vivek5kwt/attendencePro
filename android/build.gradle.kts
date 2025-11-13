@@ -53,6 +53,21 @@ subprojects {
                 namespace = "com.attendancepro.flutter_native_timezone"
             }
         }
+        val manifestFile = project.projectDir.resolve("src/main/AndroidManifest.xml")
+        if (manifestFile.exists()) {
+            tasks.matching { it.name == "preBuild" }.configureEach {
+                doFirst {
+                    val originalContent = manifestFile.readText()
+                    val target = "package=\"com.whelksoft.flutter_native_timezone\""
+                    if (originalContent.contains(target)) {
+                        val updatedContent = originalContent.replace(target, "")
+                        if (originalContent != updatedContent) {
+                            manifestFile.writeText(updatedContent)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
