@@ -7,6 +7,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await LocalNotificationService.initialize();
+  await LocalNotificationService.scheduleDailyAttendanceReminder();
 
   final repo = InMemoryAttendanceRepository();
   runApp(AttendanceProApp(repository: repo));
