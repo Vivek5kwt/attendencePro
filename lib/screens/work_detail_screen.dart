@@ -3525,8 +3525,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final bool allowContractUpdates = widget.work.isContract;
       final bool isSubmitLocked =
           isFormLocked && !(allowContractUpdates && _contractFieldsEnabled);
-      final bool areHourlyFieldsLocked =
-          isFormLocked || (allowContractUpdates && _contractFieldsEnabled);
+      final bool areHourlyFieldsLocked = isFormLocked;
       final bool contractActionsLocked = !allowContractUpdates;
       return _AttendanceSection(
         dateLabel: dateLabel,
