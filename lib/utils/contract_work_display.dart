@@ -20,6 +20,20 @@ num? _tryParseNumeric(String? value) {
   return num.tryParse(normalized);
 }
 
+String _sanitizeBunchesLabel(AppLocalizations localizations, String text,
+    {String? fallback}) {
+  final cleaned = text
+      .replaceAll(RegExp(r'\b[bB]unches\b'), '')
+      .replaceAll(RegExp(r'\s{2,}'), ' ')
+      .trim();
+
+  if (cleaned.isEmpty || cleaned.toLowerCase() == 'per') {
+    return fallback ?? localizations.contractWorkUnitFallback;
+  }
+
+  return cleaned;
+}
+
 String formatContractRateValue(num rate) {
   final doubleValue = rate.toDouble();
   final isWholeNumber = doubleValue % 1 == 0;
@@ -44,7 +58,8 @@ String formatContractUnitLabel(
   if (count != null && normalizedRole != null && normalizedRole.isNotEmpty) {
     final isWholeNumber = count.roundToDouble() == count;
     final countText = isWholeNumber ? count.toInt().toString() : count.toString();
-    return 'per $countText ${normalizedRole.toLowerCase()}';
+    final label = 'per $countText ${normalizedRole.toLowerCase()}';
+    return _sanitizeBunchesLabel(localizations, label);
   }
 
   final hasSpecificFallback = normalizedFallback != null &&
@@ -52,18 +67,24 @@ String formatContractUnitLabel(
       fallbackLower != 'per unit';
 
   if (hasSpecificFallback) {
-    return normalizedFallback;
+    return _sanitizeBunchesLabel(localizations, normalizedFallback);
   }
 
   if (normalizedRole != null && normalizedRole.isNotEmpty) {
-    return 'per ${normalizedRole.toLowerCase()}';
+    return _sanitizeBunchesLabel(
+      localizations,
+      'per ${normalizedRole.toLowerCase()}',
+    );
   }
 
   if (normalizedFallback != null && normalizedFallback.isNotEmpty) {
-    return normalizedFallback;
+    return _sanitizeBunchesLabel(localizations, normalizedFallback);
   }
 
-  return localizations.contractWorkUnitFallback;
+  return _sanitizeBunchesLabel(
+    localizations,
+    localizations.contractWorkUnitFallback,
+  );
 }
 
 String buildContractRateSubtitle(
@@ -87,7 +108,9 @@ String buildContractRateSubtitle(
   final parsedRate = rate ?? _tryParseNumeric(rawPrice);
   if (parsedRate != null) {
     final rateText = formatContractRateValue(parsedRate);
-    return '$resolvedPrefix$rateText / $unitText';
+    final label = '$resolvedPrefix$rateText / $unitText';
+    return _sanitizeBunchesLabel(localizations, label,
+        fallback: '$resolvedPrefix$rateText');
   }
 
   final rawPriceText = rawPrice?.trim();
@@ -96,11 +119,19 @@ String buildContractRateSubtitle(
     final containsUnit = normalizedUnit.isNotEmpty &&
         rawPriceText.toLowerCase().contains(normalizedUnit.toLowerCase());
     if (containsUnit) {
-      return rawPriceText;
+      return _sanitizeBunchesLabel(localizations, rawPriceText,
+          fallback: normalizedUnit.isNotEmpty ? normalizedUnit : null);
     }
     return normalizedUnit.isNotEmpty
-        ? '$rawPriceText $normalizedUnit'.trim()
-        : rawPriceText;
+        ? _sanitizeBunchesLabel(
+            localizations,
+            '$rawPriceText $normalizedUnit'.trim(),
+            fallback: rawPriceText,
+          )
+        : _sanitizeBunchesLabel(
+            localizations,
+            rawPriceText,
+          );
   }
 
   return unitText;
