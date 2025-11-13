@@ -45,7 +45,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
 
     final profile = await _repository.loadUserProfile();
     try {
-      final works = await _repository.fetchWorks();
+      final fetchedWorks = await _repository.fetchWorks();
+      final works = _arrangeWorks(fetchedWorks);
       emit(
         state.copyWith(
           loadStatus: WorkLoadStatus.success,
@@ -118,7 +119,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     );
 
     try {
-      final works = await _repository.fetchWorks();
+      final fetchedWorks = await _repository.fetchWorks();
+      final works = _arrangeWorks(fetchedWorks);
       emit(
         state.copyWith(
           isRefreshing: false,
@@ -183,9 +185,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
-      final works = await _repository.fetchWorks();
+      final fetchedWorks = await _repository.fetchWorks();
       Work? createdWork;
-      for (final work in works) {
+      for (final work in fetchedWorks) {
         if (!previousWorkIds.contains(work.id)) {
           createdWork = work;
           break;
@@ -228,6 +230,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         }
       }
 
+      final works = _arrangeWorks(fetchedWorks);
       emit(
         state.copyWith(
           addStatus: WorkActionStatus.success,
@@ -306,9 +309,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
-      final works = await _repository.fetchWorks();
+      final fetchedWorks = await _repository.fetchWorks();
       Work? updatedWork;
-      for (final work in works) {
+      for (final work in fetchedWorks) {
         if (work.id == event.work.id) {
           updatedWork = work;
           break;
@@ -350,6 +353,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           return;
         }
       }
+      final works = _arrangeWorks(fetchedWorks);
       emit(
         state.copyWith(
           updateStatus: WorkActionStatus.success,
@@ -500,21 +504,10 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         previousOrder[state.works[i].id] = i;
       }
 
-      final works = List<Work>.from(fetchedWorks);
-      if (previousOrder.isNotEmpty) {
-        final fallbackStart = previousOrder.length;
-        final fallbackIndices = <String, int>{};
-        for (var i = 0; i < fetchedWorks.length; i++) {
-          final work = fetchedWorks[i];
-          final previousIndex = previousOrder[work.id];
-          fallbackIndices[work.id] = previousIndex ?? (fallbackStart + i);
-        }
-
-        works.sort(
-          (a, b) => (fallbackIndices[a.id] ?? fallbackStart)
-              .compareTo(fallbackIndices[b.id] ?? fallbackStart),
-        );
-      }
+      final works = _arrangeWorks(
+        fetchedWorks,
+        previousOrder: previousOrder,
+      );
 
       emit(
         state.copyWith(
@@ -575,5 +568,45 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
 
   void _onCleared(WorkCleared event, Emitter<WorkState> emit) {
     emit(const WorkState());
+  }
+
+  List<Work> _arrangeWorks(
+    List<Work> works, {
+    Map<String, int>? previousOrder,
+  }) {
+    if (works.isEmpty) {
+      return const <Work>[];
+    }
+
+    final ordered = List<Work>.from(works);
+    if (previousOrder != null && previousOrder.isNotEmpty) {
+      final fallbackStart = previousOrder.length;
+      final fallbackIndices = <String, int>{};
+      for (var i = 0; i < ordered.length; i++) {
+        final work = ordered[i];
+        final previousIndex = previousOrder[work.id];
+        fallbackIndices[work.id] = previousIndex ?? (fallbackStart + i);
+      }
+      ordered.sort(
+        (a, b) => (fallbackIndices[a.id] ?? fallbackStart)
+            .compareTo(fallbackIndices[b.id] ?? fallbackStart),
+      );
+    }
+
+    final active = <Work>[];
+    final inactive = <Work>[];
+    for (final work in ordered) {
+      if (work.isActive) {
+        active.add(work);
+      } else {
+        inactive.add(work);
+      }
+    }
+
+    if (active.isEmpty) {
+      return ordered;
+    }
+
+    return [...active, ...inactive];
   }
 }
