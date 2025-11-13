@@ -1496,26 +1496,47 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
           final name = _normalizeWorkContractText(map['name']) ??
               _normalizeWorkContractText(map['title']);
-          final type = _normalizeWorkContractText(map['type']) ??
-              _normalizeWorkContractText(map['role']);
+          final rawType = _normalizeWorkContractText(map['type']);
+          final rawRole = _normalizeWorkContractText(map['role']);
+          final type = rawType ?? rawRole;
           final combinedTitle = _combineWorkContractTitle(name, type);
           final rate = _parseWorkContractRate(map);
           final rawPrice = _normalizeWorkContractText(map['price']);
           final unitLabel = _extractWorkContractUnitLabel(map);
+          final count = _parseWorkContractCount(map);
           final contractId = _extractWorkContractId(map);
 
           var subtitle = '';
           if (rate != null) {
-            subtitle =
+            final rateText =
                 _formatCurrencyDisplay(rate.toStringAsFixed(2), currencyPrefix);
+            final unitText = _formatContractUnitLabel(
+              l,
+              count: count,
+              role: rawRole ?? rawType,
+              fallback: unitLabel,
+            );
+            subtitle = '$rateText / $unitText';
           } else if (rawPrice != null && rawPrice.isNotEmpty) {
             subtitle = rawPrice;
+            final unitText = _formatContractUnitLabel(
+              l,
+              count: count,
+              role: rawRole ?? rawType,
+              fallback: unitLabel,
+            );
+            if (!subtitle.contains(unitText)) {
+              subtitle = '$subtitle $unitText';
+            }
           }
 
-          if (unitLabel != null && unitLabel.isNotEmpty) {
-            subtitle = subtitle.isEmpty
-                ? unitLabel
-                : '$subtitle ${unitLabel.trim()}';
+          if (subtitle.isEmpty) {
+            subtitle = _formatContractUnitLabel(
+              l,
+              count: count,
+              role: rawRole ?? rawType,
+              fallback: unitLabel,
+            );
           }
 
           final resolvedTitle = combinedTitle.isNotEmpty
@@ -1595,6 +1616,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       String? role;
       String? type;
       String? unitLabel;
+      num? count;
       num? rate;
 
       try {
@@ -1613,6 +1635,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         unitLabel = readString(result.unitLabel);
       } catch (_) {}
       try {
+        final dynamic countValue = result.count;
+        count = _parseNumericValue(countValue);
+      } catch (_) {}
+      try {
         final dynamic rateValue = result.rate;
         if (rateValue is num) {
           rate = rateValue;
@@ -1626,13 +1652,34 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
       var subtitle = '';
       if (rate != null) {
-        subtitle =
-            _formatCurrencyDisplay(rate.toDouble().toStringAsFixed(2), currencyPrefix);
+        final rateText = _formatCurrencyDisplay(
+          rate.toDouble().toStringAsFixed(2),
+          currencyPrefix,
+        );
+        final unitText = _formatContractUnitLabel(
+          l,
+          count: count,
+          role: role ?? type,
+          fallback: unitLabel,
+        );
+        subtitle = '$rateText / $unitText';
+      } else if (unitLabel != null && unitLabel.isNotEmpty) {
+        final unitText = _formatContractUnitLabel(
+          l,
+          count: count,
+          role: role ?? type,
+          fallback: unitLabel,
+        );
+        subtitle = unitText;
       }
-      if (unitLabel != null && unitLabel.isNotEmpty) {
-        subtitle = subtitle.isEmpty
-            ? unitLabel
-            : '$subtitle ${unitLabel.trim()}';
+
+      if (subtitle.isEmpty) {
+        subtitle = _formatContractUnitLabel(
+          l,
+          count: count,
+          role: role ?? type,
+          fallback: unitLabel,
+        );
       }
       if (subtitle.isEmpty) {
         subtitle = l.notAvailableLabel;
@@ -1781,6 +1828,42 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return null;
   }
 
+  num? _parseWorkContractCount(Map<String, dynamic> data) {
+    const keys = <String>[
+      'count',
+      'quantity',
+      'qty',
+      'unit_count',
+      'unitCount',
+    ];
+    for (final key in keys) {
+      final value = data[key];
+      final parsed = _parseNumericValue(value);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  num? _parseNumericValue(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value;
+    }
+    if (value is String) {
+      final sanitized = value.replaceAll(RegExp(r'[^0-9,.-]'), '');
+      if (sanitized.isEmpty) {
+        return null;
+      }
+      final normalized = sanitized.replaceAll(',', '');
+      return num.tryParse(normalized);
+    }
+    return null;
+  }
+
   String? _extractWorkContractUnitLabel(Map<String, dynamic> data) {
     const keys = <String>[
       'unit_label',
@@ -1798,6 +1881,32 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       }
     }
     return null;
+  }
+
+  String _formatContractUnitLabel(
+    AppLocalizations localizations, {
+    num? count,
+    String? role,
+    String? fallback,
+  }) {
+    final normalizedFallback = fallback?.trim();
+    final normalizedRole = role?.trim();
+
+    if (count != null && normalizedRole != null && normalizedRole.isNotEmpty) {
+      final isWholeNumber = count.roundToDouble() == count;
+      final countText = isWholeNumber ? count.toInt().toString() : count.toString();
+      return 'per $countText ${normalizedRole.toLowerCase()}';
+    }
+
+    if (normalizedFallback != null && normalizedFallback.isNotEmpty) {
+      return normalizedFallback;
+    }
+
+    if (normalizedRole != null && normalizedRole.isNotEmpty) {
+      return 'per ${normalizedRole.toLowerCase()}';
+    }
+
+    return localizations.contractWorkUnitFallback;
   }
 
   String _combineWorkContractTitle(String? name, String? type) {
