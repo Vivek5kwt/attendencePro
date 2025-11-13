@@ -1464,7 +1464,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
   List<_WorkContractDisplay> _resolveWorkContracts(Work work) {
     final l = AppLocalizations.of(widget.rootContext);
-    final currencyPrefix = _resolveCurrencySymbol() ?? '£';
     final items = <_WorkContractDisplay>[];
 
     void addItem(String? rawTitle, String? rawSubtitle, {String? id}) {
@@ -1506,38 +1505,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final count = _parseWorkContractCount(map);
           final contractId = _extractWorkContractId(map);
 
-          var subtitle = '';
-          if (rate != null) {
-            final rateText =
-                _formatCurrencyDisplay(rate.toStringAsFixed(2), currencyPrefix);
-            final unitText = _formatContractUnitLabel(
-              l,
-              count: count,
-              role: rawRole ?? rawType,
-              fallback: unitLabel,
-            );
-            subtitle = '$rateText / $unitText';
-          } else if (rawPrice != null && rawPrice.isNotEmpty) {
-            subtitle = rawPrice;
-            final unitText = _formatContractUnitLabel(
-              l,
-              count: count,
-              role: rawRole ?? rawType,
-              fallback: unitLabel,
-            );
-            if (!subtitle.contains(unitText)) {
-              subtitle = '$subtitle $unitText';
-            }
-          }
-
-          if (subtitle.isEmpty) {
-            subtitle = _formatContractUnitLabel(
-              l,
-              count: count,
-              role: rawRole ?? rawType,
-              fallback: unitLabel,
-            );
-          }
+          final subtitle = _buildContractSubtitleText(
+            l,
+            rate: rate,
+            rawPrice: rawPrice,
+            count: count,
+            role: rawRole ?? rawType,
+            fallbackUnitLabel: unitLabel,
+          );
 
           final resolvedTitle = combinedTitle.isNotEmpty
               ? combinedTitle
@@ -1648,39 +1623,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       } catch (_) {}
 
       final l = AppLocalizations.of(widget.rootContext);
-      final currencyPrefix = _resolveCurrencySymbol() ?? '£';
 
-      var subtitle = '';
-      if (rate != null) {
-        final rateText = _formatCurrencyDisplay(
-          rate.toDouble().toStringAsFixed(2),
-          currencyPrefix,
-        );
-        final unitText = _formatContractUnitLabel(
-          l,
-          count: count,
-          role: role ?? type,
-          fallback: unitLabel,
-        );
-        subtitle = '$rateText / $unitText';
-      } else if (unitLabel != null && unitLabel.isNotEmpty) {
-        final unitText = _formatContractUnitLabel(
-          l,
-          count: count,
-          role: role ?? type,
-          fallback: unitLabel,
-        );
-        subtitle = unitText;
-      }
-
-      if (subtitle.isEmpty) {
-        subtitle = _formatContractUnitLabel(
-          l,
-          count: count,
-          role: role ?? type,
-          fallback: unitLabel,
-        );
-      }
+      var subtitle = _buildContractSubtitleText(
+        l,
+        rate: rate,
+        count: count,
+        role: role ?? type,
+        fallbackUnitLabel: unitLabel,
+      );
       if (subtitle.isEmpty) {
         subtitle = l.notAvailableLabel;
       }
@@ -1909,6 +1859,56 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     return localizations.contractWorkUnitFallback;
   }
 
+  String _buildContractSubtitleText(
+    AppLocalizations localizations, {
+    num? rate,
+    String? rawPrice,
+    num? count,
+    String? role,
+    String? fallbackUnitLabel,
+  }) {
+    final unitText = _formatContractUnitLabel(
+      localizations,
+      count: count,
+      role: role,
+      fallback: fallbackUnitLabel,
+    );
+
+    final parsedRate = rate ?? _parseNumericValue(rawPrice);
+    if (parsedRate != null) {
+      final rateText = _formatContractRateValue(parsedRate);
+      return '€$rateText / $unitText';
+    }
+
+    if (rawPrice != null) {
+      final trimmed = rawPrice.trim();
+      if (trimmed.isNotEmpty) {
+        final normalizedUnit = unitText.trim();
+        final containsUnit = normalizedUnit.isNotEmpty &&
+            trimmed.toLowerCase().contains(normalizedUnit.toLowerCase());
+        if (containsUnit) {
+          return trimmed;
+        }
+        return normalizedUnit.isNotEmpty
+            ? '$trimmed $normalizedUnit'.trim()
+            : trimmed;
+      }
+    }
+
+    return unitText;
+  }
+
+  String _formatContractRateValue(num rate) {
+    final doubleValue = rate.toDouble();
+    final isWholeNumber = doubleValue % 1 == 0;
+    if (isWholeNumber) {
+      return doubleValue.toStringAsFixed(1);
+    }
+    final formatted = doubleValue.toStringAsFixed(2);
+    final trimmed = formatted.replaceFirst(RegExp(r'0+$'), '');
+    return trimmed.replaceFirst(RegExp(r'\.$'), '');
+  }
+
   String _combineWorkContractTitle(String? name, String? type) {
     final nameText = name?.trim() ?? '';
     final typeText = _formatWorkContractTypeLabel(type);
@@ -1933,20 +1933,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       return text.toUpperCase();
     }
     return '${text[0].toUpperCase()}${text.substring(1)}';
-  }
-
-  String _formatCurrencyDisplay(String value, String prefix) {
-    final trimmedValue = value.trim();
-    final trimmedPrefix = prefix.trim();
-    if (trimmedValue.isEmpty) {
-      return trimmedPrefix.isEmpty ? value : trimmedPrefix;
-    }
-    if (trimmedPrefix.isEmpty) {
-      return trimmedValue;
-    }
-    final addSpace =
-        prefix.trimRight() != prefix || trimmedPrefix.length > 1;
-    return addSpace ? '$trimmedPrefix $trimmedValue' : '$trimmedPrefix$trimmedValue';
   }
 
   Widget _buildContractTypeTile(
