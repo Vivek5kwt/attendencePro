@@ -183,6 +183,8 @@ class AppLocalizations {
       _value('contractWorkTypeDeleteFailedMessage');
   String get contractWorkNoEntriesLabel =>
       _value('contractWorkNoEntriesLabel');
+  String get contractWorkEmptyHelperText =>
+      _value('contractWorkEmptyHelperText');
   String get contractWorkAllTypesAddedMessage =>
       _value('contractWorkAllTypesAddedMessage');
   String get contractWorkLastUpdatedLabel =>

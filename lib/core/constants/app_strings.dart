@@ -170,7 +170,10 @@ abstract final class AppString {
       'contractWorkTypeDeletedMessage': 'Contract type deleted.',
       'contractWorkTypeDeleteFailedMessage':
           'Unable to delete contract type. Please try again.',
-      'contractWorkNoEntriesLabel': 'No contract entries recorded yet.',
+      'contractWorkNoEntriesLabel':
+          'No contract items available for this job.',
+      'contractWorkEmptyHelperText':
+          'Tap "Add Contract Work" to create your first contract item for this job.',
       'contractWorkAllTypesAddedMessage':
           'All contract work types are already added.',
       'contractWorkLastUpdatedLabel': 'Last updated',
@@ -373,7 +376,7 @@ abstract final class AppString {
           'Manage piece-rate items like Ravanello, Radish, Carrot or add your own.',
       'contractWorkCustomTypesTitle': 'Your contract types',
       'contractWorkNoCustomTypesLabel':
-          'No contract type added yet. Please add a new contract in Work Details.',
+          'No contract work has been added for this job yet.',
       'contractWorkLoadError': 'Unable to load contract types right now.',
       'cancelButton': 'Cancel',
       'saveButtonLabel': 'Save',
@@ -603,7 +606,10 @@ abstract final class AppString {
       'contractWorkTypeDeletedMessage': 'कॉन्ट्रैक्ट प्रकार हटाया गया।',
       'contractWorkTypeDeleteFailedMessage':
           'कॉन्ट्रैक्ट प्रकार हटाया नहीं जा सका। कृपया पुनः प्रयास करें।',
-      'contractWorkNoEntriesLabel': 'कोई कॉन्ट्रैक्ट प्रविष्टि दर्ज नहीं है।',
+      'contractWorkNoEntriesLabel':
+          'इस काम के लिए कोई कॉन्ट्रैक्ट आइटम उपलब्ध नहीं है।',
+      'contractWorkEmptyHelperText':
+          'अपना पहला कॉन्ट्रैक्ट जोड़ने के लिए "ठेका कार्य जोड़ें" पर टैप करें।',
       'contractWorkAllTypesAddedMessage':
           'सभी कॉन्ट्रैक्ट कार्य प्रकार पहले से जोड़े जा चुके हैं।',
       'contractWorkLastUpdatedLabel': 'आखिरी अपडेट',
@@ -638,7 +644,7 @@ abstract final class AppString {
       'profileLoadingFailed': 'प्रोफ़ाइल विवरण लोड नहीं हो सके।',
       'contractWorkCustomTypesTitle': 'आपके कॉन्ट्रैक्ट प्रकार',
       'contractWorkNoCustomTypesLabel':
-          'अभी कोई कॉन्ट्रैक्ट प्रकार नहीं जोड़ा गया है। कृपया वर्क विवरण में नया कॉन्ट्रैक्ट जोड़ें।',
+          'इस काम के लिए अभी कोई कॉन्ट्रैक्ट कार्य नहीं जोड़ा गया है।',
       'contractWorkLoadError': 'अभी कॉन्ट्रैक्ट प्रकार लोड नहीं हो पाए।',
       'changeLanguageLabel': 'भाषा बदलें',
       'helpSupportLabel': 'मदद और समर्थन',
@@ -1037,7 +1043,10 @@ abstract final class AppString {
       'contractWorkTypeDeletedMessage': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਈ ਗਈ ਹੈ।',
       'contractWorkTypeDeleteFailedMessage':
           'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਮਿਟਾਈ ਨਹੀਂ ਜਾ ਸਕੀ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
-      'contractWorkNoEntriesLabel': 'ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਐਂਟਰੀ ਰਿਕਾਰਡ ਨਹੀਂ ਹੈ।',
+      'contractWorkNoEntriesLabel':
+          'ਇਸ ਕੰਮ ਲਈ ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਆਈਟਮ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।',
+      'contractWorkEmptyHelperText':
+          'ਆਪਣਾ ਪਹਿਲਾ ਕਾਂਟ੍ਰੈਕਟ ਬਣਾਉਣ ਲਈ "ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ" ਤੇ ਟੈਪ ਕਰੋ।',
       'contractWorkAllTypesAddedMessage':
           'ਸਾਰੇ ਕਰਾਰ ਕੰਮ ਕਿਸਮਾਂ ਪਹਿਲਾਂ ਹੀ ਜੋੜੀਆਂ ਜਾ ਚੁੱਕੀਆਂ ਹਨ।',
       'contractWorkLastUpdatedLabel': 'ਆਖਰੀ ਅਪਡੇਟ',
@@ -1072,7 +1081,7 @@ abstract final class AppString {
       'profileLoadingFailed': 'ਪ੍ਰੋਫ਼ਾਈਲ ਵੇਰਵੇ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।',
       'contractWorkCustomTypesTitle': 'ਤੁਹਾਡੀਆਂ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ',
       'contractWorkNoCustomTypesLabel':
-          'ਹਾਲੇ ਤੱਕ ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਨਹੀਂ ਜੋੜੀ ਗਈ। ਕਿਰਪਾ ਕਰਕੇ ਵਰਕ ਵੇਰਵਿਆਂ ਵਿੱਚ ਨਵਾਂ ਕਾਂਟ੍ਰੈਕਟ ਸ਼ਾਮਲ ਕਰੋ।',
+          'ਇਸ ਕੰਮ ਲਈ ਹਾਲੇ ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਵਰਕ ਨਹੀਂ ਜੋੜਿਆ ਗਿਆ।',
       'contractWorkLoadError': 'ਇਸ ਵੇਲੇ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮਾਂ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ।',
       'changeLanguageLabel': 'ਭਾਸ਼ਾ ਬਦਲੋ',
       'helpSupportLabel': 'ਸਹਾਇਤਾ ਅਤੇ ਸਮਰਥਨ',
@@ -1475,7 +1484,10 @@ abstract final class AppString {
       'contractWorkTypeDeletedMessage': 'Tipo di contratto eliminato.',
       'contractWorkTypeDeleteFailedMessage':
           'Impossibile eliminare il tipo di contratto. Riprova.',
-      'contractWorkNoEntriesLabel': 'Nessuna registrazione contratto.',
+      'contractWorkNoEntriesLabel':
+          'Nessun elemento a contratto disponibile per questa attività.',
+      'contractWorkEmptyHelperText':
+          'Tocca "Aggiungi Lavoro a Contratto" per creare il tuo primo elemento a contratto.',
       'contractWorkAllTypesAddedMessage':
           'Tutti i tipi di lavoro a contratto sono già stati aggiunti.',
       'contractWorkLastUpdatedLabel': 'Ultimo aggiornamento',
@@ -1510,7 +1522,7 @@ abstract final class AppString {
       'profileLoadingFailed': 'Impossibile caricare i dettagli del profilo.',
       'contractWorkCustomTypesTitle': 'I tuoi tipi di contratto',
       'contractWorkNoCustomTypesLabel':
-          'Nessun tipo di contratto aggiunto. Aggiungi un nuovo contratto nei dettagli del lavoro.',
+          'Non hai ancora aggiunto lavori a contratto per questa attività.',
       'contractWorkLoadError': 'Impossibile caricare i tipi di contratto in questo momento.',
       'changeLanguageLabel': 'Cambia lingua',
       'helpSupportLabel': 'Assistenza',

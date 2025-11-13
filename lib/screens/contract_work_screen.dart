@@ -785,6 +785,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                               ? l.contractWorkNoCustomTypesLabel
                               : l.contractWorkNoEntriesLabel,
                           onRetry: _handleRefresh,
+                          onEmptyAction: _showContractTypeDialog,
+                          emptyActionLabel: l.addContractWorkButton,
                         ),
 
                         SizedBox(height: responsive.scale(28)),
@@ -1858,6 +1860,8 @@ class _ContractSummaryTable extends StatelessWidget {
     this.isLoading = false,
     this.error,
     this.onRetry,
+    this.onEmptyAction,
+    this.emptyActionLabel,
   });
 
   final String title;
@@ -1866,6 +1870,8 @@ class _ContractSummaryTable extends StatelessWidget {
   final String? error;
   final String emptyMessage;
   final VoidCallback? onRetry;
+  final VoidCallback? onEmptyAction;
+  final String? emptyActionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1957,7 +1963,102 @@ class _ContractSummaryTable extends StatelessWidget {
         }
       }
     } else {
-      tableRows.add(buildStatusMessage(emptyMessage));
+      tableRows.add(
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: responsive.scale(16),
+            vertical: responsive.scale(24),
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE0EAFF), Color(0xFFF5F8FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(responsive.scale(18)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(responsive.scale(20)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: responsive.scale(64),
+                    width: responsive.scale(64),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF2563EB),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(responsive.scale(14)),
+                      child: Image.asset(
+                        AppAssets.contractWork,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: responsive.scale(16)),
+                  Text(
+                    emptyMessage,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1E3A8A),
+                      fontSize: responsive.scaleText(15),
+                    ) ??
+                        TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E3A8A),
+                          fontSize: responsive.scaleText(15),
+                        ),
+                  ),
+                  SizedBox(height: responsive.scale(12)),
+                  Text(
+                    l.contractWorkEmptyHelperText,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF1F2937),
+                      fontSize: responsive.scaleText(13),
+                    ) ??
+                        TextStyle(
+                          color: const Color(0xFF1F2937),
+                          fontSize: responsive.scaleText(13),
+                        ),
+                  ),
+                  if (onEmptyAction != null) ...[
+                    SizedBox(height: responsive.scale(18)),
+                    FilledButton.icon(
+                      onPressed: onEmptyAction,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.scale(20),
+                          vertical: responsive.scale(12),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            responsive.scale(14),
+                          ),
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: responsive.scaleText(14),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline, size: 20),
+                      label: Text(
+                        emptyActionLabel ?? l.addContractWorkButton,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return Container(
