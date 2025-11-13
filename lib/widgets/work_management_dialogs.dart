@@ -15,6 +15,7 @@ import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import '../screens/contract_work_screen.dart';
+import '../utils/contract_work_display.dart';
 import '../utils/contract_unit_label.dart';
 
 Future<void> _clearStoredAddWorkContractDrafts() async {
@@ -1042,7 +1043,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     final currencySymbol =
         _resolveCurrencySymbol(type.additionalData) ?? _resolveCurrencySymbol() ?? '€';
 
-    return _buildContractSubtitleText(
+    return buildContractRateSubtitle(
       localizations,
       rate: type.rate,
       rawPrice: rawPriceText,
@@ -1414,7 +1415,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final count = _parseWorkContractCount(map);
           final contractId = _extractWorkContractId(map);
 
-          final subtitle = _buildContractSubtitleText(
+          final subtitle = buildContractRateSubtitle(
             l,
             rate: rate,
             rawPrice: rawPrice,
@@ -1568,7 +1569,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
       final l = AppLocalizations.of(widget.rootContext);
 
-      var subtitle = _buildContractSubtitleText(
+      var subtitle = buildContractRateSubtitle(
         l,
         rate: rate,
         count: count,
@@ -1815,93 +1816,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       }
     }
     return null;
-  }
-
-  String _formatContractUnitLabel(
-    AppLocalizations localizations, {
-    num? count,
-    String? role,
-    String? fallback,
-  }) {
-    final normalizedFallback = fallback?.trim();
-    final fallbackLower = normalizedFallback?.toLowerCase();
-    final normalizedRole = role?.trim();
-
-    if (count != null && normalizedRole != null && normalizedRole.isNotEmpty) {
-      final isWholeNumber = count.roundToDouble() == count;
-      final countText = isWholeNumber ? count.toInt().toString() : count.toString();
-      return 'per $countText ${normalizedRole.toLowerCase()}';
-    }
-
-    final hasSpecificFallback = normalizedFallback != null &&
-        normalizedFallback.isNotEmpty &&
-        fallbackLower != 'per unit';
-
-    if (hasSpecificFallback) {
-      return normalizedFallback;
-    }
-
-    if (normalizedRole != null && normalizedRole.isNotEmpty) {
-      return 'per ${normalizedRole.toLowerCase()}';
-    }
-
-    if (normalizedFallback != null && normalizedFallback.isNotEmpty) {
-      return normalizedFallback;
-    }
-
-    return localizations.contractWorkUnitFallback;
-  }
-
-  String _buildContractSubtitleText(
-    AppLocalizations localizations, {
-    num? rate,
-    String? rawPrice,
-    num? count,
-    String? role,
-    String? fallbackUnitLabel,
-    String? currencySymbol,
-  }) {
-    final unitText = _formatContractUnitLabel(
-      localizations,
-      count: count,
-      role: role,
-      fallback: fallbackUnitLabel,
-    );
-
-    final parsedRate = rate ?? _parseNumericValue(rawPrice);
-    if (parsedRate != null) {
-      final rateText = _formatContractRateValue(parsedRate);
-      final prefix = currencySymbol ?? '€';
-      return '$prefix$rateText / $unitText';
-    }
-
-    if (rawPrice != null) {
-      final trimmed = rawPrice.trim();
-      if (trimmed.isNotEmpty) {
-        final normalizedUnit = unitText.trim();
-        final containsUnit = normalizedUnit.isNotEmpty &&
-            trimmed.toLowerCase().contains(normalizedUnit.toLowerCase());
-        if (containsUnit) {
-          return trimmed;
-        }
-        return normalizedUnit.isNotEmpty
-            ? '$trimmed $normalizedUnit'.trim()
-            : trimmed;
-      }
-    }
-
-    return unitText;
-  }
-
-  String _formatContractRateValue(num rate) {
-    final doubleValue = rate.toDouble();
-    final isWholeNumber = doubleValue % 1 == 0;
-    if (isWholeNumber) {
-      return doubleValue.toStringAsFixed(1);
-    }
-    final formatted = doubleValue.toStringAsFixed(2);
-    final trimmed = formatted.replaceFirst(RegExp(r'0+$'), '');
-    return trimmed.replaceFirst(RegExp(r'\.$'), '');
   }
 
   String _combineWorkContractTitle(String? name, String? type) {

@@ -15,6 +15,7 @@ import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/reports_repository.dart';
+import '../utils/contract_work_display.dart';
 import '../utils/contract_unit_label.dart';
 import '../utils/responsive.dart';
 
@@ -65,7 +66,6 @@ List<String> contractWorkBuildAvailableRoles<T>({
     final key = formatted.toLowerCase();
     unique.putIfAbsent(key, () => formatted);
   }
-
   void addRole(String? value) {
     final roleValue = value?.trim();
     if (roleValue == null || roleValue.isEmpty) return;
@@ -270,14 +270,25 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     if (types.isEmpty) return const <_ContractSummaryRow>[];
     return List<_ContractSummaryRow>.generate(types.length, (i) {
       final t = types[i];
+      final metadata = t.additionalData;
+      final count = _summaryExtractContractCount(metadata);
+      final role = _summaryExtractContractRole(metadata) ?? t.role;
+      final fallbackUnitLabel = _summaryExtractContractUnitLabel(metadata) ??
+          (t.unitLabel.isNotEmpty ? t.unitLabel : null);
+      final currencySymbol =
+          _summaryExtractCurrencySymbol(metadata) ?? '€';
+      final unitsLabel = buildContractRateSubtitle(
+        l,
+        rate: t.rate,
+        count: count,
+        role: role,
+        fallbackUnitLabel: fallbackUnitLabel,
+        currencySymbol: currencySymbol,
+      );
       return _ContractSummaryRow(
         index: i + 1,
         workName: t.name,
-        units: resolveContractUnitLabel(
-          localizations: l,
-          contractName: t.name,
-          unitLabel: t.unitLabel,
-        ),
+        units: unitsLabel,
         payment: t.displayRate,
       );
     });
@@ -296,13 +307,37 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       return _ContractSummaryRow(
         index: index + 1,
         workName: item.title,
-        units: _formatUnitsLabel(item, l),
+        units: _formatUnitsLabel(item, l, currencySymbol),
         payment: item.resolveAmountLabel(currencySymbol),
       );
     });
   }
 
-  String _formatUnitsLabel(ContractWorkItemData item, AppLocalizations l) {
+  String _formatUnitsLabel(
+    ContractWorkItemData item,
+    AppLocalizations l,
+    String currencySymbol,
+  ) {
+    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
+    final hasMetadata =
+        item.ratePerUnit != null || item.unitCount != null || (item.unitRole?.trim().isNotEmpty ?? false);
+    if (hasMetadata) {
+      final fallbackUnit = item.unitLabel?.trim();
+      final resolvedFallback =
+          (fallbackUnit != null && fallbackUnit.isNotEmpty) ? fallbackUnit : null;
+      final subtitle = buildContractRateSubtitle(
+        l,
+        rate: item.ratePerUnit,
+        count: item.unitCount,
+        role: item.unitRole,
+        fallbackUnitLabel: resolvedFallback,
+        currencySymbol: normalizedSymbol,
+      );
+      if (subtitle.trim().isNotEmpty) {
+        return subtitle;
+      }
+    }
+
     final subtitle = item.subtitle.trim();
     if (subtitle.isNotEmpty) return subtitle;
 
@@ -316,6 +351,148 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       return '$completed ${l.contractWorkUnitsLabel}';
     }
     return l.notAvailableLabel;
+  }
+
+  num? _summaryExtractContractCount(Map<String, dynamic> data) {
+    if (data.isEmpty) return null;
+    const keys = <String>[
+      'count',
+      'quantity',
+      'qty',
+      'unit_count',
+      'unitCount',
+      'unit_quantity',
+      'unitQuantity',
+      'per_count',
+      'perCount',
+      'units',
+      'unit_size',
+      'unitSize',
+      'bundle_size',
+      'bundleSize',
+    ];
+    for (final key in keys) {
+      final parsed = _summaryParseNumericValue(data[key]);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    return null;
+  }
+
+  String? _summaryExtractContractRole(Map<String, dynamic> data) {
+    if (data.isEmpty) return null;
+    const keys = <String>[
+      'role',
+      'contract_role',
+      'contractRole',
+      'role_name',
+      'roleName',
+      'unit_name',
+      'unitName',
+      'unit',
+      'unit_display',
+      'unitDisplay',
+      'type',
+      'contract_type',
+      'contractType',
+      'subtype',
+      'contract_subtype',
+      'contractSubtype',
+    ];
+
+    for (final key in keys) {
+      final value = _summaryNormalizeText(data[key]);
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  String? _summaryExtractContractUnitLabel(Map<String, dynamic> data) {
+    if (data.isEmpty) return null;
+    const keys = <String>[
+      'unit_label',
+      'unitLabel',
+      'unit',
+      'unit_name',
+      'unitName',
+      'unit_display',
+      'unitDisplay',
+      'label',
+    ];
+    for (final key in keys) {
+      final value = _summaryNormalizeText(data[key]);
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  String? _summaryExtractCurrencySymbol(Map<String, dynamic> data) {
+    if (data.isEmpty) return null;
+    const keys = <String>[
+      'currency_symbol',
+      'currencySymbol',
+      'currency',
+      'currencyCode',
+      'currencyPrefix',
+    ];
+    for (final key in keys) {
+      final value = data[key];
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isEmpty) {
+          continue;
+        }
+        final isAlphabetic = trimmed.length == 3 &&
+            trimmed.codeUnits.every(
+              (unit) =>
+                  (unit >= 65 && unit <= 90) || (unit >= 97 && unit <= 122),
+            );
+        if (isAlphabetic) {
+          return '$trimmed ';
+        }
+        return trimmed;
+      }
+    }
+    return null;
+  }
+
+  num? _summaryParseNumericValue(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value;
+    }
+    if (value is String) {
+      final sanitized = value.replaceAll(RegExp(r'[^0-9,.-]'), '');
+      if (sanitized.isEmpty) {
+        return null;
+      }
+      final normalized = sanitized.replaceAll(',', '');
+      return num.tryParse(normalized);
+    }
+    return null;
+  }
+
+  String? _summaryNormalizeText(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    if (value is num) {
+      return value.toString();
+    }
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
   }
 
   Future<void> _handleRefresh() async {
@@ -2285,6 +2462,7 @@ class _ContractType {
     this.isDefault = false,
     this.isUserDefined = false,
     this.lastUpdated,
+    this.additionalData = const <String, dynamic>{},
   });
 
   factory _ContractType.fromModel({
@@ -2302,6 +2480,7 @@ class _ContractType {
       isDefault: isDefaultType,
       isUserDefined: isUserDefined ?? !isDefaultType,
       lastUpdated: type.updatedAt,
+      additionalData: type.additionalData,
     );
   }
 
@@ -2314,6 +2493,7 @@ class _ContractType {
   final bool isDefault;
   final bool isUserDefined;
   final DateTime? lastUpdated;
+  final Map<String, dynamic> additionalData;
 
   _ContractType copyWith({
     String? id,
@@ -2325,6 +2505,7 @@ class _ContractType {
     bool? isDefault,
     bool? isUserDefined,
     DateTime? lastUpdated,
+    Map<String, dynamic>? additionalData,
   }) {
     return _ContractType(
       id: id ?? this.id,
@@ -2336,6 +2517,7 @@ class _ContractType {
       isDefault: isDefault ?? this.isDefault,
       isUserDefined: isUserDefined ?? this.isUserDefined,
       lastUpdated: lastUpdated ?? this.lastUpdated,
+      additionalData: additionalData ?? this.additionalData,
     );
   }
 

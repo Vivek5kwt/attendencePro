@@ -12,6 +12,7 @@ import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/attendance_history_repository.dart';
 import '../repositories/reports_repository.dart';
+import '../utils/contract_work_display.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/contract_unit_label.dart';
@@ -449,7 +450,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final colorValue = d.indicatorColorValue;
       final color =
       colorValue != null ? Color(colorValue) : _contractColorPalette[i % _contractColorPalette.length];
-      final unitsLabel = _formatContractUnitsLabel(d, l);
+      final unitsLabel = _formatContractUnitsLabel(d, l, summary.currencySymbol);
       final calculation = _buildContractCalculationLabel(d, l, summary.currencySymbol);
       result.add(
         _ContractWorkItem(
@@ -464,7 +465,31 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     return result;
   }
 
-  String _formatContractUnitsLabel(ContractWorkItemData data, AppLocalizations l) {
+  String _formatContractUnitsLabel(
+    ContractWorkItemData data,
+    AppLocalizations l,
+    String currencySymbol,
+  ) {
+    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
+    final hasMetadata =
+        data.ratePerUnit != null || data.unitCount != null || (data.unitRole?.trim().isNotEmpty ?? false);
+    if (hasMetadata) {
+      final fallbackUnit = data.unitLabel?.trim();
+      final resolvedFallback =
+          (fallbackUnit != null && fallbackUnit.isNotEmpty) ? fallbackUnit : null;
+      final subtitle = buildContractRateSubtitle(
+        l,
+        rate: data.ratePerUnit,
+        count: data.unitCount,
+        role: data.unitRole,
+        fallbackUnitLabel: resolvedFallback,
+        currencySymbol: normalizedSymbol,
+      );
+      if (subtitle.trim().isNotEmpty) {
+        return subtitle;
+      }
+    }
+
     final subtitle = data.subtitle.trim();
     if (subtitle.isNotEmpty) return subtitle;
 
