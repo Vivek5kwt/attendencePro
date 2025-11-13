@@ -3547,8 +3547,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         areHourlyFieldsLocked: areHourlyFieldsLocked,
         contractActionsLocked: contractActionsLocked,
         showContractFields: widget.work.isContract,
-        showContractWorkButton:
-            widget.work.isContract && !_contractFieldsEnabled,
+        showContractWorkButton: widget.work.isContract &&
+            contractItems.isNotEmpty &&
+            !_contractFieldsEnabled,
         onContractWorkTap:
             widget.work.isContract ? _handleContractEntryEnable : null,
         contractFieldsEnabled: _contractFieldsEnabled,
