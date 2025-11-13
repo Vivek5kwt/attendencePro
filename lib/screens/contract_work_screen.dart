@@ -329,8 +329,12 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     unawaited(_loadContractTypes(showLoader: false));
     if (widget.work != null) {
       unawaited(_loadContractSummary());
-      final workBloc = BlocProvider.maybeOf<WorkBloc>(context);
-      workBloc?.add(const WorkRefreshed());
+      final hasWorkBloc =
+          context.getElementForInheritedWidgetOfExactType<BlocProvider<WorkBloc>>() !=
+              null;
+      if (hasWorkBloc) {
+        context.read<WorkBloc>().add(const WorkRefreshed());
+      }
     }
   }
 
