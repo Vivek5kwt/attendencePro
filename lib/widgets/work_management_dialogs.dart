@@ -86,10 +86,40 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
   bool get _hasPendingContractWorks => _pendingContractWorks.isNotEmpty;
 
-  void _removePendingContractWork(int index) {
+  Future<void> _confirmAndRemovePendingContractWork(int index) async {
     if (index < 0 || index >= _pendingContractWorks.length) {
       return;
     }
+
+    final l = AppLocalizations.of(widget.rootContext);
+
+    final shouldDelete = await showDialog<bool>(
+      context: widget.rootContext,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l.contractWorkDeleteConfirmationTitle),
+          content: Text(l.contractWorkDeleteConfirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l.cancelButton),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFB91C1C),
+              ),
+              child: Text(l.contractWorkDeleteButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || shouldDelete != true) {
+      return;
+    }
+
     setState(() {
       _pendingContractWorks.removeAt(index);
       _hasUserCreatedContractWork = _pendingContractWorks.isNotEmpty;
@@ -158,7 +188,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
           ),
           const SizedBox(width: 12),
           IconButton(
-            onPressed: () => _removePendingContractWork(index),
+            onPressed: () => _confirmAndRemovePendingContractWork(index),
             icon: const Icon(
               Icons.close,
               size: 18,
