@@ -34,6 +34,7 @@ import 'profile_screen.dart';
 import 'reports_summary_screen.dart';
 
 const List<int> _timeHourOptions = <int>[
+  0,
   1,
   2,
   3,
@@ -46,6 +47,17 @@ const List<int> _timeHourOptions = <int>[
   10,
   11,
   12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
 ];
 
 const List<int> _timeMinuteOptions = <int>[
@@ -77,13 +89,11 @@ final List<int> _breakDurationOptions = _generateBreakDurationOptions();
 
 List<_TimeDropdownOption> _generateTimeDropdownOptions() {
   final options = <_TimeDropdownOption>[];
-  for (final period in DayPeriod.values) {
-    for (final hour in _timeHourOptions) {
-      for (final minute in _timeMinuteOptions) {
-        final value = _formatTimeDropdownValue(hour, minute, period);
-        final label = _formatTimeDropdownLabel(hour, minute, period);
-        options.add(_TimeDropdownOption(value: value, label: label));
-      }
+  for (final hour in _timeHourOptions) {
+    for (final minute in _timeMinuteOptions) {
+      final value = _formatTimeDropdownValue(hour, minute);
+      final label = _formatTimeDropdownLabel(hour, minute);
+      options.add(_TimeDropdownOption(value: value, label: label));
     }
   }
   return options;
@@ -95,34 +105,16 @@ final List<_TimeDropdownOption> _timeDropdownOptions =
 final Set<String> _timeDropdownValueSet =
     _timeDropdownOptions.map((option) => option.value).toSet();
 
-String _formatTimeDropdownValue(int hour, int minute, DayPeriod period) {
-  final hour24 = _to24Hour(hour, period);
-  final hourText = hour24.toString().padLeft(2, '0');
+String _formatTimeDropdownValue(int hour, int minute) {
+  final hourText = hour.toString().padLeft(2, '0');
   final minuteText = minute.toString().padLeft(2, '0');
   return '$hourText:$minuteText';
 }
 
-String _formatTimeDropdownLabel(int hour, int minute, DayPeriod period) {
+String _formatTimeDropdownLabel(int hour, int minute) {
+  final hourText = hour.toString().padLeft(2, '0');
   final minuteText = minute.toString().padLeft(2, '0');
-  final periodText = period == DayPeriod.am
-      ? AppString.amLabel
-      : AppString.pmLabel;
-  return '$hour:$minuteText $periodText';
-}
-
-int _to24Hour(int hour, DayPeriod period) {
-  var normalized = hour % 12;
-  if (period == DayPeriod.pm) {
-    normalized += 12;
-  } else if (period == DayPeriod.am && hour == 12) {
-    normalized = 0;
-  }
-  return normalized;
-}
-
-int _toDisplayHour(int hour24) {
-  final hourOfPeriod = hour24 % 12;
-  return hourOfPeriod == 0 ? 12 : hourOfPeriod;
+  return '$hourText:$minuteText';
 }
 
 List<int> _buildMinuteOptions(int selectedMinute) {
@@ -8357,9 +8349,7 @@ Widget _buildSharedSegmentedTimeField({
         valueListenable: controller,
         builder: (context, value, _) {
           final parsedTime = _parseFlexibleTime(value.text);
-          final selectedHour = parsedTime != null
-              ? _toDisplayHour(parsedTime.hour)
-              : null;
+          final selectedHour = parsedTime?.hour;
           final minuteOptions = parsedTime != null
               ? _buildMinuteOptions(parsedTime.minute)
               : List<int>.from(_timeMinuteOptions);
@@ -8368,15 +8358,13 @@ Widget _buildSharedSegmentedTimeField({
                   ? parsedTime.minute
                   : minuteOptions.first)
               : null;
-          final selectedPeriod = parsedTime?.period;
 
-          void updateValue({int? hour, int? minute, DayPeriod? period}) {
+          void updateValue({int? hour, int? minute}) {
             if (!enabled) return;
             final resolvedHour = hour ?? selectedHour ?? _timeHourOptions.first;
             final resolvedMinute = minute ?? selectedMinute ?? minuteOptions.first;
-            final resolvedPeriod = period ?? selectedPeriod ?? DayPeriod.am;
             final textValue =
-                _formatTimeDropdownValue(resolvedHour, resolvedMinute, resolvedPeriod);
+                _formatTimeDropdownValue(resolvedHour, resolvedMinute);
             if (controller.text != textValue) {
               controller
                 ..text = textValue
@@ -8474,43 +8462,8 @@ Widget _buildSharedSegmentedTimeField({
                 borderRadius: borderRadius,
                 iconSize: iconSize,
                 dropdownKey: ValueKey(
-                  'minute-${parsedTime?.hour ?? 'null'}-${minuteOptions.length}',
+                  'minute-${selectedHour ?? 'null'}-${minuteOptions.length}',
                 ),
-              );
-
-              final periodSegment = _buildSharedSelectorSegment<DayPeriod>(
-                value: selectedPeriod,
-                placeholder: AppString.amLabel,
-                items: DayPeriod.values
-                    .map(
-                      (period) => DropdownMenuItem<DayPeriod>(
-                        value: period,
-                        child: Text(
-                          period == DayPeriod.am
-                              ? AppString.amLabel
-                              : AppString.pmLabel,
-                          style: valueStyle,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: enabled
-                    ? (value) {
-                        if (value == null) {
-                          controller.clear();
-                          field.didChange('');
-                          onValueChanged();
-                        } else {
-                          updateValue(period: value);
-                        }
-                      }
-                    : null,
-                placeholderStyle: placeholderStyle,
-                valueStyle: valueStyle,
-                padding: segmentPadding,
-                borderRadius: borderRadius,
-                iconSize: iconSize,
-                dropdownKey: ValueKey('period-${selectedPeriod ?? 'null'}'),
               );
 
               return Column(
@@ -8527,13 +8480,6 @@ Widget _buildSharedSegmentedTimeField({
                       ),
                       SizedBox(width: spacing),
                       Expanded(child: minuteSegment),
-                      SizedBox(width: spacing),
-                      _buildSharedSegmentDivider(
-                        showColon: false,
-                        height: dividerHeight,
-                      ),
-                      SizedBox(width: spacing),
-                      Expanded(child: periodSegment),
                     ],
                   ),
                   if (field.hasError)
