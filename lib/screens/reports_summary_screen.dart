@@ -509,14 +509,17 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         onRetry: _loadSummary,
       );
     } else if (summary != null) {
-      final contractItems = _mapContractItems(summary, l);
+      final hasContractSummary = _hasContractSummaryData(summary);
+      final contractItems =
+          hasContractSummary ? _mapContractItems(summary, l) : const <_ContractWorkItem>[];
       summaryBody = _SummaryLoadedContent(
         key: const ValueKey('content'),
         summary: summary,
         localization: l,
         selectedMonth: selectedMonth,
         contractItems: contractItems,
-        canDownloadContractReport: _hasContractSummaryData(summary),
+        showContractSummary: hasContractSummary,
+        canDownloadContractReport: hasContractSummary,
         onDownloadContractReport: _downloadMonthlyContractReport,
       );
     } else {
@@ -670,7 +673,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   bool _hasContractSummaryData(ReportSummary summary) {
     final c = summary.contractSummary;
     if (c.items.isNotEmpty) return true;
-    if (c.totalUnits >= 0) return true; // show section even with zero
+    if (c.totalUnits > 0) return true;
     if (c.salaryAmount > 0) return true;
     return false;
   }
@@ -683,6 +686,7 @@ class _SummaryLoadedContent extends StatelessWidget {
     required this.localization,
     required this.selectedMonth,
     required this.contractItems,
+    required this.showContractSummary,
     required this.canDownloadContractReport,
     required this.onDownloadContractReport,
   });
@@ -691,6 +695,7 @@ class _SummaryLoadedContent extends StatelessWidget {
   final AppLocalizations localization;
   final String selectedMonth;
   final List<_ContractWorkItem> contractItems;
+  final bool showContractSummary;
   final bool canDownloadContractReport;
   final VoidCallback onDownloadContractReport;
 
@@ -717,28 +722,30 @@ class _SummaryLoadedContent extends StatelessWidget {
           workingDays: summary.hourlySummary.workingDays,
           currencySymbol: currency,
         ),
-        const SizedBox(height: 24),
-        _SectionTitle(text: localization.contractWorkSummaryTitle),
-        const SizedBox(height: 12),
-        _ContractWorkSummaryCard(
-          totalUnitsLabel: localization.reportsTotalUnitsLabel,
-          totalUnits: summary.contractSummary.totalUnits,
-          salaryLabel: localization.reportsContractSalaryLabel,
-          salaryAmount: summary.contractSummary.salaryAmount,
-          currencySymbol: currency,
-          items: contractItems,
-          emptyMessage: localization.notAvailableLabel,
-        ),
-        if (canDownloadContractReport) ...[
+        if (showContractSummary) ...[
+          const SizedBox(height: 24),
+          _SectionTitle(text: localization.contractWorkSummaryTitle),
           const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: onDownloadContractReport,
-              icon: const Icon(Icons.download),
-              label: Text(localization.contractReportDownloadLabel),
-            ),
+          _ContractWorkSummaryCard(
+            totalUnitsLabel: localization.reportsTotalUnitsLabel,
+            totalUnits: summary.contractSummary.totalUnits,
+            salaryLabel: localization.reportsContractSalaryLabel,
+            salaryAmount: summary.contractSummary.salaryAmount,
+            currencySymbol: currency,
+            items: contractItems,
+            emptyMessage: localization.notAvailableLabel,
           ),
+          if (canDownloadContractReport) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                onPressed: onDownloadContractReport,
+                icon: const Icon(Icons.download),
+                label: Text(localization.contractReportDownloadLabel),
+              ),
+            ),
+          ],
         ],
       ],
     );
