@@ -161,11 +161,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
       unitLabel: work.unitLabel,
     );
 
-    final parts = <String>[];
-    if (roleDisplay.isNotEmpty) {
-      parts.add(roleDisplay);
-    }
-
     final currencySymbol = AppString.euroPrefix.trim().isEmpty
         ? '€'
         : AppString.euroPrefix.trim();
@@ -176,11 +171,12 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
       fallbackUnitLabel: resolvedUnitLabel,
       currencySymbol: currencySymbol,
     );
-    if (rateLabel.trim().isNotEmpty) {
-      parts.add(rateLabel);
+    final trimmedRateLabel = rateLabel.trim();
+    if (trimmedRateLabel.isNotEmpty) {
+      return trimmedRateLabel;
     }
 
-    return parts.join(' • ');
+    return roleDisplay;
   }
 
   Widget _buildPendingContractSummary(
