@@ -47,12 +47,14 @@ class WorkUpdated extends WorkEvent {
     required this.name,
     required this.hourlyRate,
     required this.isContract,
+    this.pendingContractWorks = const <PendingContractWork>[],
   });
 
   final Work work;
   final String name;
   final num hourlyRate;
   final bool isContract;
+  final List<PendingContractWork> pendingContractWorks;
 }
 
 class WorkActivated extends WorkEvent {
