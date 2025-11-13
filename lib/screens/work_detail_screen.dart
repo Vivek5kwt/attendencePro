@@ -27,6 +27,7 @@ import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/work_selection_dialog.dart';
 import '../widgets/work_management_dialogs.dart';
+import 'contract_work_screen.dart';
 import 'attendance_history_screen.dart';
 import 'help_support_screen.dart';
 import 'profile_screen.dart';
@@ -3138,6 +3139,26 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     await future;
   }
 
+  Future<void> _handleCreateContractTypeTap() async {
+    FocusScope.of(context).unfocus();
+
+    final targetWork = _latestWorkSnapshot ?? widget.work;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => ContractWorkScreen(
+          work: targetWork,
+          allowEditing: true,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadContractTypes(showLoader: false);
+  }
+
   void _handleWorkStateChange(WorkState state) {
     if (!mounted) {
       return;
@@ -3220,12 +3241,26 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
     }
 
-    final filteredByWork = types.where(_contractTypeMatchesCurrentWork).toList();
-    if (filteredByWork.isNotEmpty) {
-      return filteredByWork;
+    final userDefined = <ContractType>[];
+    final matchingGlobal = <ContractType>[];
+
+    for (final type in types) {
+      final isUserDefined = !(type.isDefault || type.isGlobal);
+      if (isUserDefined) {
+        userDefined.add(type);
+        continue;
+      }
+
+      if (_contractTypeMatchesCurrentWork(type)) {
+        matchingGlobal.add(type);
+      }
     }
 
-    return types;
+    if (userDefined.isNotEmpty || matchingGlobal.isNotEmpty) {
+      return <ContractType>[...userDefined, ...matchingGlobal];
+    }
+
+    return const <ContractType>[];
   }
 
   bool _contractTypeMatchesCurrentWork(ContractType type) {
@@ -6179,6 +6214,8 @@ class _AttendanceSection extends StatelessWidget {
                 entries: contractBundleEntries,
                 onTypeChanged: onContractBundleTypeChanged,
                 onRetry: onContractTypeRetry,
+                onCreateContractType:
+                    contractActionsLocked ? null : _handleCreateContractTypeTap,
                 onRemoveEntry: onRemoveContractBundle,
                 onAddEntry: onAddContractBundle,
                 onUnitsChanged: onContractBundleUnitsChanged,
@@ -6855,6 +6892,7 @@ class _ContractEntryForm extends StatelessWidget {
     this.isLocked = false,
     this.errorMessage,
     this.onRetry,
+    this.onCreateContractType,
     this.onRemoveEntry,
     this.onAddEntry,
     this.onUnitsChanged,
@@ -6868,6 +6906,7 @@ class _ContractEntryForm extends StatelessWidget {
   final void Function(String, String?)? onTypeChanged;
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final VoidCallback? onRetry;
+  final VoidCallback? onCreateContractType;
   final void Function(_ContractBundleFormEntry)? onRemoveEntry;
   final VoidCallback? onAddEntry;
   final void Function(_ContractBundleFormEntry)? onUnitsChanged;
@@ -6948,6 +6987,21 @@ class _ContractEntryForm extends StatelessWidget {
           ] else if (contractTypes.isEmpty) ...[
             _ContractFormMessage(
               message: l.contractWorkNoCustomTypesLabel,
+              primaryAction: onCreateContractType == null
+                  ? null
+                  : OutlinedButton.icon(
+                      onPressed:
+                          disableInteractions ? null : onCreateContractType,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF2563EB),
+                        side: const BorderSide(color: Color(0xFF2563EB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(l.addContractWorkButton),
+                    ),
               onRetry: onRetry,
             ),
           ] else ...[
@@ -7272,11 +7326,13 @@ class _ContractFormMessage extends StatelessWidget {
     required this.message,
     this.isError = false,
     this.onRetry,
+    this.primaryAction,
   });
 
   final String message;
   final bool isError;
   final VoidCallback? onRetry;
+  final Widget? primaryAction;
 
   @override
   Widget build(BuildContext context) {
@@ -7303,6 +7359,10 @@ class _ContractFormMessage extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          if (primaryAction != null) ...[
+            const SizedBox(height: 12),
+            primaryAction!,
+          ],
           if (onRetry != null) ...[
             const SizedBox(height: 12),
             TextButton.icon(
