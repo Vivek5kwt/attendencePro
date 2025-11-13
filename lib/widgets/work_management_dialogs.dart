@@ -8,6 +8,7 @@ import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
+import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/contract_type.dart';
 import '../models/pending_contract_work.dart';
@@ -154,8 +155,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     AppLocalizations l,
   ) {
     final roleDisplay = contractWorkFormatRoleDisplay(work.role).trim();
-    final rateText = work.ratePerUnit.toStringAsFixed(2);
-    final unitLabel = resolveContractUnitLabel(
+    final resolvedUnitLabel = resolveContractUnitLabel(
       localizations: l,
       contractName: work.name,
       unitLabel: work.unitLabel,
@@ -165,7 +165,20 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     if (roleDisplay.isNotEmpty) {
       parts.add(roleDisplay);
     }
-    parts.add('$rateText / $unitLabel');
+
+    final currencySymbol = AppString.euroPrefix.trim().isEmpty
+        ? '€'
+        : AppString.euroPrefix.trim();
+    final rateLabel = buildContractRateSubtitle(
+      l,
+      rate: work.ratePerUnit,
+      role: work.role,
+      fallbackUnitLabel: resolvedUnitLabel,
+      currencySymbol: currencySymbol,
+    );
+    if (rateLabel.trim().isNotEmpty) {
+      parts.add(rateLabel);
+    }
 
     return parts.join(' • ');
   }
