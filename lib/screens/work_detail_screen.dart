@@ -22,6 +22,7 @@ import '../repositories/contract_type_repository.dart';
 import '../repositories/dashboard_repository.dart';
 import '../utils/contract_entry_cache.dart';
 import '../utils/contract_unit_label.dart';
+import '../utils/contract_work_display.dart';
 import '../utils/language_dialog.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
@@ -3842,19 +3843,18 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           final rate = _parseContractRateValue(map);
           final rawPrice = _normalizeContractText(map['price']);
           final unitLabel = _extractContractUnitLabel(map);
+          final count = _extractContractCount(map);
+          final roleLabel = _extractContractRole(map);
 
-          var priceText = '';
-          if (rate != null) {
-            priceText =
-                _formatCurrencyValue(rate.toStringAsFixed(2), currencyPrefix);
-          } else if (rawPrice != null && rawPrice.isNotEmpty) {
-            priceText = rawPrice;
-          }
-
-          if (unitLabel != null && unitLabel.isNotEmpty) {
-            priceText =
-                priceText.isEmpty ? unitLabel : '$priceText ${unitLabel.trim()}';
-          }
+          final priceText = buildContractRateSubtitle(
+            l,
+            rate: rate,
+            rawPrice: rawPrice,
+            count: count,
+            role: roleLabel,
+            fallbackUnitLabel: unitLabel,
+            currencySymbol: currencyPrefix,
+          );
 
           final resolvedTitle = combinedTitle.isNotEmpty
               ? combinedTitle
@@ -3911,24 +3911,56 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return text.isEmpty ? null : text;
   }
 
+  num? _parseContractNumericValue(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value;
+    }
+    if (value is String) {
+      final sanitized = value.replaceAll(RegExp(r'[^0-9,.-]'), '');
+      if (sanitized.isEmpty) {
+        return null;
+      }
+      final normalized = sanitized.replaceAll(',', '');
+      return num.tryParse(normalized);
+    }
+    return null;
+  }
+
   num? _parseContractRateValue(Map<String, dynamic> data) {
     const keys = <String>['rate_per_unit', 'ratePerUnit', 'rate', 'price', 'amount'];
     for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-      if (value is num) {
-        return value;
+      final parsed = _parseContractNumericValue(data[key]);
+      if (parsed != null) {
+        return parsed;
       }
-      if (value is String) {
-        final sanitized = value.replaceAll(RegExp(r'[^0-9,.-]'), '');
-        if (sanitized.isEmpty) {
-          continue;
-        }
-        final normalized = sanitized.replaceAll(',', '');
-        final parsed = num.tryParse(normalized);
-        if (parsed != null) {
-          return parsed;
-        }
+    }
+    return null;
+  }
+
+  num? _extractContractCount(Map<String, dynamic> data) {
+    const keys = <String>[
+      'count',
+      'quantity',
+      'qty',
+      'unit_count',
+      'unitCount',
+      'unit_quantity',
+      'unitQuantity',
+      'per_count',
+      'perCount',
+      'units',
+      'unit_size',
+      'unitSize',
+      'bundle_size',
+      'bundleSize',
+    ];
+    for (final key in keys) {
+      final parsed = _parseContractNumericValue(data[key]);
+      if (parsed != null) {
+        return parsed;
       }
     }
     return null;
@@ -3943,6 +3975,34 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       'unitName',
       'unit_display',
       'unitDisplay',
+    ];
+    for (final key in keys) {
+      final value = _normalizeContractText(data[key]);
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  String? _extractContractRole(Map<String, dynamic> data) {
+    const keys = <String>[
+      'role',
+      'contract_role',
+      'contractRole',
+      'role_name',
+      'roleName',
+      'unit_name',
+      'unitName',
+      'unit',
+      'unit_display',
+      'unitDisplay',
+      'type',
+      'contract_type',
+      'contractType',
+      'subtype',
+      'contract_subtype',
+      'contractSubtype',
     ];
     for (final key in keys) {
       final value = _normalizeContractText(data[key]);
