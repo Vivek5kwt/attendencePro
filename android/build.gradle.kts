@@ -49,35 +49,6 @@ subprojects {
 }
 
 subprojects {
-    if (name == "flutter_native_timezone") {
-        pluginManager.withPlugin("com.android.library") {
-            extensions.configure<LibraryExtension>("android") {
-                namespace = "com.attendancepro.flutter_native_timezone"
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
-            }
-        }
-        val manifestFile = project.projectDir.resolve("src/main/AndroidManifest.xml")
-        if (manifestFile.exists()) {
-            tasks.matching { it.name == "preBuild" }.configureEach {
-                doFirst {
-                    val originalContent = manifestFile.readText()
-                    val target = "package=\"com.whelksoft.flutter_native_timezone\""
-                    if (originalContent.contains(target)) {
-                        val updatedContent = originalContent.replace(target, "")
-                        if (originalContent != updatedContent) {
-                            manifestFile.writeText(updatedContent)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-subprojects {
     tasks.withType<JavaCompile>().configureEach {
         sourceCompatibility = JavaVersion.VERSION_11.toString()
         targetCompatibility = JavaVersion.VERSION_11.toString()
