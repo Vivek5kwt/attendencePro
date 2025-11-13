@@ -173,7 +173,7 @@ abstract final class AppString {
       'contractWorkNoEntriesLabel':
           'No contract items available for this job.',
       'contractWorkEmptyHelperText':
-          'Tap "Add Contract Work" to create your first contract item for this job.',
+          'Tap "Add Contract Type" to create your first contract item for this job.',
       'contractWorkAllTypesAddedMessage':
           'All contract work types are already added.',
       'contractWorkLastUpdatedLabel': 'Last updated',
@@ -609,7 +609,7 @@ abstract final class AppString {
       'contractWorkNoEntriesLabel':
           'इस काम के लिए कोई कॉन्ट्रैक्ट आइटम उपलब्ध नहीं है।',
       'contractWorkEmptyHelperText':
-          'अपना पहला कॉन्ट्रैक्ट जोड़ने के लिए "ठेका कार्य जोड़ें" पर टैप करें।',
+          'अपना पहला कॉन्ट्रैक्ट आइटम जोड़ने के लिए "कॉन्ट्रैक्ट प्रकार जोड़ें" पर टैप करें।',
       'contractWorkAllTypesAddedMessage':
           'सभी कॉन्ट्रैक्ट कार्य प्रकार पहले से जोड़े जा चुके हैं।',
       'contractWorkLastUpdatedLabel': 'आखिरी अपडेट',
@@ -1046,7 +1046,7 @@ abstract final class AppString {
       'contractWorkNoEntriesLabel':
           'ਇਸ ਕੰਮ ਲਈ ਕੋਈ ਕਾਂਟ੍ਰੈਕਟ ਆਈਟਮ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।',
       'contractWorkEmptyHelperText':
-          'ਆਪਣਾ ਪਹਿਲਾ ਕਾਂਟ੍ਰੈਕਟ ਬਣਾਉਣ ਲਈ "ਕਾਂਟ੍ਰੈਕਟ ਕੰਮ ਜੋੜੋ" ਤੇ ਟੈਪ ਕਰੋ।',
+          'ਇਸ ਕੰਮ ਲਈ ਆਪਣਾ ਪਹਿਲਾ ਕਾਂਟ੍ਰੈਕਟ ਆਈਟਮ ਬਣਾਉਣ ਲਈ "ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਸ਼ਾਮਲ ਕਰੋ" ਤੇ ਟੈਪ ਕਰੋ।',
       'contractWorkAllTypesAddedMessage':
           'ਸਾਰੇ ਕਰਾਰ ਕੰਮ ਕਿਸਮਾਂ ਪਹਿਲਾਂ ਹੀ ਜੋੜੀਆਂ ਜਾ ਚੁੱਕੀਆਂ ਹਨ।',
       'contractWorkLastUpdatedLabel': 'ਆਖਰੀ ਅਪਡੇਟ',
@@ -1487,7 +1487,7 @@ abstract final class AppString {
       'contractWorkNoEntriesLabel':
           'Nessun elemento a contratto disponibile per questa attività.',
       'contractWorkEmptyHelperText':
-          'Tocca "Aggiungi Lavoro a Contratto" per creare il tuo primo elemento a contratto.',
+          'Tocca "Aggiungi tipo di contratto" per creare il tuo primo elemento a contratto per questa attività.',
       'contractWorkAllTypesAddedMessage':
           'Tutti i tipi di lavoro a contratto sono già stati aggiunti.',
       'contractWorkLastUpdatedLabel': 'Ultimo aggiornamento',

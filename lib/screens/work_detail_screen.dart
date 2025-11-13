@@ -1850,11 +1850,21 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_contractTypes.isEmpty) {
       return;
     }
+
+    final associatedIds = _extractAssociatedContractTypeIds();
+    String? fallbackId;
+    for (final id in associatedIds) {
+      if (_contractTypes.any((type) => type.id == id)) {
+        fallbackId = id;
+        break;
+      }
+    }
+
     if (_contractBundleEntries.isEmpty) {
       _contractBundleEntries.add(
         _ContractBundleFormEntry(
           id: _generateBundleEntryId(),
-          contractTypeId: _contractTypes.first.id,
+          contractTypeId: fallbackId,
         ),
       );
       return;
@@ -1871,7 +1881,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
     }
 
-    final fallbackId = _contractTypes.first.id;
     for (final entry in _contractBundleEntries) {
       final currentId = entry.contractTypeId;
       if (currentId != null &&
@@ -6987,24 +6996,33 @@ class _ContractEntryForm extends StatelessWidget {
               message: errorMessage!,
               isError: true,
               onRetry: onRetry,
+              icon: Icons.warning_amber_rounded,
             ),
           ] else if (contractTypes.isEmpty) ...[
             _ContractFormMessage(
               message: l.contractWorkNoCustomTypesLabel,
+              helperText: l.contractWorkEmptyHelperText,
+              icon: Icons.receipt_long_outlined,
               primaryAction: onCreateContractType == null
                   ? null
-                  : OutlinedButton.icon(
+                  : ElevatedButton.icon(
                       onPressed:
                           disableInteractions ? null : onCreateContractType,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2563EB),
-                        side: const BorderSide(color: Color(0xFF2563EB)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size(0, 48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       icon: const Icon(Icons.add_circle_outline),
-                      label: Text(l.addContractWorkButton),
+                      label: Text(l.contractWorkAddTypeTitle),
                     ),
               onRetry: onRetry,
             ),
@@ -7331,19 +7349,67 @@ class _ContractFormMessage extends StatelessWidget {
     this.isError = false,
     this.onRetry,
     this.primaryAction,
+    this.helperText,
+    this.icon,
   });
 
   final String message;
   final bool isError;
   final VoidCallback? onRetry;
   final Widget? primaryAction;
+  final String? helperText;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor =
-        isError ? const Color(0xFFFFF1F2) : const Color(0xFFEFF6FF);
+    final l = AppLocalizations.of(context);
     final Color foregroundColor =
         isError ? const Color(0xFFB91C1C) : const Color(0xFF1D4ED8);
+    final Color backgroundColor =
+        isError ? const Color(0xFFFFF1F2) : const Color(0xFFEFF6FF);
+    final Color accentColor =
+        isError ? foregroundColor : const Color(0xFF2563EB);
+
+    final content = <Widget>[
+      Text(
+        message,
+        style: TextStyle(
+          color: foregroundColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ];
+
+    final helper = helperText?.trim() ?? '';
+    if (helper.isNotEmpty) {
+      content.add(const SizedBox(height: 6));
+      content.add(
+        Text(
+          helper,
+          style: TextStyle(
+            color: isError ? foregroundColor.withOpacity(0.9) : const Color(0xFF475569),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    final actions = <Widget>[];
+    if (primaryAction != null) {
+      actions.add(primaryAction!);
+    }
+    if (onRetry != null) {
+      actions.add(
+        TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded, size: 18),
+          label: Text(
+            l.retryButtonLabel,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -7356,26 +7422,40 @@ class _ContractFormMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            message,
-            style: TextStyle(
-              color: foregroundColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (primaryAction != null) ...[
-            const SizedBox(height: 12),
-            primaryAction!,
-          ],
-          if (onRetry != null) ...[
-            const SizedBox(height: 12),
-            TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: Text(
-                AppLocalizations.of(context).retryButtonLabel,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (icon != null) ...[
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      icon,
+                      color: accentColor,
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: content,
+                ),
               ),
+            ],
+          ),
+          if (actions.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: actions,
             ),
           ],
         ],
