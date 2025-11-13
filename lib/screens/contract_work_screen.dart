@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -128,11 +130,17 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
   }
 
-  Future<void> _loadContractTypes() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+  Future<void> _loadContractTypes({bool showLoader = true}) async {
+    if (showLoader) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    } else {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
 
     try {
       final result = await _repository.fetchContractTypes();
@@ -163,20 +171,37 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         _summaryError = null;
 
         _pendingDeletionIds.clear();
-        _isLoading = false;
+        if (showLoader) {
+          _isLoading = false;
+        }
       });
     } on ContractTypeRepositoryException catch (error) {
       if (!mounted) return;
-      setState(() {
-        _errorMessage = error.message;
-        _isLoading = false;
-      });
+      if (showLoader) {
+        setState(() {
+          _errorMessage = error.message;
+          _isLoading = false;
+        });
+      } else {
+        final l = AppLocalizations.of(context);
+        final message = error.message.trim().isEmpty
+            ? l.contractWorkLoadError
+            : error.message;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _errorMessage = error.toString();
-        _isLoading = false;
-      });
+      if (showLoader) {
+        setState(() {
+          _errorMessage = error.toString();
+          _isLoading = false;
+        });
+      } else {
+        final l = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l.contractWorkLoadError)));
+      }
     }
   }
 
@@ -294,6 +319,16 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     await Future.wait<void>([_loadContractTypes(), _loadContractSummary()]);
   }
 
+  void _refreshContractDataSilently() {
+    if (!mounted) {
+      return;
+    }
+    unawaited(_loadContractTypes(showLoader: false));
+    if (widget.work != null) {
+      unawaited(_loadContractSummary());
+    }
+  }
+
   List<_ContractType> get _allContractTypes => <_ContractType>[
     ..._defaultContractTypes,
     ..._userContractTypes,
@@ -369,6 +404,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
     _upsertContractType(result);
 
+    _refreshContractDataSilently();
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(l.contractWorkTypeSavedMessage)));
@@ -414,6 +451,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         _summaryRows =
             _buildSummaryRowsFromTypes(_userContractTypes, l);
       });
+
+      _refreshContractDataSilently();
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l.contractWorkTypeDeletedMessage)));
