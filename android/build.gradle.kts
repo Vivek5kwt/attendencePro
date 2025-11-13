@@ -1,3 +1,4 @@
+import com.android.build.gradle.LibraryExtension
 import org.gradle.api.tasks.compile.JavaCompile
 
 allprojects {
@@ -40,6 +41,16 @@ subprojects {
                         pluginSource.writeText(originalContent.replace(target, replacement))
                     }
                 }
+            }
+        }
+    }
+}
+
+subprojects {
+    if (name == "flutter_native_timezone") {
+        pluginManager.withPlugin("com.android.library") {
+            extensions.configure<LibraryExtension>("android") {
+                namespace = "com.attendancepro.flutter_native_timezone"
             }
         }
     }
