@@ -438,9 +438,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   }
 
   List<_ContractWorkItem> _mapContractItems(
-      ReportSummary summary,
-      AppLocalizations l,
-      ) {
+    ReportSummary summary,
+    AppLocalizations l,
+  ) {
     final items = summary.contractSummary.items;
     if (items.isEmpty) return const <_ContractWorkItem>[];
 
@@ -450,7 +450,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final colorValue = d.indicatorColorValue;
       final color =
       colorValue != null ? Color(colorValue) : _contractColorPalette[i % _contractColorPalette.length];
-      final unitsLabel = _formatContractUnitsLabel(d, l, summary.currencySymbol);
+      final unitsLabel = _buildContractUnitsSummary(d, l, summary.currencySymbol);
       final calculation = _buildContractCalculationLabel(d, l, summary.currencySymbol);
       result.add(
         _ContractWorkItem(
@@ -465,42 +465,47 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     return result;
   }
 
-  String _formatContractUnitsLabel(
+  String _buildContractUnitsSummary(
     ContractWorkItemData data,
     AppLocalizations l,
     String currencySymbol,
   ) {
-    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
-    final hasMetadata =
-        data.ratePerUnit != null || data.unitCount != null || (data.unitRole?.trim().isNotEmpty ?? false);
-    if (hasMetadata) {
-      final fallbackUnit = data.unitLabel?.trim();
-      final resolvedFallback =
-          (fallbackUnit != null && fallbackUnit.isNotEmpty) ? fallbackUnit : null;
-      final subtitle = buildContractRateSubtitle(
-        l,
-        rate: data.ratePerUnit,
-        count: data.unitCount,
-        role: data.unitRole,
-        fallbackUnitLabel: resolvedFallback,
-        currencySymbol: normalizedSymbol,
-      );
-      if (subtitle.trim().isNotEmpty) {
-        return subtitle;
-      }
-    }
-
-    final subtitle = data.subtitle.trim();
-    if (subtitle.isNotEmpty) return subtitle;
-
     final unitLabel = data.unitLabel?.trim();
-    return contractUnitQuantityLabel(
+    final resolvedUnitLabel =
+        unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel;
+
+    final quantityLabel = contractUnitQuantityLabel(
       localizations: l,
       contractName: data.title,
-      unitLabel: unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+      unitLabel: resolvedUnitLabel,
       completedUnits: data.unitsCompleted,
       totalUnits: data.unitsTotal,
-    );
+    ).trim();
+
+    if (quantityLabel.isNotEmpty && quantityLabel != l.notAvailableLabel) {
+      return quantityLabel;
+    }
+
+    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
+    final subtitle = buildContractRateSubtitle(
+      l,
+      rate: data.ratePerUnit,
+      count: data.unitCount,
+      role: data.unitRole,
+      fallbackUnitLabel: resolvedUnitLabel,
+      currencySymbol: normalizedSymbol,
+    ).trim();
+
+    if (subtitle.isNotEmpty) {
+      return subtitle;
+    }
+
+    final fallbackSubtitle = data.subtitle.trim();
+    if (fallbackSubtitle.isNotEmpty) {
+      return fallbackSubtitle;
+    }
+
+    return l.notAvailableLabel;
   }
 
   String? _buildContractCalculationLabel(
@@ -510,19 +515,52 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   ) {
     final units = data.unitsCompleted;
     final rate = data.ratePerUnit;
-    if (units == null || units <= 0 || rate == null || rate <= 0) {
-      return null;
+    if (units != null && units > 0 && rate != null && rate > 0) {
+      final unitLabel = data.unitLabel?.trim();
+      final countLabel = contractUnitCountLabel(
+        localizations: l,
+        contractName: data.title,
+        unitLabel: unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+        quantity: units,
+      );
+
+      final buffer = StringBuffer()
+        ..write(countLabel)
+        ..write(' × ')
+        ..write(_formatCurrencyValue(rate, currencySymbol));
+
+      final unitCount = data.unitCount;
+      final unitRole = data.unitRole?.trim();
+      if (unitCount != null && unitCount > 0 && unitRole != null && unitRole.isNotEmpty) {
+        final isWholeCount = unitCount.roundToDouble() == unitCount;
+        final countText = isWholeCount ? unitCount.toInt().toString() : unitCount.toString();
+        buffer
+          ..write(' (')
+          ..write(countText)
+          ..write(' ')
+          ..write(unitRole.toLowerCase())
+          ..write(' per unit)');
+      }
+
+      return buffer.toString();
+    }
+    final unitLabel = data.unitLabel?.trim();
+    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
+    final subtitle = buildContractRateSubtitle(
+      l,
+      rate: data.ratePerUnit,
+      count: data.unitCount,
+      role: data.unitRole,
+      fallbackUnitLabel: unitLabel,
+      currencySymbol: normalizedSymbol,
+    ).trim();
+
+    if (subtitle.isNotEmpty) {
+      return subtitle;
     }
 
-    final unitLabel = data.unitLabel?.trim();
-    final countLabel = contractUnitCountLabel(
-      localizations: l,
-      contractName: data.title,
-      unitLabel: unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
-      quantity: units,
-    );
-
-    return '$countLabel × ${_formatCurrencyValue(rate, currencySymbol)}';
+    final fallbackSubtitle = data.subtitle.trim();
+    return fallbackSubtitle.isEmpty ? null : fallbackSubtitle;
   }
 
   @override
