@@ -329,9 +329,11 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     unawaited(_loadContractTypes(showLoader: false));
     if (widget.work != null) {
       unawaited(_loadContractSummary());
-      final workBloc = BlocProvider.maybeOf<WorkBloc>(context);
-      if (workBloc != null) {
+      try {
+        final workBloc = context.read<WorkBloc>();
         workBloc.add(const WorkRefreshed());
+      } on ProviderNotFoundException {
+        // No WorkBloc available in the current context.
       }
     }
   }
