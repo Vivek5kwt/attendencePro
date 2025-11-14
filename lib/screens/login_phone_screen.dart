@@ -729,7 +729,6 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                           child: PrimaryCtaButton(
                             label: l.loginButton,
                             height: responsive.scale(56),
-                            icon: Icons.login_rounded,
                             isLoading: isProcessing,
                             onPressed: isProcessing
                                 ? null
