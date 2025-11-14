@@ -101,47 +101,41 @@ class LocalNotificationService {
   }
 
   static Future<void> _requestPermissions() async {
+    bool? permissionGranted;
+
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
-    await androidImplementation?.requestNotificationsPermission();
+    final androidGranted =
+        await androidImplementation?.requestNotificationsPermission();
+    permissionGranted = androidGranted ?? permissionGranted;
 
     final iosImplementation = _plugin
         .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>();
-    await iosImplementation?.requestPermissions(
+    final iosGranted = await iosImplementation?.requestPermissions(
       alert: true,
       badge: false,
       sound: true,
     );
+    permissionGranted = iosGranted ?? permissionGranted;
 
     final macImplementation = _plugin
         .resolvePlatformSpecificImplementation<
             MacOSFlutterLocalNotificationsPlugin>();
-    await macImplementation?.requestPermissions(
+    final macGranted = await macImplementation?.requestPermissions(
       alert: true,
       badge: false,
       sound: true,
     );
+    permissionGranted = macGranted ?? permissionGranted;
+
+    if (permissionGranted != null) {
+      _notificationsPermissionGranted = permissionGranted;
+    }
   }
 
   static Future<_NotificationPermissionStatus> _currentPermissionStatus() async {
-    final iosImplementation = _plugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    final iosSettings = await iosImplementation?.getNotificationSettings();
-    if (iosSettings != null) {
-      return _mapDarwinAuthorizationStatus(iosSettings.authorizationStatus);
-    }
-
-    final macImplementation = _plugin
-        .resolvePlatformSpecificImplementation<
-            MacOSFlutterLocalNotificationsPlugin>();
-    final macSettings = await macImplementation?.getNotificationSettings();
-    if (macSettings != null) {
-      return _mapDarwinAuthorizationStatus(macSettings.authorizationStatus);
-    }
-
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
@@ -152,22 +146,15 @@ class LocalNotificationService {
           : _NotificationPermissionStatus.denied;
     }
 
-    return _NotificationPermissionStatus.granted;
-  }
-
-  static _NotificationPermissionStatus _mapDarwinAuthorizationStatus(
-    AuthorizationStatus status,
-  ) {
-    switch (status) {
-      case AuthorizationStatus.authorized:
-      case AuthorizationStatus.provisional:
-      case AuthorizationStatus.ephemeral:
-        return _NotificationPermissionStatus.granted;
-      case AuthorizationStatus.denied:
-        return _NotificationPermissionStatus.denied;
-      case AuthorizationStatus.notDetermined:
-        return _NotificationPermissionStatus.notDetermined;
+    if (_notificationsPermissionGranted == true) {
+      return _NotificationPermissionStatus.granted;
     }
+
+    if (_notificationsPermissionGranted == false) {
+      return _NotificationPermissionStatus.denied;
+    }
+
+    return _NotificationPermissionStatus.notDetermined;
   }
 
   static Future<bool> _ensurePermissionsRequested() async {
