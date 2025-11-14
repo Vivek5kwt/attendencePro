@@ -390,6 +390,9 @@ class LocalNotificationService {
       _attendanceReminderBody,
       date,
       details,
+      // Ensure the reminder still fires even if the device enters doze mode
+      // while the app is terminated.
+      androidAllowWhileIdle: true,
       androidScheduleMode: scheduleMode,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.wallClockTime,
