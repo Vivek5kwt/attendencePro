@@ -286,6 +286,12 @@ abstract final class AppString {
       'shareNotificationTitle': 'Notifications ready',
       'shareNotificationBody':
           'This is a test notification for sharing AttendancePro.',
+      'notificationsPermissionPromptTitle':
+          'Stay on track with reminders',
+      'notificationsPermissionPromptBody':
+          'Would you like to allow AttendancePro to send you notifications for attendance reminders and updates?',
+      'notificationsPermissionAllowButton': 'Allow notifications',
+      'notificationsPermissionNotNowButton': 'Not now',
       'dashboardTappedMessage': 'Dashboard tapped',
       'addNewWorkTappedMessage': 'Add New Work tapped',
       'attendanceHistoryTappedMessage': 'Attendance History tapped',
@@ -730,6 +736,11 @@ abstract final class AppString {
       'shareNotificationTitle': 'सूचनाएँ तैयार हैं',
       'shareNotificationBody':
           'यह AttendancePro साझा करने के लिए एक परीक्षण सूचना है।',
+      'notificationsPermissionPromptTitle': 'रिमाइंडर के साथ अपडेट रहें',
+      'notificationsPermissionPromptBody':
+          'क्या आप AttendancePro को उपस्थिति रिमाइंडर और अपडेट के लिए सूचनाएँ भेजने की अनुमति देना चाहेंगे?',
+      'notificationsPermissionAllowButton': 'सूचनाएँ अनुमति दें',
+      'notificationsPermissionNotNowButton': 'अभी नहीं',
       'dashboardTappedMessage': 'डैशबोर्ड चुना गया',
       'addNewWorkTappedMessage': 'नया कार्य चुना गया',
       'attendanceHistoryTappedMessage': 'उपस्थिति इतिहास चुना गया',
@@ -1171,6 +1182,11 @@ abstract final class AppString {
       'shareNotificationTitle': 'ਸੂਚਨਾਵਾਂ ਤਿਆਰ ਹਨ',
       'shareNotificationBody':
           'ਇਹ AttendancePro ਨੂੰ ਸਾਂਝਾ ਕਰਨ ਲਈ ਇੱਕ ਟੈਸਟ ਨੋਟੀਫਿਕੇਸ਼ਨ ਹੈ।',
+      'notificationsPermissionPromptTitle': 'ਰਿਮਾਇਂਡਰ ਨਾਲ ਜੁੜੇ ਰਹੋ',
+      'notificationsPermissionPromptBody':
+          'ਕੀ ਤੁਸੀਂ AttendancePro ਨੂੰ ਹਾਜ਼ਰੀ ਰਿਮਾਇਂਡਰ ਅਤੇ ਅਪਡੇਟਾਂ ਲਈ ਨੋਟੀਫਿਕੇਸ਼ਨ ਭੇਜਣ ਦੀ ਆਗਿਆ ਦੇਣਾ ਚਾਹੋਗੇ?',
+      'notificationsPermissionAllowButton': 'ਨੋਟੀਫਿਕੇਸ਼ਨ ਦੀ ਆਗਿਆ ਦਿਓ',
+      'notificationsPermissionNotNowButton': 'ਹਾਲੇ ਨਹੀਂ',
       'dashboardTappedMessage': 'ਡੈਸ਼ਬੋਰਡ ਚੁਣਿਆ ਗਿਆ',
       'addNewWorkTappedMessage': 'ਨਵਾਂ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'attendanceHistoryTappedMessage': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਚੁਣਿਆ ਗਿਆ',
@@ -1620,6 +1636,12 @@ abstract final class AppString {
       'shareNotificationTitle': 'Notifiche pronte',
       'shareNotificationBody':
           'Questa è una notifica di prova per condividere AttendancePro.',
+      'notificationsPermissionPromptTitle':
+          'Rimani aggiornato con i promemoria',
+      'notificationsPermissionPromptBody':
+          'Vuoi permettere a AttendancePro di inviarti notifiche per promemoria di presenza e aggiornamenti?',
+      'notificationsPermissionAllowButton': 'Consenti notifiche',
+      'notificationsPermissionNotNowButton': 'Non ora',
       'dashboardTappedMessage': 'Dashboard selezionata',
       'addNewWorkTappedMessage': 'Nuovo lavoro selezionato',
       'attendanceHistoryTappedMessage': 'Storico presenze selezionato',
