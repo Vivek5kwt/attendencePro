@@ -461,10 +461,10 @@ int _parseInt(Map<String, dynamic> json, List<String> keys, [int fallback = 0]) 
     if (value is int) return value;
     if (value is num) return value.round();
     if (value is String) {
-      final cleaned = _sanitizeNumberString(value, allowDecimal: false);
+      final cleaned = _sanitizeNumberString(value);
       if (cleaned.isEmpty) continue;
-      final parsed = int.tryParse(cleaned);
-      if (parsed != null) return parsed;
+      final parsed = double.tryParse(cleaned);
+      if (parsed != null) return parsed.round();
     }
   }
   return fallback;
@@ -477,10 +477,10 @@ int? _parseNullableInt(Map<String, dynamic> json, List<String> keys) {
     if (value is int) return value;
     if (value is num) return value.round();
     if (value is String) {
-      final cleaned = _sanitizeNumberString(value, allowDecimal: false);
+      final cleaned = _sanitizeNumberString(value);
       if (cleaned.isEmpty) continue;
-      final parsed = int.tryParse(cleaned);
-      if (parsed != null) return parsed;
+      final parsed = double.tryParse(cleaned);
+      if (parsed != null) return parsed.round();
     }
   }
   return null;
