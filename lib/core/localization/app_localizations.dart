@@ -339,6 +339,14 @@ class AppLocalizations {
       _valueWithArgs('shareMessage', {'link': link});
   String get shareNotificationTitle => _value('shareNotificationTitle');
   String get shareNotificationBody => _value('shareNotificationBody');
+  String get notificationsPermissionPromptTitle =>
+      _value('notificationsPermissionPromptTitle');
+  String get notificationsPermissionPromptBody =>
+      _value('notificationsPermissionPromptBody');
+  String get notificationsPermissionAllowButton =>
+      _value('notificationsPermissionAllowButton');
+  String get notificationsPermissionNotNowButton =>
+      _value('notificationsPermissionNotNowButton');
   String get dashboardTappedMessage => _value('dashboardTappedMessage');
   String get addNewWorkTappedMessage => _value('addNewWorkTappedMessage');
   String get attendanceHistoryTappedMessage =>

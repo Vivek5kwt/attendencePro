@@ -24,6 +24,8 @@ class LocalNotificationService {
   static bool? _notificationsPermissionGranted;
   static const String _permissionRequestedKey =
       'notifications_permission_requested';
+  static const String _permissionPromptAnsweredKey =
+      'notifications_permission_prompt_answered';
 
   static const AndroidNotificationChannel _downloadChannel =
       AndroidNotificationChannel(
@@ -55,7 +57,7 @@ class LocalNotificationService {
   static const String _attendanceReminderBody =
       "Don't forget to mark your attendance for today before the day ends! (Stay consistent and keep your records updated.)";
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({bool requestPermissionsOnInit = false}) async {
     if (_initialized) {
       return;
     }
@@ -95,7 +97,13 @@ class LocalNotificationService {
         ?.createNotificationChannel(_attendanceReminderChannel);
     await androidImplementation?.createNotificationChannel(_generalChannel);
 
-    _notificationsPermissionGranted = await _ensurePermissionsRequested();
+    if (requestPermissionsOnInit) {
+      _notificationsPermissionGranted = await _ensurePermissionsRequested();
+    } else {
+      final status = await _currentPermissionStatus();
+      _notificationsPermissionGranted =
+          status == _NotificationPermissionStatus.granted;
+    }
 
     _initialized = true;
   }
@@ -182,6 +190,7 @@ class LocalNotificationService {
     if (shouldRequest) {
       await _requestPermissions();
       await prefs.setBool(_permissionRequestedKey, true);
+      await _markPermissionPromptAnswered(prefs: prefs);
 
       final updatedStatus = await _currentPermissionStatus();
       final granted =
@@ -190,8 +199,43 @@ class LocalNotificationService {
       return granted;
     }
 
+    await _markPermissionPromptAnswered(prefs: prefs);
     _notificationsPermissionGranted = false;
     return false;
+  }
+
+  static Future<void> markPermissionPromptAnswered() async {
+    await _markPermissionPromptAnswered();
+  }
+
+  static Future<bool> shouldShowPermissionPrompt() async {
+    if (kIsWeb) {
+      return false;
+    }
+
+    if (!_initialized) {
+      await initialize();
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final promptAnswered =
+        prefs.getBool(_permissionPromptAnsweredKey) ?? false;
+
+    final status = await _currentPermissionStatus();
+    if (status == _NotificationPermissionStatus.granted) {
+      await _markPermissionPromptAnswered(prefs: prefs);
+      _notificationsPermissionGranted = true;
+      return false;
+    }
+
+    return !promptAnswered;
+  }
+
+  static Future<void> _markPermissionPromptAnswered({
+    SharedPreferences? prefs,
+  }) async {
+    final resolvedPrefs = prefs ?? await SharedPreferences.getInstance();
+    await resolvedPrefs.setBool(_permissionPromptAnsweredKey, true);
   }
 
   static Future<bool> ensurePermissionsRequested() async {
