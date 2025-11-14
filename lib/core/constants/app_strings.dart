@@ -283,6 +283,9 @@ abstract final class AppString {
       'shareWhatsappUnavailable': 'WhatsApp is not installed on this device.',
       'shareWhatsappFailed': 'Unable to open WhatsApp.',
       'shareMessage': 'Check out AttendancePro: {link}',
+      'shareNotificationTitle': 'Notifications ready',
+      'shareNotificationBody':
+          'This is a test notification for sharing AttendancePro.',
       'dashboardTappedMessage': 'Dashboard tapped',
       'addNewWorkTappedMessage': 'Add New Work tapped',
       'attendanceHistoryTappedMessage': 'Attendance History tapped',
@@ -724,6 +727,9 @@ abstract final class AppString {
       'shareWhatsappUnavailable': 'इस डिवाइस पर WhatsApp इंस्टॉल नहीं है।',
       'shareWhatsappFailed': 'WhatsApp नहीं खोल सके।',
       'shareMessage': 'AttendancePro देखें: {link}',
+      'shareNotificationTitle': 'सूचनाएँ तैयार हैं',
+      'shareNotificationBody':
+          'यह AttendancePro साझा करने के लिए एक परीक्षण सूचना है।',
       'dashboardTappedMessage': 'डैशबोर्ड चुना गया',
       'addNewWorkTappedMessage': 'नया कार्य चुना गया',
       'attendanceHistoryTappedMessage': 'उपस्थिति इतिहास चुना गया',
@@ -1162,6 +1168,9 @@ abstract final class AppString {
       'shareWhatsappUnavailable': 'ਇਸ ਡਿਵਾਈਸ ਤੇ WhatsApp ਇੰਸਟਾਲ ਨਹੀਂ ਹੈ।',
       'shareWhatsappFailed': 'WhatsApp ਨਹੀਂ ਖੋਲ੍ਹ ਸਕੇ।',
       'shareMessage': 'AttendancePro ਨੂੰ ਵੇਖੋ: {link}',
+      'shareNotificationTitle': 'ਸੂਚਨਾਵਾਂ ਤਿਆਰ ਹਨ',
+      'shareNotificationBody':
+          'ਇਹ AttendancePro ਨੂੰ ਸਾਂਝਾ ਕਰਨ ਲਈ ਇੱਕ ਟੈਸਟ ਨੋਟੀਫਿਕੇਸ਼ਨ ਹੈ।',
       'dashboardTappedMessage': 'ਡੈਸ਼ਬੋਰਡ ਚੁਣਿਆ ਗਿਆ',
       'addNewWorkTappedMessage': 'ਨਵਾਂ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'attendanceHistoryTappedMessage': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਚੁਣਿਆ ਗਿਆ',
@@ -1608,6 +1617,9 @@ abstract final class AppString {
       'shareWhatsappUnavailable': 'WhatsApp non è installato su questo dispositivo.',
       'shareWhatsappFailed': 'Impossibile aprire WhatsApp.',
       'shareMessage': 'Scopri AttendancePro: {link}',
+      'shareNotificationTitle': 'Notifiche pronte',
+      'shareNotificationBody':
+          'Questa è una notifica di prova per condividere AttendancePro.',
       'dashboardTappedMessage': 'Dashboard selezionata',
       'addNewWorkTappedMessage': 'Nuovo lavoro selezionato',
       'attendanceHistoryTappedMessage': 'Storico presenze selezionato',
