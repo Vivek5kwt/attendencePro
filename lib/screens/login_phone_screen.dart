@@ -11,6 +11,7 @@ import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 import '../utils/responsive.dart';
 import '../widgets/app_dialogs.dart';
+import '../widgets/primary_cta_button.dart';
 import 'forgot_password_screen.dart';
 import '../data/country_codes.dart';
 import '../data/phone_number_metadata.dart';
@@ -725,26 +726,14 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
                         final isProcessing = state is AuthLoading;
                         return SizedBox(
                           width: double.infinity,
-                          height: responsive.scale(55),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF007BFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(responsive.scale(32)),
-                              ),
-                            ),
+                          child: PrimaryCtaButton(
+                            label: l.loginButton,
+                            height: responsive.scale(56),
+                            icon: Icons.login_rounded,
+                            isLoading: isProcessing,
                             onPressed: isProcessing
                                 ? null
                                 : () => _submitLogin(context),
-                            child: Text(
-                              l.loginButton,
-                              style: TextStyle(
-                                fontSize: responsive.scaleText(18),
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
                           ),
                         );
                       },
