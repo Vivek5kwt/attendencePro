@@ -1995,102 +1995,155 @@ class _AddNewWorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const borderRadius = BorderRadius.all(Radius.circular(24));
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: borderRadius,
         splashFactory: InkRipple.splashFactory,
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFFAFAFF),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
+        overlayColor: MaterialStateProperty.resolveWith(
+          (states) => states.contains(MaterialState.pressed)
+              ? Colors.white.withOpacity(0.14)
+              : null,
+        ),
+        child: Ink(
+          decoration: const BoxDecoration(
+            borderRadius: borderRadius,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF4F46E5), Color(0xFF2563EB)],
+            ),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0F000000),
-                blurRadius: 16,
-                offset: Offset(0, 8),
+                color: Color(0x1F1E3A8A),
+                blurRadius: 24,
+                offset: Offset(0, 12),
               ),
             ],
           ),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-          child: _DashedOutline(
-            radius: 16,
-            dashColor: const Color(0xFF94A3B8),
-            strokeWidth: 1.2,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.add_rounded,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -24,
+                right: -16,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0F172A),
-                                fontSize: 16,
-                              ) ??
-                              const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
-                                fontSize: 16,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: 13,
-                                height: 1.4,
-                                color: const Color(0xFF6B7280),
-                                fontWeight: FontWeight.w400,
-                              ) ??
-                              const TextStyle(
-                                fontSize: 13,
-                                height: 1.4,
-                                color: Color(0xFF6B7280),
-                                fontWeight: FontWeight.w400,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ],
+                ),
               ),
-            ),
+              Positioned(
+                bottom: -32,
+                left: -20,
+                child: Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.06),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.18),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.add_circle_rounded,
+                          color: Colors.white,
+                          size: 34,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ) ??
+                                const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.16),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.cloud_upload_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    subtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                          fontSize: 13,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ) ??
+                                        const TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -2098,84 +2151,3 @@ class _AddNewWorkCard extends StatelessWidget {
   }
 }
 
-class _DashedOutline extends StatelessWidget {
-  const _DashedOutline({
-    required this.child,
-    required this.radius,
-    required this.dashColor,
-    required this.strokeWidth,
-  });
-
-  final Widget child;
-  final double radius;
-  final Color dashColor;
-  final double strokeWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedBorderPainter(
-        radius: radius,
-        color: dashColor,
-        strokeWidth: strokeWidth,
-      ),
-      child: child,
-    );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({
-    required this.radius,
-    required this.color,
-    required this.strokeWidth,
-  });
-
-  final double radius;
-  final Color color;
-  final double strokeWidth;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
-
-    final path = Path()..addRRect(rrect);
-
-    final dashWidth = 6.0;
-    final dashSpace = 4.0;
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..color = color
-      ..strokeCap = StrokeCap.round;
-
-    final dashedPath = _createDashedPath(path, dashWidth, dashSpace);
-    canvas.drawPath(dashedPath, paint);
-  }
-
-  Path _createDashedPath(Path source, double dashWidth, double dashSpace) {
-    final Path dashed = Path();
-    for (final PathMetric metric in source.computeMetrics()) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        final double next = distance + dashWidth;
-        final bool isLastSegment = next > metric.length;
-        dashed.addPath(
-          metric.extractPath(distance, isLastSegment ? metric.length : next),
-          Offset.zero,
-        );
-        distance += dashWidth + dashSpace;
-      }
-    }
-    return dashed;
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.radius != radius ||
-        oldDelegate.strokeWidth != strokeWidth;
-  }
-}
