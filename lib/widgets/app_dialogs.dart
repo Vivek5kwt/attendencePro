@@ -43,6 +43,34 @@ Future<bool> showCreativeLogoutDialog(
   );
 }
 
+class _GlowingOrb extends StatelessWidget {
+  const _GlowingOrb({
+    required this.diameter,
+    required this.colors,
+  });
+
+  final double diameter;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: diameter,
+      height: diameter,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colors.first.withOpacity(0.65),
+            colors.last.withOpacity(0.0),
+          ],
+          radius: 0.85,
+        ),
+      ),
+    );
+  }
+}
+
 Future<bool> showCreativeDeleteAccountDialog(
   BuildContext context,
   AppLocalizations localizations,
@@ -430,61 +458,114 @@ Future<String?> showCreativeLanguageDialog(
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
+                                    Color(0xFF6E7FF3),
                                     Color(0xFF7F7FD5),
                                     Color(0xFF86A8E7),
-                                    Color(0xFF91EAE4)
+                                    Color(0xFF91EAE4),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                               ),
-                              padding: EdgeInsets.fromLTRB(
-                                responsive.scale(28),
-                                responsive.scale(36),
-                                responsive.scale(28),
-                                responsive.scale(24),
-                              ),
-                              child: Column(
+                              child: Stack(
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.2),
-                                    ),
-                                    padding: EdgeInsets.all(responsive.scale(18)),
-                                    child: CircleAvatar(
-                                      radius: responsive.scale(32),
-                                      backgroundColor: Colors.white,
-                                      child: Icon(
-                                        Icons.language,
-                                        size: responsive.scale(30),
-                                        color: const Color(0xFF5A60FF),
-                                      ),
+                                  Positioned(
+                                    top: responsive.scale(-60),
+                                    right: responsive.scale(-30),
+                                    child: _GlowingOrb(
+                                      diameter: responsive.scale(160),
+                                      colors: const [
+                                        Color(0xFFB6C4FF),
+                                        Color(0xFF8EA4FF),
+                                      ],
                                     ),
                                   ),
-                                  SizedBox(height: responsive.scale(18)),
-                                  Text(
-                                    localizations.selectLanguageTitle,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: textTheme.headlineSmall?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize:
-                                          scaledFont(textTheme.headlineSmall?.fontSize),
+                                  Positioned(
+                                    bottom: responsive.scale(-40),
+                                    left: responsive.scale(-40),
+                                    child: _GlowingOrb(
+                                      diameter: responsive.scale(140),
+                                      colors: const [
+                                        Color(0xFFE7F2FF),
+                                        Color(0xFFB8E1FF),
+                                      ],
                                     ),
                                   ),
-                                  SizedBox(height: responsive.scale(8)),
-                                  Text(
-                                    localizations.languageSelection(
-                                      options[tempSelection] ?? tempSelection,
+                                  Padding(
+                                    padding: EdgeInsets.fromLTRB(
+                                      responsive.scale(28),
+                                      responsive.scale(40),
+                                      responsive.scale(28),
+                                      responsive.scale(24),
                                     ),
-                                    textAlign: TextAlign.center,
-                                    style: textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withOpacity(0.85),
-                                      fontSize:
-                                          scaledFont(textTheme.bodyMedium?.fontSize),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              responsive.scale(28),
+                                            ),
+                                            color: Colors.white.withOpacity(0.15),
+                                          ),
+                                          padding: EdgeInsets.all(responsive.scale(18)),
+                                          child: CircleAvatar(
+                                            radius: responsive.scale(32),
+                                            backgroundColor: Colors.white,
+                                            child: Icon(
+                                              Icons.translate,
+                                              size: responsive.scale(30),
+                                              color: const Color(0xFF4F5BFF),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: responsive.scale(20)),
+                                        Text(
+                                          localizations.selectLanguageTitle,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: textTheme.headlineSmall?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.4,
+                                            fontSize: scaledFont(
+                                              textTheme.headlineSmall?.fontSize,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: responsive.scale(12)),
+                                        Text(
+                                          localizations.languageDialogSubtitle,
+                                          textAlign: TextAlign.center,
+                                          style: textTheme.bodyMedium?.copyWith(
+                                            color: Colors.white.withOpacity(0.9),
+                                            fontSize: scaledFont(
+                                              textTheme.bodyMedium?.fontSize,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: responsive.scale(14)),
+                                        AnimatedSwitcher(
+                                          duration:
+                                              const Duration(milliseconds: 250),
+                                          switchInCurve: Curves.easeOutBack,
+                                          switchOutCurve: Curves.easeIn,
+                                          child: Text(
+                                            localizations.languageSelection(
+                                              options[tempSelection] ?? tempSelection,
+                                            ),
+                                            key: ValueKey<String>(tempSelection),
+                                            textAlign: TextAlign.center,
+                                            style: textTheme.bodyLarge?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: scaledFont(
+                                                textTheme.bodyLarge?.fontSize,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -522,90 +603,201 @@ Future<String?> showCreativeLanguageDialog(
                                               children: options.entries.map((entry) {
                                                 final isSelected =
                                                     entry.key == tempSelection;
+                                                final languageLabel = entry.value;
+                                                final trimmedLabel =
+                                                    languageLabel.trim();
+                                                final languageInitial =
+                                                    trimmedLabel.isNotEmpty
+                                                        ? trimmedLabel
+                                                            .substring(0, 1)
+                                                            .toUpperCase()
+                                                        : '?';
                                                 return SizedBox(
                                                   width: itemWidth,
                                                   child: GestureDetector(
                                                     onTap: () =>
                                                         setState(() => tempSelection = entry.key),
-                                                    child: AnimatedContainer(
+                                                    child: AnimatedScale(
                                                       duration: const Duration(
-                                                          milliseconds: 200),
+                                                          milliseconds: 220),
+                                                      scale: isSelected ? 1.02 : 1,
                                                       curve: Curves.easeInOut,
-                                                      padding: EdgeInsets.symmetric(
-                                                        horizontal: responsive.scale(18),
-                                                        vertical: responsive.scale(14),
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                responsive.scale(20)),
-                                                        border: Border.all(
-                                                          color: isSelected
-                                                              ? const Color(0xFF5A60FF)
-                                                              : const Color(0xFFE4E6EB),
-                                                          width: responsive.scale(1.4),
+                                                      child: AnimatedContainer(
+                                                        duration: const Duration(
+                                                            milliseconds: 220),
+                                                        curve: Curves.easeInOut,
+                                                        padding: EdgeInsets.symmetric(
+                                                          horizontal:
+                                                              responsive.scale(18),
+                                                          vertical:
+                                                              responsive.scale(16),
                                                         ),
-                                                        color: isSelected
-                                                            ? const Color(0xFFEEF1FF)
-                                                            : Colors.white,
-                                                        boxShadow: isSelected
-                                                            ? [
-                                                                BoxShadow(
-                                                                  color: const Color(0xFF5A60FF)
-                                                                      .withOpacity(0.24),
-                                                                  blurRadius:
-                                                                      responsive.scale(12),
-                                                                  offset: Offset(
-                                                                    0,
-                                                                    responsive.scale(6),
-                                                                  ),
-                                                                ),
-                                                              ]
-                                                            : [],
-                                                      ),
-                                                      child: Row(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment.center,
-                                                        children: [
-                                                          AnimatedContainer(
-                                                            duration: const Duration(
-                                                                milliseconds: 200),
-                                                            decoration: BoxDecoration(
-                                                              shape: BoxShape.circle,
-                                                              color: isSelected
-                                                                  ? const Color(0xFF5A60FF)
-                                                                  : const Color(0xFFE0E3EB),
-                                                            ),
-                                                            padding: EdgeInsets.all(
-                                                                responsive.scale(6)),
-                                                            child: Icon(
-                                                              Icons.check,
-                                                              size: responsive.scale(16),
-                                                              color: isSelected
-                                                                  ? Colors.white
-                                                                  : const Color(0xFF8D93A1),
-                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                  responsive.scale(22)),
+                                                          border: Border.all(
+                                                            color: isSelected
+                                                                ? const Color(0xFF4F5BFF)
+                                                                : const Color(0xFFE4E6EB),
+                                                            width: responsive.scale(1.4),
                                                           ),
-                                                          SizedBox(
-                                                              width: responsive.scale(14)),
-                                                          Expanded(
-                                                            child: Text(
-                                                              entry.value,
-                                                              textAlign: TextAlign.start,
-                                                              style: textTheme.bodyLarge?.copyWith(
-                                                                color: isSelected
-                                                                    ? const Color(0xFF2D3142)
-                                                                    : const Color(0xFF5C6270),
-                                                                fontWeight: isSelected
-                                                                    ? FontWeight.w700
-                                                                    : FontWeight.w500,
-                                                                fontSize: scaledFont(
-                                                                  textTheme.bodyLarge?.fontSize,
-                                                                ),
+                                                          gradient: isSelected
+                                                              ? const LinearGradient(
+                                                                  colors: [
+                                                                    Color(0xFFEAF0FF),
+                                                                    Color(0xFFF7F9FF),
+                                                                  ],
+                                                                  begin: Alignment.topLeft,
+                                                                  end: Alignment.bottomRight,
+                                                                )
+                                                              : null,
+                                                          color: isSelected
+                                                              ? null
+                                                              : Colors.white,
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: (isSelected
+                                                                      ? const Color(
+                                                                          0xFF4F5BFF)
+                                                                      : const Color(
+                                                                          0xFF8892A7))
+                                                                  .withOpacity(
+                                                                      isSelected ? 0.18 : 0.06),
+                                                              blurRadius: responsive.scale(
+                                                                  isSelected ? 18 : 10),
+                                                              offset: Offset(
+                                                                0,
+                                                                responsive.scale(
+                                                                    isSelected ? 10 : 4),
                                                               ),
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment.center,
+                                                          children: [
+                                                            AnimatedContainer(
+                                                              duration: const Duration(
+                                                                  milliseconds: 220),
+                                                              decoration: BoxDecoration(
+                                                                shape: BoxShape.circle,
+                                                                gradient: isSelected
+                                                                    ? const LinearGradient(
+                                                                        colors: [
+                                                                          Color(0xFF4F5BFF),
+                                                                          Color(0xFF7F89FF),
+                                                                        ],
+                                                                      )
+                                                                    : null,
+                                                                color: isSelected
+                                                                    ? null
+                                                                    : const Color(
+                                                                        0xFFE0E3EB),
+                                                              ),
+                                                              padding: EdgeInsets.all(
+                                                                responsive.scale(10),
+                                                              ),
+                                                              child: AnimatedSwitcher(
+                                                                duration: const Duration(
+                                                                    milliseconds: 200),
+                                                                child: isSelected
+                                                                    ? Icon(
+                                                                        Icons.check,
+                                                                        key: const ValueKey(
+                                                                            'selected-check'),
+                                                                        size: responsive
+                                                                            .scale(18),
+                                                                        color: Colors.white,
+                                                                      )
+                                                                    : Text(
+                                                                        languageInitial,
+                                                                        key: ValueKey(
+                                                                            'initial-$languageInitial'),
+                                                                        style: textTheme
+                                                                            .labelLarge
+                                                                            ?.copyWith(
+                                                                              fontSize:
+                                                                                  scaledFont(
+                                                                                textTheme.labelLarge
+                                                                                    ?.fontSize,
+                                                                              ),
+                                                                              fontWeight:
+                                                                                  FontWeight.w700,
+                                                                              color: const Color(
+                                                                                  0xFF4C5670),
+                                                                            ),
+                                                                      ),
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                                width: responsive
+                                                                    .scale(14)),
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                mainAxisSize:
+                                                                    MainAxisSize.min,
+                                                                children: [
+                                                                  Text(
+                                                                    languageLabel,
+                                                                    textAlign:
+                                                                        TextAlign.start,
+                                                                    style: textTheme
+                                                                        .bodyLarge
+                                                                        ?.copyWith(
+                                                                      color: isSelected
+                                                                          ? const Color(
+                                                                              0xFF1D1F33)
+                                                                          : const Color(
+                                                                              0xFF364155),
+                                                                      fontWeight: isSelected
+                                                                          ? FontWeight.w700
+                                                                          : FontWeight.w500,
+                                                                      fontSize: scaledFont(
+                                                                        textTheme
+                                                                            .bodyLarge
+                                                                            ?.fontSize,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  SizedBox(
+                                                                      height: responsive
+                                                                          .scale(4)),
+                                                                  AnimatedOpacity(
+                                                                    duration: const Duration(
+                                                                        milliseconds: 200),
+                                                                    opacity:
+                                                                        isSelected ? 1 : 0.65,
+                                                                    child: Text(
+                                                                      isSelected
+                                                                          ? localizations
+                                                                              .languageSelectedCaption
+                                                                          : localizations
+                                                                              .languageTapToSelect,
+                                                                      style: textTheme
+                                                                          .bodySmall
+                                                                          ?.copyWith(
+                                                                        color: isSelected
+                                                                            ? const Color(
+                                                                                0xFF4F5BFF)
+                                                                            : const Color(
+                                                                                0xFF8A93A6),
+                                                                        fontSize: scaledFont(
+                                                                          textTheme.bodySmall
+                                                                              ?.fontSize,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
