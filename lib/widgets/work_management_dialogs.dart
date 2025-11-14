@@ -2116,11 +2116,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        icon: const Icon(Icons.close),
-                        splashRadius: 20,
-                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
