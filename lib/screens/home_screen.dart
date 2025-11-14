@@ -432,11 +432,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        icon: const Icon(Icons.close),
-                        splashRadius: 20,
-                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
