@@ -17,6 +17,7 @@ import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
 import '../utils/language_dialog.dart';
+import '../utils/local_notification_service.dart';
 import '../utils/responsive.dart';
 import '../utils/session_manager.dart';
 import '../widgets/app_dialogs.dart';
@@ -1715,6 +1716,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showShareOptions() async {
     final l = AppLocalizations.of(context);
+
+    await LocalNotificationService.showTestNotification(
+      title: l.shareNotificationTitle,
+      body: l.shareNotificationBody,
+    );
 
     await showDialog<void>(
       context: context,

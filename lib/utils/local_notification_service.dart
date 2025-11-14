@@ -24,6 +24,14 @@ class LocalNotificationService {
     importance: Importance.high,
   );
 
+  static const AndroidNotificationChannel _generalChannel =
+      AndroidNotificationChannel(
+    'general_channel',
+    'General',
+    description: 'General purpose notifications',
+    importance: Importance.high,
+  );
+
   static const AndroidNotificationChannel _attendanceReminderChannel =
       AndroidNotificationChannel(
     'attendance_reminder_channel',
@@ -71,6 +79,17 @@ class LocalNotificationService {
     await androidImplementation?.createNotificationChannel(_downloadChannel);
     await androidImplementation
         ?.createNotificationChannel(_attendanceReminderChannel);
+    await androidImplementation?.createNotificationChannel(_generalChannel);
+
+    await _requestPermissions();
+
+    _initialized = true;
+  }
+
+  static Future<void> _requestPermissions() async {
+    final androidImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
     await androidImplementation?.requestNotificationsPermission();
 
     final iosImplementation = _plugin
@@ -90,8 +109,56 @@ class LocalNotificationService {
       badge: false,
       sound: true,
     );
+  }
 
-    _initialized = true;
+  static Future<void> requestPermissions() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    if (!_initialized) {
+      await initialize();
+    } else {
+      await _requestPermissions();
+    }
+  }
+
+  static Future<void> showTestNotification({
+    String title = 'Notifications ready',
+    String body = 'AttendancePro can now send you alerts.',
+  }) async {
+    if (kIsWeb) {
+      return;
+    }
+
+    if (!_initialized) {
+      await initialize();
+    } else {
+      await _requestPermissions();
+    }
+
+    final notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _generalChannel.id,
+        _generalChannel.name,
+        channelDescription: _generalChannel.description,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: true,
+      ),
+      macOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false,
+        presentSound: true,
+      ),
+    );
+
+    final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    await _plugin.show(id, title, body, notificationDetails);
   }
 
   static Future<void> showDownloadNotification({
