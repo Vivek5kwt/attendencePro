@@ -242,17 +242,24 @@ class LocalNotificationService {
     );
 
     try {
-      await _plugin.zonedSchedule(
-        _attendanceReminderNotificationId,
-        _attendanceReminderTitle,
-        _attendanceReminderBody,
-        scheduledDate,
-        notificationDetails,
-        androidScheduleMode: scheduleMode,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.wallClockTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+      await _scheduleAttendanceReminder(
+        date: scheduledDate,
+        details: notificationDetails,
+        scheduleMode: scheduleMode,
       );
+
+      if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle &&
+          !await _isAttendanceReminderPending()) {
+        debugPrint(
+          '[LocalNotificationService] Exact alarm scheduling appears to be '
+          'blocked. Retrying attendance reminder with inexact mode.',
+        );
+        await _scheduleAttendanceReminder(
+          date: scheduledDate,
+          details: notificationDetails,
+          scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        );
+      }
     } on PlatformException catch (error, stackTrace) {
       final isExactAlarmError = error.code == 'exact_alarms_not_permitted';
       final alreadyInexact =
@@ -273,16 +280,10 @@ class LocalNotificationService {
         '${scheduledDate.toString()}.',
       );
 
-      await _plugin.zonedSchedule(
-        _attendanceReminderNotificationId,
-        _attendanceReminderTitle,
-        _attendanceReminderBody,
-        scheduledDate,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.wallClockTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+      await _scheduleAttendanceReminder(
+        date: scheduledDate,
+        details: notificationDetails,
+        scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }
   }
@@ -376,6 +377,34 @@ class LocalNotificationService {
       return scheduled.add(const Duration(days: 1));
     }
     return scheduled;
+  }
+
+  static Future<void> _scheduleAttendanceReminder({
+    required tz.TZDateTime date,
+    required NotificationDetails details,
+    required AndroidScheduleMode scheduleMode,
+  }) async {
+    await _plugin.zonedSchedule(
+      _attendanceReminderNotificationId,
+      _attendanceReminderTitle,
+      _attendanceReminderBody,
+      date,
+      details,
+      androidScheduleMode: scheduleMode,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.wallClockTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  static Future<bool> _isAttendanceReminderPending() async {
+    final pendingRequests = await _plugin.pendingNotificationRequests();
+    for (final request in pendingRequests) {
+      if (request.id == _attendanceReminderNotificationId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   static bool _isSameDate(DateTime a, DateTime b) {
