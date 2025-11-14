@@ -57,9 +57,13 @@ class LocalNotificationService {
   static const int _attendanceReminderNotificationId = 2001;
   static const String _lastAttendanceMarkedKey = 'last_attendance_marked_epoch';
   static const String _attendanceReminderTimeKey = 'attendance_reminder_time';
+  static const _ReminderTime _attendanceReminderDefaultTime =
+      _ReminderTime(hour: 20, minute: 0);
+  static const int _attendanceReminderWindowStartHour = 20;
+  static const int _attendanceReminderWindowEndHour = 22;
   static const String _attendanceReminderTitle = 'Attendance Reminder';
   static const String _attendanceReminderBody =
-      "Don't forget to mark your attendance for today before the day ends! (Stay consistent and keep your records updated.)";
+      "Don't forget to mark your attendance for today before the day ends!\n(Stay consistent and keep your records updated.)";
 
   static Future<void> initialize({bool requestPermissionsOnInit = false}) async {
     if (_initialized) {
@@ -547,7 +551,10 @@ class LocalNotificationService {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final formatted = _formatStoredReminderTime(time.hour, time.minute);
+    final reminderTime =
+        _clampReminderTime(_ReminderTime(hour: time.hour, minute: time.minute));
+    final formatted =
+        _formatStoredReminderTime(reminderTime.hour, reminderTime.minute);
     await prefs.setString(_attendanceReminderTimeKey, formatted);
 
     await scheduleDailyAttendanceReminder();
@@ -555,7 +562,10 @@ class LocalNotificationService {
 
   static Future<TimeOfDay> currentAttendanceReminderTime() async {
     if (kIsWeb) {
-      return const TimeOfDay(hour: 20, minute: 0);
+      return TimeOfDay(
+        hour: _attendanceReminderDefaultTime.hour,
+        minute: _attendanceReminderDefaultTime.minute,
+      );
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -629,11 +639,32 @@ class LocalNotificationService {
     if (stored != null) {
       final parsed = _parseStoredReminderTime(stored);
       if (parsed != null) {
-        return parsed;
+        return _clampReminderTime(parsed);
       }
     }
 
-    return const _ReminderTime(hour: 20, minute: 0);
+    return _attendanceReminderDefaultTime;
+  }
+
+  static _ReminderTime _clampReminderTime(_ReminderTime time) {
+    final reminderDuration = Duration(hours: time.hour, minutes: time.minute);
+    final start =
+        Duration(hours: _attendanceReminderWindowStartHour, minutes: 0);
+    final latestAllowed =
+        Duration(hours: _attendanceReminderWindowEndHour, minutes: 0);
+
+    if (reminderDuration < start) {
+      return _attendanceReminderDefaultTime;
+    }
+
+    if (reminderDuration > latestAllowed) {
+      return _ReminderTime(
+        hour: _attendanceReminderWindowEndHour,
+        minute: 0,
+      );
+    }
+
+    return time;
   }
 
   static _ReminderTime? _parseStoredReminderTime(String raw) {
@@ -728,3 +759,4 @@ class _ReminderTime {
   final int hour;
   final int minute;
 }
+
