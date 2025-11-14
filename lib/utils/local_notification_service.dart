@@ -8,6 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+enum _NotificationPermissionStatus {
+  granted,
+  denied,
+  notDetermined,
+}
+
 class LocalNotificationService {
   LocalNotificationService._();
 
@@ -15,6 +21,9 @@ class LocalNotificationService {
       FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
   static bool _timeZoneInitialized = false;
+  static bool? _notificationsPermissionGranted;
+  static const String _permissionRequestedKey =
+      'notifications_permission_requested';
 
   static const AndroidNotificationChannel _downloadChannel =
       AndroidNotificationChannel(
@@ -47,8 +56,13 @@ class LocalNotificationService {
       "Don't forget to mark your attendance for today before the day ends! (Stay consistent and keep your records updated.)";
 
   static Future<void> initialize() async {
-    if (_initialized || kIsWeb) {
+    if (_initialized) {
+      return;
+    }
+
+    if (kIsWeb) {
       _initialized = true;
+      _notificationsPermissionGranted = false;
       return;
     }
 
@@ -81,7 +95,7 @@ class LocalNotificationService {
         ?.createNotificationChannel(_attendanceReminderChannel);
     await androidImplementation?.createNotificationChannel(_generalChannel);
 
-    await _requestPermissions();
+    _notificationsPermissionGranted = await _ensurePermissionsRequested();
 
     _initialized = true;
   }
@@ -111,16 +125,120 @@ class LocalNotificationService {
     );
   }
 
-  static Future<void> requestPermissions() async {
+  static Future<_NotificationPermissionStatus> _currentPermissionStatus() async {
+    final iosImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+    final iosSettings = await iosImplementation?.getNotificationSettings();
+    if (iosSettings != null) {
+      return _mapDarwinAuthorizationStatus(iosSettings.authorizationStatus);
+    }
+
+    final macImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin>();
+    final macSettings = await macImplementation?.getNotificationSettings();
+    if (macSettings != null) {
+      return _mapDarwinAuthorizationStatus(macSettings.authorizationStatus);
+    }
+
+    final androidImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    final androidStatus = await androidImplementation?.areNotificationsEnabled();
+    if (androidStatus != null) {
+      return androidStatus
+          ? _NotificationPermissionStatus.granted
+          : _NotificationPermissionStatus.denied;
+    }
+
+    return _NotificationPermissionStatus.granted;
+  }
+
+  static _NotificationPermissionStatus _mapDarwinAuthorizationStatus(
+    AuthorizationStatus status,
+  ) {
+    switch (status) {
+      case AuthorizationStatus.authorized:
+      case AuthorizationStatus.provisional:
+      case AuthorizationStatus.ephemeral:
+        return _NotificationPermissionStatus.granted;
+      case AuthorizationStatus.denied:
+        return _NotificationPermissionStatus.denied;
+      case AuthorizationStatus.notDetermined:
+        return _NotificationPermissionStatus.notDetermined;
+    }
+  }
+
+  static Future<bool> _ensurePermissionsRequested() async {
     if (kIsWeb) {
-      return;
+      _notificationsPermissionGranted = false;
+      return false;
+    }
+
+    final status = await _currentPermissionStatus();
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyRequested = prefs.getBool(_permissionRequestedKey) ?? false;
+
+    if (status == _NotificationPermissionStatus.granted) {
+      if (!alreadyRequested) {
+        await prefs.setBool(_permissionRequestedKey, true);
+      }
+      _notificationsPermissionGranted = true;
+      return true;
+    }
+
+    final shouldRequest =
+        status == _NotificationPermissionStatus.notDetermined ||
+            !alreadyRequested;
+
+    if (shouldRequest) {
+      await _requestPermissions();
+      await prefs.setBool(_permissionRequestedKey, true);
+
+      final updatedStatus = await _currentPermissionStatus();
+      final granted =
+          updatedStatus == _NotificationPermissionStatus.granted;
+      _notificationsPermissionGranted = granted;
+      return granted;
+    }
+
+    _notificationsPermissionGranted = false;
+    return false;
+  }
+
+  static Future<bool> ensurePermissionsRequested() async {
+    if (kIsWeb) {
+      _notificationsPermissionGranted = false;
+      return false;
     }
 
     if (!_initialized) {
       await initialize();
-    } else {
-      await _requestPermissions();
+      return _notificationsPermissionGranted ?? false;
     }
+
+    return _ensurePermissionsRequested();
+  }
+
+  static Future<bool> requestPermissions() async {
+    return ensurePermissionsRequested();
+  }
+
+  static Future<bool> hasNotificationPermissions() async {
+    if (kIsWeb) {
+      return false;
+    }
+
+    if (!_initialized) {
+      await initialize();
+      return _notificationsPermissionGranted ?? false;
+    }
+
+    final status = await _currentPermissionStatus();
+    final granted = status == _NotificationPermissionStatus.granted;
+    _notificationsPermissionGranted = granted;
+    return granted;
   }
 
   static Future<void> showTestNotification({
@@ -131,10 +249,13 @@ class LocalNotificationService {
       return;
     }
 
-    if (!_initialized) {
-      await initialize();
-    } else {
-      await _requestPermissions();
+    final permissionGranted = await ensurePermissionsRequested();
+    if (!permissionGranted) {
+      debugPrint(
+        '[LocalNotificationService] Notification permission not granted. '
+        'Skipping test notification.',
+      );
+      return;
     }
 
     final notificationDetails = NotificationDetails(
@@ -169,8 +290,13 @@ class LocalNotificationService {
       return;
     }
 
-    if (!_initialized) {
-      await initialize();
+    final permissionGranted = await ensurePermissionsRequested();
+    if (!permissionGranted) {
+      debugPrint(
+        '[LocalNotificationService] Notification permission not granted. '
+        'Skipping download notification for $fileName.',
+      );
+      return;
     }
 
     final notificationDetails = NotificationDetails(
@@ -243,6 +369,16 @@ class LocalNotificationService {
 
     if (!_initialized) {
       await initialize();
+    }
+
+    final permissionGranted = await hasNotificationPermissions();
+    if (!permissionGranted) {
+      debugPrint(
+        '[LocalNotificationService] Notifications permission not granted. '
+        'Attendance reminder scheduling skipped.',
+      );
+      await _plugin.cancel(_attendanceReminderNotificationId);
+      return;
     }
 
     await _ensureTimeZoneSetup();
