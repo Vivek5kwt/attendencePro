@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -109,60 +110,32 @@ class LocalNotificationService {
   }
 
   static Future<void> _requestPermissions() async {
-    bool? permissionGranted;
-
-    final androidImplementation = _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    final androidGranted =
-        await androidImplementation?.requestNotificationsPermission();
-    permissionGranted = androidGranted ?? permissionGranted;
-
-    final iosImplementation = _plugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    final iosGranted = await iosImplementation?.requestPermissions(
-      alert: true,
-      badge: false,
-      sound: true,
-    );
-    permissionGranted = iosGranted ?? permissionGranted;
-
-    final macImplementation = _plugin
-        .resolvePlatformSpecificImplementation<
-            MacOSFlutterLocalNotificationsPlugin>();
-    final macGranted = await macImplementation?.requestPermissions(
-      alert: true,
-      badge: false,
-      sound: true,
-    );
-    permissionGranted = macGranted ?? permissionGranted;
-
-    if (permissionGranted != null) {
-      _notificationsPermissionGranted = permissionGranted;
-    }
+    final status = await Permission.notification.request();
+    _notificationsPermissionGranted = _isPermissionStatusGranted(status);
   }
 
   static Future<_NotificationPermissionStatus> _currentPermissionStatus() async {
-    final androidImplementation = _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    final androidStatus = await androidImplementation?.areNotificationsEnabled();
-    if (androidStatus != null) {
-      return androidStatus
-          ? _NotificationPermissionStatus.granted
-          : _NotificationPermissionStatus.denied;
-    }
+    final status = await Permission.notification.status;
 
-    if (_notificationsPermissionGranted == true) {
+    if (_isPermissionStatusGranted(status)) {
+      _notificationsPermissionGranted = true;
       return _NotificationPermissionStatus.granted;
     }
 
-    if (_notificationsPermissionGranted == false) {
+    if (status == PermissionStatus.denied ||
+        status == PermissionStatus.restricted ||
+        status == PermissionStatus.permanentlyDenied) {
+      _notificationsPermissionGranted = false;
       return _NotificationPermissionStatus.denied;
     }
 
     return _NotificationPermissionStatus.notDetermined;
+  }
+
+  static bool _isPermissionStatusGranted(PermissionStatus status) {
+    return status.isGranted ||
+        status == PermissionStatus.limited ||
+        status == PermissionStatus.provisional;
   }
 
   static Future<bool> _ensurePermissionsRequested() async {
