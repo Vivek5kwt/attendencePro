@@ -99,7 +99,9 @@ class LocalNotificationService {
     await androidImplementation?.createNotificationChannel(_generalChannel);
 
     if (requestPermissionsOnInit) {
-      _notificationsPermissionGranted = await _ensurePermissionsRequested();
+      _notificationsPermissionGranted = await _ensurePermissionsRequested(
+        markPromptAnswered: false,
+      );
     } else {
       final status = await _currentPermissionStatus();
       _notificationsPermissionGranted =
@@ -138,7 +140,9 @@ class LocalNotificationService {
         status == PermissionStatus.provisional;
   }
 
-  static Future<bool> _ensurePermissionsRequested() async {
+  static Future<bool> _ensurePermissionsRequested({
+    bool markPromptAnswered = true,
+  }) async {
     if (kIsWeb) {
       _notificationsPermissionGranted = false;
       return false;
@@ -152,6 +156,9 @@ class LocalNotificationService {
       if (!alreadyRequested) {
         await prefs.setBool(_permissionRequestedKey, true);
       }
+      if (markPromptAnswered) {
+        await _markPermissionPromptAnswered(prefs: prefs);
+      }
       _notificationsPermissionGranted = true;
       return true;
     }
@@ -163,7 +170,9 @@ class LocalNotificationService {
     if (shouldRequest) {
       await _requestPermissions();
       await prefs.setBool(_permissionRequestedKey, true);
-      await _markPermissionPromptAnswered(prefs: prefs);
+      if (markPromptAnswered) {
+        await _markPermissionPromptAnswered(prefs: prefs);
+      }
 
       final updatedStatus = await _currentPermissionStatus();
       final granted =
@@ -172,7 +181,9 @@ class LocalNotificationService {
       return granted;
     }
 
-    await _markPermissionPromptAnswered(prefs: prefs);
+    if (markPromptAnswered) {
+      await _markPermissionPromptAnswered(prefs: prefs);
+    }
     _notificationsPermissionGranted = false;
     return false;
   }
@@ -211,7 +222,9 @@ class LocalNotificationService {
     await resolvedPrefs.setBool(_permissionPromptAnsweredKey, true);
   }
 
-  static Future<bool> ensurePermissionsRequested() async {
+  static Future<bool> ensurePermissionsRequested({
+    bool markPromptAnswered = true,
+  }) async {
     if (kIsWeb) {
       _notificationsPermissionGranted = false;
       return false;
@@ -222,11 +235,11 @@ class LocalNotificationService {
       return _notificationsPermissionGranted ?? false;
     }
 
-    return _ensurePermissionsRequested();
+    return _ensurePermissionsRequested(markPromptAnswered: markPromptAnswered);
   }
 
-  static Future<bool> requestPermissions() async {
-    return ensurePermissionsRequested();
+  static Future<bool> requestPermissions({bool markPromptAnswered = true}) async {
+    return ensurePermissionsRequested(markPromptAnswered: markPromptAnswered);
   }
 
   static Future<bool> hasNotificationPermissions() async {
