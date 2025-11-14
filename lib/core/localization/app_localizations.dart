@@ -364,10 +364,13 @@ class AppLocalizations {
   String get confirmSelectionButton => _value('confirmSelectionButton');
   String get workSelectionHourSuffix => _value('workSelectionHourSuffix');
   String get selectLanguageTitle => _value('selectLanguageTitle');
+  String get languageDialogSubtitle => _value('languageDialogSubtitle');
   String get languageEnglish => _value('languageEnglish');
   String get languageHindi => _value('languageHindi');
   String get languagePunjabi => _value('languagePunjabi');
   String get languageItalian => _value('languageItalian');
+  String get languageSelectedCaption => _value('languageSelectedCaption');
+  String get languageTapToSelect => _value('languageTapToSelect');
   String get noWorkAddedYet => _value('noWorkAddedYet');
   String get startTrackingAttendance => _value('startTrackingAttendance');
   String get addYourFirstWork => _value('addYourFirstWork');
