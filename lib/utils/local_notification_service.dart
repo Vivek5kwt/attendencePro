@@ -346,7 +346,7 @@ class LocalNotificationService {
       from.year,
       from.month,
       from.day,
-      20,
+      10,
     );
     if (!scheduled.isAfter(from)) {
       return scheduled.add(const Duration(days: 1));
