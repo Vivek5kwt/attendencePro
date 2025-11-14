@@ -55,6 +55,7 @@ class LocalNotificationService {
 
   static const int _attendanceReminderNotificationId = 2001;
   static const String _lastAttendanceMarkedKey = 'last_attendance_marked_epoch';
+  static const String _attendanceReminderTimeKey = 'attendance_reminder_time';
   static const String _attendanceReminderTitle = 'Attendance Reminder';
   static const String _attendanceReminderBody =
       "Don't forget to mark your attendance for today before the day ends! (Stay consistent and keep your records updated.)";
@@ -431,6 +432,7 @@ class LocalNotificationService {
     );
 
     final prefs = await SharedPreferences.getInstance();
+    final reminderTime = _resolveReminderTime(prefs);
     final lastMarkedEpoch = prefs.getInt(_lastAttendanceMarkedKey);
     final now = tz.TZDateTime.now(tz.local);
 
@@ -440,7 +442,11 @@ class LocalNotificationService {
     final bool markedToday =
         lastMarkedDate != null && _isSameDate(lastMarkedDate, now);
 
-    var scheduledDate = _nextEightPm(now);
+    var scheduledDate = _nextReminderTime(
+      now,
+      hour: reminderTime.hour,
+      minute: reminderTime.minute,
+    );
     String schedulingReason =
         'Scheduling reminder for today at the configured time.';
     if (markedToday) {
@@ -463,6 +469,8 @@ class LocalNotificationService {
     );
     debugPrint(
       '[LocalNotificationService] $schedulingReason\n'
+      '  • Configured reminder time: '
+          '${_formatReminderTimeLabel(reminderTime)}\n'
       '  • Now: ${now.toString()}\n'
       '  • Last marked date: ${lastMarkedDate?.toIso8601String() ?? 'never'}\n'
       '  • Scheduling mode: $scheduleMode\n'
@@ -532,6 +540,28 @@ class LocalNotificationService {
     await scheduleDailyAttendanceReminder();
   }
 
+  static Future<void> updateAttendanceReminderTime(TimeOfDay time) async {
+    if (kIsWeb) {
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final formatted = _formatStoredReminderTime(time.hour, time.minute);
+    await prefs.setString(_attendanceReminderTimeKey, formatted);
+
+    await scheduleDailyAttendanceReminder();
+  }
+
+  static Future<TimeOfDay> currentAttendanceReminderTime() async {
+    if (kIsWeb) {
+      return const TimeOfDay(hour: 20, minute: 0);
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final reminderTime = _resolveReminderTime(prefs);
+    return TimeOfDay(hour: reminderTime.hour, minute: reminderTime.minute);
+  }
+
   static Future<DateTime?> lastAttendanceMarkedDate() async {
     if (kIsWeb) {
       return null;
@@ -593,13 +623,61 @@ class LocalNotificationService {
     return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
-  static tz.TZDateTime _nextEightPm(tz.TZDateTime from) {
+  static _ReminderTime _resolveReminderTime(SharedPreferences prefs) {
+    final stored = prefs.getString(_attendanceReminderTimeKey);
+    if (stored != null) {
+      final parsed = _parseStoredReminderTime(stored);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return const _ReminderTime(hour: 20, minute: 0);
+  }
+
+  static _ReminderTime? _parseStoredReminderTime(String raw) {
+    final parts = raw.split(':');
+    if (parts.length != 2) {
+      return null;
+    }
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) {
+      return null;
+    }
+
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      return null;
+    }
+
+    return _ReminderTime(hour: hour, minute: minute);
+  }
+
+  static String _formatStoredReminderTime(int hour, int minute) {
+    final hourLabel = hour.toString().padLeft(2, '0');
+    final minuteLabel = minute.toString().padLeft(2, '0');
+    return '$hourLabel:$minuteLabel';
+  }
+
+  static String _formatReminderTimeLabel(_ReminderTime time) {
+    final hourLabel = time.hour.toString().padLeft(2, '0');
+    final minuteLabel = time.minute.toString().padLeft(2, '0');
+    return '$hourLabel:$minuteLabel';
+  }
+
+  static tz.TZDateTime _nextReminderTime(
+    tz.TZDateTime from, {
+    required int hour,
+    required int minute,
+  }) {
     final scheduled = tz.TZDateTime(
       tz.local,
       from.year,
       from.month,
       from.day,
-      10,
+      hour,
+      minute,
     );
     if (!scheduled.isAfter(from)) {
       return scheduled.add(const Duration(days: 1));
@@ -641,4 +719,11 @@ class LocalNotificationService {
   static bool _isSameDate(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
+}
+
+class _ReminderTime {
+  const _ReminderTime({required this.hour, required this.minute});
+
+  final int hour;
+  final int minute;
 }
