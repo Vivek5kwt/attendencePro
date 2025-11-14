@@ -12,6 +12,7 @@ import 'package:timezone/timezone.dart' as tz;
 enum _NotificationPermissionStatus {
   granted,
   denied,
+  permanentlyDenied,
   notDetermined,
 }
 
@@ -124,9 +125,13 @@ class LocalNotificationService {
       return _NotificationPermissionStatus.granted;
     }
 
-    if (status == PermissionStatus.denied ||
-        status == PermissionStatus.restricted ||
-        status == PermissionStatus.permanentlyDenied) {
+    if (status == PermissionStatus.permanentlyDenied ||
+        status == PermissionStatus.restricted) {
+      _notificationsPermissionGranted = false;
+      return _NotificationPermissionStatus.permanentlyDenied;
+    }
+
+    if (status == PermissionStatus.denied) {
       _notificationsPermissionGranted = false;
       return _NotificationPermissionStatus.denied;
     }
@@ -165,7 +170,7 @@ class LocalNotificationService {
 
     final shouldRequest =
         status == _NotificationPermissionStatus.notDetermined ||
-            !alreadyRequested;
+            status == _NotificationPermissionStatus.denied;
 
     if (shouldRequest) {
       await _requestPermissions();
@@ -181,6 +186,9 @@ class LocalNotificationService {
       return granted;
     }
 
+    if (!alreadyRequested) {
+      await prefs.setBool(_permissionRequestedKey, true);
+    }
     if (markPromptAnswered) {
       await _markPermissionPromptAnswered(prefs: prefs);
     }
