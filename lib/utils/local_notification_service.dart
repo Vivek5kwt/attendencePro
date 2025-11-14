@@ -213,13 +213,33 @@ class LocalNotificationService {
         lastMarkedDate != null && _isSameDate(lastMarkedDate, now);
 
     var scheduledDate = _nextEightPm(now);
+    String schedulingReason =
+        'Scheduling reminder for today at the configured time.';
     if (markedToday) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
+      schedulingReason =
+          'Attendance already marked today. Scheduling reminder for the next day.';
     } else if (now.isAfter(scheduledDate)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
+      schedulingReason =
+          'Current time is past the configured reminder. Scheduling for tomorrow.';
+    } else if (now.isAtSameMomentAs(scheduledDate)) {
+      schedulingReason =
+          'Current time matches the configured reminder. Scheduling it immediately for today.';
     }
 
     await _plugin.cancel(_attendanceReminderNotificationId);
+    debugPrint(
+      '[LocalNotificationService] Cancelled existing attendance reminder (id: '
+      '$_attendanceReminderNotificationId).',
+    );
+    debugPrint(
+      '[LocalNotificationService] $schedulingReason\n'
+      '  • Now: ${now.toString()}\n'
+      '  • Last marked date: ${lastMarkedDate?.toIso8601String() ?? 'never'}\n'
+      '  • Scheduling mode: $scheduleMode\n'
+      '  • Scheduled fire time: ${scheduledDate.toString()}',
+    );
 
     try {
       await _plugin.zonedSchedule(
@@ -248,6 +268,10 @@ class LocalNotificationService {
         'Exact alarm scheduling is not permitted. Falling back to inexact scheduling.',
       );
       debugPrint('$stackTrace');
+      debugPrint(
+        '[LocalNotificationService] Retrying scheduling with inexact mode for '
+        '${scheduledDate.toString()}.',
+      );
 
       await _plugin.zonedSchedule(
         _attendanceReminderNotificationId,
