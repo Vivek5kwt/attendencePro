@@ -46,6 +46,20 @@ class HistoryReportEntry {
   final double salary;
 }
 
+class HistoryReportSummary {
+  const HistoryReportSummary({
+    required this.totalHoursWorked,
+    required this.totalHourlySalary,
+    required this.totalContractSalary,
+    required this.grandTotalEarnings,
+  });
+
+  final double totalHoursWorked;
+  final double totalHourlySalary;
+  final double totalContractSalary;
+  final double grandTotalEarnings;
+}
+
 class PdfReportService {
   const PdfReportService._();
 
@@ -172,6 +186,7 @@ class PdfReportService {
     required String monthLabel,
     required String currencySymbol,
     required List<HistoryReportDay> days,
+    HistoryReportSummary? summary,
   }) async {
     if (days.isEmpty) {
       throw ArgumentError('days must not be empty');
@@ -279,6 +294,18 @@ class PdfReportService {
               );
           }
 
+          if (summary != null) {
+            widgets
+              ..add(pw.SizedBox(height: 20))
+              ..add(
+                _buildHistorySummary(
+                  fonts: fonts,
+                  currencySymbol: currencySymbol,
+                  summary: summary,
+                ),
+              );
+          }
+
           widgets
             ..add(pw.SizedBox(height: 20))
             ..add(
@@ -366,6 +393,105 @@ class PdfReportService {
     );
   }
 
+  static pw.Widget _buildHistorySummary({
+    required _PdfFontAssets fonts,
+    required String currencySymbol,
+    required HistoryReportSummary summary,
+  }) {
+    final rows = <MapEntry<String, String>>[
+      MapEntry('Total Hours Worked', _formatHours(summary.totalHoursWorked)),
+      MapEntry(
+        'Total Hourly Salary',
+        _formatCurrency(currencySymbol, summary.totalHourlySalary),
+      ),
+    ];
+
+    if (summary.totalContractSalary > 0) {
+      rows.add(
+        MapEntry(
+          'Total Contract Salary',
+          _formatCurrency(currencySymbol, summary.totalContractSalary),
+        ),
+      );
+    }
+
+    rows.add(
+      MapEntry(
+        'Grand Total Earnings',
+        _formatCurrency(currencySymbol, summary.grandTotalEarnings),
+      ),
+    );
+
+    pw.Widget buildRow(String label, String value, {bool isEmphasis = false}) {
+      return pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(vertical: 4),
+        child: pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: <pw.Widget>[
+            pw.Expanded(
+              child: pw.Text(
+                label,
+                style: _textStyle(
+                  fonts,
+                  font: isEmphasis ? fonts.bold : fonts.regular,
+                  fontSize: 11,
+                  color: PdfColors.blueGrey800,
+                ),
+              ),
+            ),
+            pw.Text(
+              value,
+              style: _textStyle(
+                fonts,
+                font: isEmphasis ? fonts.bold : fonts.regular,
+                fontSize: 11,
+                color: isEmphasis ? PdfColors.blueGrey900 : PdfColors.blueGrey700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final widgets = <pw.Widget>[
+      pw.Text(
+        'Summary',
+        style: _textStyle(
+          fonts,
+          font: fonts.bold,
+          fontSize: 13,
+          color: PdfColors.blueGrey900,
+        ),
+      ),
+      pw.SizedBox(height: 8),
+    ];
+
+    for (var i = 0; i < rows.length; i++) {
+      final isLast = i == rows.length - 1;
+      widgets.add(
+        buildRow(
+          rows[i].key,
+          rows[i].value,
+          isEmphasis: isLast,
+        ),
+      );
+    }
+
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: pw.BoxDecoration(
+        color: PdfColor.fromHex('#F5F3FF'),
+        borderRadius: pw.BorderRadius.circular(10),
+        border: pw.Border.all(color: PdfColor.fromHex('#DDD6FE'), width: 0.6),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: widgets,
+      ),
+    );
+  }
+
   static Future<File> _saveDocument(pw.Document document, String fileName) async {
     final bytes = await document.save();
     final directory = await _resolveReportDirectory();
@@ -402,6 +528,17 @@ class PdfReportService {
     final day = date.day.toString().padLeft(2, '0');
     final year = date.year.toString();
     return '$day $month $year';
+  }
+
+  static String _formatHours(double hours) {
+    final totalMinutes = (hours * 60).round();
+    final clampedMinutes = totalMinutes < 0 ? 0 : totalMinutes;
+    final resolvedHours = clampedMinutes ~/ 60;
+    final minutes = clampedMinutes % 60;
+    if (minutes == 0) {
+      return '${resolvedHours}h';
+    }
+    return '${resolvedHours}h ${minutes}m';
   }
 
   static String _formatCurrency(String symbol, double amount) {
