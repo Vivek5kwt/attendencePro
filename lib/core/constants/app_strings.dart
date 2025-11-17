@@ -564,7 +564,7 @@ abstract final class AppString {
       'attendanceHistoryLoggedHoursLabel': 'लॉग किए गए घंटे',
       'attendanceHistoryReasonLabel': 'कारण',
       'contractReportDownloadLabel': 'Download contract report (PDF)',
-      'historyReportDownloadLabel': 'Download attendance history (PDF)',
+      'historyReportDownloadLabel': 'उपस्थिति इतिहास डाउनलोड करें (PDF)',
       'reportDownloadNoEntriesMessage':
           'No records are available for the selected view.',
       'reportDownloadSuccessMessage': 'PDF saved to {path}',
@@ -1012,7 +1012,7 @@ abstract final class AppString {
       'attendanceHistoryLoggedHoursLabel': 'ਲਾਗ ਕੀਤੇ ਘੰਟੇ',
       'attendanceHistoryReasonLabel': 'ਕਾਰਨ',
       'contractReportDownloadLabel': 'Download contract report (PDF)',
-      'historyReportDownloadLabel': 'Download attendance history (PDF)',
+      'historyReportDownloadLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਡਾਊਨਲੋਡ ਕਰੋ (PDF)',
       'reportDownloadNoEntriesMessage':
           'No records are available for the selected view.',
       'reportDownloadSuccessMessage': 'PDF saved to {path}',

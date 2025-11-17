@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
@@ -31,16 +32,6 @@ const List<String> _kMonthNames = <String>[
   'December',
 ];
 
-const List<String> _kWeekdayNames = <String>[
-  'Mon',
-  'Tue',
-  'Wed',
-  'Thu',
-  'Fri',
-  'Sat',
-  'Sun',
-];
-
 enum _HistoryViewMode { hours, contract }
 
 class AttendanceHistoryScreen extends StatefulWidget {
@@ -59,7 +50,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   late final ContractTypeRepository _contractTypeRepository;
   late final WorkRepository _workRepository;
 
-  final List<String> _availableMonths = <String>[];
+  final List<DateTime> _availableMonths = <DateTime>[];
   List<String> _availableWorks = <String>[];
 
   final List<_AttendanceEntry> _entries = <_AttendanceEntry>[];
@@ -67,7 +58,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   final Map<String, Work> _workLookup = <String, Work>{};
   List<ContractType> _contractTypes = <ContractType>[];
 
-  String _selectedMonth = '';
+  DateTime? _selectedMonth;
   String _selectedWork = '';
   _HistoryViewMode _viewMode = _HistoryViewMode.hours;
   bool _initialized = false;
@@ -160,16 +151,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     _availableMonths
       ..clear()
       ..addAll(
-        List<String>.generate(
+        List<DateTime>.generate(
           6,
-              (index) {
-            final date = DateTime(now.year, now.month - index, 1);
-            return '${_kMonthNames[date.month - 1]} ${date.year}';
-          },
+              (index) => DateTime(now.year, now.month - index, 1),
         ),
       );
-    _selectedMonth =
-    _availableMonths.isNotEmpty ? _availableMonths.first : '';
+    _selectedMonth = _availableMonths.isNotEmpty ? _availableMonths.first : null;
   }
 
   List<String> _buildWorkOptions(List<String> workNames) {
@@ -303,11 +290,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   }
 
   Future<void> _loadEntries() async {
-    if (_selectedMonth.isEmpty) {
+    if (_selectedMonth == null) {
       return;
     }
 
-    final targetDate = _parseMonthLabel(_selectedMonth) ?? DateTime.now();
+    final targetDate = _selectedMonth!;
 
     if (_selectedWork.isEmpty && _availableWorks.isNotEmpty) {
       _selectedWork = _availableWorks.first;
@@ -396,20 +383,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _errorMessage = l.attendanceHistoryLoadFailedMessage;
       });
     }
-  }
-
-  DateTime? _parseMonthLabel(String label) {
-    final parts = label.split(' ');
-    if (parts.length != 2) {
-      return null;
-    }
-    final monthIndex = _kMonthNames
-        .indexWhere((month) => month.toLowerCase() == parts[0].toLowerCase());
-    final year = int.tryParse(parts[1]);
-    if (monthIndex == -1 || year == null) {
-      return null;
-    }
-    return DateTime(year, monthIndex + 1, 1);
   }
 
   _AttendanceEntry _mapEntryFromData(
@@ -613,7 +586,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     return null;
   }
 
-  void _onMonthChanged(String value) {
+  void _onMonthChanged(DateTime value) {
     if (value == _selectedMonth) {
       return;
     }
@@ -696,7 +669,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
-    if (_selectedMonth.isEmpty) {
+    if (_selectedMonth == null) {
       _showErrorSnackBar(l.reportDownloadFailedMessage);
       return;
     }
@@ -706,6 +679,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
 
     try {
+      final monthLabel = _formatMonthYear(_selectedMonth!, l.locale);
       final workName = _selectedWork.trim().isEmpty
           ? l.attendanceHistoryAllWorks
           : _selectedWork.trim();
@@ -724,7 +698,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
         final reportFile = await PdfReportService.generateMonthlyContractReport(
           workName: workName,
-          monthLabel: _selectedMonth,
+          monthLabel: monthLabel,
           currencySymbol: _currencySymbol,
           rows: rows,
           summary: summary,
@@ -766,7 +740,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         final reportFile =
             await PdfReportService.generateAttendanceHistoryReport(
           workName: workName,
-          monthLabel: _selectedMonth,
+          monthLabel: monthLabel,
           currencySymbol: _currencySymbol,
           days: days,
           summary: summary,
@@ -1572,10 +1546,10 @@ class _HistoryFilterBar extends StatelessWidget {
     required this.onViewModeChanged,
   });
 
-  final List<String> months;
-  final String selectedMonth;
+  final List<DateTime> months;
+  final DateTime? selectedMonth;
   final _HistoryViewMode viewMode;
-  final ValueChanged<String> onMonthChanged;
+  final ValueChanged<DateTime> onMonthChanged;
   final ValueChanged<_HistoryViewMode> onViewModeChanged;
 
   @override
@@ -1602,11 +1576,11 @@ class _HistoryFilterBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _FilterDropdown<String>(
+            child: _FilterDropdown<DateTime>(
               value: resolvedMonth,
               values: months,
               placeholder: l.attendanceHistoryMonthLabel,
-              labelBuilder: (value) => value,
+              labelBuilder: (value) => _formatMonthYear(value, l.locale),
               onChanged: onMonthChanged,
             ),
           ),
@@ -1723,7 +1697,9 @@ class _SelectedWorkBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final hasWork = workName.trim().isNotEmpty;
-    final displayName = hasWork ? 'Work Name:- $workName' : l.activeWorkLabel;
+    final displayName = hasWork
+        ? '${l.workNameLabel}:- $workName'
+        : l.activeWorkLabel;
 
     return Container(
       decoration: BoxDecoration(
@@ -1891,7 +1867,7 @@ class _EntryDayCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _formatDayLabel(date),
+                _formatDayLabel(date, localization.locale),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF111827),
@@ -2376,7 +2352,7 @@ class _ContractEntryDayCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _formatDayLabel(date),
+                _formatDayLabel(date, localization.locale),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF111827),
@@ -2760,7 +2736,7 @@ class _HourlyAttendanceSheetState extends State<_HourlyAttendanceSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${widget.entry.workName} · ${_formatDayLabel(widget.entry.date)}',
+                '${widget.entry.workName} · ${_formatDayLabel(widget.entry.date, l.locale)}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -3031,7 +3007,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${widget.entry.workName} · ${_formatDayLabel(widget.entry.date)}',
+                '${widget.entry.workName} · ${_formatDayLabel(widget.entry.date, l.locale)}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -3215,12 +3191,22 @@ SplayTreeMap<DateTime, List<_AttendanceEntry>> _groupEntriesByDay(
   return map;
 }
 
-String _formatDayLabel(DateTime date) {
-  final index = (date.weekday - 1).clamp(0, 6);
-  final weekday = _kWeekdayNames[index.toInt()];
-  final monthLabel = _kMonthNames[date.month - 1].substring(0, 3);
-  final day = date.day.toString().padLeft(2, '0');
-  return '$weekday, $day $monthLabel';
+String _formatDayLabel(DateTime date, Locale locale) {
+  final formatter = DateFormat('EEE, dd MMM', _resolveLocaleName(locale));
+  return formatter.format(date);
+}
+
+String _formatMonthYear(DateTime date, Locale locale) {
+  final formatter = DateFormat('MMMM yyyy', _resolveLocaleName(locale));
+  return formatter.format(date);
+}
+
+String _resolveLocaleName(Locale locale) {
+  final countryCode = locale.countryCode;
+  if (countryCode == null || countryCode.isEmpty) {
+    return locale.languageCode;
+  }
+  return '${locale.languageCode}_$countryCode';
 }
 
 String _formatCurrencyValue(String symbol, double value) {
