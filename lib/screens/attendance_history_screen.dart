@@ -742,12 +742,33 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         )
             .toList(growable: false);
 
+        final totalHoursWorked = hoursEntries.fold<double>(
+          0,
+          (previousValue, entry) =>
+              previousValue + entry.hoursWorked + entry.overtimeHours,
+        );
+        final totalHourlySalary = hoursEntries.fold<double>(
+          0,
+          (previousValue, entry) => previousValue + entry.salary,
+        );
+        final totalContractSalary = contractEntries.fold<double>(
+          0,
+          (previousValue, entry) => previousValue + entry.salary,
+        );
+        final summary = HistoryReportSummary(
+          totalHoursWorked: totalHoursWorked,
+          totalHourlySalary: totalHourlySalary,
+          totalContractSalary: totalContractSalary,
+          grandTotalEarnings: totalHourlySalary + totalContractSalary,
+        );
+
         final reportFile =
-        await PdfReportService.generateAttendanceHistoryReport(
+            await PdfReportService.generateAttendanceHistoryReport(
           workName: workName,
           monthLabel: _selectedMonth,
           currencySymbol: _currencySymbol,
           days: days,
+          summary: summary,
         );
 
         if (!mounted) {
