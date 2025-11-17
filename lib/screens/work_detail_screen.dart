@@ -6474,7 +6474,8 @@ class _AttendanceSection extends StatelessWidget {
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
                 isLocked: contractActionsLocked,
-                trailingAction: _buildSubmitButton(context, l),
+                trailingAction:
+                    isWorkOff ? null : _buildSubmitButton(context, l),
               ),
             ],
             const SizedBox(height: 24),
@@ -6517,10 +6518,12 @@ class _AttendanceSection extends StatelessWidget {
   }) {
     final hasContractButton = showContractWorkButton && onContractWorkTap != null;
     final hasWorkOffButton = onWorkOffSubmit != null;
-    Widget? buildSubmitButton({double? height}) =>
-        includeSubmit ? _buildSubmitButton(context, l, height: height) : null;
+    final shouldShowSubmit = includeSubmit && !isWorkOff;
+    Widget? buildSubmitButton({double? height}) => shouldShowSubmit
+        ? _buildSubmitButton(context, l, height: height)
+        : null;
 
-    if (!hasContractButton && !hasWorkOffButton && !includeSubmit) {
+    if (!hasContractButton && !hasWorkOffButton && !shouldShowSubmit) {
       return const SizedBox.shrink();
     }
 
