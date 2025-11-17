@@ -208,7 +208,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
   }
 
-  Future<void> _loadContractSummary() async {
+  Future<void> _loadContractSummary({bool showLoader = true}) async {
     final work = widget.work;
     if (work == null) {
       setState(() {
@@ -221,7 +221,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
 
     setState(() {
-      _isLoadingSummary = true;
+      if (showLoader) {
+        _isLoadingSummary = true;
+      }
       _summaryError = null;
     });
 
@@ -496,22 +498,29 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   Future<void> _handleRefresh() async {
-    await Future.wait<void>([_loadContractTypes(), _loadContractSummary()]);
+    await _refreshContractData(showLoader: true, notifyDashboard: true);
   }
 
-  void _refreshContractDataSilently() {
-    if (!mounted) {
-      return;
+  Future<void> _refreshContractData({
+    bool showLoader = false,
+    bool notifyDashboard = false,
+  }) async {
+    await Future.wait<void>([
+      _loadContractTypes(showLoader: showLoader),
+      _loadContractSummary(showLoader: showLoader),
+    ]);
+
+    if (notifyDashboard) {
+      _notifyDashboardOfChanges();
     }
-    unawaited(_loadContractTypes(showLoader: false));
-    if (widget.work != null) {
-      unawaited(_loadContractSummary());
-      try {
-        final workBloc = context.read<WorkBloc>();
-        workBloc.add(const WorkRefreshed());
-      } on ProviderNotFoundException {
-        // No WorkBloc available in the current context.
-      }
+  }
+
+  void _notifyDashboardOfChanges() {
+    try {
+      final workBloc = context.read<WorkBloc>();
+      workBloc.add(const WorkRefreshed());
+    } on ProviderNotFoundException {
+      // No WorkBloc available in the current context.
     }
   }
 
@@ -590,7 +599,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
     _upsertContractType(result);
 
-    _refreshContractDataSilently();
+    await _refreshContractData(notifyDashboard: true);
+    if (!mounted) return;
 
     ScaffoldMessenger.of(
       context,
@@ -638,7 +648,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             _buildSummaryRowsFromTypes(_userContractTypes, l);
       });
 
-      _refreshContractDataSilently();
+      await _refreshContractData(notifyDashboard: true);
+      if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
