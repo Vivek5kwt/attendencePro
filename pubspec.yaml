@@ -44,6 +44,7 @@ dependencies:
   flutter_intl_phone_field: ^0.0.7
   shared_preferences: ^2.2.3
   url_launcher: ^6.3.0
+  intl: ^0.20.2
   pdf: ^3.11.0
   flutter_local_notifications: 16.3.2
   timezone: ^0.9.4
