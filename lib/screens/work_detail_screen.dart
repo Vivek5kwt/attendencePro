@@ -348,6 +348,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   String? _previousStartTime;
   String? _previousEndTime;
   String? _previousBreakMinutes;
+  bool _shouldResetContractFormAfterSummary = false;
 
   DashboardSummary? _dashboardSummary;
   bool _isSummaryLoading = true;
@@ -1819,6 +1820,22 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _handleAttendanceFieldChanged();
   }
 
+  void _prepareContractEntryFormForNextSubmission() {
+    if (!mounted || !widget.work.isContract) {
+      return;
+    }
+    setState(() {
+      _contractFieldsEnabled = true;
+      if (_contractBundleEntries.isEmpty) {
+        _ensurePrimaryBundleEntry();
+      }
+      for (final entry in _contractBundleEntries) {
+        entry.controller.clear();
+      }
+    });
+    _handleAttendanceFieldChanged();
+  }
+
   String _generateBundleEntryId() {
     _bundleEntryCounter += 1;
     return 'bundle_${DateTime.now().microsecondsSinceEpoch}_$_bundleEntryCounter';
@@ -2815,7 +2832,15 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           isLocked: true,
         );
       }
-      await _loadSummary();
+      _shouldResetContractFormAfterSummary = includeContractEntry;
+      try {
+        await _loadSummary();
+      } finally {
+        if (_shouldResetContractFormAfterSummary) {
+          _shouldResetContractFormAfterSummary = false;
+          _prepareContractEntryFormForNextSubmission();
+        }
+      }
       await _refreshMissedAttendance(showDialog: false);
     } on AttendanceAuthException {
       if (!mounted) {
