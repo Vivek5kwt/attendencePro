@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -364,10 +365,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   bool _isCompletingMissedAttendance = false;
   final Set<DateTime> _lockedAttendanceDates = <DateTime>{};
   final Map<DateTime, int> _attendanceIdsByDate = <DateTime, int>{};
+  StreamSubscription<WorkState>? _workSubscription;
+  Work? _latestWorkSnapshot;
+  bool _wasWorkRefreshing = false;
 
   @override
   void initState() {
     super.initState();
+    _latestWorkSnapshot = widget.work;
     _initializeAttendanceControllers();
     if (widget.work.isContract) {
       final initialContractTypeId =
@@ -386,6 +391,21 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
       _loadSummary();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _workSubscription ??=
+        context.read<WorkBloc>().stream.listen(_handleWorkStateChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant WorkDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.work.id != widget.work.id) {
+      _latestWorkSnapshot = widget.work;
+    }
   }
 
   Future<void> _handleChangeWork() async {
@@ -3129,12 +3149,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       entry.dispose();
     }
     _ratePerUnitController.dispose();
+    _workSubscription?.cancel();
     super.dispose();
   }
 
   Future<void> _loadSummary() async {
     if (!mounted) return;
     final l = AppLocalizations.of(context);
+    final workId = _latestWorkSnapshot?.id ?? widget.work.id;
     setState(() {
       _isSummaryLoading = true;
       _summaryError = null;
@@ -3142,7 +3164,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     try {
       final summary =
-          await _dashboardRepository.fetchSummary(workId: widget.work.id);
+          await _dashboardRepository.fetchSummary(workId: workId);
       if (!mounted) return;
       final isTodayMarked = _hasMarkedAttendanceForToday(summary.todayEntry);
       setState(() {
@@ -3190,8 +3212,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
   }
 
-  Future<void> _loadContractTypes() async {
-    if (!widget.work.isContract) {
+  Future<void> _loadContractTypes({bool showLoader = true}) async {
+    final isContractWork =
+        _latestWorkSnapshot?.isContract ?? widget.work.isContract;
+    if (!isContractWork) {
       return;
     }
     if (_isLoadingContractTypes) {
@@ -3199,10 +3223,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    setState(() {
-      _isLoadingContractTypes = true;
-      _contractTypesError = null;
-    });
+    if (showLoader) {
+      setState(() {
+        _isLoadingContractTypes = true;
+        _contractTypesError = null;
+      });
+    } else {
+      setState(() {
+        _contractTypesError = null;
+      });
+    }
 
     Future<void> loader() async {
       try {
@@ -3228,6 +3258,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         );
         setState(() {
           _contractTypesError = message;
+          if (showLoader) {
+            _isLoadingContractTypes = false;
+          }
         });
       } catch (_) {
         if (!mounted) {
@@ -3236,10 +3269,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         final l = AppLocalizations.of(context);
         setState(() {
           _contractTypesError = l.contractWorkLoadError;
+          if (showLoader) {
+            _isLoadingContractTypes = false;
+          }
         });
       } finally {
         _contractTypesLoadFuture = null;
-        if (mounted) {
+        if (mounted && showLoader) {
           setState(() {
             _isLoadingContractTypes = false;
           });
@@ -3255,10 +3291,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   Future<void> _handleCreateContractTypeTap() async {
     FocusScope.of(context).unfocus();
 
+    final targetWork = _latestWorkSnapshot ?? widget.work;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => ContractWorkScreen(
-          work: widget.work,
+          work: targetWork,
           allowEditing: true,
         ),
       ),
@@ -3268,7 +3305,70 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    await _loadContractTypes();
+    await _loadContractTypes(showLoader: false);
+  }
+
+  void _handleWorkStateChange(WorkState state) {
+    if (!mounted) {
+      return;
+    }
+
+    final bool refreshCompleted = _wasWorkRefreshing && !state.isRefreshing;
+    _wasWorkRefreshing = state.isRefreshing;
+
+    final targetId = _latestWorkSnapshot?.id ?? widget.work.id;
+    final updatedWork = _findWorkById(state.works, targetId);
+    if (updatedWork == null) {
+      if (refreshCompleted) {
+        unawaited(_loadSummary());
+      }
+      return;
+    }
+
+    final previous = _latestWorkSnapshot;
+    final bool hasMeaningfulChange =
+        previous == null || !_areWorksEquivalent(previous, updatedWork);
+
+    if (!hasMeaningfulChange && !refreshCompleted) {
+      return;
+    }
+
+    _latestWorkSnapshot = updatedWork;
+    if (updatedWork.isContract) {
+      unawaited(_loadContractTypes(showLoader: false));
+    }
+    unawaited(_loadSummary());
+  }
+
+  Work? _findWorkById(List<Work> works, String id) {
+    for (final work in works) {
+      if (work.id == id) {
+        return work;
+      }
+    }
+    return null;
+  }
+
+  bool _areWorksEquivalent(Work a, Work b) {
+    if (identical(a, b)) {
+      return true;
+    }
+    if (a.id != b.id) {
+      return false;
+    }
+    if (a.name != b.name || a.isActive != b.isActive) {
+      return false;
+    }
+    if (a.isContract != b.isContract) {
+      return false;
+    }
+    if (a.hourlyRate != b.hourlyRate) {
+      return false;
+    }
+    if (!mapEquals(a.additionalData, b.additionalData)) {
+      return false;
+    }
+    return true;
   }
 
   List<ContractType> _mergeContractTypes(ContractTypeCollection collection) {
