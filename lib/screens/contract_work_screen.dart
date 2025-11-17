@@ -18,6 +18,7 @@ import '../repositories/reports_repository.dart';
 import '../utils/contract_work_display.dart';
 import '../utils/contract_unit_label.dart';
 import '../utils/responsive.dart';
+import '../utils/work_contract_filter.dart';
 
 const List<String> kContractWorkDefaultRoleOptions = <String>[
   'Bin',
@@ -149,6 +150,10 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       final result = await _repository.fetchContractTypes();
       if (!mounted) return;
       final localizations = AppLocalizations.of(context);
+      final filteredUserTypes = _filterContractTypesForCurrentWork(
+        result.userTypes,
+      );
+
       setState(() {
         _defaultContractTypes
           ..clear()
@@ -161,9 +166,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         _userContractTypes
           ..clear()
           ..addAll(
-            result.userTypes.map(
-                  (type) =>
-                  _ContractType.fromModel(type: type, isUserDefined: true),
+            filteredUserTypes.map(
+              (type) => _withWorkAssociation(
+                _ContractType.fromModel(
+                  type: type,
+                  isUserDefined: true,
+                ),
+              ),
             ),
           );
 
@@ -539,16 +548,58 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     ..._userContractTypes,
   ];
 
+  List<models.ContractType> _filterContractTypesForCurrentWork(
+    List<models.ContractType> types,
+  ) {
+    final workId = widget.work?.id.trim();
+    if (workId == null || workId.isEmpty) {
+      return types;
+    }
+    return types
+        .where((type) =>
+            type.additionalData.isNotEmpty &&
+            workDataMatchesId(type.additionalData, workId))
+        .toList(growable: false);
+  }
+
+  _ContractType _withWorkAssociation(_ContractType type) {
+    final workId = widget.work?.id.trim();
+    if (workId == null || workId.isEmpty) {
+      return type;
+    }
+    if (type.additionalData.isNotEmpty &&
+        workDataMatchesId(type.additionalData, workId)) {
+      return type;
+    }
+    final updated = Map<String, dynamic>.from(type.additionalData)
+      ..['work_id'] = workId;
+    return type.copyWith(additionalData: updated);
+  }
+
+  bool _shouldIncludeContractType(_ContractType type) {
+    final workId = widget.work?.id.trim();
+    if (workId == null || workId.isEmpty) {
+      return true;
+    }
+    return type.additionalData.isNotEmpty &&
+        workDataMatchesId(type.additionalData, workId);
+  }
+
   void _upsertContractType(_ContractType type) {
-    final targetList =
-    type.isUserDefined ? _userContractTypes : _defaultContractTypes;
-    final index = targetList.indexWhere((item) => item.id == type.id);
+    final normalizedType = _withWorkAssociation(type);
+    if (!_shouldIncludeContractType(normalizedType)) {
+      return;
+    }
+    final targetList = normalizedType.isUserDefined
+        ? _userContractTypes
+        : _defaultContractTypes;
+    final index = targetList.indexWhere((item) => item.id == normalizedType.id);
     final localizations = AppLocalizations.of(context);
     setState(() {
       if (index == -1) {
-        targetList.add(type);
+        targetList.add(normalizedType);
       } else {
-        targetList[index] = type;
+        targetList[index] = normalizedType;
       }
       _syncAvailableRoles();
       _summaryRows =
