@@ -494,8 +494,12 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     String currencySymbol,
   ) {
     final unitLabel = data.unitLabel?.trim();
-    final resolvedUnitLabel =
-        unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel;
+    final resolvedUnitLabel = resolveContractUnitLabel(
+      localizations: l,
+      contractName: data.title,
+      unitLabel:
+          unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+    );
 
     final quantityLabel = contractUnitQuantityLabel(
       localizations: l,
@@ -540,10 +544,16 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     final rate = data.ratePerUnit;
     if (units != null && units > 0 && rate != null && rate > 0) {
       final unitLabel = data.unitLabel?.trim();
+      final resolvedUnitLabel = resolveContractUnitLabel(
+        localizations: l,
+        contractName: data.title,
+        unitLabel:
+            unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+      );
       final countLabel = contractUnitCountLabel(
         localizations: l,
         contractName: data.title,
-        unitLabel: unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+        unitLabel: resolvedUnitLabel,
         quantity: units,
       );
 
@@ -568,13 +578,19 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       return buffer.toString();
     }
     final unitLabel = data.unitLabel?.trim();
+    final resolvedUnitLabel = resolveContractUnitLabel(
+      localizations: l,
+      contractName: data.title,
+      unitLabel:
+          unitLabel == null || unitLabel.isEmpty ? l.contractWorkUnitFallback : unitLabel,
+    );
     final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
     final subtitle = buildContractRateSubtitle(
       l,
       rate: data.ratePerUnit,
       count: data.unitCount,
       role: data.unitRole,
-      fallbackUnitLabel: unitLabel,
+      fallbackUnitLabel: resolvedUnitLabel,
       currencySymbol: normalizedSymbol,
     ).trim();
 
