@@ -671,6 +671,26 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         ? contractEntries
         : hoursEntries;
 
+    final totalHoursWorked = hoursEntries.fold<double>(
+      0,
+      (previousValue, entry) =>
+          previousValue + entry.hoursWorked + entry.overtimeHours,
+    );
+    final totalHourlySalary = hoursEntries.fold<double>(
+      0,
+      (previousValue, entry) => previousValue + entry.salary,
+    );
+    final totalContractSalary = contractEntries.fold<double>(
+      0,
+      (previousValue, entry) => previousValue + entry.salary,
+    );
+    final summary = HistoryReportSummary(
+      totalHoursWorked: totalHoursWorked,
+      totalHourlySalary: totalHourlySalary,
+      totalContractSalary: totalContractSalary,
+      grandTotalEarnings: totalHourlySalary + totalContractSalary,
+    );
+
     if (targetEntries.isEmpty) {
       _showInfoSnackBar(l.reportDownloadNoEntriesMessage);
       return;
@@ -707,6 +727,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           monthLabel: _selectedMonth,
           currencySymbol: _currencySymbol,
           rows: rows,
+          summary: summary,
         );
 
         if (!mounted) {
@@ -741,26 +762,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           ),
         )
             .toList(growable: false);
-
-        final totalHoursWorked = hoursEntries.fold<double>(
-          0,
-          (previousValue, entry) =>
-              previousValue + entry.hoursWorked + entry.overtimeHours,
-        );
-        final totalHourlySalary = hoursEntries.fold<double>(
-          0,
-          (previousValue, entry) => previousValue + entry.salary,
-        );
-        final totalContractSalary = contractEntries.fold<double>(
-          0,
-          (previousValue, entry) => previousValue + entry.salary,
-        );
-        final summary = HistoryReportSummary(
-          totalHoursWorked: totalHoursWorked,
-          totalHourlySalary: totalHourlySalary,
-          totalContractSalary: totalContractSalary,
-          grandTotalEarnings: totalHourlySalary + totalContractSalary,
-        );
 
         final reportFile =
             await PdfReportService.generateAttendanceHistoryReport(

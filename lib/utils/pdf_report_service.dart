@@ -83,6 +83,7 @@ class PdfReportService {
     required String monthLabel,
     required String currencySymbol,
     required List<ContractReportRow> rows,
+    HistoryReportSummary? summary,
   }) async {
     if (rows.isEmpty) {
       throw ArgumentError('rows must not be empty');
@@ -110,17 +111,18 @@ class PdfReportService {
     document.addPage(
       pw.MultiPage(
         margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        build: (context) => <pw.Widget>[
-          _buildHeader(
-            fonts: fonts,
-            title: 'Monthly Contract Report',
-            workName: workName,
-            periodLabel: monthLabel,
-          ),
-          pw.SizedBox(height: 20),
-          _buildStripedTable(
-            headers: const <String>['Date', 'Contract type', 'Units', 'Rate', 'Amount'],
-            data: tableData,
+        build: (context) {
+          final widgets = <pw.Widget>[
+            _buildHeader(
+              fonts: fonts,
+              title: 'Monthly Contract Report',
+              workName: workName,
+              periodLabel: monthLabel,
+            ),
+            pw.SizedBox(height: 20),
+            _buildStripedTable(
+              headers: const <String>['Date', 'Contract type', 'Units', 'Rate', 'Amount'],
+              data: tableData,
             headerStyle: _textStyle(
               fonts,
               font: fonts.bold,
@@ -139,13 +141,28 @@ class PdfReportService {
             },
           ),
           pw.SizedBox(height: 18),
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: pw.BoxDecoration(
-              color: PdfColor.fromHex('#ECFDF5'),
-              borderRadius: pw.BorderRadius.circular(8),
-              border: pw.Border.all(color: PdfColor.fromHex('#6EE7B7'), width: 0.6),
-            ),
+        ];
+
+          if (summary != null) {
+            widgets
+              ..add(
+                _buildHistorySummary(
+                  fonts: fonts,
+                  currencySymbol: currencySymbol,
+                  summary: summary,
+                ),
+              )
+              ..add(pw.SizedBox(height: 18));
+          }
+
+          widgets.add(
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: pw.BoxDecoration(
+                color: PdfColor.fromHex('#ECFDF5'),
+                borderRadius: pw.BorderRadius.circular(8),
+                border: pw.Border.all(color: PdfColor.fromHex('#6EE7B7'), width: 0.6),
+              ),
             child: pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: <pw.Widget>[
@@ -169,8 +186,11 @@ class PdfReportService {
                 ),
               ],
             ),
-          ),
-        ],
+            ),
+          );
+
+          return widgets;
+        },
       ),
     );
 

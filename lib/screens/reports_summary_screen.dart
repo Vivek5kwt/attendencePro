@@ -355,11 +355,13 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
 
       final workLabel = resolvedWorkName.isEmpty ? l.attendanceHistoryAllWorks : resolvedWorkName;
 
+      final pdfSummary = _resolvePdfSummaryForPdf();
       final reportFile = await PdfReportService.generateMonthlyContractReport(
         workName: workLabel,
         monthLabel: _selectedMonth,
         currencySymbol: history.currencySymbol,
         rows: rows,
+        summary: pdfSummary,
       );
 
       _showSnack(
@@ -382,6 +384,27 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     } catch (_) {
       _showSnack(l.reportDownloadFailedMessage, color: const Color(0xFFB91C1C));
     }
+  }
+
+  HistoryReportSummary? _resolvePdfSummaryForPdf() {
+    final summary = _summary;
+    if (summary == null) {
+      return null;
+    }
+
+    final totalHours = summary.hourlySummary.totalHours;
+    final totalHourlySalary = summary.hourlySummary.hourlySalary;
+    final totalContractSalary = summary.contractSummary.salaryAmount;
+    final combined = summary.combinedSalary.amount;
+    final grandTotal =
+        combined > 0 ? combined : totalHourlySalary + totalContractSalary;
+
+    return HistoryReportSummary(
+      totalHoursWorked: totalHours,
+      totalHourlySalary: totalHourlySalary,
+      totalContractSalary: totalContractSalary,
+      grandTotalEarnings: grandTotal,
+    );
   }
 
   Work? _findActiveWorkFromState(WorkState state) {
