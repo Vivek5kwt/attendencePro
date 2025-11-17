@@ -18,15 +18,6 @@ class HelpSupportScreen extends StatelessWidget {
     }
   }
 
-  void _showComingSoonMessage(BuildContext context) {
-    final messenger = ScaffoldMessenger.of(context);
-    final localization = AppLocalizations.of(context);
-
-    messenger.showSnackBar(
-      SnackBar(content: Text(localization.helpSupportComingSoon)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -110,14 +101,6 @@ class HelpSupportScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            _ContactCard(
-              icon: Icons.chat_bubble_outline,
-              label: l.helpSupportChatLabel,
-              value: l.helpSupportChatSubtitle,
-              buttonLabel: l.helpSupportChatButton,
-              onPressed: () => _showComingSoonMessage(context),
             ),
             const SizedBox(height: 24),
           ],
