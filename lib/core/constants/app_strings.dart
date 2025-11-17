@@ -292,6 +292,9 @@ abstract final class AppString {
           'Would you like to allow AttendancePro to send you notifications for attendance reminders and updates?',
       'notificationsPermissionAllowButton': 'Allow notifications',
       'notificationsPermissionNotNowButton': 'Not now',
+      'attendanceReminderNotificationTitle': 'Attendance Reminder',
+      'attendanceReminderNotificationBody':
+          'Please mark your attendance for today! Tap to open the app.',
       'dashboardTappedMessage': 'Dashboard tapped',
       'addNewWorkTappedMessage': 'Add New Work tapped',
       'attendanceHistoryTappedMessage': 'Attendance History tapped',
@@ -744,6 +747,9 @@ abstract final class AppString {
           'क्या आप AttendancePro को उपस्थिति रिमाइंडर और अपडेट के लिए सूचनाएँ भेजने की अनुमति देना चाहेंगे?',
       'notificationsPermissionAllowButton': 'सूचनाएँ अनुमति दें',
       'notificationsPermissionNotNowButton': 'अभी नहीं',
+      'attendanceReminderNotificationTitle': 'उपस्थिति रिमाइंडर',
+      'attendanceReminderNotificationBody':
+          'कृपया आज की उपस्थिति दर्ज करें! ऐप खोलने के लिए टैप करें।',
       'dashboardTappedMessage': 'डैशबोर्ड चुना गया',
       'addNewWorkTappedMessage': 'नया कार्य चुना गया',
       'attendanceHistoryTappedMessage': 'उपस्थिति इतिहास चुना गया',
@@ -1193,6 +1199,9 @@ abstract final class AppString {
           'ਕੀ ਤੁਸੀਂ AttendancePro ਨੂੰ ਹਾਜ਼ਰੀ ਰਿਮਾਇਂਡਰ ਅਤੇ ਅਪਡੇਟਾਂ ਲਈ ਨੋਟੀਫਿਕੇਸ਼ਨ ਭੇਜਣ ਦੀ ਆਗਿਆ ਦੇਣਾ ਚਾਹੋਗੇ?',
       'notificationsPermissionAllowButton': 'ਨੋਟੀਫਿਕੇਸ਼ਨ ਦੀ ਆਗਿਆ ਦਿਓ',
       'notificationsPermissionNotNowButton': 'ਹਾਲੇ ਨਹੀਂ',
+      'attendanceReminderNotificationTitle': 'ਹਾਜ਼ਰੀ ਯਾਦ ਦਿਹਾਣੀ',
+      'attendanceReminderNotificationBody':
+          'ਕਿਰਪਾ ਕਰਕੇ ਅੱਜ ਦੀ ਹਾਜ਼ਰੀ ਲਗਾਓ! ਐਪ ਖੋਲ੍ਹਣ ਲਈ ਟੈਪ ਕਰੋ।',
       'dashboardTappedMessage': 'ਡੈਸ਼ਬੋਰਡ ਚੁਣਿਆ ਗਿਆ',
       'addNewWorkTappedMessage': 'ਨਵਾਂ ਕੰਮ ਚੁਣਿਆ ਗਿਆ',
       'attendanceHistoryTappedMessage': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਚੁਣਿਆ ਗਿਆ',
@@ -1651,6 +1660,9 @@ abstract final class AppString {
           'Vuoi permettere a AttendancePro di inviarti notifiche per promemoria di presenza e aggiornamenti?',
       'notificationsPermissionAllowButton': 'Consenti notifiche',
       'notificationsPermissionNotNowButton': 'Non ora',
+      'attendanceReminderNotificationTitle': 'Promemoria presenza',
+      'attendanceReminderNotificationBody':
+          "Segna la presenza di oggi! Tocca per aprire l'app.",
       'dashboardTappedMessage': 'Dashboard selezionata',
       'addNewWorkTappedMessage': 'Nuovo lavoro selezionato',
       'attendanceHistoryTappedMessage': 'Storico presenze selezionato',

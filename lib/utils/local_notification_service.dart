@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:attendancepro/core/constants/app_strings.dart';
 import 'package:attendancepro/utils/native_timezone.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +13,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+import 'package:attendancepro/utils/session_manager.dart';
 
 enum _NotificationPermissionStatus {
   granted,
@@ -63,7 +69,15 @@ class LocalNotificationService {
   static const int _attendanceReminderWindowEndHour = 22;
   static const String _attendanceReminderTitle = 'Attendance Reminder';
   static const String _attendanceReminderBody =
-      "Don't forget to mark your attendance for today before the day ends!\n(Stay consistent and keep your records updated.)";
+      'Please mark your attendance for today! Tap to open the app.';
+  static const String _payloadTypeKey = 'type';
+  static const String _payloadFilePathKey = 'filePath';
+  static const String _payloadTypeDownload = 'open_file';
+  static const String _payloadTypeAttendanceReminder = 'attendance_reminder';
+  static const SessionManager _sessionManager = SessionManager();
+
+  static Future<void> Function()? _attendanceReminderTapHandler;
+  static int _pendingAttendanceReminderTapCount = 0;
 
   static Future<void> initialize({bool requestPermissionsOnInit = false}) async {
     if (_initialized) {
@@ -361,7 +375,10 @@ class LocalNotificationService {
       'Download complete',
       '$fileName saved to $filePath',
       notificationDetails,
-      payload: filePath,
+      payload: _encodePayload(<String, String>{
+        _payloadTypeKey: _payloadTypeDownload,
+        _payloadFilePathKey: filePath,
+      }),
     );
   }
 
@@ -377,11 +394,25 @@ class LocalNotificationService {
       return;
     }
 
-    try {
-      await OpenFilex.open(payload, type: 'application/pdf');
-    } catch (error, stackTrace) {
-      debugPrint('Failed to open downloaded report from notification: $error');
-      debugPrint('$stackTrace');
+    final parsedPayload = _decodePayload(payload);
+
+    if (parsedPayload == null) {
+      await _openDownloadedReport(payload);
+      return;
+    }
+
+    final type = parsedPayload[_payloadTypeKey];
+    if (type == _payloadTypeDownload) {
+      final filePath = parsedPayload[_payloadFilePathKey];
+      if (filePath is String && filePath.trim().isNotEmpty) {
+        await _openDownloadedReport(filePath);
+      }
+      return;
+    }
+
+    if (type == _payloadTypeAttendanceReminder) {
+      await _handleAttendanceReminderDeepLink();
+      return;
     }
   }
 
@@ -436,6 +467,8 @@ class LocalNotificationService {
       ),
     );
 
+    final reminderCopy = await _resolveAttendanceReminderCopy();
+
     final prefs = await SharedPreferences.getInstance();
     final reminderTime = _resolveReminderTime(prefs);
     final lastMarkedEpoch = prefs.getInt(_lastAttendanceMarkedKey);
@@ -487,6 +520,7 @@ class LocalNotificationService {
         date: scheduledDate,
         details: notificationDetails,
         scheduleMode: scheduleMode,
+        copy: reminderCopy,
       );
 
       if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle &&
@@ -499,6 +533,7 @@ class LocalNotificationService {
           date: scheduledDate,
           details: notificationDetails,
           scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          copy: reminderCopy,
         );
       }
     } on PlatformException catch (error, stackTrace) {
@@ -525,6 +560,7 @@ class LocalNotificationService {
         date: scheduledDate,
         details: notificationDetails,
         scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        copy: reminderCopy,
       );
     }
   }
@@ -721,21 +757,109 @@ class LocalNotificationService {
     required tz.TZDateTime date,
     required NotificationDetails details,
     required AndroidScheduleMode scheduleMode,
+    required _AttendanceReminderCopy copy,
   }) async {
     await _plugin.zonedSchedule(
       _attendanceReminderNotificationId,
-      _attendanceReminderTitle,
-      _attendanceReminderBody,
+      copy.title,
+      copy.body,
       date,
       details,
       // Ensure the reminder still fires even if the device enters doze mode
       // while the app is terminated.
       androidAllowWhileIdle: true,
       androidScheduleMode: scheduleMode,
+      payload: _encodePayload(<String, String>{
+        _payloadTypeKey: _payloadTypeAttendanceReminder,
+      }),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.wallClockTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
+  }
+
+  static String _encodePayload(Map<String, dynamic> data) {
+    return jsonEncode(data);
+  }
+
+  static Map<String, dynamic>? _decodePayload(String payload) {
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
+
+  static Future<void> _openDownloadedReport(String filePath) async {
+    try {
+      await OpenFilex.open(filePath, type: 'application/pdf');
+    } catch (error, stackTrace) {
+      debugPrint('Failed to open downloaded report from notification: $error');
+      debugPrint('$stackTrace');
+    }
+  }
+
+  static Future<_AttendanceReminderCopy> _resolveAttendanceReminderCopy() async {
+    final preferredLanguage = await _sessionManager.getPreferredLanguage();
+    return _buildAttendanceReminderCopy(preferredLanguage);
+  }
+
+  static _AttendanceReminderCopy _buildAttendanceReminderCopy(
+    String? languageCode,
+  ) {
+    final supportedValues = AppString.localizedValues;
+    final fallbackValues = supportedValues['en'] ?? const <String, String>{};
+    final normalizedLanguage =
+        supportedValues.containsKey(languageCode) ? languageCode : 'en';
+    final localizedValues =
+        supportedValues[normalizedLanguage] ?? fallbackValues;
+
+    final title = localizedValues['attendanceReminderNotificationTitle'] ??
+        fallbackValues['attendanceReminderNotificationTitle'] ??
+        _attendanceReminderTitle;
+    final body = localizedValues['attendanceReminderNotificationBody'] ??
+        fallbackValues['attendanceReminderNotificationBody'] ??
+        _attendanceReminderBody;
+
+    return _AttendanceReminderCopy(title: title, body: body);
+  }
+
+  static Future<void> _handleAttendanceReminderDeepLink() async {
+    final handler = _attendanceReminderTapHandler;
+    if (handler == null) {
+      _pendingAttendanceReminderTapCount++;
+      return;
+    }
+    await handler();
+  }
+
+  static void _flushPendingAttendanceReminderTaps() {
+    final handler = _attendanceReminderTapHandler;
+    if (handler == null || _pendingAttendanceReminderTapCount == 0) {
+      return;
+    }
+
+    final pending = _pendingAttendanceReminderTapCount;
+    _pendingAttendanceReminderTapCount = 0;
+    for (var i = 0; i < pending; i++) {
+      scheduleMicrotask(() async {
+        final activeHandler = _attendanceReminderTapHandler;
+        if (activeHandler != null) {
+          await activeHandler();
+        }
+      });
+    }
+  }
+
+  static void registerAttendanceReminderTapHandler(
+    Future<void> Function() handler,
+  ) {
+    _attendanceReminderTapHandler = handler;
+    _flushPendingAttendanceReminderTaps();
   }
 
   static Future<bool> _isAttendanceReminderPending() async {
@@ -758,5 +882,12 @@ class _ReminderTime {
 
   final int hour;
   final int minute;
+}
+
+class _AttendanceReminderCopy {
+  const _AttendanceReminderCopy({required this.title, required this.body});
+
+  final String title;
+  final String body;
 }
 
