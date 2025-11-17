@@ -1046,6 +1046,11 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     final role = _extractWorkContractRole(data) ?? type.role;
     final fallbackUnitLabel =
         _extractWorkContractUnitLabel(data) ?? (type.unitLabel.isNotEmpty ? type.unitLabel : null);
+    final resolvedUnitLabel = resolveContractUnitLabel(
+      localizations: localizations,
+      contractName: type.name,
+      unitLabel: fallbackUnitLabel ?? localizations.contractWorkUnitFallback,
+    );
 
     final rawPriceText = _normalizeWorkContractText(data['price']);
 
@@ -1058,7 +1063,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       rawPrice: rawPriceText,
       count: count,
       role: role,
-      fallbackUnitLabel: fallbackUnitLabel,
+      fallbackUnitLabel: resolvedUnitLabel,
       currencySymbol: currencySymbol,
     );
   }
@@ -1583,12 +1588,20 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
       final l = AppLocalizations.of(widget.rootContext);
 
+      final resolvedUnitLabel = resolveContractUnitLabel(
+        localizations: l,
+        contractName: name ?? role ?? type ?? '',
+        unitLabel: (unitLabel != null && unitLabel.isNotEmpty)
+            ? unitLabel
+            : l.contractWorkUnitFallback,
+      );
+
       var subtitle = buildContractRateSubtitle(
         l,
         rate: rate,
         count: count,
         role: role ?? type,
-        fallbackUnitLabel: unitLabel,
+        fallbackUnitLabel: resolvedUnitLabel,
         currencySymbol: _resolveCurrencySymbol(),
       );
       if (subtitle.isEmpty) {

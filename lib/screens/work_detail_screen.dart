@@ -3877,13 +3877,19 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           final count = _extractContractCount(map);
           final roleLabel = _extractContractRole(map);
 
+          final resolvedUnitLabel = resolveContractUnitLabel(
+            localizations: l,
+            contractName: name ?? type ?? '',
+            unitLabel: unitLabel ?? l.contractWorkUnitFallback,
+          );
+
           final priceText = buildContractRateSubtitle(
             l,
             rate: rate,
             rawPrice: rawPrice,
             count: count,
             role: roleLabel,
-            fallbackUnitLabel: unitLabel,
+            fallbackUnitLabel: resolvedUnitLabel,
             currencySymbol: currencyPrefix,
           );
 

@@ -277,6 +277,11 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       final role = _summaryExtractContractRole(metadata) ?? t.role;
       final fallbackUnitLabel = _summaryExtractContractUnitLabel(metadata) ??
           (t.unitLabel.isNotEmpty ? t.unitLabel : null);
+      final resolvedUnitLabel = resolveContractUnitLabel(
+        localizations: l,
+        contractName: t.name,
+        unitLabel: fallbackUnitLabel ?? l.contractWorkUnitFallback,
+      );
       final currencySymbol =
           _summaryExtractCurrencySymbol(metadata) ?? '€';
       final unitsLabel = buildContractRateSubtitle(
@@ -284,7 +289,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         rate: t.rate,
         count: count,
         role: role,
-        fallbackUnitLabel: fallbackUnitLabel,
+        fallbackUnitLabel: resolvedUnitLabel,
         currencySymbol: currencySymbol,
       );
       return _ContractSummaryRow(
@@ -325,8 +330,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         item.ratePerUnit != null || item.unitCount != null || (item.unitRole?.trim().isNotEmpty ?? false);
     if (hasMetadata) {
       final fallbackUnit = item.unitLabel?.trim();
-      final resolvedFallback =
-          (fallbackUnit != null && fallbackUnit.isNotEmpty) ? fallbackUnit : null;
+      final resolvedFallback = (fallbackUnit != null && fallbackUnit.isNotEmpty)
+          ? resolveContractUnitLabel(
+              localizations: l,
+              contractName: item.title,
+              unitLabel: fallbackUnit,
+            )
+          : null;
       final subtitle = buildContractRateSubtitle(
         l,
         rate: item.ratePerUnit,
