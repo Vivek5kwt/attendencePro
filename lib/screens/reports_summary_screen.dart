@@ -12,7 +12,6 @@ import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/attendance_history_repository.dart';
 import '../repositories/reports_repository.dart';
-import '../utils/contract_work_display.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/contract_unit_label.dart';
@@ -467,112 +466,86 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     final items = summary.contractSummary.items;
     if (items.isEmpty) return const <_ContractWorkItem>[];
 
+    final normalizedSymbol = summary.currencySymbol.trim().isEmpty ? '€' : summary.currencySymbol;
+    final aggregations = <String, _ContractWorkAggregation>{};
+
+    for (final data in items) {
+      final workName = data.title.trim().isEmpty ? l.notAvailableLabel : data.title.trim();
+      final role = _normalizeContractRoleDisplay(data.unitRole);
+      final aggregationKey = '${workName.toLowerCase()}|${role?.toLowerCase() ?? ''}';
+      final aggregation = aggregations.putIfAbsent(
+        aggregationKey,
+        () => _ContractWorkAggregation(workName: workName, role: role),
+      );
+
+      final units = _extractContractUnits(data);
+      if (units != null) {
+        aggregation.totalUnits += units;
+      }
+
+      if (data.ratePerUnit != null && data.ratePerUnit! > 0) {
+        aggregation.ratePerUnit ??= data.ratePerUnit;
+      }
+
+      final resolvedUnitLabel = _resolveUnitLabelText(data, l);
+      aggregation.unitLabel ??= resolvedUnitLabel;
+
+      if (data.amount > 0) {
+        aggregation.amount += data.amount;
+      }
+
+      if (data.indicatorColorValue != null && aggregation.indicatorColorValue == null) {
+        aggregation.indicatorColorValue = data.indicatorColorValue;
+      }
+    }
+
+    final aggregationList = aggregations.values.toList(growable: false);
     final result = <_ContractWorkItem>[];
-    for (var i = 0; i < items.length; i++) {
-      final d = items[i];
-      final colorValue = d.indicatorColorValue;
-      final color =
-          colorValue != null ? Color(colorValue) : _contractColorPalette[i % _contractColorPalette.length];
-      final unitsLabel = _buildContractUnitsSummary(d, l, summary.currencySymbol);
-      final calculation = _buildContractCalculationLabel(d, l, summary.currencySymbol);
-      final amountLabel = _resolveContractAmountLabel(d, summary.currencySymbol);
+
+    for (var i = 0; i < aggregationList.length; i++) {
+      final aggregation = aggregationList[i];
+      final resolvedUnitLabel = aggregation.unitLabel ?? l.contractWorkUnitFallback;
+      final unitsLabel = aggregation.totalUnits > 0
+          ? contractUnitCountLabel(
+              localizations: l,
+              contractName: aggregation.workName,
+              unitLabel: resolvedUnitLabel,
+              quantity: aggregation.totalUnits,
+            )
+          : l.notAvailableLabel;
+
+      double? paymentAmount;
+      if (aggregation.ratePerUnit != null && aggregation.totalUnits > 0) {
+        paymentAmount = aggregation.ratePerUnit! * aggregation.totalUnits;
+      } else if (aggregation.amount > 0) {
+        paymentAmount = aggregation.amount;
+      }
+
+      final amountLabel = paymentAmount != null
+          ? _formatCurrencyValue(paymentAmount, normalizedSymbol)
+          : l.notAvailableLabel;
+
+      final calculationLabel =
+          aggregation.ratePerUnit != null && aggregation.totalUnits > 0
+              ? '$unitsLabel × ${_formatCurrencyValue(aggregation.ratePerUnit!, normalizedSymbol)}'
+              : null;
+
+      final indicatorColor = aggregation.indicatorColorValue != null
+          ? Color(aggregation.indicatorColorValue!)
+          : _contractColorPalette[i % _contractColorPalette.length];
+
       result.add(
         _ContractWorkItem(
-          title: d.title,
+          title: _formatContractWorkTitle(aggregation.workName, aggregation.role),
           unitsLabel: unitsLabel,
           amount: amountLabel,
-          indicatorColor: color,
-          calculationLabel: calculation,
+          indicatorColor: indicatorColor,
+          calculationLabel: calculationLabel,
         ),
       );
     }
+
     return result;
-  }
-
-  String _buildContractUnitsSummary(
-    ContractWorkItemData data,
-    AppLocalizations l,
-    String currencySymbol,
-  ) {
-    final resolvedUnitLabel = _resolveUnitLabelText(data, l);
-    final resolvedUnits = _extractContractUnits(data);
-
-    if (resolvedUnits != null) {
-      return contractUnitCountLabel(
-        localizations: l,
-        contractName: data.title,
-        unitLabel: resolvedUnitLabel,
-        quantity: resolvedUnits,
-      );
-    }
-
-    final quantityLabel = contractUnitQuantityLabel(
-      localizations: l,
-      contractName: data.title,
-      unitLabel: resolvedUnitLabel,
-      completedUnits: data.unitsCompleted,
-      totalUnits: data.unitsTotal,
-    ).trim();
-
-    if (quantityLabel.isNotEmpty && quantityLabel != l.notAvailableLabel) {
-      return quantityLabel;
-    }
-
-    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
-    final subtitle = buildContractRateSubtitle(
-      l,
-      rate: data.ratePerUnit,
-      role: data.unitRole,
-      fallbackUnitLabel: resolvedUnitLabel,
-      currencySymbol: normalizedSymbol,
-    ).trim();
-
-    if (subtitle.isNotEmpty) {
-      return subtitle;
-    }
-
-    final fallbackSubtitle = data.subtitle.trim();
-    if (fallbackSubtitle.isNotEmpty) {
-      return fallbackSubtitle;
-    }
-
-    return l.notAvailableLabel;
-  }
-
-  String? _buildContractCalculationLabel(
-    ContractWorkItemData data,
-    AppLocalizations l,
-    String currencySymbol,
-  ) {
-    final rate = data.ratePerUnit;
-    final resolvedUnits = _extractContractUnits(data);
-    final resolvedUnitLabel = _resolveUnitLabelText(data, l);
-    if (rate != null && rate > 0 && resolvedUnits != null) {
-      final countLabel = contractUnitCountLabel(
-        localizations: l,
-        contractName: data.title,
-        unitLabel: resolvedUnitLabel,
-        quantity: resolvedUnits,
-      );
-
-      return '$countLabel × ${_formatCurrencyValue(rate, currencySymbol)}';
-    }
-
-    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
-    final subtitle = buildContractRateSubtitle(
-      l,
-      rate: data.ratePerUnit,
-      role: data.unitRole,
-      fallbackUnitLabel: resolvedUnitLabel,
-      currencySymbol: normalizedSymbol,
-    ).trim();
-
-    if (subtitle.isNotEmpty) {
-      return subtitle;
-    }
-
-    final fallbackSubtitle = data.subtitle.trim();
-    return fallbackSubtitle.isEmpty ? null : fallbackSubtitle;
   }
 
   String _resolveUnitLabelText(ContractWorkItemData data, AppLocalizations l) {
@@ -600,27 +573,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       contractName: data.title,
       unitLabel: l.contractWorkUnitFallback,
     );
-  }
-
-  String _resolveContractAmountLabel(
-    ContractWorkItemData data,
-    String currencySymbol,
-  ) {
-    final customLabel = data.amountLabel?.trim();
-    if (customLabel != null && customLabel.isNotEmpty) {
-      return customLabel;
-    }
-
-    if (data.amount > 0) {
-      return _formatCurrencyValue(data.amount, currencySymbol);
-    }
-
-    final computed = _calculateContractItemAmount(data);
-    if (computed != null) {
-      return _formatCurrencyValue(computed, currencySymbol);
-    }
-
-    return _formatCurrencyValue(0, currencySymbol);
   }
 
   @override
@@ -1689,6 +1641,47 @@ class _ContractWorkItem {
   final String? calculationLabel;
 }
 
+class _ContractWorkAggregation {
+  _ContractWorkAggregation({
+    required this.workName,
+    this.role,
+  });
+
+  final String workName;
+  final String? role;
+  int totalUnits = 0;
+  double amount = 0;
+  double? ratePerUnit;
+  String? unitLabel;
+  int? indicatorColorValue;
+}
+
+String _formatContractWorkTitle(String workName, String? role) {
+  final normalizedName = workName.trim().isEmpty ? 'Contract Work' : workName.trim();
+  final normalizedRole = _normalizeContractRoleDisplay(role);
+  if (normalizedRole == null || normalizedRole.isEmpty) {
+    return normalizedName;
+  }
+  return '$normalizedName · $normalizedRole';
+}
+
+String? _normalizeContractRoleDisplay(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) {
+    return null;
+  }
+  switch (trimmed.toLowerCase()) {
+    case 'bin':
+      return 'Bin';
+    case 'crate':
+      return 'Crate';
+    case 'bunches':
+      return 'Bunches';
+    default:
+      return trimmed;
+  }
+}
+
 class _ContractWorkTile extends StatelessWidget {
   const _ContractWorkTile({required this.item});
 
@@ -1877,6 +1870,11 @@ int? _extractContractUnits(ContractWorkItemData data) {
     return value.round();
   }
 
+  final unitCount = normalize(data.unitCount);
+  if (unitCount != null) {
+    return unitCount;
+  }
+
   final completed = normalize(data.unitsCompleted);
   if (completed != null) {
     return completed;
@@ -1885,11 +1883,6 @@ int? _extractContractUnits(ContractWorkItemData data) {
   final totalUnits = normalize(data.unitsTotal);
   if (totalUnits != null) {
     return totalUnits;
-  }
-
-  final unitCount = normalize(data.unitCount);
-  if (unitCount != null) {
-    return unitCount;
   }
 
   final pending = normalize(data.unitsPending);
