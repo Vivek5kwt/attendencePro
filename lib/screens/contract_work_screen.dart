@@ -2,10 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../bloc/work_bloc.dart';
-import '../bloc/work_event.dart';
 import '../core/constants/app_assets.dart';
 import '../core/constants/app_strings.dart';
 import '../core/localization/app_localizations.dart';
@@ -594,30 +590,16 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   }
 
   Future<void> _handleRefresh() async {
-    await _refreshContractData(showLoader: true, notifyDashboard: true);
+    await _refreshContractData(showLoader: true);
   }
 
   Future<void> _refreshContractData({
     bool showLoader = false,
-    bool notifyDashboard = false,
   }) async {
     await Future.wait<void>([
       _loadContractTypes(showLoader: showLoader),
       _loadContractSummary(showLoader: showLoader),
     ]);
-
-    if (notifyDashboard) {
-      _notifyDashboardOfChanges();
-    }
-  }
-
-  void _notifyDashboardOfChanges() {
-    try {
-      final workBloc = context.read<WorkBloc>();
-      workBloc.add(const WorkRefreshed());
-    } on ProviderNotFoundException {
-      // No WorkBloc available in the current context.
-    }
   }
 
   List<_ContractType> get _allContractTypes => <_ContractType>[
@@ -737,7 +719,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
     _upsertContractType(result);
 
-    await _refreshContractData(notifyDashboard: true);
+    await _refreshContractData();
     if (!mounted) return;
 
     ScaffoldMessenger.of(
@@ -786,7 +768,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
             _buildSummaryRowsFromTypes(_userContractTypes, l);
       });
 
-      await _refreshContractData(notifyDashboard: true);
+      await _refreshContractData();
       if (!mounted) return;
 
       ScaffoldMessenger.of(
