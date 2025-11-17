@@ -2061,6 +2061,87 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return _BundleCollectionResult(bundles: bundles);
   }
 
+  String _formatBundleCount(num count) {
+    final doubleValue = count.toDouble();
+    if (doubleValue % 1 == 0) {
+      return doubleValue.toInt().toString();
+    }
+    var formatted = doubleValue.toStringAsFixed(2);
+    while (formatted.contains('.') && formatted.endsWith('0')) {
+      formatted = formatted.substring(0, formatted.length - 1);
+    }
+    if (formatted.endsWith('.')) {
+      formatted = formatted.substring(0, formatted.length - 1);
+    }
+    return formatted;
+  }
+
+  bool _isHundredBunchContractType(ContractType? type) {
+    if (type == null) {
+      return false;
+    }
+    final name = type.name.toLowerCase();
+    if (name.contains('ravanello')) {
+      return true;
+    }
+    final unitLabel = type.unitLabel.toLowerCase();
+    final role = type.role?.toLowerCase() ?? '';
+    final mentionsBunch = name.contains('bunch') ||
+        unitLabel.contains('bunch') ||
+        unitLabel.contains('mazz') ||
+        name.contains('mazz') ||
+        role == 'bunches';
+    if (!mentionsBunch) {
+      return false;
+    }
+    final mentionsHundred = unitLabel.contains('100') ||
+        unitLabel.contains('hundred') ||
+        name.contains('100') ||
+        name.contains('cento');
+    if (mentionsHundred) {
+      return true;
+    }
+    return role == 'bunches';
+  }
+
+  num _normalizeHundredBunchCount({
+    required ContractType? contractType,
+    required num rawCount,
+  }) {
+    if (rawCount <= 0) {
+      return rawCount;
+    }
+    if (!_isHundredBunchContractType(contractType)) {
+      return rawCount;
+    }
+    final normalized = rawCount / 100;
+    if (normalized % 1 == 0) {
+      return normalized.toInt();
+    }
+    return double.parse(normalized.toStringAsFixed(3));
+  }
+
+  List<AttendanceContractBundle> _buildBundlePayload(
+    List<AttendanceContractBundle> bundles,
+  ) {
+    if (bundles.isEmpty) {
+      return const <AttendanceContractBundle>[];
+    }
+    return bundles
+        .map((bundle) {
+          final type = _findContractTypeById(bundle.contractTypeId);
+          final normalizedCount = _normalizeHundredBunchCount(
+            contractType: type,
+            rawCount: bundle.count,
+          );
+          return AttendanceContractBundle(
+            contractTypeId: bundle.contractTypeId,
+            count: normalizedCount,
+          );
+        })
+        .toList(growable: false);
+  }
+
   List<_PreviewBundleInfo> _buildPreviewBundles(
     List<AttendanceContractBundle> bundles,
   ) {
@@ -2552,8 +2633,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     List<AttendanceContractBundle> bundles = const <AttendanceContractBundle>[];
+    List<AttendanceContractBundle> bundlePayload =
+        const <AttendanceContractBundle>[];
     int? contractTypeId;
     int? units;
+    num? payloadUnits;
     double? ratePerUnit;
     List<_PreviewBundleInfo> previewBundles = const <_PreviewBundleInfo>[];
     bool includeContractEntry = false;
@@ -2578,10 +2662,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         return;
       }
 
+      bundlePayload = _buildBundlePayload(bundles);
+
       previewBundles = _buildPreviewBundles(bundles);
       if (bundles.length == 1) {
         contractTypeId = bundles.first.contractTypeId;
-        units = bundles.first.count;
+        units = bundles.first.count.toInt();
+        payloadUnits =
+            bundlePayload.isNotEmpty ? bundlePayload.first.count : units;
         final selectedContractType = _findContractTypeById(contractTypeId);
         ratePerUnit = selectedContractType?.rate;
       }
@@ -2613,9 +2701,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         breakMinutes: breakMinutes,
         isContractEntry: contractEntryPayloadValue,
         contractTypeId: contractTypeId,
-        units: units,
+        units: payloadUnits ?? units,
         ratePerUnit: ratePerUnit,
-        bundles: bundles,
+        bundles: bundlePayload,
       );
 
       previewFetched = true;
@@ -2674,9 +2762,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           breakMinutes: breakMinutes,
           isContractEntry: contractEntryPayloadValue,
           contractTypeId: contractTypeId,
-          units: units,
+          units: payloadUnits ?? units,
           ratePerUnit: ratePerUnit,
-          bundles: bundles,
+          bundles: bundlePayload,
         );
         _setAttendanceIdForDate(_selectedDate, existingAttendanceId);
       } else {
@@ -2689,9 +2777,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           breakMinutes: breakMinutes,
           isContractEntry: contractEntryPayloadValue,
           contractTypeId: contractTypeId,
-          units: units,
+          units: payloadUnits ?? units,
           ratePerUnit: ratePerUnit,
-          bundles: bundles,
+          bundles: bundlePayload,
         );
       }
       if (!mounted) {
@@ -2832,7 +2920,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (isContractEntry) {
       if (bundles.isNotEmpty) {
         final bundleText = bundles
-            .map((bundle) => '${bundle.typeName} × ${bundle.count}')
+            .map((bundle) =>
+                '${bundle.typeName} × ${_formatBundleCount(bundle.count)}')
             .join(', ');
         _addPreviewEntry(
           infoEntries,
@@ -7003,7 +7092,7 @@ class _PreviewBundleInfo {
   });
 
   final String typeName;
-  final int count;
+  final num count;
 }
 
 class _BundleCollectionResult {

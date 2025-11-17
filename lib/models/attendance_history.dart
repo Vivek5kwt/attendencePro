@@ -861,7 +861,7 @@ List<AttendanceContractBundle> _parseContractBundles(
       'type_id',
       'typeId',
     ]);
-    final singleCount = _parseInt(json, const [
+    final singleCount = _parseBundleCount(json, const [
       'count',
       'units_completed',
       'unitsCompleted',
@@ -894,7 +894,7 @@ List<AttendanceContractBundle> _parseContractBundles(
       'typeId',
       'id',
     ]);
-    final count = _parseInt(map, const [
+    final count = _parseBundleCount(map, const [
       'count',
       'units',
       'quantity',
@@ -915,6 +915,36 @@ List<AttendanceContractBundle> _parseContractBundles(
     return const <AttendanceContractBundle>[];
   }
   return List<AttendanceContractBundle>.unmodifiable(result);
+}
+
+num? _parseBundleCount(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (!json.containsKey(key)) {
+      continue;
+    }
+    final parsed = _parseBundleCountValue(json[key]);
+    if (parsed != null) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+num? _parseBundleCountValue(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is num) {
+    return value.toDouble();
+  }
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    return double.tryParse(trimmed);
+  }
+  return null;
 }
 
 List<dynamic>? _extractBundleList(Map<String, dynamic> json, [int depth = 0]) {
