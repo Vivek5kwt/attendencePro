@@ -2678,7 +2678,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final bool? contractEntryPayloadValue = includeContractEntry ? true : null;
 
-    if (includeContractEntry) {
+    if (includeContractEntry && !hasHourlyInput) {
       startTime ??= '00:00';
       endTime ??= '00:00';
       breakMinutes ??= 0;
