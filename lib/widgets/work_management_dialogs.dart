@@ -1421,6 +1421,11 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final rate = _parseWorkContractRate(map);
           final rawPrice = _normalizeWorkContractText(map['price']);
           final unitLabel = _extractWorkContractUnitLabel(map);
+          final resolvedUnitLabel = resolveContractUnitLabel(
+            localizations: l,
+            contractName: name ?? type ?? '',
+            unitLabel: unitLabel ?? l.contractWorkUnitFallback,
+          );
           final count = _parseWorkContractCount(map);
           final contractId = _extractWorkContractId(map);
 
@@ -1430,7 +1435,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             rawPrice: rawPrice,
             count: count,
             role: rawRole ?? rawType,
-            fallbackUnitLabel: unitLabel,
+            fallbackUnitLabel: resolvedUnitLabel,
             currencySymbol: _resolveCurrencySymbol(map),
           );
 
