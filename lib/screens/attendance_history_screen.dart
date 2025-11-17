@@ -2435,9 +2435,9 @@ class _ContractEntryTile extends StatelessWidget {
   final ValueChanged<_AttendanceEntry> onEdit;
   final Map<String, ContractType> contractTypesById;
 
-  int _resolveUnits() {
+  num _resolveUnits() {
     if (entry.contractBundles.isNotEmpty) {
-      return entry.contractBundles.fold<int>(
+      return entry.contractBundles.fold<num>(
         0,
         (previousValue, element) => previousValue + element.count,
       );
@@ -2510,6 +2510,8 @@ class _ContractEntryTile extends StatelessWidget {
         );
 
     final resolvedUnits = _resolveUnits();
+    final resolvedUnitsDisplay =
+        resolvedUnits > 0 ? _formatBundleUnits(resolvedUnits) : '--';
     final price = entry.ratePerUnit ?? 0;
     final priceLabel = price > 0
         ? _formatCurrencyValue(currencySymbol, price)
@@ -2559,7 +2561,7 @@ class _ContractEntryTile extends StatelessWidget {
             children: [
               _InfoStatMiniCard(
                 label: localization.contractWorkUnitsLabel,
-                value: resolvedUnits > 0 ? resolvedUnits.toString() : '--',
+                value: resolvedUnitsDisplay,
                 labelStyle: labelStyle,
                 valueStyle: valueStyle,
               ),
@@ -2576,15 +2578,15 @@ class _ContractEntryTile extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: entry.contractBundles
-                  .map(
-                    (bundle) => _ContractBundleChip(
-                      label: _resolveBundleLabel(bundle),
-                      units: bundle.count,
-                      localization: localization,
-                    ),
-                  )
-                  .toList(growable: false),
+                  children: entry.contractBundles
+                      .map(
+                        (bundle) => _ContractBundleChip(
+                          label: _resolveBundleLabel(bundle),
+                          units: bundle.count,
+                          localization: localization,
+                        ),
+                      )
+                      .toList(growable: false),
             ),
           ],
           const SizedBox(height: 12),
@@ -2602,6 +2604,21 @@ class _ContractEntryTile extends StatelessWidget {
   }
 }
 
+String _formatBundleUnits(num value) {
+  final doubleValue = value.toDouble();
+  if (doubleValue % 1 == 0) {
+    return doubleValue.toInt().toString();
+  }
+  var formatted = doubleValue.toStringAsFixed(2);
+  while (formatted.contains('.') && formatted.endsWith('0')) {
+    formatted = formatted.substring(0, formatted.length - 1);
+  }
+  if (formatted.endsWith('.')) {
+    formatted = formatted.substring(0, formatted.length - 1);
+  }
+  return formatted;
+}
+
 class _ContractBundleChip extends StatelessWidget {
   const _ContractBundleChip({
     required this.label,
@@ -2610,7 +2627,7 @@ class _ContractBundleChip extends StatelessWidget {
   });
 
   final String label;
-  final int units;
+  final num units;
   final AppLocalizations localization;
 
   @override
@@ -2632,7 +2649,7 @@ class _ContractBundleChip extends StatelessWidget {
         border: Border.all(color: const Color(0xFFBFDBFE)),
       ),
       child: Text(
-        '$label · $units ${localization.contractWorkUnitsLabel}',
+        '$label · ${_formatBundleUnits(units)} ${localization.contractWorkUnitsLabel}',
         style: textStyle,
       ),
     );
@@ -2858,7 +2875,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
     );
     bundleEntries = <_ContractBundleEditEntry>[];
 
-    void addBundle({ContractType? type, int? count}) {
+    void addBundle({ContractType? type, num? count}) {
       final resolvedType = type ??
           (widget.contractTypes.isNotEmpty ? widget.contractTypes.first : null);
       bundleEntries.add(
@@ -3169,12 +3186,12 @@ class _ContractBundleEditEntry {
   _ContractBundleEditEntry({
     required this.id,
     this.contractType,
-    int? initialCount,
+    num? initialCount,
   }) : controller = TextEditingController(
-    text: initialCount != null && initialCount > 0
-        ? initialCount.toString()
-        : '',
-  );
+          text: initialCount != null && initialCount > 0
+              ? _formatBundleUnits(initialCount)
+              : '',
+        );
 
   final String id;
   ContractType? contractType;

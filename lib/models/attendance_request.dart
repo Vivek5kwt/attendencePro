@@ -101,11 +101,11 @@ class AttendanceRequest {
 class AttendanceContractBundle {
   const AttendanceContractBundle({
     required this.contractTypeId,
-    required this.count,
-  });
+    required num count,
+  }) : count = count;
 
   final int contractTypeId;
-  final int count;
+  final num count;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
