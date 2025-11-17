@@ -41,6 +41,7 @@ class AttendanceRequest {
     if (!isLeave) {
       final hasBundles = bundles != null && bundles!.isNotEmpty;
       final normalizedContractTypeId = contractTypeId ?? 1;
+      final resolvedIsContractEntry = isContractEntry ?? false;
 
       if (startTime != null) {
         payload['start_time'] = startTime;
@@ -52,11 +53,9 @@ class AttendanceRequest {
         payload['break_minutes'] = breakMinutes;
       }
 
-      if (isContractEntry != null) {
-        payload['is_contract_entry'] = isContractEntry;
-      }
+      payload['is_contract_entry'] = resolvedIsContractEntry;
 
-      if (isContractEntry == true) {
+      if (resolvedIsContractEntry) {
         if (hasBundles) {
           payload['bundles'] =
               bundles!.map((bundle) => bundle.toJson()).toList(growable: false);
