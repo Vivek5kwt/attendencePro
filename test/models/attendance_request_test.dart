@@ -96,12 +96,31 @@ void main() {
         {'contract_type_id': 4, 'count': 2},
         {'contract_type_id': 5, 'count': 1},
       ]);
-      expect(json.containsKey('start_time'), isFalse);
-      expect(json.containsKey('end_time'), isFalse);
-      expect(json.containsKey('break_minutes'), isFalse);
+      expect(json['start_time'], '07:25');
+      expect(json['end_time'], '20:45');
+      expect(json['break_minutes'], 35);
       expect(json.containsKey('contract_type_id'), isFalse);
       expect(json.containsKey('units'), isFalse);
       expect(json.containsKey('rate_per_unit'), isFalse);
+    });
+
+    test('serializes hourly attendance without explicit contract flag', () {
+      final request = AttendanceRequest(
+        workId: 11,
+        date: DateTime(2025, 11, 12),
+        startTime: '06:30',
+        endTime: '14:10',
+        breakMinutes: 20,
+      );
+
+      final json = request.toJson();
+
+      expect(json['work_id'], 11);
+      expect(json['start_time'], '06:30');
+      expect(json['end_time'], '14:10');
+      expect(json['break_minutes'], 20);
+      expect(json['contract_type_id'], 1);
+      expect(json.containsKey('is_contract_entry'), isFalse);
     });
 
     test('serializes leave attendance with minimal payload', () {
