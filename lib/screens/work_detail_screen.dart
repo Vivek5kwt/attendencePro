@@ -319,6 +319,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     'breakTimeMinutes',
   ];
 
+  static const String _alreadySubmittedServerMessage =
+      'attendance for this date is already submitted';
+
   final DashboardRepository _dashboardRepository = DashboardRepository();
   final AttendanceEntryRepository _attendanceRepository =
       AttendanceEntryRepository();
@@ -1309,9 +1312,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (!mounted) {
         return;
       }
-      final message = e.message.trim().isNotEmpty
-          ? e.message.trim()
-          : l.attendanceMissedEntriesLoadFailed;
+      final message = _localizeAttendanceServerMessage(
+        e.message.trim().isNotEmpty
+            ? e.message.trim()
+            : l.attendanceMissedEntriesLoadFailed,
+      );
       if (showDialog) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(message)));
@@ -1373,9 +1378,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (!mounted) {
         return false;
       }
-      final message = e.message.trim().isNotEmpty
-          ? e.message.trim()
-          : l.attendanceMissedEntriesLoadFailed;
+      final message = _localizeAttendanceServerMessage(
+        e.message.trim().isNotEmpty
+            ? e.message.trim()
+            : l.attendanceMissedEntriesLoadFailed,
+      );
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
       return false;
@@ -1570,8 +1577,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _isCompletingMissedAttendance = false;
 
     if (response != null) {
-      final message =
-          _extractResponseMessage(response) ?? l.attendanceMissedEntriesCompleteSuccess;
+      final message = _localizeAttendanceServerMessage(
+        _extractResponseMessage(response) ??
+            l.attendanceMissedEntriesCompleteSuccess,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -2446,8 +2455,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         if (!mounted) {
           return;
         }
-        final message =
-            _extractResponseMessage(response) ?? l.attendanceSubmitSuccess;
+        final message = _localizeAttendanceServerMessage(
+          _extractResponseMessage(response) ?? l.attendanceSubmitSuccess,
+        );
         _setAttendanceStatus(
           message,
           isError: false,
@@ -2490,9 +2500,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         if (!mounted) {
           return;
         }
-        final message = e.message.trim().isNotEmpty
-            ? e.message.trim()
-            : l.attendanceSubmitFailed;
+        final message = _localizeAttendanceServerMessage(
+          e.message.trim().isNotEmpty
+              ? e.message.trim()
+              : l.attendanceSubmitFailed,
+        );
         _setAttendanceStatus(message, isError: true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
@@ -2684,8 +2696,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (!mounted) {
         return;
       }
-      final message =
-          _extractResponseMessage(response) ?? l.attendanceSubmitSuccess;
+      final message = _localizeAttendanceServerMessage(
+        _extractResponseMessage(response) ?? l.attendanceSubmitSuccess,
+      );
       _setAttendanceStatus(
         message,
         isError: false,
@@ -2731,9 +2744,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final fallback = previewFetched
           ? l.attendanceSubmitFailed
           : l.attendancePreviewFetchFailed;
-      final message = e.message.trim().isNotEmpty
-          ? e.message.trim()
-          : fallback;
+      final message = _localizeAttendanceServerMessage(
+        e.message.trim().isNotEmpty ? e.message.trim() : fallback,
+      );
       _setAttendanceStatus(message, isError: true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -2772,9 +2785,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final l = AppLocalizations.of(context);
     final previewData = _extractPreviewData(previewResponse);
     final responseMessage = _extractResponseMessage(previewResponse);
-    final description = (responseMessage != null && responseMessage.trim().isNotEmpty)
-        ? responseMessage.trim()
-        : l.attendancePreviewDescription;
+    final description =
+        (responseMessage != null && responseMessage.trim().isNotEmpty)
+            ? _localizeAttendanceServerMessage(responseMessage)
+            : l.attendancePreviewDescription;
 
     final infoEntries = <_PreviewInfoEntry>[];
     _addPreviewEntry(infoEntries, l.attendanceDateLabel, _formatDate(date));
@@ -3058,9 +3072,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       );
     } on DashboardRepositoryException catch (e) {
       if (!mounted) return;
-      final message = e.message.trim().isNotEmpty
-          ? e.message.trim()
-          : l.dashboardSummaryLoadFailedMessage;
+      final message = _localizeAttendanceServerMessage(
+        e.message.trim().isNotEmpty
+            ? e.message.trim()
+            : l.dashboardSummaryLoadFailedMessage,
+      );
       setState(() {
         _summaryError = message;
         _isSummaryLoading = false;
@@ -3120,9 +3136,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           return;
         }
         final l = AppLocalizations.of(context);
-        final message = e.message.trim().isNotEmpty
-            ? e.message.trim()
-            : l.contractWorkLoadError;
+        final message = _localizeAttendanceServerMessage(
+          e.message.trim().isNotEmpty
+              ? e.message.trim()
+              : l.contractWorkLoadError,
+        );
         setState(() {
           _contractTypesError = message;
           if (showLoader) {
@@ -4488,6 +4506,26 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final month = monthNames[date.month - 1];
     final day = date.day.toString().padLeft(2, '0');
     return '$month $day, ${date.year}';
+  }
+
+  String _formatSelectedDateForAlreadySubmitted(DateTime date) {
+    final normalized = _normalizeDateOnly(date);
+    final day = normalized.day.toString().padLeft(2, '0');
+    final month = normalized.month.toString().padLeft(2, '0');
+    return '$day/$month/${normalized.year}';
+  }
+
+  String _localizeAttendanceServerMessage(String message) {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) {
+      return message;
+    }
+    if (trimmed.toLowerCase() == _alreadySubmittedServerMessage) {
+      final formattedDate =
+          _formatSelectedDateForAlreadySubmitted(_selectedDate);
+      return 'Attendance for $formattedDate is already submitted.';
+    }
+    return trimmed;
   }
 
   DateTime? _parseDateText(String value) {
