@@ -246,9 +246,19 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
       if (!mounted) return;
 
+      final localizations = AppLocalizations.of(context);
+      final computedRows = _buildSummaryRows(summary, localizations);
+      final resolvedTotalUnits = computedRows.totalUnits > 0
+          ? computedRows.totalUnits
+          : summary.contractSummary.totalUnits;
+      final resolvedSalary = computedRows.totalSalary > 0
+          ? computedRows.totalSalary
+          : summary.contractSummary.salaryAmount;
+
       setState(() {
-        _summaryTotalUnits = summary.contractSummary.totalUnits;
-        _summarySalaryAmount = summary.contractSummary.salaryAmount;
+        _summaryRows = computedRows.rows;
+        _summaryTotalUnits = resolvedTotalUnits;
+        _summarySalaryAmount = resolvedSalary;
         _isLoadingSummary = false;
       });
     } on ReportsRepositoryException catch (error) {
@@ -282,8 +292,9 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     return List<_ContractSummaryRow>.generate(types.length, (i) {
       final t = types[i];
       final metadata = t.additionalData;
-      final count = _summaryExtractContractCount(metadata);
-      final role = _summaryExtractContractRole(metadata) ?? t.role;
+      final count = _summaryNormalizeUnits(
+        _summaryExtractContractCount(metadata),
+      );
       final fallbackUnitLabel = _summaryExtractContractUnitLabel(metadata) ??
           (t.unitLabel.isNotEmpty ? t.unitLabel : null);
       final resolvedUnitLabel = resolveContractUnitLabel(
@@ -293,85 +304,134 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       );
       final currencySymbol =
           _summaryExtractCurrencySymbol(metadata) ?? '€';
-      final unitsLabel = buildContractRateSubtitle(
-        l,
-        rate: t.rate,
-        count: count,
-        role: role,
-        fallbackUnitLabel: resolvedUnitLabel,
-        currencySymbol: currencySymbol,
-      );
+      final unitsLabel = count != null
+          ? contractUnitCountLabel(
+              localizations: l,
+              contractName: t.name,
+              unitLabel: resolvedUnitLabel,
+              quantity: count,
+            )
+          : l.notAvailableLabel;
+      final paymentAmount = count != null ? t.rate * count : null;
+      final paymentLabel = paymentAmount != null
+          ? _formatCurrencyValue(paymentAmount, currencySymbol)
+          : l.notAvailableLabel;
       return _ContractSummaryRow(
         index: i + 1,
         workName: t.name,
         units: unitsLabel,
-        payment: t.displayRate,
+        payment: paymentLabel,
       );
     });
   }
 
-  List<_ContractSummaryRow> _buildSummaryRows(
-      ReportSummary summary,
-      AppLocalizations l,
-      ) {
-    final items = summary.contractSummary.items;
-    if (items.isEmpty) return const <_ContractSummaryRow>[];
-
-    final currencySymbol = summary.currencySymbol;
-    return List<_ContractSummaryRow>.generate(items.length, (index) {
-      final item = items[index];
-      return _ContractSummaryRow(
-        index: index + 1,
-        workName: item.title,
-        units: _formatUnitsLabel(item, l, currencySymbol),
-        payment: item.resolveAmountLabel(currencySymbol),
-      );
-    });
-  }
-
-  String _formatUnitsLabel(
-    ContractWorkItemData item,
+  _ContractSummaryComputation _buildSummaryRows(
+    ReportSummary summary,
     AppLocalizations l,
-    String currencySymbol,
   ) {
-    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
-    final hasMetadata =
-        item.ratePerUnit != null || item.unitCount != null || (item.unitRole?.trim().isNotEmpty ?? false);
-    if (hasMetadata) {
-      final fallbackUnit = item.unitLabel?.trim();
-      final resolvedFallback = (fallbackUnit != null && fallbackUnit.isNotEmpty)
-          ? resolveContractUnitLabel(
-              localizations: l,
-              contractName: item.title,
-              unitLabel: fallbackUnit,
-            )
-          : null;
-      final subtitle = buildContractRateSubtitle(
-        l,
-        rate: item.ratePerUnit,
-        count: item.unitCount,
-        role: item.unitRole,
-        fallbackUnitLabel: resolvedFallback,
-        currencySymbol: normalizedSymbol,
+    final items = summary.contractSummary.items;
+    if (items.isEmpty) {
+      return const _ContractSummaryComputation(
+        rows: <_ContractSummaryRow>[],
+        totalUnits: 0,
+        totalSalary: 0,
       );
-      if (subtitle.trim().isNotEmpty) {
-        return subtitle;
+    }
+
+    final normalizedSymbol = summary.currencySymbol.trim().isEmpty
+        ? '€'
+        : summary.currencySymbol;
+    final aggregations = <String, _ContractSummaryAggregation>{};
+
+    int? _extractUnits(ContractWorkItemData data) {
+      return _summaryNormalizeUnits(data.unitCount) ??
+          _summaryNormalizeUnits(data.unitsCompleted) ??
+          _summaryNormalizeUnits(data.unitsTotal) ??
+          _summaryNormalizeUnits(data.unitsPending);
+    }
+
+    for (final item in items) {
+      final workName = item.title.trim().isEmpty
+          ? l.notAvailableLabel
+          : item.title.trim();
+      final key = workName.toLowerCase();
+      final aggregation = aggregations.putIfAbsent(
+        key,
+        () => _ContractSummaryAggregation(workName: workName),
+      );
+
+      final units = _extractUnits(item);
+      if (units != null) {
+        aggregation.totalUnits += units;
+      }
+
+      if (item.ratePerUnit != null && item.ratePerUnit! > 0) {
+        aggregation.ratePerUnit ??= item.ratePerUnit;
+      }
+
+      final fallbackUnitLabel = (item.unitLabel?.trim().isNotEmpty ?? false)
+          ? item.unitLabel!.trim()
+          : l.contractWorkUnitFallback;
+      final resolvedUnitLabel = resolveContractUnitLabel(
+        localizations: l,
+        contractName: workName,
+        unitLabel: fallbackUnitLabel,
+      );
+      aggregation.unitLabel ??= resolvedUnitLabel;
+
+      if (item.amount > 0) {
+        aggregation.amount += item.amount;
       }
     }
 
-    final subtitle = item.subtitle.trim();
-    if (subtitle.isNotEmpty) return subtitle;
+    final rows = <_ContractSummaryRow>[];
+    var totalUnits = 0;
+    var totalSalary = 0.0;
+    var rowIndex = 1;
 
-    final completed = item.unitsCompleted;
-    final total = item.unitsTotal;
+    for (final aggregation in aggregations.values) {
+      final unitsLabel = aggregation.totalUnits > 0
+          ? contractUnitCountLabel(
+              localizations: l,
+              contractName: aggregation.workName,
+              unitLabel: aggregation.unitLabel ?? l.contractWorkUnitFallback,
+              quantity: aggregation.totalUnits,
+            )
+          : l.notAvailableLabel;
 
-    if (completed != null && total != null && total > 0) {
-      return '$completed / $total ${l.contractWorkUnitsLabel}';
+      double? paymentAmount;
+      if (aggregation.ratePerUnit != null && aggregation.totalUnits > 0) {
+        paymentAmount = aggregation.ratePerUnit! * aggregation.totalUnits;
+      } else if (aggregation.amount > 0) {
+        paymentAmount = aggregation.amount;
+      }
+
+      final paymentLabel = paymentAmount != null
+          ? _formatCurrencyValue(paymentAmount, normalizedSymbol)
+          : l.notAvailableLabel;
+
+      if (aggregation.totalUnits > 0) {
+        totalUnits += aggregation.totalUnits;
+      }
+      if (paymentAmount != null) {
+        totalSalary += paymentAmount;
+      }
+
+      rows.add(
+        _ContractSummaryRow(
+          index: rowIndex++,
+          workName: aggregation.workName,
+          units: unitsLabel,
+          payment: paymentLabel,
+        ),
+      );
     }
-    if (completed != null) {
-      return '$completed ${l.contractWorkUnitsLabel}';
-    }
-    return l.notAvailableLabel;
+
+    return _ContractSummaryComputation(
+      rows: rows,
+      totalUnits: totalUnits,
+      totalSalary: totalSalary,
+    );
   }
 
   num? _summaryExtractContractCount(Map<String, dynamic> data) {
@@ -401,35 +461,19 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     return null;
   }
 
-  String? _summaryExtractContractRole(Map<String, dynamic> data) {
-    if (data.isEmpty) return null;
-    const keys = <String>[
-      'role',
-      'contract_role',
-      'contractRole',
-      'role_name',
-      'roleName',
-      'unit_name',
-      'unitName',
-      'unit',
-      'unit_display',
-      'unitDisplay',
-      'type',
-      'contract_type',
-      'contractType',
-      'subtype',
-      'contract_subtype',
-      'contractSubtype',
-    ];
-
-    for (final key in keys) {
-      final value = _summaryNormalizeText(data[key]);
-      if (value != null && value.isNotEmpty) {
-        return value;
-      }
+  int? _summaryNormalizeUnits(num? value) {
+    if (value == null) {
+      return null;
     }
-
-    return null;
+    final doubleValue = value.toDouble();
+    if (doubleValue.isNaN || doubleValue.isInfinite) {
+      return null;
+    }
+    if (doubleValue < 0) {
+      return null;
+    }
+    final rounded = doubleValue.round();
+    return rounded;
   }
 
   String? _summaryExtractContractUnitLabel(Map<String, dynamic> data) {
@@ -481,6 +525,15 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       }
     }
     return null;
+  }
+
+  String _formatCurrencyValue(num value, String currencySymbol) {
+    final normalizedSymbol = currencySymbol.trim().isEmpty ? '€' : currencySymbol;
+    final doubleValue = value.toDouble();
+    final isWholeNumber = doubleValue.floorToDouble() == doubleValue;
+    final formatted = doubleValue.abs().toStringAsFixed(isWholeNumber ? 0 : 2);
+    final prefix = doubleValue < 0 ? '-' : '';
+    return '$prefix$normalizedSymbol$formatted';
   }
 
   num? _summaryParseNumericValue(Object? value) {
@@ -2368,8 +2421,8 @@ class _ContractSummaryTableRow extends StatelessWidget {
   const _ContractSummaryTableRow.header({super.key})
       : index = null,
         workName = 'Work Name',
-        units = 'Units',
-        payment = 'Payment',
+        units = 'Total Units',
+        payment = 'Total Payment',
         isHeader = true;
 
   final int? index;
@@ -2650,6 +2703,28 @@ class _ContractSummaryRow {
   final String workName;
   final String units;
   final String payment;
+}
+
+class _ContractSummaryAggregation {
+  _ContractSummaryAggregation({required this.workName});
+
+  final String workName;
+  int totalUnits = 0;
+  double amount = 0;
+  double? ratePerUnit;
+  String? unitLabel;
+}
+
+class _ContractSummaryComputation {
+  const _ContractSummaryComputation({
+    required this.rows,
+    required this.totalUnits,
+    required this.totalSalary,
+  });
+
+  final List<_ContractSummaryRow> rows;
+  final int totalUnits;
+  final double totalSalary;
 }
 
 class _ManageTypeRow extends StatelessWidget {
