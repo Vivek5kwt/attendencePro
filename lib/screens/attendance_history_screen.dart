@@ -1374,6 +1374,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         currencySymbol: _currencySymbol,
         localization: l,
         onEdit: _handleEditEntry,
+        contractTypes: _contractTypes,
       );
 
       content = SingleChildScrollView(
@@ -2288,26 +2289,352 @@ class _EditButton extends StatelessWidget {
 }
 
 class _ContractHistoryList extends StatelessWidget {
-  const _ContractHistoryList({
+  _ContractHistoryList({
     required this.entries,
     required this.currencySymbol,
     required this.localization,
     required this.onEdit,
-  });
+    required List<ContractType> contractTypes,
+  }) : _contractTypesById = Map<String, ContractType>.unmodifiable({
+          for (final type in contractTypes) type.id: type,
+        });
 
   final List<_AttendanceEntry> entries;
   final String currencySymbol;
   final AppLocalizations localization;
   final ValueChanged<_AttendanceEntry> onEdit;
+  final Map<String, ContractType> _contractTypesById;
 
   @override
   Widget build(BuildContext context) {
-    return _EntryHistoryList(
-      entries: entries,
-      currencySymbol: currencySymbol,
-      localization: localization,
-      onEdit: onEdit,
-      showTotalHours: false,
+    final grouped = _groupEntriesByDay(entries);
+    final dayGroups = grouped.entries.toList(growable: false);
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: dayGroups.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final entry = dayGroups[index];
+        return _ContractEntryDayCard(
+          date: entry.key,
+          entries: entry.value,
+          currencySymbol: currencySymbol,
+          localization: localization,
+          onEdit: onEdit,
+          contractTypesById: _contractTypesById,
+        );
+      },
+    );
+  }
+}
+
+class _ContractEntryDayCard extends StatelessWidget {
+  const _ContractEntryDayCard({
+    required this.date,
+    required this.entries,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+    required this.contractTypesById,
+  });
+
+  final DateTime date;
+  final List<_AttendanceEntry> entries;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+  final Map<String, ContractType> contractTypesById;
+
+  @override
+  Widget build(BuildContext context) {
+    final dayTotal = entries.fold<double>(
+      0,
+      (previousValue, element) => previousValue + element.salary,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _formatDayLabel(date),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
+              ),
+              Text(
+                _formatCurrencyValue(currencySymbol, dayTotal),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF2563EB),
+                    ) ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2563EB),
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Column(
+            children: [
+              for (int i = 0; i < entries.length; i++) ...[
+                _ContractEntryTile(
+                  entry: entries[i],
+                  currencySymbol: currencySymbol,
+                  localization: localization,
+                  onEdit: onEdit,
+                  contractTypesById: contractTypesById,
+                ),
+                if (i != entries.length - 1) const SizedBox(height: 12),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractEntryTile extends StatelessWidget {
+  const _ContractEntryTile({
+    required this.entry,
+    required this.currencySymbol,
+    required this.localization,
+    required this.onEdit,
+    required this.contractTypesById,
+  });
+
+  final _AttendanceEntry entry;
+  final String currencySymbol;
+  final AppLocalizations localization;
+  final ValueChanged<_AttendanceEntry> onEdit;
+  final Map<String, ContractType> contractTypesById;
+
+  int _resolveUnits() {
+    if (entry.contractBundles.isNotEmpty) {
+      return entry.contractBundles.fold<int>(
+        0,
+        (previousValue, element) => previousValue + element.count,
+      );
+    }
+    return entry.unitsCompleted ?? 0;
+  }
+
+  String _resolveContractTypeLabel() {
+    final label = entry.contractType?.trim();
+    if (label != null && label.isNotEmpty) {
+      return label;
+    }
+    return localization.contractWorkUnitFallback;
+  }
+
+  String _resolveBundleLabel(AttendanceContractBundle bundle) {
+    final key = bundle.contractTypeId.toString();
+    final contractType = contractTypesById[key];
+    if (contractType != null) {
+      return contractType.name;
+    }
+    return localization.contractWorkLabel;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+    final subtitleStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        );
+    final amountStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF047857),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF047857),
+        );
+    final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF6B7280),
+          fontSize: 11,
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF6B7280),
+          fontSize: 11,
+        );
+    final valueStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+          fontSize: 13,
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+          fontSize: 13,
+        );
+
+    final resolvedUnits = _resolveUnits();
+    final price = entry.ratePerUnit ?? 0;
+    final priceLabel = price > 0
+        ? _formatCurrencyValue(currencySymbol, price)
+        : '--';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDFDFE),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(entry.workName, style: titleStyle),
+                    const SizedBox(height: 4),
+                    Text(_resolveContractTypeLabel(), style: subtitleStyle),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              _EditButtonTextOnly(
+                onPressed: () => onEdit(entry),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _InfoStatMiniCard(
+                label: localization.contractWorkUnitsLabel,
+                value: resolvedUnits > 0 ? resolvedUnits.toString() : '--',
+                labelStyle: labelStyle,
+                valueStyle: valueStyle,
+              ),
+              _InfoStatMiniCard(
+                label: localization.contractWorkRateLabel,
+                value: priceLabel,
+                labelStyle: labelStyle,
+                valueStyle: valueStyle,
+              ),
+            ],
+          ),
+          if (entry.contractBundles.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: entry.contractBundles
+                  .map(
+                    (bundle) => _ContractBundleChip(
+                      label: _resolveBundleLabel(bundle),
+                      units: bundle.count,
+                      localization: localization,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              _formatCurrencyValue(currencySymbol, entry.salary),
+              textAlign: TextAlign.right,
+              style: amountStyle,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractBundleChip extends StatelessWidget {
+  const _ContractBundleChip({
+    required this.label,
+    required this.units,
+    required this.localization,
+  });
+
+  final String label;
+  final int units;
+  final AppLocalizations localization;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1D4ED8),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1D4ED8),
+        );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: Text(
+        '$label · $units ${localization.contractWorkUnitsLabel}',
+        style: textStyle,
+      ),
     );
   }
 }
