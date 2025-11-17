@@ -1712,10 +1712,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _showShareOptions() async {
     final l = AppLocalizations.of(context);
 
-    await LocalNotificationService.showTestNotification(
+/*    await LocalNotificationService.showTestNotification(
       title: l.shareNotificationTitle,
       body: l.shareNotificationBody,
-    );
+    );*/
 
     await showDialog<void>(
       context: context,

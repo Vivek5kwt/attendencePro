@@ -150,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.profileTitle),
+        title: Text(l.profileTitle,style: TextStyle(color: Colors.white),),
         elevation: 0,
       ),
       body: _isLoading
