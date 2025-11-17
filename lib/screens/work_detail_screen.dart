@@ -366,6 +366,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final Map<DateTime, int> _attendanceIdsByDate = <DateTime, int>{};
   StreamSubscription<WorkState>? _workSubscription;
   Work? _latestWorkSnapshot;
+  bool _wasWorkRefreshing = false;
 
   @override
   void initState() {
@@ -3197,15 +3198,27 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (!mounted) {
       return;
     }
+
+    final bool refreshCompleted = _wasWorkRefreshing && !state.isRefreshing;
+    _wasWorkRefreshing = state.isRefreshing;
+
     final targetId = _latestWorkSnapshot?.id ?? widget.work.id;
     final updatedWork = _findWorkById(state.works, targetId);
     if (updatedWork == null) {
+      if (refreshCompleted) {
+        unawaited(_loadSummary());
+      }
       return;
     }
+
     final previous = _latestWorkSnapshot;
-    if (previous != null && _areWorksEquivalent(previous, updatedWork)) {
+    final bool hasMeaningfulChange =
+        previous == null || !_areWorksEquivalent(previous, updatedWork);
+
+    if (!hasMeaningfulChange && !refreshCompleted) {
       return;
     }
+
     _latestWorkSnapshot = updatedWork;
     if (updatedWork.isContract) {
       unawaited(_loadContractTypes(showLoader: false));
