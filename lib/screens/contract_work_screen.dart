@@ -318,11 +318,27 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
           : l.notAvailableLabel;
       return _ContractSummaryRow(
         index: i + 1,
-        workName: t.name,
+        workName: _formatWorkNameWithRole(t.name, t.role),
         units: unitsLabel,
         payment: paymentLabel,
       );
     });
+  }
+
+  String? _normalizeSummaryRole(String? role) {
+    final trimmed = role?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return contractWorkFormatRoleDisplay(trimmed);
+  }
+
+  String _formatWorkNameWithRole(String workName, String? role) {
+    final normalizedRole = _normalizeSummaryRole(role);
+    if (normalizedRole == null) {
+      return workName;
+    }
+    return '$workName · $normalizedRole';
   }
 
   _ContractSummaryComputation _buildSummaryRows(
@@ -354,12 +370,17 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       final workName = item.title.trim().isEmpty
           ? l.notAvailableLabel
           : item.title.trim();
-      final key = workName.toLowerCase();
+      final role = _normalizeSummaryRole(item.unitRole);
+      final key = '${workName.toLowerCase()}|${role?.toLowerCase() ?? ''}';
       final aggregation = aggregations.putIfAbsent(
         key,
-        () => _ContractSummaryAggregation(workName: workName),
+        () => _ContractSummaryAggregation(
+          workName: workName,
+          role: role,
+        ),
       );
 
+      aggregation.role ??= role;
       final units = _extractUnits(item);
       if (units != null) {
         aggregation.totalUnits += units;
@@ -420,7 +441,10 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       rows.add(
         _ContractSummaryRow(
           index: rowIndex++,
-          workName: aggregation.workName,
+          workName: _formatWorkNameWithRole(
+            aggregation.workName,
+            aggregation.role,
+          ),
           units: unitsLabel,
           payment: paymentLabel,
         ),
@@ -2706,9 +2730,13 @@ class _ContractSummaryRow {
 }
 
 class _ContractSummaryAggregation {
-  _ContractSummaryAggregation({required this.workName});
+  _ContractSummaryAggregation({
+    required this.workName,
+    this.role,
+  });
 
   final String workName;
+  String? role;
   int totalUnits = 0;
   double amount = 0;
   double? ratePerUnit;
