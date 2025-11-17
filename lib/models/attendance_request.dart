@@ -40,7 +40,6 @@ class AttendanceRequest {
 
     if (!isLeave) {
       final hasBundles = bundles != null && bundles!.isNotEmpty;
-      final normalizedContractTypeId = contractTypeId ?? 1;
       final resolvedIsContractEntry = isContractEntry ?? false;
 
       if (startTime != null) {
@@ -60,7 +59,9 @@ class AttendanceRequest {
           payload['bundles'] =
               bundles!.map((bundle) => bundle.toJson()).toList(growable: false);
         } else {
-          payload['contract_type_id'] = normalizedContractTypeId;
+          if (contractTypeId != null) {
+            payload['contract_type_id'] = contractTypeId;
+          }
           if (units != null) {
             payload['units'] = units;
           }
@@ -68,8 +69,8 @@ class AttendanceRequest {
             payload['rate_per_unit'] = ratePerUnit;
           }
         }
-      } else if (!hasBundles) {
-        payload['contract_type_id'] = normalizedContractTypeId;
+      } else if (!hasBundles && contractTypeId != null) {
+        payload['contract_type_id'] = contractTypeId;
       }
     }
 
