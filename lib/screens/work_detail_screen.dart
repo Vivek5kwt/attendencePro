@@ -456,7 +456,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         if (!mounted) {
           return;
         }
-        showEditWorkDialog(context: context, work: work);
+        unawaited(_openEditWorkDialog(work));
       },
     );
 
@@ -555,7 +555,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         if (!mounted) {
           return;
         }
-        showEditWorkDialog(context: context, work: work);
+        unawaited(_openEditWorkDialog(work));
       },
     );
 
@@ -660,7 +660,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            showEditWorkDialog(context: context, work: work);
+            unawaited(_openEditWorkDialog(work));
           }
         });
       },
@@ -677,6 +677,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openEditWorkDialog(Work work) async {
+    await showEditWorkDialog(context: context, work: work);
+    if (!mounted) {
+      return;
+    }
+    unawaited(_refreshWorks());
+  }
+
+  Future<void> _refreshWorks() {
+    final completer = Completer<void>();
+    context.read<WorkBloc>().add(WorkRefreshed(completer: completer));
+    return completer.future;
   }
 
   Future<void> _handleDrawerLogoutTap(AppLocalizations l) async {
