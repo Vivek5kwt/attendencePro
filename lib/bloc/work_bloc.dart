@@ -185,7 +185,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
-      final fetchedWorks = await _repository.fetchWorks();
+      var fetchedWorks = await _repository.fetchWorks();
       Work? createdWork;
       for (final work in fetchedWorks) {
         if (!previousWorkIds.contains(work.id)) {
@@ -199,6 +199,13 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
             work: createdWork,
             pending: event.pendingContractWorks,
           );
+          fetchedWorks = await _repository.fetchWorks();
+          for (final work in fetchedWorks) {
+            if (work.id == createdWork!.id) {
+              createdWork = work;
+              break;
+            }
+          }
         } on ContractTypeAuthException {
           emit(
             state.copyWith(
@@ -309,7 +316,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
-      final fetchedWorks = await _repository.fetchWorks();
+      var fetchedWorks = await _repository.fetchWorks();
       Work? updatedWork;
       for (final work in fetchedWorks) {
         if (work.id == event.work.id) {
@@ -323,6 +330,13 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
             work: updatedWork,
             pending: event.pendingContractWorks,
           );
+          fetchedWorks = await _repository.fetchWorks();
+          for (final work in fetchedWorks) {
+            if (work.id == event.work.id) {
+              updatedWork = work;
+              break;
+            }
+          }
         } on ContractTypeAuthException {
           emit(
             state.copyWith(
