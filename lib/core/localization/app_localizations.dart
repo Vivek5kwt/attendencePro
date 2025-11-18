@@ -203,6 +203,11 @@ class AppLocalizations {
   String get contractWorkUnitFallback => _value('contractWorkUnitFallback');
   String get contractWorkCloseSheetLabel =>
       _value('contractWorkCloseSheetLabel');
+  String get contractWorkDuplicateErrorTitle =>
+      _value('contractWorkDuplicateErrorTitle');
+  String get contractWorkDuplicateErrorMessage =>
+      _value('contractWorkDuplicateErrorMessage');
+  String get okButtonLabel => _value('okButtonLabel');
   String get profileLabel => _value('profileLabel');
   String get profileTitle => _value('profileTitle');
   String get profileNameLabel => _value('profileNameLabel');
