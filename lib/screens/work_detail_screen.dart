@@ -367,6 +367,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   final Map<DateTime, int> _attendanceIdsByDate = <DateTime, int>{};
   StreamSubscription<WorkState>? _workSubscription;
   Work? _latestWorkSnapshot;
+
+  Work get _resolvedWork => _latestWorkSnapshot ?? widget.work;
   bool _wasWorkRefreshing = false;
 
   @override
@@ -374,7 +376,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     super.initState();
     _latestWorkSnapshot = widget.work;
     _initializeAttendanceControllers();
-    if (widget.work.isContract) {
+    if (_resolvedWork.isContract) {
       final initialContractTypeId =
           _extractContractTypeIdFromAdditionalData()?.toString();
       _ensurePrimaryBundleEntry(initialContractTypeId: initialContractTypeId);
@@ -386,7 +388,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (!mounted) {
         return;
       }
-      if (widget.work.isContract) {
+      if (_resolvedWork.isContract) {
         _loadContractTypes();
       }
       _loadSummary();
@@ -421,7 +423,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final l = AppLocalizations.of(context);
     final previousWorkIds = works.map((work) => work.id).toSet();
     final initialActiveWorkId =
-        _findActiveWorkFromState(workBloc.state)?.id ?? widget.work.id;
+        _findActiveWorkFromState(workBloc.state)?.id ?? _resolvedWork.id;
     var addWorkRequested = false;
     final addDialogCompletion = Completer<void>();
 
@@ -440,7 +442,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       context: context,
       works: works,
       localization: l,
-      initialSelectedWorkId: widget.work.id,
+      initialSelectedWorkId: _resolvedWork.id,
       onAddNewWork: () {
         if (!mounted) {
           if (!addDialogCompletion.isCompleted) {
@@ -463,7 +465,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     if (selected != null) {
-      if (selected.id == widget.work.id) {
+      if (selected.id == _resolvedWork.id) {
         return;
       }
       _navigateToWorkDashboard(selected);
@@ -528,7 +530,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             ? activeWork
             : null);
 
-    if (targetWork != null && targetWork.id != widget.work.id) {
+    if (targetWork != null && targetWork.id != _resolvedWork.id) {
       _navigateToWorkDashboard(targetWork);
       return;
     }
@@ -542,7 +544,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       works: updatedWorks,
       localization: l,
       initialSelectedWorkId:
-          createdWork?.id ?? activeWork?.id ?? widget.work.id,
+          createdWork?.id ?? activeWork?.id ?? _resolvedWork.id,
       onAddNewWork: () {
         if (!mounted) {
           return;
@@ -561,7 +563,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    if (fallbackSelected.id != widget.work.id) {
+    if (fallbackSelected.id != _resolvedWork.id) {
       _navigateToWorkDashboard(fallbackSelected);
     }
   }
@@ -915,14 +917,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _selectedDate = DateTime.now();
     _dateLabelOverride = null;
 
-    if (!widget.work.isContract && _contractBundleEntries.isNotEmpty) {
+    if (!_resolvedWork.isContract && _contractBundleEntries.isNotEmpty) {
       for (final entry in _contractBundleEntries) {
         entry.dispose();
       }
       _contractBundleEntries.clear();
     }
 
-    final additionalData = widget.work.additionalData;
+    final additionalData = _resolvedWork.additionalData;
     final initialDate = _extractDateFromMap(additionalData, const [
       'date',
       'entry_date',
@@ -964,13 +966,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     var bundlesApplied = false;
-    if (widget.work.isContract) {
+    if (_resolvedWork.isContract) {
       bundlesApplied = _applyBundleDataFromMap(
         additionalData,
         replaceExisting: true,
       );
     }
-    if (widget.work.isContract && !bundlesApplied) {
+    if (_resolvedWork.isContract && !bundlesApplied) {
       final unitsText = _extractNumericText(additionalData, const [
         'units',
         'unit_count',
@@ -987,7 +989,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
     }
 
-    if (widget.work.isContract) {
+    if (_resolvedWork.isContract) {
       _ensurePrimaryBundleEntry();
     }
 
@@ -1015,10 +1017,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Future<void> _restoreContractEntryCache() async {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
-    final cache = await ContractEntryCache.load(widget.work.id);
+    final cache = await ContractEntryCache.load(_resolvedWork.id);
     if (!mounted || cache == null) {
       return;
     }
@@ -1064,7 +1066,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _syncContractFieldsVisibility({bool notify = false}) {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       if (_contractFieldsEnabled) {
         if (notify) {
           setState(() {
@@ -1094,7 +1096,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   bool _hasContractBundleUnitsInput() {
-    if (!widget.work.isContract || !_contractFieldsEnabled ||
+    if (!_resolvedWork.isContract || !_contractFieldsEnabled ||
         _contractBundleEntries.isEmpty) {
       return false;
     }
@@ -1153,7 +1155,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     var bundlesApplied = false;
-    if (widget.work.isContract) {
+    if (_resolvedWork.isContract) {
       bundlesApplied = _applyBundleDataFromMap(
         entry.raw,
         replaceExisting: true,
@@ -1176,7 +1178,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
     }
 
-    if (widget.work.isContract) {
+    if (_resolvedWork.isContract) {
       _ensurePrimaryBundleEntry();
     }
 
@@ -1275,7 +1277,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final l = AppLocalizations.of(context);
     try {
       final dates = await _attendanceRepository
-          .fetchMissedAttendanceDates(workId: widget.work.id);
+          .fetchMissedAttendanceDates(workId: _resolvedWork.id);
       if (!mounted) {
         return;
       }
@@ -1339,7 +1341,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final l = AppLocalizations.of(context);
     try {
       final dates = await _attendanceRepository
-          .fetchMissedAttendanceDates(workId: widget.work.id);
+          .fetchMissedAttendanceDates(workId: _resolvedWork.id);
       if (!mounted) {
         return false;
       }
@@ -1506,20 +1508,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
 
     final l = AppLocalizations.of(context);
-    if (widget.work.isContract && _contractTypes.isEmpty) {
+    if (_resolvedWork.isContract && _contractTypes.isEmpty) {
       await _loadContractTypes();
     }
 
     Object? contractTypeId = _resolveContractTypeId();
     var contractType = _findContractTypeById(contractTypeId);
-    if (widget.work.isContract && contractTypeId == null) {
+    if (_resolvedWork.isContract && contractTypeId == null) {
       if (_contractTypes.isEmpty && _isLoadingContractTypes) {
         await _loadContractTypes();
       }
       contractTypeId = _resolveContractTypeId();
       contractType ??= _findContractTypeById(contractTypeId);
     }
-    if (widget.work.isContract && contractTypeId == null &&
+    if (_resolvedWork.isContract && contractTypeId == null &&
         _contractTypes.isNotEmpty) {
       final fallbackType = _contractTypes.first;
       contractTypeId = fallbackType.id;
@@ -1528,7 +1530,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     String? contractTypeName = contractType?.name;
     if (contractTypeName == null || contractTypeName.trim().isEmpty) {
-      final additionalData = widget.work.additionalData;
+      final additionalData = _resolvedWork.additionalData;
       const candidateKeys = <String>[
         'contract_type_name',
         'contractTypeName',
@@ -1553,11 +1555,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       builder: (sheetContext) {
         return _MissedAttendanceCompletionSheet(
           dates: _pendingMissedDates.toList(growable: false),
-          workId: widget.work.id,
-          workName: widget.work.name,
+          workId: _resolvedWork.id,
+          workName: _resolvedWork.name,
           localization: l,
           dateFormatter: _formatDate,
-          isContractWork: widget.work.isContract,
+          isContractWork: _resolvedWork.isContract,
           contractTypeId: contractTypeId,
           contractTypeName: contractTypeName,
           contractTypes: _contractTypes,
@@ -1653,7 +1655,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _scheduleContractEntryCacheSave() {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
     _contractEntryCacheDebounce?.cancel();
@@ -1668,7 +1670,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Future<void> _persistContractEntryCache() async {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
     final items = _contractBundleEntries
@@ -1678,7 +1680,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             ))
         .toList(growable: false);
     await ContractEntryCache.save(
-      workId: widget.work.id,
+      workId: _resolvedWork.id,
       isEnabled: _contractFieldsEnabled,
       entries: items,
     );
@@ -1722,7 +1724,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleContractTypeChanged(String entryId, String? value) {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
     _ContractBundleFormEntry? target;
@@ -1742,7 +1744,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleAddContractBundle() {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
     if (_contractTypes.isEmpty) {
@@ -1768,7 +1770,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleRemoveContractBundle(_ContractBundleFormEntry entry) {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
     if (_contractBundleEntries.length <= 1) {
@@ -1785,14 +1787,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleContractBundleUnitsChanged(_ContractBundleFormEntry entry) {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return;
     }
     _handleAttendanceFieldChanged();
   }
 
   void _handleContractEntryEnable() {
-    if (!widget.work.isContract || _contractFieldsEnabled) {
+    if (!_resolvedWork.isContract || _contractFieldsEnabled) {
       return;
     }
     FocusScope.of(context).unfocus();
@@ -1807,7 +1809,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _handleContractEntryDisable() {
-    if (!widget.work.isContract || !_contractFieldsEnabled) {
+    if (!_resolvedWork.isContract || !_contractFieldsEnabled) {
       return;
     }
     FocusScope.of(context).unfocus();
@@ -1821,7 +1823,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   void _prepareContractEntryFormForNextSubmission() {
-    if (!mounted || !widget.work.isContract) {
+    if (!mounted || !_resolvedWork.isContract) {
       return;
     }
     setState(() {
@@ -1923,7 +1925,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     Map<String, dynamic> data, {
     bool replaceExisting = true,
   }) {
-    if (!widget.work.isContract) {
+    if (!_resolvedWork.isContract) {
       return false;
     }
     final bundleList = _extractBundleList(data);
@@ -2221,7 +2223,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _previousStartTime = null;
         _previousEndTime = null;
         _previousBreakMinutes = null;
-        if (widget.work.isContract) {
+        if (_resolvedWork.isContract) {
           _contractFieldsEnabled = _previousContractFieldsEnabled;
           if (_contractFieldsEnabled) {
             _ensurePrimaryBundleEntry();
@@ -2292,7 +2294,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _ContractBundleFormEntry entry,
     String? value,
   ) {
-    if (!widget.work.isContract || !_contractFieldsEnabled) {
+    if (!_resolvedWork.isContract || !_contractFieldsEnabled) {
       return null;
     }
     final hasAnyUnitsInput = _contractBundleEntries
@@ -2313,7 +2315,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String? _validateRatePerUnit(String? value) {
-    if (!widget.work.isContract || !_contractFieldsEnabled) {
+    if (!_resolvedWork.isContract || !_contractFieldsEnabled) {
       return null;
     }
     final trimmed = value?.trim() ?? '';
@@ -2407,7 +2409,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Object? _extractContractTypeIdFromAdditionalData() {
-    final data = widget.work.additionalData;
+    final data = _resolvedWork.additionalData;
     const keys = ['contract_type_id', 'contractTypeId', 'contract_type', 'contractType'];
     for (final key in keys) {
       final value = data[key];
@@ -2518,7 +2520,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final normalizedSelectedDate = _normalizeDateOnly(_selectedDate);
     final normalizedToday = _normalizeDateOnly(DateTime.now());
     final bool isContractUpdateAttempt =
-        widget.work.isContract && _contractFieldsEnabled;
+        _resolvedWork.isContract && _contractFieldsEnabled;
     final bool shouldUpdateExistingAttendance =
         isContractUpdateAttempt && _isSelectedDateLocked;
     if (_isSelectedDateLocked && !isContractUpdateAttempt) {
@@ -2547,7 +2549,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
       try {
         final response = await _attendanceRepository.submitAttendance(
-          workId: widget.work.id,
+          workId: _resolvedWork.id,
           date: _selectedDate,
           isLeave: true,
         );
@@ -2637,7 +2639,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         : null;
 
     final bool contractSectionVisible =
-        widget.work.isContract && _contractFieldsEnabled;
+        _resolvedWork.isContract && _contractFieldsEnabled;
     final bool hasContractInput = contractSectionVisible &&
         _hasContractBundleUnitsInput();
     if (contractSectionVisible && hasContractInput && _contractTypes.isEmpty) {
@@ -2710,7 +2712,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     try {
       final previewResponse = await _attendanceRepository.previewAttendance(
-        workId: widget.work.id,
+        workId: _resolvedWork.id,
         date: _selectedDate,
         isLeave: false,
         startTime: startTime,
@@ -2771,7 +2773,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         }
         response = await _attendanceRepository.updateAttendance(
           attendanceId: existingAttendanceId,
-          workId: widget.work.id,
+          workId: _resolvedWork.id,
           date: _selectedDate,
           isLeave: false,
           startTime: startTime,
@@ -2786,7 +2788,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _setAttendanceIdForDate(_selectedDate, existingAttendanceId);
       } else {
         response = await _attendanceRepository.submitAttendance(
-          workId: widget.work.id,
+          workId: _resolvedWork.id,
           date: _selectedDate,
           isLeave: false,
           startTime: startTime,
@@ -3156,7 +3158,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   Future<void> _loadSummary() async {
     if (!mounted) return;
     final l = AppLocalizations.of(context);
-    final workId = _latestWorkSnapshot?.id ?? widget.work.id;
+    final workId = _resolvedWork.id;
     setState(() {
       _isSummaryLoading = true;
       _summaryError = null;
@@ -3213,8 +3215,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   Future<void> _loadContractTypes({bool showLoader = true}) async {
-    final isContractWork =
-        _latestWorkSnapshot?.isContract ?? widget.work.isContract;
+    final isContractWork = _resolvedWork.isContract;
     if (!isContractWork) {
       return;
     }
@@ -3316,7 +3317,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final bool refreshCompleted = _wasWorkRefreshing && !state.isRefreshing;
     _wasWorkRefreshing = state.isRefreshing;
 
-    final targetId = _latestWorkSnapshot?.id ?? widget.work.id;
+    final targetId = _resolvedWork.id;
     final updatedWork = _findWorkById(state.works, targetId);
     if (updatedWork == null) {
       if (refreshCompleted) {
@@ -3433,7 +3434,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   Set<String> _extractAssociatedContractTypeIds() {
     final ids = <String>{};
-    final data = widget.work.additionalData;
+    final data = _resolvedWork.additionalData;
 
     void addId(Object? value) {
       if (value == null) {
@@ -3526,7 +3527,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (workId == null) {
       return true;
     }
-    return workId == widget.work.id;
+    return workId == _resolvedWork.id;
   }
 
   String? _extractWorkIdFromMap(Map<dynamic, dynamic> data) {
@@ -3594,10 +3595,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         l.drawerUserPhone;
     final activeWork = _findActiveWorkFromState(workState);
     final activeWorkName = (activeWork != null &&
-            activeWork.id == widget.work.id &&
+            activeWork.id == _resolvedWork.id &&
             activeWork.name.trim().isNotEmpty)
         ? activeWork.name.trim()
-        : widget.work.name.trim();
+        : _resolvedWork.name.trim();
     final shouldShowActiveWork = activeWorkName.isNotEmpty;
     final hourlyRateText = _buildHourlyRateText(l);
     final workTypeLabel = _resolveWorkTypeLabel(l);
@@ -3674,7 +3675,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     Widget buildAttendanceSection() {
       final bool isFormLocked = _isSelectedDateLocked;
-      final bool allowContractUpdates = widget.work.isContract;
+      final bool allowContractUpdates = _resolvedWork.isContract;
       final bool isSubmitLocked =
           isFormLocked && !(allowContractUpdates && _contractFieldsEnabled);
       final bool areHourlyFieldsLocked = isFormLocked;
@@ -3697,12 +3698,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isSubmitLocked: isSubmitLocked,
         areHourlyFieldsLocked: areHourlyFieldsLocked,
         contractActionsLocked: contractActionsLocked,
-        showContractFields: widget.work.isContract,
-        showContractWorkButton: widget.work.isContract &&
+        showContractFields: _resolvedWork.isContract,
+        showContractWorkButton: _resolvedWork.isContract &&
             contractItems.isNotEmpty &&
             !_contractFieldsEnabled,
         onContractWorkTap:
-            widget.work.isContract ? _handleContractEntryEnable : null,
+            _resolvedWork.isContract ? _handleContractEntryEnable : null,
         contractFieldsEnabled: _contractFieldsEnabled,
         isContractFieldsLoading: _isLoadingContractTypes,
         contractFieldsError: _contractTypesError,
@@ -3710,14 +3711,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         contractBundleEntries: _contractBundleEntries,
         onContractBundleTypeChanged: _handleContractTypeChanged,
         onContractTypeRetry:
-            widget.work.isContract ? () => _loadContractTypes() : null,
+            _resolvedWork.isContract ? () => _loadContractTypes() : null,
         onCreateContractType:
             contractActionsLocked ? null : _handleCreateContractTypeTap,
         onAddContractBundle: _handleAddContractBundle,
         onRemoveContractBundle: _handleRemoveContractBundle,
         onContractBundleUnitsChanged: _handleContractBundleUnitsChanged,
         onContractEntryRemove:
-            widget.work.isContract ? _handleContractEntryDisable : null,
+            _resolvedWork.isContract ? _handleContractEntryDisable : null,
         bundleUnitsValidator: _validateBundleUnits,
         startTimeValidator: _validateStartTime,
         endTimeValidator: _validateEndTime,
@@ -3904,10 +3905,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   String _buildHourlyRateText(AppLocalizations l) {
-    if (widget.work.isContract) {
+    if (_resolvedWork.isContract) {
       return l.contractWorkLabel;
     }
-    final rate = widget.work.hourlyRate;
+    final rate = _resolvedWork.hourlyRate;
     if (rate == null) {
       return l.notAvailableLabel;
     }
@@ -3926,7 +3927,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     ];
 
     for (final key in possibleKeys) {
-      final value = widget.work.additionalData[key];
+      final value = _resolvedWork.additionalData[key];
       if (value is String) {
         final trimmed = value.trim();
         if (trimmed.isNotEmpty) {
@@ -3935,7 +3936,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
     }
 
-    return widget.work.isContract ? l.contractWorkLabel : l.hourlyWorkLabel;
+    return _resolvedWork.isContract ? l.contractWorkLabel : l.hourlyWorkLabel;
   }
 
   List<_ContractItem> _resolveContractItems() {
@@ -3961,7 +3962,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       );
     }
 
-    final rawContracts = widget.work.additionalData['contracts'];
+    final rawContracts = _resolvedWork.additionalData['contracts'];
     if (rawContracts is List) {
       for (final raw in rawContracts) {
         if (raw is Map) {
@@ -4019,7 +4020,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return items;
     }
 
-    final rawItems = widget.work.additionalData['contractItems'];
+    final rawItems = _resolvedWork.additionalData['contractItems'];
     if (rawItems is List) {
       for (final raw in rawItems) {
         if (raw is Map) {
@@ -4243,7 +4244,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   List<_SummaryStat> _resolveSummaryStats(AppLocalizations l) {
-    final summary = widget.work.additionalData['summary'];
+    final summary = _resolvedWork.additionalData['summary'];
     if (summary is Map) {
       final summaryMap = Map<String, dynamic>.from(summary);
       final currencyPrefix = _resolveCurrencyPrefix(summaryMap);
@@ -4332,20 +4333,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return true;
     }
 
-    if (_containsContractMetrics(widget.work.additionalData)) {
+    if (_containsContractMetrics(_resolvedWork.additionalData)) {
       return true;
     }
 
-    final additionalSummary = _normalizeDynamicMap(widget.work.additionalData['summary']);
+    final additionalSummary = _normalizeDynamicMap(_resolvedWork.additionalData['summary']);
     if (_containsContractMetrics(additionalSummary)) {
       return true;
     }
 
-    if (_iterableHasEntries(widget.work.additionalData['contracts'])) {
+    if (_iterableHasEntries(_resolvedWork.additionalData['contracts'])) {
       return true;
     }
 
-    if (_iterableHasEntries(widget.work.additionalData['contractItems'])) {
+    if (_iterableHasEntries(_resolvedWork.additionalData['contractItems'])) {
       return true;
     }
 
@@ -4483,7 +4484,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (summarySymbol != null) {
       return summarySymbol;
     }
-    final workSymbol = _extractCurrencySymbol(widget.work.additionalData);
+    final workSymbol = _extractCurrencySymbol(_resolvedWork.additionalData);
     return workSymbol ?? fallback;
   }
 
