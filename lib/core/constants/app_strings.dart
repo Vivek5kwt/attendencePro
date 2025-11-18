@@ -185,6 +185,10 @@ abstract final class AppString {
       'contractWorkUnitPerHundredBunches': 'per 100 bunches',
       'contractWorkUnitFallback': 'per unit',
       'contractWorkCloseSheetLabel': 'Close contract type details',
+      'contractWorkDuplicateErrorTitle': 'Contract type already exists',
+      'contractWorkDuplicateErrorMessage':
+          'This contract type already exists for this work. Please choose a different name.',
+      'okButtonLabel': 'OK',
       'profileLabel': 'Profile',
       'profileTitle': 'Edit Profile',
       'profileNameLabel': 'Full name',
@@ -634,6 +638,10 @@ abstract final class AppString {
       'contractWorkUnitPerHundredBunches': 'प्रति 100 गुच्छे',
       'contractWorkUnitFallback': 'प्रति इकाई',
       'contractWorkCloseSheetLabel': 'कॉन्ट्रैक्ट विवरण शीट बंद करें',
+      'contractWorkDuplicateErrorTitle': 'कॉन्ट्रैक्ट प्रकार पहले से मौजूद है',
+      'contractWorkDuplicateErrorMessage':
+          'यह कॉन्ट्रैक्ट प्रकार इस काम के लिए पहले से मौजूद है। कृपया कोई अलग नाम चुनें।',
+      'okButtonLabel': 'ठीक है',
       'profileLabel': 'प्रोफ़ाइल',
       'profileTitle': 'प्रोफ़ाइल संपादित करें',
       'profileNameLabel': 'पूरा नाम',
@@ -1083,6 +1091,10 @@ abstract final class AppString {
       'contractWorkUnitPerHundredBunches': '100 ਗੁੱਛਿਆਂ ਪ੍ਰਤੀ',
       'contractWorkUnitFallback': 'ਪਰ ਯੂਨਿਟ',
       'contractWorkCloseSheetLabel': 'ਕਰਾਰ ਵੇਰਵਾ ਸ਼ੀਟ ਬੰਦ ਕਰੋ',
+      'contractWorkDuplicateErrorTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ',
+      'contractWorkDuplicateErrorMessage':
+          'ਇਹ ਕੰਮ ਲਈ ਇਹ ਕਾਂਟ੍ਰੈਕਟ ਕਿਸਮ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਵੱਖਰਾ ਨਾਮ ਚੁਣੋ।',
+      'okButtonLabel': 'ਠੀਕ ਹੈ',
       'profileLabel': 'ਪ੍ਰੋਫ਼ਾਈਲ',
       'profileTitle': 'ਪ੍ਰੋਫ਼ਾਈਲ ਸੋਧੋ',
       'profileNameLabel': 'ਪੂਰਾ ਨਾਮ',
@@ -1536,6 +1548,10 @@ abstract final class AppString {
       'contractWorkUnitPerHundredBunches': 'per 100 mazzi',
       'contractWorkUnitFallback': 'per unità',
       'contractWorkCloseSheetLabel': 'Chiudi dettagli tipo contratto',
+      'contractWorkDuplicateErrorTitle': 'Tipo di contratto già presente',
+      'contractWorkDuplicateErrorMessage':
+          'Questo tipo di contratto esiste già per questo lavoro. Scegli un nome diverso.',
+      'okButtonLabel': 'OK',
       'profileLabel': 'Profilo',
       'profileTitle': 'Modifica profilo',
       'profileNameLabel': 'Nome completo',

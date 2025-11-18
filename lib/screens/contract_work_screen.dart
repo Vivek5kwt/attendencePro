@@ -1589,10 +1589,28 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
 
       print("Error: ${error.message}");
 
-      if (error.message.contains("Contract type already exists.")) {
-        Navigator.of(context, rootNavigator: true).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Contract work type already exists. Please choose a different work name.')),
+      final lowerCasedMessage = error.message.toLowerCase();
+      if (lowerCasedMessage.contains('contract type already exists')) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            final dialogLocalizations = AppLocalizations.of(dialogContext);
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(dialogLocalizations.contractWorkDuplicateErrorTitle),
+              content: Text(
+                error.message.isNotEmpty
+                    ? error.message
+                    : dialogLocalizations.contractWorkDuplicateErrorMessage,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(dialogLocalizations.okButtonLabel),
+                ),
+              ],
+            );
+          },
         );
       } else {
         // Other repository errors
