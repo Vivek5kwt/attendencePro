@@ -9,6 +9,7 @@ import '../data/country_codes.dart';
 import '../data/phone_number_metadata.dart';
 import 'policy_screen.dart';
 import '../utils/responsive.dart';
+import '../utils/snackbar.dart';
 import '../widgets/primary_cta_button.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -78,14 +79,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _submitSignup() {
     final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (!_agreed) {
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.termsAgreement)),
-      );
+      _showSnack(l.termsAgreement);
       return;
     }
 
@@ -129,6 +126,11 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  void _showSnack(String message) {
+    if (!mounted) return;
+    AppSnackBar.show(context, message);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -142,20 +144,13 @@ class _SignupScreenState extends State<SignupScreen> {
     final selectedLanguage = _resolveLanguage();
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) async {
-        final messenger = ScaffoldMessenger.of(context);
         if (state is AuthError) {
-          messenger.hideCurrentSnackBar();
-          messenger.showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          _showSnack(state.message);
         } else if (state is AuthAuthenticated) {
           final msg = state.data?['message'] ??
               state.data?['status'] ??
               AppLocalizations.of(context).operationSuccessful;
-          messenger.hideCurrentSnackBar();
-          messenger.showSnackBar(
-            SnackBar(content: Text(msg)),
-          );
+          _showSnack(msg);
         }
       },
       child: Scaffold(
