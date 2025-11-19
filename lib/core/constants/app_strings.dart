@@ -78,6 +78,8 @@ abstract final class AppString {
       'appTitle': 'AttendancePro',
       'drawerUserName': 'John Snow',
       'drawerUserPhone': '+39-319-055-5550',
+      'drawerPremiumBadge': 'Premium member',
+      'drawerViewProfileLabel': 'View profile',
       'dashboardLabel': 'Works List',
       'homeBannerTitle': 'Track Attendance Smarter',
       'homeBannerSubtitle':
@@ -531,6 +533,8 @@ abstract final class AppString {
       'appTitle': 'अटेंडेंस प्रो',
       'drawerUserName': 'जॉन स्नो',
       'drawerUserPhone': '+39-319-055-5550',
+      'drawerPremiumBadge': 'प्रीमियम सदस्य',
+      'drawerViewProfileLabel': 'प्रोफ़ाइल देखें',
       'dashboardLabel': 'कार्य सूची',
       'homeBannerTitle': 'उपस्थिति को स्मार्ट तरीके से ट्रैक करें',
       'homeBannerSubtitle':
@@ -983,6 +987,8 @@ abstract final class AppString {
       'appTitle': 'ਅਟੈਂਡੈਂਸ ਪ੍ਰੋ',
       'drawerUserName': 'ਜੌਨ ਸਨੋ',
       'drawerUserPhone': '+39-319-055-5550',
+      'drawerPremiumBadge': 'ਪ੍ਰੀਮੀਅਮ ਮੈਂਬਰ',
+      'drawerViewProfileLabel': 'ਪ੍ਰੋਫ਼ਾਈਲ ਵੇਖੋ',
       'dashboardLabel': 'ਕੰਮਾਂ ਦੀ ਸੂਚੀ',
       'homeBannerTitle': 'ਹਾਜ਼ਰੀ ਨੂੰ ਹੋਰ ਸਮਝਦਾਰੀ ਨਾਲ ਟਰੈਕ ਕਰੋ',
       'homeBannerSubtitle':
@@ -1439,6 +1445,8 @@ abstract final class AppString {
       'appTitle': 'PresenzePro',
       'drawerUserName': 'John Snow',
       'drawerUserPhone': '+39-319-055-5550',
+      'drawerPremiumBadge': 'Membro premium',
+      'drawerViewProfileLabel': 'Vedi profilo',
       'dashboardLabel': 'Elenco lavori',
       'homeBannerTitle': 'Monitora le presenze in modo intelligente',
       'homeBannerSubtitle':

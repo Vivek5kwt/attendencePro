@@ -48,6 +48,8 @@ class AppLocalizations {
   String get appTitle => _value('appTitle');
   String get drawerUserName => _value('drawerUserName');
   String get drawerUserPhone => _value('drawerUserPhone');
+  String get drawerPremiumBadge => _value('drawerPremiumBadge');
+  String get drawerViewProfileLabel => _value('drawerViewProfileLabel');
   String get dashboardLabel => _value('dashboardLabel');
   String get homeBannerTitle => _value('homeBannerTitle');
   String get homeBannerSubtitle => _value('homeBannerSubtitle');

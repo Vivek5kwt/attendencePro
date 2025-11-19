@@ -119,8 +119,10 @@ class AppDrawer extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _DrawerHeader(
+              localization: localization,
               userName: userName,
               userEmail: userContact,
+              onViewProfile: () => _handleTap(context, onProfileTap),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -239,10 +241,17 @@ class _DrawerMenuItem {
 }
 
 class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader({required this.userName, required this.userEmail});
+  const _DrawerHeader({
+    required this.localization,
+    required this.userName,
+    required this.userEmail,
+    required this.onViewProfile,
+  });
 
+  final AppLocalizations localization;
   final String userName;
   final String userEmail;
+  final VoidCallback onViewProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +259,7 @@ class _DrawerHeader extends StatelessWidget {
         userName.trim().isNotEmpty ? userName.trim()[0].toUpperCase() : '?';
 
     return SizedBox(
-      height: 220,
+      height: 240,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -342,6 +351,27 @@ class _DrawerHeader extends StatelessWidget {
                               fontSize: 14,
                             ),
                       ),
+                      const SizedBox(height: 14),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Wrap(
+                            alignment: constraints.maxWidth > 320
+                                ? WrapAlignment.spaceBetween
+                                : WrapAlignment.start,
+                            runAlignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 12,
+                            runSpacing: 10,
+                            children: [
+                              _PremiumBadge(text: localization.drawerPremiumBadge),
+                              _ViewProfileButton(
+                                label: localization.drawerViewProfileLabel,
+                                onPressed: onViewProfile,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -349,6 +379,75 @@ class _DrawerHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PremiumBadge extends StatelessWidget {
+  const _PremiumBadge({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.verified, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ViewProfileButton extends StatelessWidget {
+  const _ViewProfileButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 0),
+      child: TextButton.icon(
+        icon: const Icon(Icons.person_outline, size: 18),
+        label: FittedBox(
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          side: BorderSide(color: Colors.white.withOpacity(0.4)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
       ),
     );
   }
