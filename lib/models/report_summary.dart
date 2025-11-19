@@ -5,6 +5,7 @@ class ReportSummary {
     required this.contractSummary,
     required this.breakdown,
     required this.currencySymbol,
+    required this.contractDetails,
   });
 
   factory ReportSummary.fromJson(Map<String, dynamic> json) {
@@ -66,6 +67,7 @@ class ReportSummary {
         breakdownJson.isEmpty ? data : breakdownJson,
       ),
       currencySymbol: currencySymbol,
+      contractDetails: _parseContractDetails(data),
     );
   }
 
@@ -74,6 +76,7 @@ class ReportSummary {
   final ContractSummaryData contractSummary;
   final SummaryBreakdown breakdown;
   final String currencySymbol;
+  final List<ContractDetail> contractDetails;
 }
 
 class CombinedSalaryData {
@@ -257,6 +260,80 @@ class ContractSummaryData {
   final int totalUnits;
   final double salaryAmount;
   final List<ContractWorkItemData> items;
+}
+
+class ContractDetail {
+  const ContractDetail({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.ratePerUnit,
+    required this.unitLabel,
+  });
+
+  factory ContractDetail.fromJson(Map<String, dynamic> json) {
+    final resolvedType = _parseString(
+      json,
+      const ['type', 'category', 'unit_type', 'unitType', 'contract_type'],
+    );
+    return ContractDetail(
+      id: _parseNullableInt(json, const [
+        'id',
+        'contract_type_id',
+        'contractTypeId',
+      ]),
+      name: _parseString(
+        json,
+        const ['name', 'title', 'label'],
+        fallback: 'Contract',
+      ),
+      type: resolvedType.isEmpty ? null : resolvedType,
+      ratePerUnit: _parseNullableDouble(json, const [
+        'rate_per_unit',
+        'ratePerUnit',
+        'rate',
+        'price_per_unit',
+        'pricePerUnit',
+      ]),
+      unitLabel: _parseString(
+        json,
+        const ['unit_label', 'unitLabel', 'unit_name', 'unitName', 'unit'],
+        fallback: '',
+      ),
+    );
+  }
+
+  final int? id;
+  final String name;
+  final String? type;
+  final double? ratePerUnit;
+  final String unitLabel;
+}
+
+List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
+  final source = json['contract_details'] ?? json['contractDetails'];
+  final normalized = _normalizeContractDetailSource(source);
+  if (normalized == null) {
+    return const <ContractDetail>[];
+  }
+
+  final details = <ContractDetail>[];
+  for (final entry in normalized) {
+    final map = _ensureMap(entry);
+    if (map != null) {
+      details.add(ContractDetail.fromJson(map));
+    }
+  }
+  return details;
+}
+
+Iterable<dynamic>? _normalizeContractDetailSource(dynamic source) {
+  if (source == null) return null;
+  if (source is List) return source;
+  if (source is Set) return source;
+  if (source is Iterable) return source;
+  if (source is Map) return source.values;
+  return null;
 }
 
 class ContractWorkItemData {

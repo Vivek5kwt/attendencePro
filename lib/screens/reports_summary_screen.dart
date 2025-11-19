@@ -812,6 +812,8 @@ class _SummaryLoadedContent extends StatelessWidget {
     final currency = summary.currencySymbol;
     final resolvedContractUnits = _resolveContractSummaryTotalUnits(summary.contractSummary);
     final resolvedContractSalary = _resolveContractSummarySalaryAmount(summary.contractSummary);
+    final contractDetails = summary.contractDetails;
+    final hasContractDetails = contractDetails.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -832,6 +834,18 @@ class _SummaryLoadedContent extends StatelessWidget {
           workingDays: summary.hourlySummary.workingDays,
           currencySymbol: currency,
         ),
+        if (hasContractDetails) ...[
+          const SizedBox(height: 24),
+          _SectionTitle(text: localization.reportsContractDetailsTitle),
+          const SizedBox(height: 12),
+          _ContractDetailsCard(
+            details: contractDetails,
+            currencySymbol: currency,
+            subtitle: localization.reportsContractDetailsSubtitle,
+            rateLabel: localization.reportsContractDetailsRateLabel,
+            typeLabel: localization.reportsContractDetailsTypeLabel,
+          ),
+        ],
         if (showContractSummary) ...[
           const SizedBox(height: 24),
           _SectionTitle(text: localization.contractWorkSummaryTitle),
@@ -1376,6 +1390,186 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
             value: workingDays.toString(),
             icon: Icons.calendar_month,
             color: const Color(0xFF7C3AED),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractDetailsCard extends StatelessWidget {
+  const _ContractDetailsCard({
+    required this.details,
+    required this.currencySymbol,
+    required this.subtitle,
+    required this.rateLabel,
+    required this.typeLabel,
+  });
+
+  final List<ContractDetail> details;
+  final String currencySymbol;
+  final String subtitle;
+  final String rateLabel;
+  final String typeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1D4ED8),
+        ) ??
+        const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1D4ED8),
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE0EAFF), Color(0xFFF5F3FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A312E81),
+            blurRadius: 22,
+            offset: Offset(0, 16),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(subtitle, style: subtitleStyle),
+          const SizedBox(height: 16),
+          ...List.generate(details.length, (index) {
+            final detail = details[index];
+            final isLast = index == details.length - 1;
+            return Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+              child: _ContractDetailTile(
+                detail: detail,
+                currencySymbol: currencySymbol,
+                rateLabel: rateLabel,
+                typeLabel: typeLabel,
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractDetailTile extends StatelessWidget {
+  const _ContractDetailTile({
+    required this.detail,
+    required this.currencySymbol,
+    required this.rateLabel,
+    required this.typeLabel,
+  });
+
+  final ContractDetail detail;
+  final String currencySymbol;
+  final String rateLabel;
+  final String typeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final nameStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+    final hintStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w500,
+        ) ??
+        const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF6B7280),
+        );
+    final rateStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+    final chipStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: const Color(0xFF1E3A8A),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1E3A8A),
+        );
+
+    final rate = detail.ratePerUnit;
+    final rateText = rate != null
+        ? _formatCurrencyValue(rate, currencySymbol)
+        : '--';
+    final unitLabel = detail.unitLabel.trim();
+    final type = detail.type;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE0E7FF)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(detail.name, style: nameStyle),
+                if (type != null && type.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E7FF),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '${typeLabel.toUpperCase()}: ${type.trim()}',
+                      style: chipStyle,
+                    ),
+                  ),
+                ],
+                if (unitLabel.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(unitLabel, style: hintStyle),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(rateText, style: rateStyle),
+              const SizedBox(height: 4),
+              Text(rateLabel, style: hintStyle),
+            ],
           ),
         ],
       ),

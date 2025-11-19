@@ -297,6 +297,14 @@ class AppLocalizations {
       _value('reportsTotalPaymentLabel');
   String get reportsContractSalaryLabel =>
       _value('reportsContractSalaryLabel');
+  String get reportsContractDetailsTitle =>
+      _value('reportsContractDetailsTitle');
+  String get reportsContractDetailsSubtitle =>
+      _value('reportsContractDetailsSubtitle');
+  String get reportsContractDetailsRateLabel =>
+      _value('reportsContractDetailsRateLabel');
+  String get reportsContractDetailsTypeLabel =>
+      _value('reportsContractDetailsTypeLabel');
   String get reportsBreakdownSuffix => _value('reportsBreakdownSuffix');
   String get reportsMonthlySectionTitle =>
       _value('reportsMonthlySectionTitle');
