@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../utils/responsive.dart';
-import 'app_loader.dart';
 
 class PrimaryCtaButton extends StatelessWidget {
   const PrimaryCtaButton({
@@ -99,43 +98,27 @@ class PrimaryCtaButton extends StatelessWidget {
                   padding: EdgeInsets.symmetric(
                     horizontal: responsive.scale(24),
                   ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    switchInCurve: Curves.easeOut,
-                    switchOutCurve: Curves.easeIn,
-                    child: isLoading
-                        ? SizedBox(
-                            key: const ValueKey('loading'),
-                            height: responsive.scale(22),
-                            width: responsive.scale(22),
-                            child: AppLoader(
-                              size: responsive.scale(22),
-                              color: Colors.white,
-                            ),
-                          )
-                        : Row(
-                            key: const ValueKey('content'),
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (icon != null) ...[
-                                Icon(
-                                  icon,
-                                  size: responsive.scale(22),
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: responsive.scale(10)),
-                              ],
-                              Text(
-                                label,
-                                style: TextStyle(
-                                  fontSize: responsive.scaleText(18),
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(
+                          icon,
+                          size: responsive.scale(22),
+                          color: Colors.white.withOpacity(isLoading ? 0.7 : 1),
+                        ),
+                        SizedBox(width: responsive.scale(10)),
+                      ],
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: responsive.scaleText(18),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: Colors.white.withOpacity(isLoading ? 0.7 : 1),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
