@@ -117,6 +117,7 @@ abstract final class AppString {
       'attendanceHistoryReasonLabel': 'Reason',
       'contractReportDownloadLabel': 'Download contract report (PDF)',
       'historyReportDownloadLabel': 'Download attendance history (PDF)',
+      'reportsSummaryDownloadLabel': 'Download report summary (PDF)',
       'reportDownloadNoEntriesMessage':
           'No records are available for the selected view.',
       'reportDownloadSuccessMessage': 'PDF saved to {path}',
@@ -574,6 +575,7 @@ abstract final class AppString {
       'attendanceHistoryReasonLabel': 'कारण',
       'contractReportDownloadLabel': 'Download contract report (PDF)',
       'historyReportDownloadLabel': 'उपस्थिति इतिहास डाउनलोड करें (PDF)',
+      'reportsSummaryDownloadLabel': 'रिपोर्ट सारांश डाउनलोड करें (PDF)',
       'reportDownloadNoEntriesMessage':
           'No records are available for the selected view.',
       'reportDownloadSuccessMessage': 'PDF saved to {path}',
@@ -1030,6 +1032,7 @@ abstract final class AppString {
       'attendanceHistoryReasonLabel': 'ਕਾਰਨ',
       'contractReportDownloadLabel': 'Download contract report (PDF)',
       'historyReportDownloadLabel': 'ਹਾਜ਼ਰੀ ਇਤਿਹਾਸ ਡਾਊਨਲੋਡ ਕਰੋ (PDF)',
+      'reportsSummaryDownloadLabel': 'ਰਿਪੋਰਟ ਸੰਖੇਪ ਡਾਊਨਲੋਡ ਕਰੋ (PDF)',
       'reportDownloadNoEntriesMessage':
           'No records are available for the selected view.',
       'reportDownloadSuccessMessage': 'PDF saved to {path}',
@@ -1491,6 +1494,7 @@ abstract final class AppString {
       'attendanceHistoryReasonLabel': 'Motivo',
       'contractReportDownloadLabel': 'Scarica rapporto contratti (PDF)',
       'historyReportDownloadLabel': 'Scarica storico presenze (PDF)',
+      'reportsSummaryDownloadLabel': 'Scarica riepilogo report (PDF)',
       'reportDownloadNoEntriesMessage':
           'Nessun record disponibile per la vista selezionata.',
       'reportDownloadSuccessMessage': 'PDF salvato in {path}',
