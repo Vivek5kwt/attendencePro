@@ -59,11 +59,13 @@ class _AddWorkDialog extends StatefulWidget {
 }
 
 class _AddWorkDialogState extends State<_AddWorkDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _workNameController;
   late final TextEditingController _hourlySalaryController;
   final List<PendingContractWork> _pendingContractWorks =
       <PendingContractWork>[];
   bool _hasUserCreatedContractWork = false;
+  bool _isFormValid = false;
 
   void _showRootSnack(String message) {
     final trimmed = message.trim();
@@ -76,11 +78,16 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     super.initState();
     _workNameController = TextEditingController();
     _hourlySalaryController = TextEditingController();
+    _workNameController.addListener(_updateFormValidity);
+    _hourlySalaryController.addListener(_updateFormValidity);
     _resetPendingContractWorkState();
+    _updateFormValidity();
   }
 
   @override
   void dispose() {
+    _workNameController.removeListener(_updateFormValidity);
+    _hourlySalaryController.removeListener(_updateFormValidity);
     _workNameController.dispose();
     _hourlySalaryController.dispose();
     super.dispose();
@@ -89,9 +96,44 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   void _clearForm() {
     _workNameController.clear();
     _hourlySalaryController.clear();
+    _formKey.currentState?.reset();
     setState(() {
       _resetPendingContractWorkState();
+      _isFormValid = false;
     });
+  }
+
+  void _updateFormValidity() {
+    final nextValidity = _computeFormValidity();
+    if (!mounted) {
+      _isFormValid = nextValidity;
+      return;
+    }
+    if (nextValidity != _isFormValid) {
+      setState(() {
+        _isFormValid = nextValidity;
+      });
+    }
+  }
+
+  bool _computeFormValidity() {
+    final workName = _workNameController.text.trim();
+    if (workName.isEmpty) {
+      return false;
+    }
+
+    final hourlyText = _hourlySalaryController.text.trim();
+    if (hourlyText.isEmpty) {
+      return true;
+    }
+
+    final normalized = hourlyText.replaceAll(',', '');
+    final parsed = double.tryParse(normalized);
+    if (parsed == null) {
+      return false;
+    }
+
+    return parsed >= 0;
   }
 
   bool get _hasPendingContractWorks => _pendingContractWorks.isNotEmpty;
@@ -304,27 +346,19 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   }
 
   Future<void> _handleSaveWork(BuildContext dialogContext) async {
-    final l = AppLocalizations.of(widget.rootContext);
-    final workName = _workNameController.text.trim();
-    final hourlyRateText = _hourlySalaryController.text.trim();
-
-    if (workName.isEmpty) {
-      _showRootSnack(l.workNameRequiredMessage);
+    final formState = _formKey.currentState;
+    final isValid = formState?.validate() ?? false;
+    if (!isValid) {
+      _updateFormValidity();
       return;
     }
 
+    final workName = _workNameController.text.trim();
+    final hourlyRateText = _hourlySalaryController.text.trim();
     num hourlyRate = 0;
     if (hourlyRateText.isNotEmpty) {
-      final parsedRate = double.tryParse(hourlyRateText.replaceAll(',', ''));
-      if (parsedRate == null) {
-        _showRootSnack(l.invalidHourlyRateMessage);
-        return;
-      }
-      if (parsedRate < 0) {
-        _showRootSnack(l.hourlyRateNegativeValidation);
-        return;
-      }
-      hourlyRate = parsedRate;
+      hourlyRate =
+          double.tryParse(hourlyRateText.replaceAll(',', ''))?.toDouble() ?? 0;
     }
 
     FocusScope.of(dialogContext).unfocus();
@@ -493,126 +527,170 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
                                   const SizedBox(height: 20),
 
-                                  Text(
-                                    l.workNameLabel,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                      color:
-                                      const Color(0xFF0F172A),
-                                    ) ??
-                                        const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                          color: Color(0xFF0F172A),
+                                  Form(
+                                    key: _formKey,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l.workNameLabel,
+                                          style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                    fontSize: 16,
+                                                    color: const Color(
+                                                        0xFF0F172A),
+                                                  ) ??
+                                              const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                                fontSize: 16,
+                                                color:
+                                                    Color(0xFF0F172A),
+                                              ),
                                         ),
-                                  ),
-                                  const SizedBox(height: 8),
-
-                                  TextField(
-                                    controller: _workNameController,
-                                    textInputAction: TextInputAction.next,
-                                    decoration: InputDecoration(
-                                      hintText: l.workNameHint,
-                                      hintStyle: const TextStyle(
-                                        color: Color(0xFF9CA3AF),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      contentPadding:
-                                      const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(28),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFE0E0E0),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller: _workNameController,
+                                          textInputAction:
+                                              TextInputAction.next,
+                                          decoration: InputDecoration(
+                                            hintText: l.workNameHint,
+                                            hintStyle: const TextStyle(
+                                              color: Color(0xFF9CA3AF),
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE0E0E0),
+                                              ),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE0E0E0),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF007BFF),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            final trimmed =
+                                                value?.trim() ?? '';
+                                            if (trimmed.isEmpty) {
+                                              return l
+                                                  .workNameRequiredMessage;
+                                            }
+                                            return null;
+                                          },
                                         ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(28),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFE0E0E0),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          l.hourlySalaryLabel,
+                                          style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                    fontSize: 16,
+                                                    color: const Color(
+                                                        0xFF0F172A),
+                                                  ) ??
+                                              const TextStyle(
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                                fontSize: 16,
+                                                color:
+                                                    Color(0xFF0F172A),
+                                              ),
                                         ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(28),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF007BFF),
-                                          width: 1.5,
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller:
+                                              _hourlySalaryController,
+                                          keyboardType: const TextInputType
+                                              .numberWithOptions(
+                                            decimal: true,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText: l.hourlySalaryHint,
+                                            hintStyle: const TextStyle(
+                                              color: Color(0xFF9CA3AF),
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE0E0E0),
+                                              ),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE0E0E0),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF007BFF),
+                                                width: 1.5,
+                                              ),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            final trimmed =
+                                                value?.trim() ?? '';
+                                            if (trimmed.isEmpty) {
+                                              return null;
+                                            }
+                                            final normalized = trimmed
+                                                .replaceAll(',', '');
+                                            final parsed = double.tryParse(
+                                                normalized);
+                                            if (parsed == null) {
+                                              return l
+                                                  .invalidHourlyRateMessage;
+                                            }
+                                            if (parsed < 0) {
+                                              return l
+                                                  .hourlyRateNegativeValidation;
+                                            }
+                                            return null;
+                                          },
                                         ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  Text(
-                                    l.hourlySalaryLabel,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                      color:
-                                      const Color(0xFF0F172A),
-                                    ) ??
-                                        const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                          color: Color(0xFF0F172A),
-                                        ),
-                                  ),
-                                  const SizedBox(height: 8),
-
-                                  TextField(
-                                    controller: _hourlySalaryController,
-                                    keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: l.hourlySalaryHint,
-                                      hintStyle: const TextStyle(
-                                        color: Color(0xFF9CA3AF),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      contentPadding:
-                                      const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(28),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFE0E0E0),
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(28),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFE0E0E0),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(28),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF007BFF),
-                                          width: 1.5,
-                                        ),
-                                      ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -781,41 +859,41 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: isSaving
+                                    onPressed: isSaving || !_isFormValid
                                         ? null
                                         : () => _handleSaveWork(context),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor:
-                                      const Color(0xFF0066FF),
+                                          const Color(0xFF0066FF),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 16,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
-                                        BorderRadius.circular(32),
+                                            BorderRadius.circular(32),
                                       ),
                                       elevation: 0,
                                       disabledBackgroundColor:
-                                      const Color(0xFF0066FF)
-                                          .withOpacity(0.5),
+                                          const Color(0xFF0066FF)
+                                              .withOpacity(0.5),
                                     ),
                                     child: isSaving
                                         ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: AppLoader(
-                                        size: 20,
-                                        color: Colors.white,
-                                      ),
-                                    )
+                                            height: 20,
+                                            width: 20,
+                                            child: AppLoader(
+                                              size: 20,
+                                              color: Colors.white,
+                                            ),
+                                          )
                                         : Text(
-                                      l.saveWorkButton,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                            l.saveWorkButton,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ],
