@@ -99,6 +99,8 @@ class AppLocalizations {
       _value('contractReportDownloadLabel');
   String get historyReportDownloadLabel =>
       _value('historyReportDownloadLabel');
+  String get reportsSummaryDownloadLabel =>
+      _value('reportsSummaryDownloadLabel');
   String reportDownloadSuccessMessage(String path) =>
       _valueWithArgs('reportDownloadSuccessMessage', {'path': path});
   String get reportDownloadFailedMessage =>

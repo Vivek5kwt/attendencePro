@@ -620,16 +620,16 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final hasContractSummary = _hasContractSummaryData(summary);
       final contractItems =
           hasContractSummary ? _mapContractItems(summary, l) : const <_ContractWorkItem>[];
-      summaryBody = _SummaryLoadedContent(
-        key: const ValueKey('content'),
-        summary: summary,
-        localization: l,
-        selectedMonth: selectedMonth,
-        contractItems: contractItems,
-        showContractSummary: hasContractSummary,
-        canDownloadContractReport: hasContractSummary,
-        onDownloadContractReport: _downloadMonthlyContractReport,
-      );
+        summaryBody = _SummaryLoadedContent(
+          key: const ValueKey('content'),
+          summary: summary,
+          localization: l,
+          selectedMonth: selectedMonth,
+          contractItems: contractItems,
+          showContractSummary: hasContractSummary,
+          canDownloadContractReport: true,
+          onDownloadContractReport: _downloadMonthlyContractReport,
+        );
     } else {
       summaryBody = _SummaryEmptyView(
         key: const ValueKey('empty'),
@@ -862,17 +862,17 @@ class _SummaryLoadedContent extends StatelessWidget {
             unitsColumnLabel: localization.reportsTotalUnitsLabel,
             paymentColumnLabel: localization.reportsTotalPaymentLabel,
           ),
-          if (canDownloadContractReport) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: onDownloadContractReport,
-                icon: const Icon(Icons.download),
-                label: Text(localization.contractReportDownloadLabel),
-              ),
+        ],
+        if (canDownloadContractReport) ...[
+          const SizedBox(height: 24),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: onDownloadContractReport,
+              icon: const Icon(Icons.download),
+              label: Text(localization.reportsSummaryDownloadLabel),
             ),
-          ],
+          ),
         ],
       ],
     );
