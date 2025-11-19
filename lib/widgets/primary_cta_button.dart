@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utils/responsive.dart';
+import 'app_loader.dart';
 
 class PrimaryCtaButton extends StatelessWidget {
   const PrimaryCtaButton({
@@ -107,11 +108,9 @@ class PrimaryCtaButton extends StatelessWidget {
                             key: const ValueKey('loading'),
                             height: responsive.scale(22),
                             width: responsive.scale(22),
-                            child: CircularProgressIndicator(
-                              strokeWidth: responsive.scale(2.6),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
+                            child: AppLoader(
+                              size: responsive.scale(22),
+                              color: Colors.white,
                             ),
                           )
                         : Row(

@@ -23,6 +23,7 @@ import '../utils/session_manager.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/app_loader.dart';
 import '../widgets/work_management_dialogs.dart';
 import '../widgets/work_selection_dialog.dart';
 import 'attendance_history_screen.dart';
@@ -829,7 +830,7 @@ class _HomeScreenState extends State<HomeScreen> {
         state,
         children: const [
           SizedBox(height: 16),
-          Center(child: CircularProgressIndicator()),
+          Center(child: AppLoader()),
           SizedBox(height: 24),
         ],
       );
@@ -1122,14 +1123,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isActivating)
-                    SizedBox(
+                    const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
+                      child: AppLoader(
+                        size: 16,
+                        color: Colors.white,
                       ),
                     )
                   else
@@ -1441,7 +1440,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
                     height: 28,
                     width: 28,
-                    child: CircularProgressIndicator(strokeWidth: 3),
+                    child: AppLoader(size: 28),
                   ),
                 ),
               ),

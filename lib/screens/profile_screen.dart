@@ -7,6 +7,7 @@ import '../bloc/work_event.dart';
 import '../core/localization/app_localizations.dart';
 import '../repositories/user_repository.dart';
 import '../utils/snackbar.dart';
+import '../widgets/app_loader.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -153,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoader())
           : DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -346,9 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               ? const SizedBox(
                                                   width: 22,
                                                   height: 22,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                  ),
+                                                  child: AppLoader(size: 22),
                                                 )
                                               : Text(l.profileSaveButton),
                                         ),

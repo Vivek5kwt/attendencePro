@@ -1,5 +1,6 @@
 import 'package:attendancepro/screens/signup_screen.dart';
 import 'package:attendancepro/screens/verify_screen.dart';
+import 'package:attendancepro/widgets/app_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/app_cubit.dart';
@@ -108,11 +109,7 @@ class _AuthFlowState extends State<AuthFlow> {
                 child: Container(
                   color: Colors.black45,
                   alignment: Alignment.center,
-                  child: SizedBox(
-                    width: responsive.scale(48),
-                    height: responsive.scale(48),
-                    child: const CircularProgressIndicator(),
-                  ),
+                  child: AppLoader(size: responsive.scale(48)),
                 ),
               ),
             ),

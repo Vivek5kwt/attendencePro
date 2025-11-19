@@ -17,6 +17,7 @@ import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/responsive.dart';
 import '../utils/snackbar.dart';
+import '../widgets/app_loader.dart';
 
 const List<String> _kMonthNames = <String>[
   'January',
@@ -1308,7 +1309,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
     Widget content;
     if (_isLoadingWorks && _entries.isEmpty) {
-      content = const Center(child: CircularProgressIndicator());
+      content = const Center(child: AppLoader());
     } else if (_requiresAuthentication) {
       content = _StatusMessage(message: l.authenticationRequiredMessage);
     } else if (_errorMessage != null) {
@@ -1373,11 +1374,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.onPrimary,
-                      ),
+                    child: AppLoader(
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   )
                       : const Icon(Icons.download),
@@ -1518,7 +1517,7 @@ class _LoadingOverlay extends StatelessWidget {
     return Container(
       color: Colors.black.withOpacity(0.08),
       child: const Center(
-        child: CircularProgressIndicator(),
+        child: AppLoader(),
       ),
     );
   }
@@ -2770,7 +2769,7 @@ class _HourlyAttendanceSheetState extends State<_HourlyAttendanceSheet> {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: AppLoader(size: 18),
                           )
                         : Text(l.saveButtonLabel),
                   ),
@@ -3130,7 +3129,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: AppLoader(size: 18),
                           )
                         : Text(l.saveButtonLabel),
                   ),
