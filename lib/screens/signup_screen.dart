@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/locale_cubit.dart';
-import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../data/country_codes.dart';
 import '../data/phone_number_metadata.dart';
@@ -27,11 +26,15 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
+  final TextEditingController _countrySearchController = TextEditingController();
+  final FocusNode _countrySearchFocusNode = FocusNode();
 
   late final List<CountryCodeOption> _countryCodeOptions;
   late CountryCodeOption _selectedCountry;
   String _selectedCountryCode = '+39';
   late String _selectedLanguage;
+  bool _showInlineCountryPicker = false;
+  String _countrySearchQuery = '';
 
   bool _passwordVisible = false;
   bool _confirmVisible = false;
@@ -66,6 +69,8 @@ class _SignupScreenState extends State<SignupScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _countrySearchController.dispose();
+    _countrySearchFocusNode.dispose();
     _termsRecognizer.dispose();
     _privacyRecognizer.dispose();
     super.dispose();
@@ -462,66 +467,82 @@ class _SignupScreenState extends State<SignupScreen> {
         );
 
     final metadata = metadataForDialCode(_selectedCountry.dialCode);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(responsive.scale(36)),
-        border: Border.all(color: const Color(0xFFD9E2EF)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x14000000),
-            blurRadius: responsive.scale(12),
-            offset: Offset(0, responsive.scale(4)),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: responsive.scale(12),
-        vertical: responsive.scale(6),
-      ),
-      child: Row(
+    return TapRegion(
+      onTapOutside: (_) => _closeInlineCountryPicker(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildCountrySelector(dialCodeStyle, responsive),
-          SizedBox(width: responsive.scale(12)),
           Container(
-            width: responsive.scale(1),
-            height: responsive.scale(32),
-            color: const Color(0xFFE5E7EB),
-          ),
-          SizedBox(width: responsive.scale(12)),
-          Expanded(
-            child: TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(metadata.maxLength),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(responsive.scale(36)),
+              border: Border.all(color: const Color(0xFFD9E2EF)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0x14000000),
+                  blurRadius: responsive.scale(12),
+                  offset: Offset(0, responsive.scale(4)),
+                ),
               ],
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: responsive.scale(12),
-                ),
-                hintText: l.phoneNumberHint,
-                hintStyle: TextStyle(
-                  color: const Color(0xFF9CA3AF),
-                  fontSize: responsive.scaleText(16),
-                ),
-              ),
-              validator: (value) {
-                final trimmed = value?.trim() ?? '';
-                if (trimmed.isEmpty) return l.phoneRequired;
-                if (trimmed.length < metadata.minLength ||
-                    trimmed.length > metadata.maxLength) {
-                  return l.phoneInvalid;
-                }
-                if (!RegExp(r'^[0-9]+$').hasMatch(trimmed)) {
-                  return l.phoneInvalid;
-                }
-                return null;
-              },
             ),
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.scale(12),
+              vertical: responsive.scale(6),
+            ),
+            child: Row(
+              children: [
+                _buildCountrySelector(dialCodeStyle, responsive),
+                SizedBox(width: responsive.scale(12)),
+                Container(
+                  width: responsive.scale(1),
+                  height: responsive.scale(32),
+                  color: const Color(0xFFE5E7EB),
+                ),
+                SizedBox(width: responsive.scale(12)),
+                Expanded(
+                  child: TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(metadata.maxLength),
+                    ],
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: responsive.scale(12),
+                      ),
+                      hintText: l.phoneNumberHint,
+                      hintStyle: TextStyle(
+                        color: const Color(0xFF9CA3AF),
+                        fontSize: responsive.scaleText(16),
+                      ),
+                    ),
+                    validator: (value) {
+                      final trimmed = value?.trim() ?? '';
+                      if (trimmed.isEmpty) return l.phoneRequired;
+                      if (trimmed.length < metadata.minLength ||
+                          trimmed.length > metadata.maxLength) {
+                        return l.phoneInvalid;
+                      }
+                      if (!RegExp(r'^[0-9]+$').hasMatch(trimmed)) {
+                        return l.phoneInvalid;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeInOut,
+            switchOutCurve: Curves.easeInOut,
+            child: _showInlineCountryPicker
+                ? _buildInlineCountryPicker(l, responsive)
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -530,7 +551,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildCountrySelector(TextStyle dialCodeStyle, Responsive responsive) {
     return InkWell(
-      onTap: _showCountryPicker,
+      onTap: _toggleInlineCountryPicker,
       borderRadius: BorderRadius.circular(responsive.scale(32)),
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -540,14 +561,13 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: responsive.scale(12),
-              height: responsive.scale(12),
-              alignment: Alignment.center,
-              child: Image.asset(
-                AppAssets.dropDownIcon,
-                width: responsive.scale(12),
-                height: responsive.scale(12),
+            AnimatedRotation(
+              turns: _showInlineCountryPicker ? 0.5 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.keyboard_arrow_down,
+                size: responsive.scale(20),
+                color: const Color(0xFF007BFF),
               ),
             ),
             SizedBox(width: responsive.scale(8)),
@@ -566,155 +586,192 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Future<void> _showCountryPicker() async {
-    final l = AppLocalizations.of(context);
-    final responsive = context.responsive;
+  void _toggleInlineCountryPicker() {
     FocusScope.of(context).unfocus();
-    final selected = await showModalBottomSheet<CountryCodeOption>(
-      context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(responsive.scale(16))),
-      ),
-      builder: (sheetContext) {
-        String query = '';
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final filtered = _countryCodeOptions.where((country) {
-              if (query.isEmpty) return true;
-              final q = query.toLowerCase();
-              return country.name.toLowerCase().contains(q) ||
-                  country.dialCode.contains(query) ||
-                  country.isoCode.toLowerCase().contains(q);
-            }).toList();
+    setState(() {
+      _showInlineCountryPicker = !_showInlineCountryPicker;
+      if (!_showInlineCountryPicker) {
+        _countrySearchQuery = '';
+        _countrySearchController.clear();
+      }
+    });
+    if (_showInlineCountryPicker) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _countrySearchFocusNode.requestFocus();
+        }
+      });
+    }
+  }
 
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SizedBox(
-                  height:
-                      MediaQuery.of(context).size.height * responsive.scale(0.75),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Container(
-                        width: responsive.scale(36),
-                        height: responsive.scale(4),
-                        margin: EdgeInsets.symmetric(
-                          vertical: responsive.scale(12),
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade400,
-                          borderRadius:
-                              BorderRadius.circular(responsive.scale(2)),
-                        ),
+  void _closeInlineCountryPicker() {
+    if (!_showInlineCountryPicker) return;
+    setState(() {
+      _showInlineCountryPicker = false;
+      _countrySearchQuery = '';
+      _countrySearchController.clear();
+    });
+  }
+
+  void _onCountrySearchChanged(String value) {
+    setState(() {
+      _countrySearchQuery = value.trim();
+    });
+  }
+
+  List<CountryCodeOption> get _visibleCountryOptions {
+    if (_countrySearchQuery.isEmpty) {
+      return _countryCodeOptions;
+    }
+    final query = _countrySearchQuery.toLowerCase();
+    return _countryCodeOptions.where((country) {
+      final name = country.name.toLowerCase();
+      return name.contains(query) ||
+          country.dialCode.contains(_countrySearchQuery) ||
+          country.isoCode.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  Widget _buildInlineCountryPicker(
+      AppLocalizations l, Responsive responsive) {
+    final filtered = _visibleCountryOptions;
+    return Container(
+      key: const ValueKey('signup-inline-country-picker'),
+      width: double.infinity,
+      margin: EdgeInsets.only(top: responsive.scale(12)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(responsive.scale(24)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x1A000000),
+            blurRadius: responsive.scale(16),
+            offset: Offset(0, responsive.scale(8)),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(responsive.scale(16)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _countrySearchController,
+            focusNode: _countrySearchFocusNode,
+            onChanged: _onCountrySearchChanged,
+            decoration: InputDecoration(
+              hintText: l.searchCountryCodes,
+              prefixIcon: Icon(
+                Icons.search,
+                color: Colors.grey.shade600,
+              ),
+              filled: true,
+              fillColor: const Color(0xFFF5F6FA),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: responsive.scale(12),
+                vertical: responsive.scale(12),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(responsive.scale(16)),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          SizedBox(height: responsive.scale(12)),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: responsive.scale(260),
+            ),
+            child: filtered.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: responsive.scale(24)),
+                      child: Text(
+                        l.noCountryCodeResults,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: responsive.scale(20),
-                          vertical: responsive.scale(8),
-                        ),
-                        child: TextField(
-                          autofocus: true,
-                          decoration: InputDecoration(
-                            hintText: l.searchCountryCodes,
-                            prefixIcon: Icon(
-                              Icons.search,
-                              size: responsive.scale(20),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                responsive.scale(28),
-                              ),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
+                    ),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemBuilder: (context, index) {
+                      final country = filtered[index];
+                      final isActive =
+                          country.isoCode == _selectedCountry.isoCode;
+                      return InkWell(
+                        onTap: () => _handleCountrySelected(country),
+                        borderRadius:
+                            BorderRadius.circular(responsive.scale(16)),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: responsive.scale(10),
+                            horizontal: responsive.scale(4),
                           ),
-                          onChanged: (value) => setModalState(() {
-                            query = value.trim();
-                          }),
-                        ),
-                      ),
-                      SizedBox(height: responsive.scale(4)),
-                      Expanded(
-                        child: filtered.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: responsive.scale(24)),
-                                  child: Text(
-                                    l.noCountryCodeResults,
-                                    textAlign: TextAlign.center,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
+                          child: Row(
+                            children: [
+                              Text(
+                                countryFlag(country.isoCode),
+                                style: TextStyle(
+                                  fontSize: responsive.scaleText(20),
                                 ),
-                              )
-                            : ListView.separated(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: responsive.scale(12),
-                                    vertical: responsive.scale(8)),
-                                itemBuilder: (context, index) {
-                                  final country = filtered[index];
-                                  final isActive =
-                                      country.isoCode == _selectedCountry.isoCode;
-                                  return ListTile(
-                                    onTap: () =>
-                                        Navigator.of(sheetContext).pop(country),
-                                    leading: Text(
-                                      countryFlag(country.isoCode),
-                                      style: TextStyle(
-                                        fontSize: responsive.scaleText(20),
-                                      ),
-                                    ),
-                                    title: Text(
+                              ),
+                              SizedBox(width: responsive.scale(12)),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
                                       country.name,
                                       style: TextStyle(
                                         fontSize: responsive.scaleText(16),
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                    subtitle: Text(
+                                    SizedBox(height: responsive.scale(2)),
+                                    Text(
                                       country.dialCode,
                                       style: TextStyle(
                                         fontSize: responsive.scaleText(14),
                                         color: Colors.grey.shade600,
                                       ),
                                     ),
-                                    trailing: isActive
-                                        ? Icon(
-                                            Icons.check,
-                                            color: const Color(0xFF007BFF),
-                                            size: responsive.scale(20),
-                                          )
-                                        : null,
-                                  );
-                                },
-                                separatorBuilder: (_, __) => Divider(
-                                  height: responsive.scale(1),
-                                  indent: responsive.scale(72),
+                                  ],
                                 ),
-                                itemCount: filtered.length,
                               ),
-                      ),
-                    ],
+                              if (isActive)
+                                Icon(
+                                  Icons.check_circle,
+                                  color: const Color(0xFF22C55E),
+                                  size: responsive.scale(20),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (_, __) => Divider(
+                      height: responsive.scale(1),
+                      color: const Color(0xFFE5E7EB),
+                    ),
+                    itemCount: filtered.length,
                   ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+          ),
+        ],
+      ),
     );
+  }
 
-    if (!mounted || selected == null) return;
+  void _handleCountrySelected(CountryCodeOption selected) {
+    final metadata = metadataForDialCode(selected.dialCode);
     setState(() {
       _selectedCountry = selected;
       _selectedCountryCode = selected.dialCode;
-      final metadata = metadataForDialCode(selected.dialCode);
+      _showInlineCountryPicker = false;
+      _countrySearchQuery = '';
+      _countrySearchController.clear();
       final current = _phoneController.text;
       if (current.length > metadata.maxLength) {
         final truncated = current.substring(0, metadata.maxLength);
