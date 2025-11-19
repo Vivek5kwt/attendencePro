@@ -4809,6 +4809,13 @@ class _MissedAttendanceCompletionSheetState
   bool _isSubmitting = false;
   String? _errorMessage;
 
+  void _showSnack(String message, {Color? backgroundColor}) {
+    if (!mounted) return;
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(context, trimmed, backgroundColor: backgroundColor);
+  }
+
   @override
   void initState() {
     super.initState();
