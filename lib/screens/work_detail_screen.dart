@@ -24,6 +24,7 @@ import '../utils/contract_entry_cache.dart';
 import '../utils/contract_unit_label.dart';
 import '../utils/contract_work_display.dart';
 import '../utils/language_dialog.dart';
+import '../utils/snackbar.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/work_selection_dialog.dart';
@@ -357,6 +358,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   String? _attendanceStatusMessage;
   bool _attendanceStatusIsError = false;
   Timer? _attendanceStatusTimer;
+
+  void _showSnack(String message, {Color? backgroundColor}) {
+    if (!mounted) return;
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(context, trimmed, backgroundColor: backgroundColor);
+  }
   Timer? _contractEntryCacheDebounce;
   DateTime _selectedDate = DateTime.now();
   String? _dateLabelOverride;
@@ -535,9 +543,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('New work created successfully.')),
-    );
+    _showSnack('New work created successfully.');
 
     final fallbackSelected = await showWorkSelectionDialog(
       context: context,
@@ -698,12 +704,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final shouldLogout = await _showLogoutConfirmationDialog(l);
     if (!shouldLogout || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().logout();
     if (!mounted) return;
     context.read<WorkBloc>().add(const WorkCleared());
     final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    _showSnack(message);
   }
 
   Future<void> _handleDrawerDeleteAccountTap(AppLocalizations l) async {
@@ -711,7 +716,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final shouldDelete = await _showDeleteAccountConfirmationDialog(l);
     if (!shouldDelete || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().deleteAccount();
     if (!mounted) return;
     if (success) {
@@ -719,7 +723,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
     final message =
         success ? l.deleteAccountSuccessMessage : l.deleteAccountFailedMessage;
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    _showSnack(message);
   }
 
   Future<bool> _showLogoutConfirmationDialog(AppLocalizations l) {
@@ -1323,8 +1327,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _missedDialogShown = false;
       });
       if (showDialog) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
     } on AttendanceRepositoryException catch (e) {
       if (!mounted) {
@@ -1336,8 +1339,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             : l.attendanceMissedEntriesLoadFailed,
       );
       if (showDialog) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
     } catch (_) {
       if (!mounted) {
@@ -1345,8 +1347,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
       if (showDialog) {
         final message = l.attendanceMissedEntriesLoadFailed;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
     }
   }
@@ -1389,8 +1390,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         return false;
       }
       final message = l.authenticationRequiredMessage;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      _showSnack(message);
       return false;
     } on AttendanceRepositoryException catch (e) {
       if (!mounted) {
@@ -1401,16 +1401,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
             ? e.message.trim()
             : l.attendanceMissedEntriesLoadFailed,
       );
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      _showSnack(message);
       return false;
     } catch (_) {
       if (!mounted) {
         return false;
       }
       final message = l.attendanceMissedEntriesLoadFailed;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      _showSnack(message);
       return false;
     }
   }
@@ -1599,9 +1597,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _extractResponseMessage(response) ??
             l.attendanceMissedEntriesCompleteSuccess,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
       await _loadSummary();
     }
   }
@@ -1767,9 +1763,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final nextTypeId = _findNextAvailableContractTypeId();
     if (nextTypeId == null) {
       final l = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkAllTypesAddedMessage)),
-      );
+      _showSnack(l.contractWorkAllTypesAddedMessage);
       return;
     }
     setState(() {
@@ -2254,11 +2248,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
     final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(content: Text(l.attendanceAlreadyMarkedMessage)),
-    );
+    _showSnack(l.attendanceAlreadyMarkedMessage);
   }
 
   String? _validateStartTime(String? value) {
@@ -2540,8 +2530,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (_isSelectedDateLocked && !isContractUpdateAttempt) {
       final message = l.attendanceAlreadyMarkedMessage;
       _setAttendanceStatus(message, isError: true);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      _showSnack(message);
       return;
     }
     if (!formState.validate()) {
@@ -2578,9 +2567,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           isError: false,
           autoHideDuration: const Duration(seconds: 3),
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showSnack(message);
         if (mounted) {
           setState(() {
             if (normalizedSelectedDate == normalizedToday) {
@@ -2608,9 +2595,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         }
         final message = l.authenticationRequiredMessage;
         _setAttendanceStatus(message, isError: true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showSnack(message);
       } on AttendanceRepositoryException catch (e) {
         if (!mounted) {
           return;
@@ -2621,18 +2606,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               : l.attendanceSubmitFailed,
         );
         _setAttendanceStatus(message, isError: true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showSnack(message);
       } catch (_) {
         if (!mounted) {
           return;
         }
         final message = l.attendanceSubmitFailed;
         _setAttendanceStatus(message, isError: true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showSnack(message);
       } finally {
         if (mounted) {
           setState(() {
@@ -2659,9 +2640,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (contractSectionVisible && hasContractInput && _contractTypes.isEmpty) {
       final message = l.contractWorkLoadError;
       _setAttendanceStatus(message, isError: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
       return;
     }
 
@@ -2679,9 +2658,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (collectionResult.errorMessage != null) {
         final message = collectionResult.errorMessage!;
         _setAttendanceStatus(message, isError: true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showSnack(message);
         return;
       }
 
@@ -2689,9 +2666,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       if (bundles.isEmpty) {
         final message = l.attendanceUnitsRequired;
         _setAttendanceStatus(message, isError: true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showSnack(message);
         return;
       }
 
@@ -2780,9 +2755,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         if (existingAttendanceId == null) {
           final message = l.attendanceSubmitFailed;
           _setAttendanceStatus(message, isError: true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          _showSnack(message);
           return;
         }
         response = await _attendanceRepository.updateAttendance(
@@ -2826,9 +2799,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         isError: false,
         autoHideDuration: const Duration(seconds: 3),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
       if (mounted) {
         setState(() {
           if (normalizedSelectedDate == normalizedToday) {
@@ -2864,9 +2835,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
       final message = l.authenticationRequiredMessage;
       _setAttendanceStatus(message, isError: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
     } on AttendanceRepositoryException catch (e) {
       if (!mounted) {
         return;
@@ -2878,9 +2847,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         e.message.trim().isNotEmpty ? e.message.trim() : fallback,
       );
       _setAttendanceStatus(message, isError: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
     } catch (_) {
       if (!mounted) {
         return;
@@ -2889,9 +2856,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           ? l.attendanceSubmitFailed
           : l.attendancePreviewFetchFailed;
       _setAttendanceStatus(message, isError: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
     } finally {
       if (mounted) {
         setState(() {
@@ -3198,9 +3163,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _summaryError = message;
         _isSummaryLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
     } on DashboardRepositoryException catch (e) {
       if (!mounted) return;
       final message = _localizeAttendanceServerMessage(
@@ -3212,9 +3175,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _summaryError = message;
         _isSummaryLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
     } catch (_) {
       if (!mounted) return;
       final message = l.dashboardSummaryLoadFailedMessage;
@@ -3222,9 +3183,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _summaryError = message;
         _isSummaryLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
     }
   }
 
@@ -5732,9 +5691,7 @@ class _MissedAttendanceCompletionSheetState
     }
     if (!data.includeContractEntry && widget.contractTypes.isEmpty) {
       final message = widget.localization.contractWorkLoadError;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showSnack(message);
       return;
     }
     setState(() {

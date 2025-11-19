@@ -18,6 +18,7 @@ import '../repositories/reports_repository.dart';
 import '../utils/contract_work_display.dart';
 import '../utils/contract_unit_label.dart';
 import '../utils/responsive.dart';
+import '../utils/snackbar.dart';
 import '../utils/work_contract_filter.dart';
 
 const List<String> kContractWorkDefaultRoleOptions = <String>[
@@ -119,6 +120,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  void _showSnack(String message, {Color? backgroundColor}) {
+    if (!mounted) return;
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(context, trimmed, backgroundColor: backgroundColor);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -199,8 +207,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         final message = error.message.trim().isEmpty
             ? l.contractWorkLoadError
             : error.message;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
     } catch (error) {
       if (!mounted) return;
@@ -211,8 +218,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         });
       } else {
         final l = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l.contractWorkLoadError)));
+        _showSnack(l.contractWorkLoadError);
       }
     }
   }
@@ -699,9 +705,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
 
   void _showComingSoonSnackBar(BuildContext context) {
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l.helpSupportComingSoon)));
+    AppSnackBar.show(context, l.helpSupportComingSoon);
   }
 
   double get _totalUnits => _summaryTotalUnits.toDouble();
@@ -740,9 +744,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     await _refreshContractData(notifyDashboard: true);
     if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l.contractWorkTypeSavedMessage)));
+    _showSnack(l.contractWorkTypeSavedMessage);
   }
 
   Future<void> _handleDeleteContractType(_ContractType type) async {
@@ -789,9 +791,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       await _refreshContractData(notifyDashboard: true);
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l.contractWorkTypeDeletedMessage)));
+      _showSnack(l.contractWorkTypeDeletedMessage);
     } on ContractTypeRepositoryException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -800,17 +800,13 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       final message = error.message.trim().isNotEmpty
           ? error.message
           : l.contractWorkTypeDeleteFailedMessage;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      _showSnack(message);
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _pendingDeletionIds.remove(type.id);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
-      );
+      _showSnack(l.contractWorkTypeDeleteFailedMessage);
     }
   }
 
@@ -1496,21 +1492,15 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     // Validation for required fields
     if ((name.isEmpty && widget.isNameEditable) ||
         (!widget.isNameEditable && (type?.name.trim().isEmpty ?? true))) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkNameRequiredMessage)),
-      );
+      AppSnackBar.show(context, l.contractWorkNameRequiredMessage);
       return;
     }
     if (resolvedRole.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkRoleRequiredMessage)),
-      );
+      AppSnackBar.show(context, l.contractWorkRoleRequiredMessage);
       return;
     }
     if (rate == null || rate <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkRateRequiredMessage)),
-      );
+      AppSnackBar.show(context, l.contractWorkRateRequiredMessage);
       return;
     }
 
@@ -1578,9 +1568,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
       Navigator.of(context).pop(updatedType);
 
       // Success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
-      );
+      AppSnackBar.show(context, l.contractWorkTypeSavedMessage);
     } on ContractTypeRepositoryException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -1614,9 +1602,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
         );
       } else {
         // Other repository errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
+        AppSnackBar.show(context, error.message);
       }
     } catch (error) {
       if (!mounted) return;
@@ -1626,9 +1612,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
       // Generic error
       print("An unknown error occurred: $error");
       Navigator.of(context, rootNavigator: true).pop();  // Close the bottom sheet
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      AppSnackBar.show(context, error.toString());
     }
   }
 

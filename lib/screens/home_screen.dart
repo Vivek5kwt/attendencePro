@@ -20,6 +20,7 @@ import '../utils/language_dialog.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/responsive.dart';
 import '../utils/session_manager.dart';
+import '../utils/snackbar.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/work_management_dialogs.dart';
@@ -55,6 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _hasTriggeredAutoActivation = false;
   String? _pendingActivationWorkId;
 
+  void _showSnack(String message) {
+    if (!mounted) return;
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(context, trimmed);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchWorks({bool showSnackBarOnError = false}) async {
     final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
     setState(() {
       _isLoadingWorks = true;
@@ -93,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _works = const <Work>[];
       });
       if (showSnackBarOnError) {
-        messenger.showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
       return;
     }
@@ -118,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _worksError = message;
       });
       if (showSnackBarOnError) {
-        messenger.showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
     } catch (_) {
       if (!mounted) {
@@ -129,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _worksError = message;
       });
       if (showSnackBarOnError) {
-        messenger.showSnackBar(SnackBar(content: Text(message)));
+        _showSnack(message);
       }
     } finally {
       if (mounted) {
@@ -532,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onDrawerOptionSelected(String option) {
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(option)));
+    _showSnack(option);
   }
 
   Future<void> _handleLogoutTap(AppLocalizations l) async {
@@ -540,12 +547,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final shouldLogout = await _showLogoutConfirmationDialog(l);
     if (!shouldLogout || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().logout();
     if (!mounted) return;
     context.read<WorkBloc>().add(const WorkCleared());
     final message = success ? l.logoutSuccessMessage : l.logoutFailedMessage;
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    _showSnack(message);
   }
 
   Future<bool> _showLogoutConfirmationDialog(AppLocalizations l) {
@@ -557,7 +563,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final shouldDelete = await _showDeleteAccountConfirmationDialog(l);
     if (!shouldDelete || !mounted) return;
 
-    final messenger = ScaffoldMessenger.of(context);
     final success = await context.read<AppCubit>().deleteAccount();
     if (!mounted) return;
     if (success) {
@@ -566,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final message = success
         ? l.deleteAccountSuccessMessage
         : l.deleteAccountFailedMessage;
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    _showSnack(message);
   }
 
   Future<bool> _showDeleteAccountConfirmationDialog(AppLocalizations l) {
@@ -586,7 +591,6 @@ class _HomeScreenState extends State<HomeScreen> {
               previous.feedbackKind != current.feedbackKind,
           listener: (context, state) {
             final l = AppLocalizations.of(context);
-            final messenger = ScaffoldMessenger.of(context);
             String? message;
 
             if (state.requiresAuthentication) {
@@ -614,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             if (message != null && message.isNotEmpty) {
-              messenger.showSnackBar(SnackBar(content: Text(message)));
+              _showSnack(message);
             }
           },
         ),
@@ -1932,7 +1936,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _shareViaWhatsApp() async {
     final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final message = l.shareMessage(_shareLink);
     final uri = Uri.parse(
       'whatsapp://send?text=${Uri.encodeComponent(message)}',
@@ -1942,9 +1945,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final canLaunch = await canLaunchUrl(uri);
       if (!canLaunch) {
         if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.shareWhatsappUnavailable)),
-        );
+        _showSnack(l.shareWhatsappUnavailable);
         return;
       }
 
@@ -1954,11 +1955,11 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (!launched && mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(l.shareWhatsappFailed)));
+        _showSnack(l.shareWhatsappFailed);
       }
     } catch (_) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l.shareWhatsappFailed)));
+      _showSnack(l.shareWhatsappFailed);
     }
   }
 
@@ -1966,9 +1967,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Clipboard.setData(ClipboardData(text: _shareLink));
     if (!mounted) return;
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l.shareLinkCopied)));
+    _showSnack(l.shareLinkCopied);
   }
 
   @override

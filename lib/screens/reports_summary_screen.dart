@@ -15,6 +15,7 @@ import '../repositories/reports_repository.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/contract_unit_label.dart';
+import '../utils/snackbar.dart';
 import '../widgets/work_selection_dialog.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
@@ -309,7 +310,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     if (!mounted) return;
     final m = message.trim();
     if (m.isEmpty) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m), backgroundColor: color));
+    AppSnackBar.show(context, m, backgroundColor: color);
   }
 
   Future<void> _downloadMonthlyContractReport() async {

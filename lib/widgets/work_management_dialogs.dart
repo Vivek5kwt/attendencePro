@@ -18,6 +18,7 @@ import '../repositories/work_repository.dart';
 import '../screens/contract_work_screen.dart';
 import '../utils/contract_work_display.dart';
 import '../utils/contract_unit_label.dart';
+import '../utils/snackbar.dart';
 
 Future<void> _clearStoredAddWorkContractDrafts() async {
   final prefs = await SharedPreferences.getInstance();
@@ -62,6 +63,12 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   final List<PendingContractWork> _pendingContractWorks =
       <PendingContractWork>[];
   bool _hasUserCreatedContractWork = false;
+
+  void _showRootSnack(String message) {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(widget.rootContext, trimmed);
+  }
 
   @override
   void initState() {
@@ -245,7 +252,6 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
   Future<void> _navigateToContractWorkScreen() async {
     FocusScope.of(context).unfocus();
 
-    final messenger = ScaffoldMessenger.of(widget.rootContext);
     final l = AppLocalizations.of(widget.rootContext);
     final repository = ContractTypeRepository();
 
@@ -284,34 +290,25 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
           _pendingContractWorks.add(pending);
           _hasUserCreatedContractWork = true;
         });
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.contractWorkTypeSavedMessage)),
-        );
+        _showRootSnack(l.contractWorkTypeSavedMessage);
       }
     } on ContractTypeRepositoryException catch (error) {
       final message = error.message.trim().isEmpty
           ? l.contractWorkLoadError
           : error.message;
-      messenger.showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      _showRootSnack(message);
     } catch (_) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.contractWorkLoadError)),
-      );
+      _showRootSnack(l.contractWorkLoadError);
     }
   }
 
   Future<void> _handleSaveWork(BuildContext dialogContext) async {
-    final messenger = ScaffoldMessenger.of(widget.rootContext);
     final l = AppLocalizations.of(widget.rootContext);
     final workName = _workNameController.text.trim();
     final hourlyRateText = _hourlySalaryController.text.trim();
 
     if (workName.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.workNameRequiredMessage)),
-      );
+      _showRootSnack(l.workNameRequiredMessage);
       return;
     }
 
@@ -319,15 +316,11 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
     if (hourlyRateText.isNotEmpty) {
       final parsedRate = double.tryParse(hourlyRateText.replaceAll(',', ''));
       if (parsedRate == null) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.invalidHourlyRateMessage)),
-        );
+        _showRootSnack(l.invalidHourlyRateMessage);
         return;
       }
       if (parsedRate < 0) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.hourlyRateNegativeValidation)),
-        );
+        _showRootSnack(l.hourlyRateNegativeValidation);
         return;
       }
       hourlyRate = parsedRate;
@@ -1070,7 +1063,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
 
   Future<void> _navigateToContractWorkScreen() async {
     FocusScope.of(context).unfocus();
-    final messenger = ScaffoldMessenger.of(widget.rootContext);
     final l = AppLocalizations.of(widget.rootContext);
 
     try {
@@ -1120,16 +1112,12 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       final message = error.message.trim().isEmpty
           ? l.contractWorkLoadError
           : error.message;
-      messenger.showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackBar.show(widget.rootContext, message);
     } catch (_) {
       if (!mounted) {
         return;
       }
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.contractWorkLoadError)),
-      );
+      AppSnackBar.show(widget.rootContext, l.contractWorkLoadError);
     }
   }
 
@@ -1182,9 +1170,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
-      );
+      AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeletedMessage);
     } on ContractTypeRepositoryException catch (error) {
       if (!mounted) {
         return;
@@ -1197,17 +1183,13 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         return;
       }
       if (!exists) {
-        ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-          SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
-        );
+        AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeletedMessage);
         return;
       }
       final message = error.message.trim().isEmpty
           ? l.contractWorkTypeDeleteFailedMessage
           : error.message;
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackBar.show(widget.rootContext, message);
     } catch (_) {
       if (!mounted) {
         return;
@@ -1220,14 +1202,10 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         return;
       }
       if (!exists) {
-        ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-          SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
-        );
+        AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeletedMessage);
         return;
       }
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
-      );
+      AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeleteFailedMessage);
     }
   }
 
@@ -1288,9 +1266,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeDeletedMessage)),
-      );
+      AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeletedMessage);
       unawaited(_refreshWorkDetails(showError: false));
       unawaited(_loadContractTypes());
     } on ContractTypeRepositoryException catch (error) {
@@ -1303,9 +1279,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       final message = error.message.trim().isEmpty
           ? l.contractWorkTypeDeleteFailedMessage
           : error.message;
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackBar.show(widget.rootContext, message);
       unawaited(_refreshWorkDetails());
     } catch (_) {
       if (!mounted) {
@@ -1314,9 +1288,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       setState(() {
         _deletingWorkContractIds.remove(contractId);
       });
-      ScaffoldMessenger.of(widget.rootContext).showSnackBar(
-        SnackBar(content: Text(l.contractWorkTypeDeleteFailedMessage)),
-      );
+      AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeleteFailedMessage);
       unawaited(_refreshWorkDetails());
     }
   }
@@ -1650,7 +1622,6 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   Future<void> _refreshWorkDetails({bool showError = true}) async {
-    final messenger = ScaffoldMessenger.of(widget.rootContext);
     final l = AppLocalizations.of(widget.rootContext);
 
     try {
@@ -1694,9 +1665,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       final message = error.message.trim().isEmpty
           ? l.contractWorkLoadError
           : error.message;
-      messenger.showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackBar.show(widget.rootContext, message);
     } on Exception {
       if (!mounted) {
         return;
@@ -1707,9 +1676,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       if (!showError) {
         return;
       }
-      messenger.showSnackBar(
-        SnackBar(content: Text(l.contractWorkLoadError)),
-      );
+      AppSnackBar.show(widget.rootContext, l.contractWorkLoadError);
     }
   }
 
