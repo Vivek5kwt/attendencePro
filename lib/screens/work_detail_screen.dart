@@ -4213,7 +4213,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final currencyPrefix = _resolveCurrencyPrefix(summary.raw);
       final stats = <_SummaryStat>[];
 
-      if (!_hasContractSummaryData(summaryData: summary.raw)) {
+      if (totalHours > 0) {
         stats.add(
           _SummaryStat(
             title: l.totalHoursLabel,
@@ -4264,14 +4264,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final currencyPrefix = _resolveCurrencyPrefix(summaryMap);
       final stats = <_SummaryStat>[];
 
-      final shouldShowHours = !_hasContractSummaryData(summaryData: summaryMap);
-
       final totalHours = _formatSummaryMetric(
         summaryMap,
         const ['total_hours', 'totalHours', 'hours'],
         numericSuffix: ' h',
       );
-      if (shouldShowHours && totalHours != null) {
+      if (totalHours != null) {
         stats.add(
           _SummaryStat(
             title: l.totalHoursLabel,
