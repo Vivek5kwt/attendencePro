@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../utils/responsive.dart';
+import '../widgets/primary_cta_button.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -165,34 +166,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       final isProcessing = state is AuthLoading;
                       return SizedBox(
                         width: double.infinity,
-                        height: responsive.scale(55),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007BFF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(responsive.scale(32)),
-                            ),
-                          ),
+                        child: PrimaryCtaButton(
+                          label: l.sendOtpButton,
+                          height: responsive.scale(56),
+                          isLoading: isProcessing,
                           onPressed: isProcessing ? null : _submit,
-                          child: isProcessing
-                              ? SizedBox(
-                                  height: responsive.scale(24),
-                                  width: responsive.scale(24),
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2.6,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : Text(
-                                  l.sendOtpButton,
-                                  style: TextStyle(
-                                    fontSize: responsive.scaleText(18),
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
                         ),
                       );
                     },
