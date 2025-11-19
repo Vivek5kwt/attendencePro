@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../utils/responsive.dart';
+import '../widgets/primary_cta_button.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String phone;
@@ -217,23 +218,10 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 SizedBox(height: responsive.scale(40)),
                 SizedBox(
                   width: double.infinity,
-                  height: responsive.scale(55),
-                  child: ElevatedButton(
+                  child: PrimaryCtaButton(
+                    label: l.verifyOtpButton,
+                    height: responsive.scale(56),
                     onPressed: _verify,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(responsive.scale(30)),
-                      ),
-                    ),
-                    child: Text(
-                      l.verifyOtpButton,
-                      style: TextStyle(
-                        fontSize: responsive.scaleText(18),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
                 SizedBox(height: responsive.scale(20)),

@@ -10,6 +10,7 @@ import '../data/country_codes.dart';
 import '../data/phone_number_metadata.dart';
 import 'policy_screen.dart';
 import '../utils/responsive.dart';
+import '../widgets/primary_cta_button.dart';
 
 class SignupScreen extends StatefulWidget {
   final String? initialName;
@@ -405,24 +406,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       final isProcessing = state is AuthLoading;
                       return SizedBox(
                         width: double.infinity,
-                        height: responsive.scale(52),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007BFF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(responsive.scale(30)),
-                            ),
-                            elevation: 0,
-                          ),
+                        child: PrimaryCtaButton(
+                          label: l.signupButton,
+                          height: responsive.scale(56),
+                          isLoading: isProcessing,
                           onPressed: isProcessing ? null : _submitSignup,
-                          child: Text(
-                            l.signupButton,
-                            style: TextStyle(
-                              fontSize: responsive.scaleText(18),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                         ),
                       );
                     },
