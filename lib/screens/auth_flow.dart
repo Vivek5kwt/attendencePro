@@ -8,6 +8,7 @@ import '../bloc/locale_cubit.dart';
 import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
 import '../utils/responsive.dart';
+import '../utils/snackbar.dart';
 import 'create_password_screen.dart';
 import 'login_phone_screen.dart';
 
@@ -20,6 +21,13 @@ class AuthFlow extends StatefulWidget {
 
 class _AuthFlowState extends State<AuthFlow> {
   AuthState? _lastNonLoadingState;
+
+  void _showSnack(String message, {Color? backgroundColor}) {
+    if (!mounted) return;
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(context, trimmed, backgroundColor: backgroundColor);
+  }
 
   @override
   void initState() {
@@ -41,44 +49,20 @@ class _AuthFlowState extends State<AuthFlow> {
         } else if (state is AuthVerifyNumber) {
           final message = state.infoMessage;
           if (message != null && message.trim().isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message.trim()),
-                backgroundColor: Colors.black87,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            _showSnack(message, backgroundColor: Colors.black87);
           }
         } else if (state is AuthPhoneInput) {
           final message = state.infoMessage;
           if (message != null && message.trim().isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message.trim()),
-                backgroundColor: Colors.black87,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            _showSnack(message, backgroundColor: Colors.black87);
           }
         } else if (state is AuthCreatePassword) {
           final message = state.infoMessage;
           if (message != null && message.trim().isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message.trim()),
-                backgroundColor: Colors.black87,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            _showSnack(message, backgroundColor: Colors.black87);
           }
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          _showSnack(state.message, backgroundColor: Colors.red);
         }
       },
       builder: (context, state) {

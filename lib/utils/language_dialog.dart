@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../widgets/app_dialogs.dart';
+import 'snackbar.dart';
 
 Future<void> showLanguageSelectionDialog({
   required BuildContext context,
@@ -29,8 +30,9 @@ Future<void> showLanguageSelectionDialog({
     };
     final label =
         updatedNames[selectedCode] ?? options[selectedCode] ?? selectedCode;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(updatedLocalization.languageSelection(label))),
+    AppSnackBar.show(
+      context,
+      updatedLocalization.languageSelection(label),
     );
   }
 }

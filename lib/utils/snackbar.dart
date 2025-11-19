@@ -3,21 +3,34 @@ import 'package:flutter/material.dart';
 class AppSnackBar {
   const AppSnackBar._();
 
-  static void show(BuildContext context, String message,
-      {bool reserveBottomBarSpace = true}) {
+  static void show(
+    BuildContext context,
+    String message, {
+    bool reserveBottomBarSpace = true,
+    Color? backgroundColor,
+    Duration? duration,
+  }) {
     final messenger = ScaffoldMessenger.of(context);
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        _buildSnackBar(context, message, reserveBottomBarSpace),
+        _buildSnackBar(
+          context,
+          message,
+          reserveBottomBarSpace: reserveBottomBarSpace,
+          backgroundColor: backgroundColor,
+          duration: duration,
+        ),
       );
   }
 
   static SnackBar _buildSnackBar(
     BuildContext context,
-    String message,
-    bool reserveBottomBarSpace,
-  ) {
+    String message, {
+    required bool reserveBottomBarSpace,
+    Color? backgroundColor,
+    Duration? duration,
+  }) {
     final padding = MediaQuery.paddingOf(context);
     final viewInsets = MediaQuery.viewInsetsOf(context);
     final bottomInset = viewInsets.bottom;
@@ -31,7 +44,8 @@ class AppSnackBar {
       behavior: SnackBarBehavior.floating,
       margin: EdgeInsets.fromLTRB(16, 0, 16, bottomMargin),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      duration: const Duration(seconds: 3),
+      duration: duration ?? const Duration(seconds: 3),
+      backgroundColor: backgroundColor,
     );
   }
 }

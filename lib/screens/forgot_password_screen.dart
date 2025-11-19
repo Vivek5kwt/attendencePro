@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../utils/responsive.dart';
+import '../utils/snackbar.dart';
 import '../widgets/primary_cta_button.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -25,15 +26,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _showSnack(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    AppSnackBar.show(context, trimmed);
   }
 
   bool _isValidEmail(String value) {

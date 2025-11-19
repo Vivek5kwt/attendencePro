@@ -3,18 +3,16 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
+import '../utils/snackbar.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
   Future<void> _launchUri(BuildContext context, Uri uri) async {
-    final messenger = ScaffoldMessenger.of(context);
     final localization = AppLocalizations.of(context);
 
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(localization.helpSupportLaunchFailed)),
-      );
+      AppSnackBar.show(context, localization.helpSupportLaunchFailed);
     }
   }
 

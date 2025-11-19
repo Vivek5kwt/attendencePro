@@ -6,6 +6,7 @@ import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
 import '../core/localization/app_localizations.dart';
 import '../repositories/user_repository.dart';
+import '../utils/snackbar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -107,9 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context.read<LocaleCubit>().setLocale(Locale(localeToApply));
       context.read<WorkBloc>().add(const WorkProfileRefreshed());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.profileUpdateSuccess)),
-      );
+      AppSnackBar.show(context, l.profileUpdateSuccess);
 
       setState(() {
         _isSaving = false;

@@ -16,6 +16,7 @@ import '../repositories/work_repository.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/responsive.dart';
+import '../utils/snackbar.dart';
 
 const List<String> _kMonthNames = <String>[
   'January',
@@ -1181,12 +1182,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     if (!mounted || trimmed.isEmpty) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(trimmed),
-        backgroundColor: const Color(0xFFB91C1C),
-      ),
-    );
+    AppSnackBar.show(context, trimmed, backgroundColor: const Color(0xFFB91C1C));
   }
 
   void _showSuccessSnackBar(String message) {
@@ -1194,12 +1190,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     if (!mounted || trimmed.isEmpty) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(trimmed),
-        backgroundColor: const Color(0xFF15803D),
-      ),
-    );
+    AppSnackBar.show(context, trimmed, backgroundColor: const Color(0xFF15803D));
   }
 
   void _showInfoSnackBar(String message) {
@@ -1207,9 +1198,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     if (!mounted || trimmed.isEmpty) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(trimmed)),
-    );
+    AppSnackBar.show(context, trimmed);
   }
 
   TimeOfDay? _parseTimeOfDay(String? value) {
@@ -1477,9 +1466,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
   void _showComingSoonMessage(BuildContext context) {
     final l = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l.helpSupportComingSoon)),
-    );
+    AppSnackBar.show(context, l.helpSupportComingSoon);
   }
 }
 
