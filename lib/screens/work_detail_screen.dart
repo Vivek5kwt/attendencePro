@@ -27,6 +27,7 @@ import '../utils/language_dialog.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/app_loader.dart';
 import '../widgets/work_selection_dialog.dart';
 import '../widgets/work_management_dialogs.dart';
 import 'contract_work_screen.dart';
@@ -5052,11 +5053,9 @@ class _MissedAttendanceCompletionSheetState
                                 ? const SizedBox(
                                     width: 18,
                                     height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
+                                    child: AppLoader(
+                                      size: 18,
+                                      color: Colors.white,
                                     ),
                                   )
                                 : Text(l.attendanceMissedEntriesResolveButton),
@@ -6684,9 +6683,9 @@ class _AttendanceSection extends StatelessWidget {
             ? const SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child: AppLoader(
+                  size: 20,
+                  color: Colors.white,
                 ),
               )
             : FittedBox(
@@ -7039,7 +7038,7 @@ class _SummaryStatusCard extends StatelessWidget {
             width: double.infinity,
             child: Center(
               child: isLoading
-                  ? const CircularProgressIndicator()
+                  ? const AppLoader()
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

@@ -20,6 +20,7 @@ import '../utils/contract_unit_label.dart';
 import '../utils/responsive.dart';
 import '../utils/snackbar.dart';
 import '../utils/work_contract_filter.dart';
+import '../widgets/app_loader.dart';
 
 const List<String> kContractWorkDefaultRoleOptions = <String>[
   'Bin',
@@ -963,7 +964,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     if (_isLoading) {
       bodyContent = const Center(
         key: ValueKey('contract-types-loading'),
-        child: CircularProgressIndicator(),
+        child: AppLoader(),
       );
     } else if (_errorMessage != null) {
       final fallbackMessage = l.contractWorkLoadError;
@@ -2156,12 +2157,9 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
                                 ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
+                              child: AppLoader(
+                                size: 20,
+                                color: Colors.white,
                               ),
                             )
                                 : Text(l.saveButtonLabel),
@@ -2251,7 +2249,7 @@ class _ContractSummaryTable extends StatelessWidget {
           child: const SizedBox(
             height: 32,
             width: 32,
-            child: CircularProgressIndicator(),
+            child: AppLoader(size: 32),
           ),
         ),
       );

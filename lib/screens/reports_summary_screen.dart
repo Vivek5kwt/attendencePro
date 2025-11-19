@@ -16,6 +16,7 @@ import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/contract_unit_label.dart';
 import '../utils/snackbar.dart';
+import '../widgets/app_loader.dart';
 import '../widgets/work_selection_dialog.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
@@ -885,7 +886,7 @@ class _SummaryLoadingView extends StatelessWidget {
             const SizedBox(
               width: 48,
               height: 48,
-              child: CircularProgressIndicator(),
+              child: AppLoader(size: 48),
             ),
             const SizedBox(height: 16),
             Text(message, textAlign: TextAlign.center, style: style),

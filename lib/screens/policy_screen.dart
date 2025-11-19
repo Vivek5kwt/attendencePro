@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../apis/content_api.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/policy_content.dart';
+import '../widgets/app_loader.dart';
 import '../apis/auth_api.dart' show ApiException;
 
 enum PolicyType { terms, privacy }
@@ -80,7 +81,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
         future: _policyFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: AppLoader());
           }
 
           if (snapshot.hasError) {

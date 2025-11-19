@@ -19,6 +19,7 @@ import '../screens/contract_work_screen.dart';
 import '../utils/contract_work_display.dart';
 import '../utils/contract_unit_label.dart';
 import '../utils/snackbar.dart';
+import 'app_loader.dart';
 
 Future<void> _clearStoredAddWorkContractDrafts() async {
   final prefs = await SharedPreferences.getInstance();
@@ -802,12 +803,9 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                         ? const SizedBox(
                                       height: 20,
                                       width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor:
-                                        AlwaysStoppedAnimation<Color>(
-                                          Colors.white,
-                                        ),
+                                      child: AppLoader(
+                                        size: 20,
+                                        color: Colors.white,
                                       ),
                                     )
                                         : Text(
@@ -1892,11 +1890,9 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
             const SizedBox(
               height: 20,
               width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Color(0xFFB91C1C),
-                ),
+              child: AppLoader(
+                size: 20,
+                color: Color(0xFFB91C1C),
               ),
             )
           else
@@ -2303,12 +2299,9 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
                                     ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor:
-                                    AlwaysStoppedAnimation<Color>(
-                                      Color(0xFFB91C1C),
-                                    ),
+                                  child: AppLoader(
+                                    size: 20,
+                                    color: Color(0xFFB91C1C),
                                   ),
                                 )
                                     : Row(
@@ -2559,11 +2552,9 @@ class _ContractListRow extends StatelessWidget {
                   const SizedBox(
                     height: 20,
                     width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFB91C1C),
-                      ),
+                    child: AppLoader(
+                      size: 20,
+                      color: Color(0xFFB91C1C),
                     ),
                   )
                 else
