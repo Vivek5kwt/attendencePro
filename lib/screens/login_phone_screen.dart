@@ -10,6 +10,7 @@ import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/navigation/routes.dart';
 import '../utils/responsive.dart';
+import '../utils/snackbar.dart';
 import '../widgets/app_dialogs.dart';
 import '../widgets/primary_cta_button.dart';
 import 'forgot_password_screen.dart';
@@ -105,14 +106,7 @@ class _LoginPhoneScreenState extends State<LoginPhoneScreen> {
 
   void _showSnack(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    AppSnackBar.show(context, message);
   }
 
   void _updateLoginMode(_LoginMode mode) {
