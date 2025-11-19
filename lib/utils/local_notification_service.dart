@@ -344,6 +344,9 @@ class LocalNotificationService {
       return;
     }
 
+    final friendlyTitle = 'Download ready';
+    final friendlyBody = '$fileName downloaded successfully.';
+
     final notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         _downloadChannel.id,
@@ -352,8 +355,8 @@ class LocalNotificationService {
         importance: Importance.high,
         priority: Priority.high,
         styleInformation: BigTextStyleInformation(
-          'Saved to $filePath',
-          contentTitle: 'Download complete',
+          friendlyBody,
+          contentTitle: friendlyTitle,
           summaryText: fileName,
         ),
       ),
@@ -372,8 +375,8 @@ class LocalNotificationService {
     final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     await _plugin.show(
       id,
-      'Download complete',
-      '$fileName saved to $filePath',
+      friendlyTitle,
+      friendlyBody,
       notificationDetails,
       payload: _encodePayload(<String, String>{
         _payloadTypeKey: _payloadTypeDownload,
