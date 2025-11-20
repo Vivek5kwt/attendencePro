@@ -690,7 +690,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             .map(
               (entry) => ContractReportRow(
             date: entry.date,
-            contractType: entry.contractType ?? '',
+            contractType: _resolveContractTypeLabel(entry, l),
             unitsCompleted: entry.unitsCompleted ?? 0,
             ratePerUnit: entry.ratePerUnit ?? 0,
             salary: entry.salary,
@@ -802,6 +802,35 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  String _resolveContractTypeLabel(
+      _AttendanceEntry entry,
+      AppLocalizations localization,
+      ) {
+    final explicit = entry.contractType?.trim();
+    if (explicit != null && explicit.isNotEmpty) {
+      return explicit;
+    }
+
+    if (entry.contractBundles.isNotEmpty) {
+      final seen = <String>{};
+      final labels = <String>[];
+
+      for (final bundle in entry.contractBundles) {
+        final type = _findContractTypeById(bundle.contractTypeId);
+        final name = type?.name.trim();
+        if (name != null && name.isNotEmpty && seen.add(name)) {
+          labels.add(name);
+        }
+      }
+
+      if (labels.isNotEmpty) {
+        return labels.join(', ');
+      }
+    }
+
+    return localization.contractWorkUnitFallback;
+  }
+
   String _buildHistoryDetail(
       _AttendanceEntry entry,
       AppLocalizations localization,
@@ -824,9 +853,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       case _AttendanceEntryType.contract:
         final units = entry.unitsCompleted ?? 0;
         final rate = entry.ratePerUnit ?? 0;
-        final typeLabel = entry.contractType?.trim().isNotEmpty == true
-            ? entry.contractType!.trim()
-            : localization.contractWorkUnitFallback;
+        final typeLabel = _resolveContractTypeLabel(entry, localization);
         final rateLabel = _formatCurrencyValue(_currencySymbol, rate);
         return '$units $typeLabel @ $rateLabel';
       case _AttendanceEntryType.leave:

@@ -141,7 +141,7 @@ class PdfReportService {
             ),
             pw.SizedBox(height: 18),
             pw.Text(
-              'In Download File Like This:-',
+              'Daily wages',
               style: _textStyle(
                 fonts,
                 font: fonts.bold,
