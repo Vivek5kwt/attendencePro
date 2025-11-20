@@ -2139,14 +2139,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (rawCount <= 0) {
       return rawCount;
     }
-    if (!_isHundredBunchContractType(contractType)) {
-      return rawCount;
-    }
-    final normalized = rawCount / 100;
-    if (normalized % 1 == 0) {
-      return normalized.toInt();
-    }
-    return double.parse(normalized.toStringAsFixed(3));
+    return rawCount;
   }
 
   List<AttendanceContractBundle> _buildBundlePayload(
