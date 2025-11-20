@@ -4622,7 +4622,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (trimmed.toLowerCase() == _alreadySubmittedServerMessage) {
       final formattedDate =
           _formatSelectedDateForAlreadySubmitted(_selectedDate);
-      return 'Attendance for $formattedDate is already submitted.';
+      return 'Attendance for ($formattedDate) is already submitted.';
     }
     return trimmed;
   }
