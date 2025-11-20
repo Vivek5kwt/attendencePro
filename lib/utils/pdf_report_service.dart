@@ -91,22 +91,42 @@ class PdfReportService {
 
     final fonts = await _resolveFonts();
     final document = pw.Document(theme: fonts.theme);
-    final totalSalary = rows.fold<double>(
-      0,
-          (previousValue, element) => previousValue + element.salary,
-    );
 
-    final tableData = rows
-        .map(
-          (row) => <String>[
-        _formatDate(row.date),
-        row.contractType.isEmpty ? '-' : row.contractType,
+    final contractTotals = <String, MapEntry<int, double>>{};
+    var totalUnits = 0;
+    var totalSalary = 0.0;
+
+    final currencyLabel = _resolveCurrencyLabel(currencySymbol);
+
+    final tableData = rows.map((row) {
+      final label = row.contractType.isEmpty ? '-' : row.contractType;
+      final entry = contractTotals[label];
+      final updatedUnits = (entry?.key ?? 0) + row.unitsCompleted;
+      final updatedSalary = (entry?.value ?? 0) + row.salary;
+      contractTotals[label] = MapEntry(updatedUnits, updatedSalary);
+
+      totalUnits += row.unitsCompleted;
+      totalSalary += row.salary;
+
+      return <String>[
+        _formatContractDate(row.date),
+        label,
         row.unitsCompleted.toString(),
-        _formatCurrency(currencySymbol, row.ratePerUnit),
-        _formatCurrency(currencySymbol, row.salary),
-      ],
-    )
-        .toList(growable: false);
+        _formatContractCurrency(currencyLabel, row.ratePerUnit),
+        _formatContractCurrency(currencyLabel, row.salary),
+      ];
+    }).toList(growable: false);
+
+    final monthlyTotals = <List<String>>[];
+    var serial = 1;
+    for (final entry in contractTotals.entries) {
+      monthlyTotals.add(<String>[
+        '${serial++}.',
+        entry.key,
+        entry.value.key.toString(),
+        _formatContractCurrency(currencyLabel, entry.value.value),
+      ]);
+    }
 
     document.addPage(
       pw.MultiPage(
@@ -115,79 +135,96 @@ class PdfReportService {
           final widgets = <pw.Widget>[
             _buildHeader(
               fonts: fonts,
-              title: 'Monthly Contract Report',
+              title: 'Contract Work Summary',
               workName: workName,
               periodLabel: monthLabel,
             ),
-            pw.SizedBox(height: 20),
-            _buildStripedTable(
-              headers: const <String>['Date', 'Contract type', 'Units', 'Rate', 'Amount'],
-              data: tableData,
-            headerStyle: _textStyle(
-              fonts,
-              font: fonts.bold,
-              fontSize: 11,
-              color: PdfColors.white,
+            pw.SizedBox(height: 18),
+            pw.Text(
+              'In Download File Like This:-',
+              style: _textStyle(
+                fonts,
+                font: fonts.bold,
+                fontSize: 12,
+                color: PdfColors.blueGrey800,
+              ),
             ),
-            cellStyle: _textStyle(fonts, fontSize: 10),
-            headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
-            border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-            cellAlignments: const <int, pw.Alignment>{
-              0: pw.Alignment.centerLeft,
-              1: pw.Alignment.centerLeft,
-              2: pw.Alignment.center,
-              3: pw.Alignment.centerRight,
-              4: pw.Alignment.centerRight,
-            },
-          ),
-          pw.SizedBox(height: 18),
-        ];
+            pw.SizedBox(height: 10),
+            _buildBorderedTable(
+              fonts: fonts,
+              headers: const <String>['Date', 'Contract Type', 'Unit', 'Rate', 'Salary'],
+              data: tableData,
+              cellAlignments: const <int, pw.Alignment>{
+                0: pw.Alignment.centerLeft,
+                1: pw.Alignment.centerLeft,
+                2: pw.Alignment.center,
+                3: pw.Alignment.center,
+                4: pw.Alignment.center,
+              },
+            ),
+            pw.SizedBox(height: 18),
+            pw.Text(
+              'Monthly Total',
+              style: _textStyle(
+                fonts,
+                font: fonts.bold,
+                fontSize: 12,
+                color: PdfColors.blueGrey800,
+              ),
+            ),
+            pw.SizedBox(height: 10),
+            _buildBorderedTable(
+              fonts: fonts,
+              headers: const <String>['Sr. no', 'Contract Type', 'Unit', 'Salary'],
+              data: monthlyTotals,
+              cellAlignments: const <int, pw.Alignment>{
+                0: pw.Alignment.center,
+                1: pw.Alignment.centerLeft,
+                2: pw.Alignment.center,
+                3: pw.Alignment.center,
+              },
+            ),
+            pw.SizedBox(height: 16),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: <pw.Widget>[
+                pw.Text(
+                  'Total Unit   =',
+                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
+                ),
+                pw.Text(
+                  totalUnits.toString(),
+                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 6),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: <pw.Widget>[
+                pw.Text(
+                  'Net Salary  =',
+                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
+                ),
+                pw.Text(
+                  _formatContractCurrency(currencyLabel, totalSalary),
+                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
+                ),
+              ],
+            ),
+          ];
 
           if (summary != null) {
             widgets
+              ..add(pw.SizedBox(height: 16))
               ..add(
                 _buildHistorySummary(
                   fonts: fonts,
                   currencySymbol: currencySymbol,
                   summary: summary,
                 ),
-              )
-              ..add(pw.SizedBox(height: 18));
+              );
           }
-
-          widgets.add(
-            pw.Container(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: pw.BoxDecoration(
-                color: PdfColor.fromHex('#ECFDF5'),
-                borderRadius: pw.BorderRadius.circular(8),
-                border: pw.Border.all(color: PdfColor.fromHex('#6EE7B7'), width: 0.6),
-              ),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: <pw.Widget>[
-                pw.Text(
-                  'Total earned',
-                  style: _textStyle(
-                    fonts,
-                    font: fonts.bold,
-                    fontSize: 12,
-                    color: PdfColor.fromHex('#047857'),
-                  ),
-                ),
-                pw.Text(
-                  _formatCurrency(currencySymbol, totalSalary),
-                  style: _textStyle(
-                    fonts,
-                    font: fonts.bold,
-                    fontSize: 12,
-                    color: PdfColor.fromHex('#065F46'),
-                  ),
-                ),
-              ],
-            ),
-            ),
-          );
 
           return widgets;
         },
@@ -569,6 +606,76 @@ class PdfReportService {
   static String _sanitizeFileSegment(String value) {
     final sanitized = value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
     return sanitized.replaceAll(RegExp(r'_+'), '_').replaceAll(RegExp(r'^_|_$'), '');
+  }
+
+  static String _resolveCurrencyLabel(String symbol) {
+    final trimmed = symbol.trim();
+    if (trimmed.isEmpty) return 'Euro';
+    if (trimmed == '€') return 'Euro';
+    return trimmed;
+  }
+
+  static String _formatContractCurrency(String currencyLabel, double amount) {
+    return '${_formatNumber(amount)} $currencyLabel';
+  }
+
+  static String _formatNumber(double value) {
+    if (value.isNaN || value.isInfinite) return '0';
+    final rounded = value.roundToDouble();
+    if (rounded == value) return rounded.toInt().toString();
+    return value.toStringAsFixed(2);
+  }
+
+  static String _formatContractDate(DateTime date) {
+    final month = _monthNames[date.month - 1].substring(0, 3).toLowerCase();
+    final day = date.day.toString().padLeft(2, '0');
+    final year = date.year.toString();
+    return '$day/$month/$year';
+  }
+
+  static pw.Widget _buildBorderedTable({
+    required _PdfFontAssets fonts,
+    required List<String> headers,
+    required List<List<String>> data,
+    required Map<int, pw.Alignment> cellAlignments,
+  }) {
+    final headerStyle = _textStyle(fonts, font: fonts.bold, fontSize: 10);
+    final cellStyle = _textStyle(fonts, fontSize: 10);
+    final defaultAlignment = pw.Alignment.centerLeft;
+
+    final rows = <pw.TableRow>[
+      pw.TableRow(
+        children: List<pw.Widget>.generate(
+          headers.length,
+          (index) => _buildTableCell(
+            text: headers[index],
+            style: headerStyle,
+            alignment: cellAlignments[index] ?? defaultAlignment,
+          ),
+        ),
+      ),
+    ];
+
+    for (final row in data) {
+      rows.add(
+        pw.TableRow(
+          children: List<pw.Widget>.generate(
+            headers.length,
+            (index) => _buildTableCell(
+              text: index < row.length ? row[index] : '',
+              style: cellStyle,
+              alignment: cellAlignments[index] ?? defaultAlignment,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey500, width: 0.7),
+      defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
+      children: rows,
+    );
   }
 
   static pw.Widget _buildStripedTable({
