@@ -4625,7 +4625,13 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (trimmed.isEmpty) {
       return message;
     }
-    if (_alreadySubmittedServerMessages.contains(trimmed.toLowerCase())) {
+    final lowerCased = trimmed.toLowerCase();
+    final isAlreadySubmitted = _alreadySubmittedServerMessages.contains(lowerCased) ||
+        lowerCased.contains('already marked for today') ||
+        lowerCased.contains('already submitted for today') ||
+        lowerCased.contains('makred for today');
+
+    if (isAlreadySubmitted) {
       final formattedDate =
           _formatSelectedDateForAlreadySubmitted(_selectedDate);
       return 'Attendance for ($formattedDate) is already submitted.';
