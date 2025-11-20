@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../bloc/work_bloc.dart';
 import '../bloc/work_state.dart';
@@ -844,6 +845,10 @@ class _SummaryLoadedContent extends StatelessWidget {
             subtitle: localization.reportsContractDetailsSubtitle,
             rateLabel: localization.reportsContractDetailsRateLabel,
             typeLabel: localization.reportsContractDetailsTypeLabel,
+            totalUnits: resolvedContractUnits,
+            totalSalary: resolvedContractSalary,
+            totalUnitsLabel: localization.reportsTotalUnitsLabel,
+            salaryLabel: localization.reportsContractSalaryLabel,
           ),
         ],
         if (showContractSummary) ...[
@@ -1404,6 +1409,10 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.subtitle,
     required this.rateLabel,
     required this.typeLabel,
+    required this.totalUnits,
+    required this.totalSalary,
+    required this.totalUnitsLabel,
+    required this.salaryLabel,
   });
 
   final List<ContractDetail> details;
@@ -1411,55 +1420,154 @@ class _ContractDetailsCard extends StatelessWidget {
   final String subtitle;
   final String rateLabel;
   final String typeLabel;
+  final num totalUnits;
+  final double totalSalary;
+  final String totalUnitsLabel;
+  final String salaryLabel;
 
   @override
   Widget build(BuildContext context) {
     final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF1D4ED8),
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF0F172A),
         ) ??
         const TextStyle(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1D4ED8),
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF0F172A),
         );
+
+    final summaryLabelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF6B7280),
+        );
+    final summaryValueStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF111827),
+        );
+    final headerStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          color: const Color(0xFF475467),
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ) ??
+        const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+          color: Color(0xFF475467),
+        );
+
+    final formattedTotalUnits = _formatNumber(totalUnits);
+    final formattedTotalSalary = _formatCurrencyValue(totalSalary, currencySymbol);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE0EAFF), Color(0xFFF5F3FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(32),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1A312E81),
-            blurRadius: 22,
-            offset: Offset(0, 16),
+            color: Color(0x0F111827),
+            blurRadius: 18,
+            offset: Offset(0, 12),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(subtitle, style: subtitleStyle),
-          const SizedBox(height: 16),
-          ...List.generate(details.length, (index) {
-            final detail = details[index];
-            final isLast = index == details.length - 1;
-            return Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
-              child: _ContractDetailTile(
-                detail: detail,
-                currencySymbol: currencySymbol,
-                rateLabel: rateLabel,
-                typeLabel: typeLabel,
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryValueTile(
+                  label: totalUnitsLabel,
+                  value: formattedTotalUnits,
+                  icon: Icons.stacked_bar_chart,
+                  iconColor: const Color(0xFF6366F1),
+                ),
               ),
-            );
-          }),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SummaryValueTile(
+                  label: salaryLabel,
+                  value: formattedTotalSalary,
+                  icon: Icons.savings_outlined,
+                  iconColor: const Color(0xFF059669),
+                  emphasizeValue: true,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(subtitle, style: subtitleStyle),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
+                    _ContractHeaderCell(
+                      text: typeLabel,
+                      flex: 4,
+                      style: headerStyle,
+                    ),
+                    _ContractHeaderCell(
+                      text: totalUnitsLabel,
+                      flex: 3,
+                      style: headerStyle,
+                      alignment: Alignment.centerRight,
+                    ),
+                    _ContractHeaderCell(
+                      text: rateLabel,
+                      flex: 3,
+                      style: headerStyle,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...List.generate(details.length, (index) {
+                  final detail = details[index];
+                  final isLast = index == details.length - 1;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+                    child: _ContractDetailTile(
+                      index: index + 1,
+                      detail: detail,
+                      currencySymbol: currencySymbol,
+                      rateLabel: rateLabel,
+                      typeLabel: typeLabel,
+                      summaryLabelStyle: summaryLabelStyle,
+                      summaryValueStyle: summaryValueStyle,
+                      unitText:
+                          detail.unitLabel.isEmpty ? '--' : detail.unitLabel,
+                      unitLabelHeading: totalUnitsLabel,
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1468,16 +1576,26 @@ class _ContractDetailsCard extends StatelessWidget {
 
 class _ContractDetailTile extends StatelessWidget {
   const _ContractDetailTile({
+    required this.index,
     required this.detail,
     required this.currencySymbol,
     required this.rateLabel,
     required this.typeLabel,
+    required this.summaryLabelStyle,
+    required this.summaryValueStyle,
+    required this.unitText,
+    required this.unitLabelHeading,
   });
 
+  final int index;
   final ContractDetail detail;
   final String currencySymbol;
   final String rateLabel;
   final String typeLabel;
+  final TextStyle summaryLabelStyle;
+  final TextStyle summaryValueStyle;
+  final String unitText;
+  final String unitLabelHeading;
 
   @override
   Widget build(BuildContext context) {
@@ -1499,15 +1617,6 @@ class _ContractDetailTile extends StatelessWidget {
           fontWeight: FontWeight.w500,
           color: Color(0xFF6B7280),
         );
-    final rateStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF111827),
-        ) ??
-        const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF111827),
-        );
     final chipStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
           color: const Color(0xFF1E3A8A),
           fontWeight: FontWeight.w600,
@@ -1526,52 +1635,111 @@ class _ContractDetailTile extends StatelessWidget {
     final type = detail.type;
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE0E7FF)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0C000000),
+            blurRadius: 8,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$index.',
+              style: chipStyle.copyWith(color: const Color(0xFF0F172A)),
+            ),
+          ),
           Expanded(
+            flex: 4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(detail.name, style: nameStyle),
+                if (unitLabel.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(unitLabel, style: hintStyle),
+                ],
                 if (type != null && type.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE0E7FF),
+                      color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      '${typeLabel.toUpperCase()}: ${type.trim()}',
+                      type.trim(),
                       style: chipStyle,
                     ),
                   ),
                 ],
-                if (unitLabel.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(unitLabel, style: hintStyle),
-                ],
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(rateText, style: rateStyle),
-              const SizedBox(height: 4),
-              Text(rateLabel, style: hintStyle),
-            ],
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(unitText, style: summaryValueStyle),
+                  const SizedBox(height: 4),
+                  Text(unitLabelHeading, style: summaryLabelStyle),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(rateText, style: summaryValueStyle),
+                  const SizedBox(height: 4),
+                  Text(rateLabel, style: summaryLabelStyle),
+                ],
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ContractHeaderCell extends StatelessWidget {
+  const _ContractHeaderCell({
+    required this.text,
+    required this.flex,
+    required this.style,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final String text;
+  final int flex;
+  final TextStyle style;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: flex,
+      child: Align(
+        alignment: alignment,
+        child: Text(text.toUpperCase(), style: style),
       ),
     );
   }
@@ -2050,6 +2218,11 @@ String _formatCurrencyValue(num value, String symbol) {
 String _formatHoursValue(double value) {
   final isWhole = value.floorToDouble() == value;
   return value.toStringAsFixed(isWhole ? 0 : 1);
+}
+
+String _formatNumber(num value) {
+  final formatter = NumberFormat.decimalPattern();
+  return formatter.format(value);
 }
 
 num? _extractContractUnits(ContractWorkItemData data) {
