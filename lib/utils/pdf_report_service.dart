@@ -129,16 +129,6 @@ class PdfReportService {
       ]);
     }
 
-    final monthlyTotalsWithSummary = <List<String>>[
-      ...monthlyTotals,
-      <String>[
-        '',
-        'Total',
-        totalUnits.toString(),
-        _formatContractCurrency(currencyLabel, totalSalary),
-      ],
-    ];
-
     document.addPage(
       pw.MultiPage(
         margin: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -171,7 +161,7 @@ class PdfReportService {
             _buildBorderedTable(
               fonts: fonts,
               headers: const <String>['Sr. no', 'Contract Type', 'Unit', 'Salary'],
-              data: monthlyTotalsWithSummary,
+              data: monthlyTotals,
               cellAlignments: const <int, pw.Alignment>{
                 0: pw.Alignment.center,
                 1: pw.Alignment.centerLeft,
@@ -180,32 +170,17 @@ class PdfReportService {
               },
             ),
             pw.SizedBox(height: 16),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: <pw.Widget>[
-                pw.Text(
-                  'Total Unit   =',
-                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
-                ),
-                pw.Text(
-                  totalUnits.toString(),
-                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
-                ),
+            _buildBorderedTable(
+              fonts: fonts,
+              headers: const <String>['Label', 'Amount'],
+              data: <List<String>>[
+                <String>['Total Unit', totalUnits.toString()],
+                <String>['Net Salary', _formatContractCurrency(currencyLabel, totalSalary)],
               ],
-            ),
-            pw.SizedBox(height: 6),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: <pw.Widget>[
-                pw.Text(
-                  'Net Salary  =',
-                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
-                ),
-                pw.Text(
-                  _formatContractCurrency(currencyLabel, totalSalary),
-                  style: _textStyle(fonts, font: fonts.bold, fontSize: 11),
-                ),
-              ],
+              cellAlignments: const <int, pw.Alignment>{
+                0: pw.Alignment.center,
+                1: pw.Alignment.center,
+              },
             ),
           ];
 
