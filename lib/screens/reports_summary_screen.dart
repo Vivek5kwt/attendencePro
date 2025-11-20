@@ -1491,78 +1491,91 @@ class _ContractDetailsCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _SummaryValueTile(
+                child: _ContractHighlightTile(
                   label: totalUnitsLabel,
                   value: formattedTotalUnits,
                   icon: Icons.stacked_bar_chart,
-                  iconColor: const Color(0xFF6366F1),
+                  accentColor: const Color(0xFF4F46E5),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _SummaryValueTile(
+                child: _ContractHighlightTile(
                   label: salaryLabel,
                   value: formattedTotalSalary,
-                  icon: Icons.savings_outlined,
-                  iconColor: const Color(0xFF059669),
+                  icon: Icons.payments_outlined,
+                  accentColor: const Color(0xFF059669),
                   emphasizeValue: true,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(subtitle, style: subtitleStyle),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
-                    _ContractHeaderCell(
-                      text: typeLabel,
-                      flex: 4,
-                      style: headerStyle,
-                    ),
-                    _ContractHeaderCell(
-                      text: totalUnitsLabel,
-                      flex: 3,
-                      style: headerStyle,
-                      alignment: Alignment.centerRight,
-                    ),
-                    _ContractHeaderCell(
-                      text: rateLabel,
-                      flex: 3,
-                      style: headerStyle,
-                      alignment: Alignment.centerRight,
-                    ),
-                  ],
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
+                      _ContractHeaderCell(
+                        text: typeLabel,
+                        flex: 4,
+                        style: headerStyle,
+                      ),
+                      _ContractHeaderCell(
+                        text: totalUnitsLabel,
+                        flex: 3,
+                        style: headerStyle,
+                        alignment: Alignment.centerRight,
+                      ),
+                      _ContractHeaderCell(
+                        text: rateLabel,
+                        flex: 3,
+                        style: headerStyle,
+                        alignment: Alignment.centerRight,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 ...List.generate(details.length, (index) {
                   final detail = details[index];
                   final isLast = index == details.length - 1;
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
-                    child: _ContractDetailTile(
-                      index: index + 1,
-                      detail: detail,
-                      currencySymbol: currencySymbol,
-                      rateLabel: rateLabel,
-                      typeLabel: typeLabel,
-                      summaryLabelStyle: summaryLabelStyle,
-                      summaryValueStyle: summaryValueStyle,
-                      unitText:
-                          detail.unitLabel.isEmpty ? '--' : detail.unitLabel,
-                      unitLabelHeading: totalUnitsLabel,
-                    ),
+                  return Column(
+                    children: [
+                      _ContractDetailTile(
+                        index: index + 1,
+                        detail: detail,
+                        currencySymbol: currencySymbol,
+                        rateLabel: rateLabel,
+                        typeLabel: typeLabel,
+                        summaryLabelStyle: summaryLabelStyle,
+                        summaryValueStyle: summaryValueStyle,
+                        unitText: detail.unitLabel.isEmpty ? '--' : detail.unitLabel,
+                        unitLabelHeading: totalUnitsLabel,
+                      ),
+                      if (!isLast)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                        ),
+                    ],
                   );
                 }),
               ],
@@ -1635,15 +1648,15 @@ class _ContractDetailTile extends StatelessWidget {
     final type = detail.type;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 8,
+            color: Color(0x0A0F172A),
+            blurRadius: 10,
             offset: Offset(0, 6),
           ),
         ],
@@ -1804,6 +1817,93 @@ class _SummaryValueTile extends StatelessWidget {
                   color: emphasizeValue ? const Color(0xFF059669) : const Color(0xFF111827),
                 ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractHighlightTile extends StatelessWidget {
+  const _ContractHighlightTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accentColor,
+    this.emphasizeValue = false,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color accentColor;
+  final bool emphasizeValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF4B5563),
+        ) ??
+        const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF4B5563),
+        );
+    final valueStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF0F172A),
+        ) ??
+        const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF0F172A),
+        );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        color: const Color(0xFFFBFCFF),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0F172A),
+            blurRadius: 10,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: accentColor, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: labelStyle),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: emphasizeValue
+                      ? valueStyle.copyWith(color: accentColor)
+                      : valueStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
         ],
       ),
     );
