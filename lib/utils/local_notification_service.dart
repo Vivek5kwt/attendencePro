@@ -70,14 +70,20 @@ class LocalNotificationService {
   static const String _attendanceReminderTitle = 'Attendance Reminder';
   static const String _attendanceReminderBody =
       'Please mark your attendance for today! Tap to open the app.';
+  static const String _dashboardDeepLinkTitle = 'AttendancePro';
+  static const String _dashboardDeepLinkBody =
+      'Tap to jump straight to your dashboard.';
   static const String _payloadTypeKey = 'type';
   static const String _payloadFilePathKey = 'filePath';
   static const String _payloadTypeDownload = 'open_file';
   static const String _payloadTypeAttendanceReminder = 'attendance_reminder';
+  static const String _payloadTypeDashboardDeepLink = 'dashboard';
   static const SessionManager _sessionManager = SessionManager();
 
   static Future<void> Function()? _attendanceReminderTapHandler;
   static int _pendingAttendanceReminderTapCount = 0;
+  static Future<void> Function()? _dashboardDeepLinkHandler;
+  static int _pendingDashboardTapCount = 0;
 
   static Future<void> initialize({bool requestPermissionsOnInit = false}) async {
     if (_initialized) {
@@ -324,7 +330,19 @@ class LocalNotificationService {
     );
 
     final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    await _plugin.show(id, title, body, notificationDetails);
+    final copy = await _resolveDashboardNotificationCopy(
+      overrideTitle: title,
+      overrideBody: body,
+    );
+    await _plugin.show(
+      id,
+      copy.title,
+      copy.body,
+      notificationDetails,
+      payload: _encodePayload(<String, String>{
+        _payloadTypeKey: _payloadTypeDashboardDeepLink,
+      }),
+    );
   }
 
   static Future<void> showDownloadNotification({
@@ -415,6 +433,11 @@ class LocalNotificationService {
 
     if (type == _payloadTypeAttendanceReminder) {
       await _handleAttendanceReminderDeepLink();
+      return;
+    }
+
+    if (type == _payloadTypeDashboardDeepLink) {
+      await _handleDashboardDeepLink();
       return;
     }
   }
@@ -865,6 +888,76 @@ class LocalNotificationService {
     _flushPendingAttendanceReminderTaps();
   }
 
+  static Future<_DashboardNotificationCopy> _resolveDashboardNotificationCopy({
+    String? overrideTitle,
+    String? overrideBody,
+  }) async {
+    final preferredLanguage = await _sessionManager.getPreferredLanguage();
+    return _buildDashboardNotificationCopy(
+      preferredLanguage,
+      overrideTitle: overrideTitle,
+      overrideBody: overrideBody,
+    );
+  }
+
+  static _DashboardNotificationCopy _buildDashboardNotificationCopy(
+    String? languageCode, {
+    String? overrideTitle,
+    String? overrideBody,
+  }) {
+    final supportedValues = AppString.localizedValues;
+    final fallbackValues = supportedValues['en'] ?? const <String, String>{};
+    final normalizedLanguage =
+        supportedValues.containsKey(languageCode) ? languageCode : 'en';
+    final localizedValues =
+        supportedValues[normalizedLanguage] ?? fallbackValues;
+
+    final title = overrideTitle ??
+        localizedValues['dashboardNotificationTitle'] ??
+        fallbackValues['dashboardNotificationTitle'] ??
+        _dashboardDeepLinkTitle;
+    final body = overrideBody ??
+        localizedValues['dashboardNotificationBody'] ??
+        fallbackValues['dashboardNotificationBody'] ??
+        _dashboardDeepLinkBody;
+
+    return _DashboardNotificationCopy(title: title, body: body);
+  }
+
+  static Future<void> _handleDashboardDeepLink() async {
+    final handler = _dashboardDeepLinkHandler;
+    if (handler == null) {
+      _pendingDashboardTapCount++;
+      return;
+    }
+    await handler();
+  }
+
+  static void _flushPendingDashboardTaps() {
+    final handler = _dashboardDeepLinkHandler;
+    if (handler == null || _pendingDashboardTapCount == 0) {
+      return;
+    }
+
+    final pending = _pendingDashboardTapCount;
+    _pendingDashboardTapCount = 0;
+    for (var i = 0; i < pending; i++) {
+      scheduleMicrotask(() async {
+        final activeHandler = _dashboardDeepLinkHandler;
+        if (activeHandler != null) {
+          await activeHandler();
+        }
+      });
+    }
+  }
+
+  static void registerDashboardDeepLinkHandler(
+    Future<void> Function() handler,
+  ) {
+    _dashboardDeepLinkHandler = handler;
+    _flushPendingDashboardTaps();
+  }
+
   static Future<bool> _isAttendanceReminderPending() async {
     final pendingRequests = await _plugin.pendingNotificationRequests();
     for (final request in pendingRequests) {
@@ -889,6 +982,13 @@ class _ReminderTime {
 
 class _AttendanceReminderCopy {
   const _AttendanceReminderCopy({required this.title, required this.body});
+
+  final String title;
+  final String body;
+}
+
+class _DashboardNotificationCopy {
+  const _DashboardNotificationCopy({required this.title, required this.body});
 
   final String title;
   final String body;
