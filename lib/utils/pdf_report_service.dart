@@ -140,15 +140,7 @@ class PdfReportService {
               periodLabel: monthLabel,
             ),
             pw.SizedBox(height: 18),
-            pw.Text(
-              'Daily wages',
-              style: _textStyle(
-                fonts,
-                font: fonts.bold,
-                fontSize: 12,
-                color: PdfColors.blueGrey800,
-              ),
-            ),
+            _buildSectionTitle(fonts: fonts, title: 'Daily wages'),
             pw.SizedBox(height: 10),
             _buildBorderedTable(
               fonts: fonts,
@@ -163,15 +155,7 @@ class PdfReportService {
               },
             ),
             pw.SizedBox(height: 18),
-            pw.Text(
-              'Monthly Total',
-              style: _textStyle(
-                fonts,
-                font: fonts.bold,
-                fontSize: 12,
-                color: PdfColors.blueGrey800,
-              ),
-            ),
+            _buildSectionTitle(fonts: fonts, title: 'Monthly Total'),
             pw.SizedBox(height: 10),
             _buildBorderedTable(
               fonts: fonts,
@@ -647,8 +631,8 @@ class PdfReportService {
     required List<List<String>> data,
     required Map<int, pw.Alignment> cellAlignments,
   }) {
-    final headerStyle = _textStyle(fonts, font: fonts.bold, fontSize: 10);
-    final cellStyle = _textStyle(fonts, fontSize: 10);
+    final headerStyle = _textStyle(fonts, font: fonts.bold, fontSize: 11);
+    final cellStyle = _textStyle(fonts, fontSize: 10.5);
     final defaultAlignment = pw.Alignment.centerLeft;
 
     final rows = <pw.TableRow>[
@@ -680,9 +664,24 @@ class PdfReportService {
     }
 
     return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey500, width: 0.7),
+      border: pw.TableBorder.all(color: PdfColors.grey800, width: 0.9),
       defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
       children: rows,
+    );
+  }
+
+  static pw.Widget _buildSectionTitle({
+    required _PdfFontAssets fonts,
+    required String title,
+  }) {
+    return pw.Text(
+      title,
+      style: _textStyle(
+        fonts,
+        font: fonts.bold,
+        fontSize: 12,
+        color: PdfColors.blueGrey900,
+      ),
     );
   }
 
