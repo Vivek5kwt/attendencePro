@@ -119,8 +119,9 @@ class PdfReportService {
 
     final monthlyTotals = <List<String>>[];
     var serial = 1;
-    for (final entry in contractTotals.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key))) {
+    // Preserve the original insertion order so the monthly totals table mirrors
+    // the sequence of contract types shown in the daily entries.
+    for (final entry in contractTotals.entries) {
       monthlyTotals.add(<String>[
         '${serial++}.',
         entry.key,
