@@ -271,8 +271,8 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             ? entry.contractType!.trim()
             : localization.reportsContractDetailsTypeLabel;
         final rateLabel = _formatCurrencyValue(
-          entry.detectedCurrencySymbol ?? '',
           rate,
+          entry.detectedCurrencySymbol ?? '',
         );
         return '$units $typeLabel @ $rateLabel';
       case AttendanceHistoryEntryType.leave:
@@ -2315,14 +2315,6 @@ class _ContractSummaryHeaderRow extends StatelessWidget {
   }
 }
 
-String _formatCurrencyValue(num value, String symbol) {
-  final doubleValue = value.toDouble();
-  final isWhole = doubleValue.floorToDouble() == doubleValue;
-  final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
-  final prefix = doubleValue < 0 ? '-' : '';
-  return '$prefix$symbol$formatted';
-}
-
 String _formatHoursValue(double value) {
   final isWhole = value.floorToDouble() == value;
   return value.toStringAsFixed(isWhole ? 0 : 1);
@@ -2449,9 +2441,13 @@ double _resolveContractSummarySalaryAmount(ContractSummaryData summary) {
   return total;
 }
 
-String _formatCurrencyValue(String symbol, double value) {
-  final resolved = symbol.trim().isEmpty ? '€' : symbol.trim();
-  return '$resolved${value.toStringAsFixed(2)}';
+String _formatCurrencyValue(num value, String symbol) {
+  final doubleValue = value.toDouble();
+  final resolvedSymbol = symbol.trim().isEmpty ? '€' : symbol.trim();
+  final isWhole = doubleValue.floorToDouble() == doubleValue;
+  final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
+  final prefix = doubleValue < 0 ? '-' : '';
+  return '$prefix$resolvedSymbol$formatted';
 }
 
 String _formatHours(double hours) {
