@@ -1388,31 +1388,31 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               onChange: _availableWorks.length > 1 ? _showWorkPicker : null,
             ),
             SizedBox(height: responsive.scale(24)),
-            if (viewEntries.isNotEmpty) ...[
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed:
-                  _isGeneratingReport ? null : _downloadCurrentReport,
-                  icon: _isGeneratingReport
-                      ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: AppLoader(
-                      size: 18,
-                      color: Theme.of(context).colorScheme.onPrimary,
+            if (viewEntries.isNotEmpty && _viewMode != _HistoryViewMode.contract)
+              ...[
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    onPressed:
+                        _isGeneratingReport ? null : _downloadCurrentReport,
+                    icon: _isGeneratingReport
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: AppLoader(
+                              size: 18,
+                              color:
+                                  Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.download),
+                    label: Text(
+                      l.historyReportDownloadLabel,
                     ),
-                  )
-                      : const Icon(Icons.download),
-                  label: Text(
-                    _viewMode == _HistoryViewMode.contract
-                        ? l.contractReportDownloadLabel
-                        : l.historyReportDownloadLabel,
                   ),
                 ),
-              ),
-              SizedBox(height: responsive.scale(16)),
-            ],
+                SizedBox(height: responsive.scale(16)),
+              ],
             historyWidget,
           ],
         ),
