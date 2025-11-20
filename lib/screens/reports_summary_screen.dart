@@ -2484,6 +2484,18 @@ String _formatCurrencyValue(num value, String symbol) {
   return '$prefix$resolvedSymbol$formatted';
 }
 
+String _formatCurrency(double value, String symbol) {
+  final resolvedSymbol = symbol.trim().isEmpty ? '€' : symbol.trim();
+  final absolute = value.abs();
+  final isWhole = absolute.floorToDouble() == absolute;
+  final precision = isWhole ? 0 : 2;
+  final formatted = value.toStringAsFixed(precision);
+  if (value < 0) {
+    return '-$resolvedSymbol${formatted.substring(1)}';
+  }
+  return '$resolvedSymbol$formatted';
+}
+
 String _formatHours(double hours) {
   final totalMinutes = (hours * 60).round();
   final clampedMinutes = totalMinutes < 0 ? 0 : totalMinutes;
