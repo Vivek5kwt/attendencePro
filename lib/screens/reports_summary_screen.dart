@@ -845,10 +845,7 @@ class _SummaryLoadedContent extends StatelessWidget {
             subtitle: localization.reportsContractDetailsSubtitle,
             rateLabel: localization.reportsContractDetailsRateLabel,
             typeLabel: localization.reportsContractDetailsTypeLabel,
-            totalUnits: resolvedContractUnits,
-            totalSalary: resolvedContractSalary,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
-            salaryLabel: localization.reportsContractSalaryLabel,
           ),
         ],
         if (showContractSummary) ...[
@@ -1409,10 +1406,7 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.subtitle,
     required this.rateLabel,
     required this.typeLabel,
-    required this.totalUnits,
-    required this.totalSalary,
     required this.totalUnitsLabel,
-    required this.salaryLabel,
   });
 
   final List<ContractDetail> details;
@@ -1420,10 +1414,7 @@ class _ContractDetailsCard extends StatelessWidget {
   final String subtitle;
   final String rateLabel;
   final String typeLabel;
-  final num totalUnits;
-  final double totalSalary;
   final String totalUnitsLabel;
-  final String salaryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1467,9 +1458,6 @@ class _ContractDetailsCard extends StatelessWidget {
           color: Color(0xFF475467),
         );
 
-    final formattedTotalUnits = _formatNumber(totalUnits);
-    final formattedTotalSalary = _formatCurrencyValue(totalSalary, currencySymbol);
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -1488,29 +1476,6 @@ class _ContractDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _ContractHighlightTile(
-                  label: totalUnitsLabel,
-                  value: formattedTotalUnits,
-                  icon: Icons.stacked_bar_chart,
-                  accentColor: const Color(0xFF4F46E5),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ContractHighlightTile(
-                  label: salaryLabel,
-                  value: formattedTotalSalary,
-                  icon: Icons.payments_outlined,
-                  accentColor: const Color(0xFF059669),
-                  emphasizeValue: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
