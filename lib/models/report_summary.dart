@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class ReportSummary {
   const ReportSummary({
     required this.combinedSalary,
@@ -269,12 +271,15 @@ class ContractDetail {
     required this.type,
     required this.ratePerUnit,
     required this.unitLabel,
+    this.totalUnits,
+    this.salaryAmount,
+    this.date,
   });
 
   factory ContractDetail.fromJson(Map<String, dynamic> json) {
     final resolvedType = _parseString(
       json,
-      const ['type', 'category', 'unit_type', 'unitType', 'contract_type'],
+        const ['type', 'category', 'unit_type', 'unitType', 'contract_type'],
     );
     return ContractDetail(
       id: _parseNullableInt(json, const [
@@ -300,6 +305,32 @@ class ContractDetail {
         const ['unit_label', 'unitLabel', 'unit_name', 'unitName', 'unit'],
         fallback: '',
       ),
+      totalUnits: _parseNullableDouble(json, const [
+        'total_units',
+        'units_completed',
+        'unitsCompleted',
+        'units',
+        'quantity',
+        'qty',
+      ]),
+      salaryAmount: _parseNullableDouble(json, const [
+        'salary_amount',
+        'salaryAmount',
+        'salary',
+        'amount',
+        'total_salary',
+        'totalSalary',
+        'payment',
+      ]),
+      date: _parseNullableDate(json, const [
+        'date',
+        'work_date',
+        'workDate',
+        'created_at',
+        'createdAt',
+        'entry_date',
+        'entryDate',
+      ]),
     );
   }
 
@@ -308,6 +339,15 @@ class ContractDetail {
   final String? type;
   final double? ratePerUnit;
   final String unitLabel;
+  final double? totalUnits;
+  final double? salaryAmount;
+  final DateTime? date;
+
+  String? get formattedDate {
+    if (date == null) return null;
+    final formatted = DateFormat('dd/MMM/yyyy').format(date!);
+    return formatted.toLowerCase();
+  }
 }
 
 List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
@@ -572,6 +612,26 @@ double? _parseNullableDouble(Map<String, dynamic> json, List<String> keys) {
       final cleaned = _sanitizeNumberString(value);
       if (cleaned.isEmpty) continue;
       final parsed = double.tryParse(cleaned);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+}
+
+DateTime? _parseNullableDate(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value == null) continue;
+    if (value is DateTime) return value;
+    if (value is int) {
+      if (value > 0) {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) continue;
+      final parsed = DateTime.tryParse(trimmed);
       if (parsed != null) return parsed;
     }
   }
