@@ -271,6 +271,28 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
 
   String _asString(dynamic v) => (v?.toString() ?? '').trim();
 
+  String _resolveContractLabel(dynamic entry) {
+    final primary = _asString(entry?.contractType);
+    if (primary.isNotEmpty) return primary;
+
+    final candidates = <dynamic>{
+      entry?.contractName,
+      entry?.name,
+      entry?.title,
+      entry?.label,
+      entry?.typeLabel,
+      entry?.workName,
+      entry?.unitType,
+    };
+
+    for (final candidate in candidates) {
+      final label = _asString(candidate);
+      if (label.isNotEmpty) return label;
+    }
+
+    return '';
+  }
+
   bool _isContractLikeEntry(dynamic e) {
     // 1) If enum/type exists and equals contract, accept.
     try {
@@ -288,7 +310,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
 
   ContractReportRow? _toContractRow(dynamic e) {
     final date = _asDate(e?.date);
-    final type = _asString(e?.contractType);
+    final type = _resolveContractLabel(e);
     final units = _asInt(e?.unitsCompleted) ?? 0;
     final rate = _asDouble(e?.ratePerUnit) ?? 0.0;
     final salary = _asDouble(e?.salary) ?? 0.0;
