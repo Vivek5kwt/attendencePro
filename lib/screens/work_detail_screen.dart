@@ -7416,66 +7416,62 @@ class _ContractEntryForm extends StatelessWidget {
                             style: labelStyle,
                           ),
                           const SizedBox(height: 8),
-                          TextFormField(
-                            controller: entry.controller,
-                            enabled: !disableInteractions,
-                            validator: (value) =>
-                                bundleUnitsValidator(entry, value),
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                                    decimal: false),
-                            decoration: InputDecoration(
-                              hintText: unitHint,
-                              hintStyle: hintStyle,
-                              prefixIcon: const Icon(
-                                Icons.inventory_2_outlined,
-                                color: Color(0xFF2563EB),
-                              ),
-                              suffixIcon: Padding(
-                                padding: const EdgeInsets.only(
-                                    right: 12, top: 12, bottom: 12),
-                                child: _ContractUnitBadge(label: unitLabel),
-                              ),
-                              suffixIconConstraints: const BoxConstraints(
-                                minHeight: 0,
-                                minWidth: 0,
-                              ),
-                              helperText: rateHelperText,
-                              filled: true,
-                              fillColor: const Color(0xFFF8FAFF),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 18,
-                                horizontal: 12,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE0E7FF),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE0E7FF),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF2563EB),
-                                  width: 1.4,
-                                ),
-                              ),
-                              disabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                            ),
-                            onChanged: (_) => onUnitsChanged?.call(entry),
+                      TextFormField(
+                        controller: entry.controller,
+                        enabled: !disableInteractions,
+                        validator: (value) => bundleUnitsValidator(entry, value),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                        decoration: InputDecoration(
+                          hintText: "Enter quantity…",
+                          hintStyle: hintStyle,
+                          prefixIcon: const Icon(
+                            Icons.inventory_2_outlined,
+                            color: Color(0xFF2563EB),
                           ),
-                        ],
+
+                          // ❌ Removed unit label badge (per bunch / per crate)
+                          suffixIcon: null,
+                          suffixIconConstraints: const BoxConstraints(
+                            minHeight: 0,
+                            minWidth: 0,
+                          ),
+
+                          helperText: rateHelperText,
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFF),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 18,
+                            horizontal: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE0E7FF),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE0E7FF),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF2563EB),
+                              width: 1.4,
+                            ),
+                          ),
+                          disabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE2E8F0),
+                            ),
+                          ),
+                        ),
+                        onChanged: (_) => onUnitsChanged?.call(entry),
+                      ),
+                      ],
                       ),
                     ),
                   ),
