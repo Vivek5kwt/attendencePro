@@ -2682,8 +2682,9 @@ class _HourlyAttendanceSheetState extends State<_HourlyAttendanceSheet> {
   void initState() {
     super.initState();
     final entry = widget.entry;
-    startController = TextEditingController(text: entry.startTime ?? '');
-    endController = TextEditingController(text: entry.endTime ?? '');
+    startController =
+        TextEditingController(text: _normalizeTimeLabel(entry.startTime));
+    endController = TextEditingController(text: _normalizeTimeLabel(entry.endTime));
     breakController = TextEditingController(
       text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
     );
@@ -3094,8 +3095,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      SizedBox(
-                        width: 110,
+                      Flexible(
                         child: TextFormField(
                           controller: bundleEntry.controller,
                           decoration: InputDecoration(
@@ -3233,6 +3233,42 @@ String _formatHours(double hours) {
   final resolvedHours = clampedMinutes ~/ 60;
   final minutes = clampedMinutes % 60;
   return '${resolvedHours}h ${minutes}m';
+}
+
+String _normalizeTimeLabel(String? raw) {
+  final trimmed = raw?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return '';
+  }
+
+  final dateTimeCandidate = DateTime.tryParse(
+    trimmed.contains('T') ? trimmed : trimmed.replaceFirst(' ', 'T'),
+  );
+  if (dateTimeCandidate != null) {
+    return _formatTimeLabel(
+      TimeOfDay(
+        hour: dateTimeCandidate.hour,
+        minute: dateTimeCandidate.minute,
+      ),
+    );
+  }
+
+  final timeMatch = RegExp(r'(\d{1,2}):(\d{1,2})').firstMatch(trimmed);
+  if (timeMatch != null) {
+    final hour = int.tryParse(timeMatch.group(1) ?? '');
+    final minute = int.tryParse(timeMatch.group(2) ?? '');
+    if (hour != null && minute != null) {
+      return _formatTimeLabel(TimeOfDay(hour: hour, minute: minute));
+    }
+  }
+
+  return trimmed;
+}
+
+String _formatTimeLabel(TimeOfDay time) {
+  final hour = time.hour.toString().padLeft(2, '0');
+  final minute = time.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
 }
 
 class _EmptyState extends StatelessWidget {
