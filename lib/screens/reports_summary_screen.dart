@@ -338,17 +338,17 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final hoursEntries = entries
           .where(
             (entry) =>
-                (entry.type == AttendanceHistoryEntryType.hourly ||
-                    entry.type == AttendanceHistoryEntryType.leave) &&
-                entry.isContractEntry != true,
-          )
+        (entry.type == AttendanceHistoryEntryType.hourly ||
+            entry.type == AttendanceHistoryEntryType.leave) &&
+            entry.isContractEntry != true,
+      )
           .toList(growable: false);
       final contractEntries = entries
           .where(
             (entry) =>
-                entry.type == AttendanceHistoryEntryType.contract ||
-                entry.isContractEntry == true,
-          )
+        entry.type == AttendanceHistoryEntryType.contract ||
+            entry.isContractEntry == true,
+      )
           .toList(growable: false);
 
       if (hoursEntries.isEmpty) {
@@ -359,23 +359,23 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final summary = HistoryReportSummary(
         totalHoursWorked: hoursEntries.fold<double>(
           0,
-          (previous, entry) => previous + entry.hoursWorked + entry.overtimeHours,
+              (previous, entry) => previous + entry.hoursWorked + entry.overtimeHours,
         ),
         totalHourlySalary: hoursEntries.fold<double>(
           0,
-          (previous, entry) => previous + entry.salary,
+              (previous, entry) => previous + entry.salary,
         ),
         totalContractSalary: contractEntries.fold<double>(
           0,
-          (previous, entry) => previous + entry.salary,
+              (previous, entry) => previous + entry.salary,
         ),
         grandTotalEarnings: hoursEntries.fold<double>(
-              0,
+          0,
               (previous, entry) => previous + entry.salary,
-            ) +
+        ) +
             contractEntries.fold<double>(
               0,
-              (previous, entry) => previous + entry.salary,
+                  (previous, entry) => previous + entry.salary,
             ),
       );
 
@@ -383,19 +383,19 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final days = grouped.entries
           .map(
             (entry) => HistoryReportDay(
-              date: entry.key,
-              entries: entry.value
-                  .map(
-                    (item) => HistoryReportEntry(
-                      workName: item.workName,
-                      typeLabel: _resolveEntryTypeLabel(item.type, l),
-                      detail: _buildHistoryDetail(item, l),
-                      salary: item.salary,
-                    ),
-                  )
-                  .toList(growable: false),
+          date: entry.key,
+          entries: entry.value
+              .map(
+                (item) => HistoryReportEntry(
+              workName: item.workName,
+              typeLabel: _resolveEntryTypeLabel(item.type, l),
+              detail: _buildHistoryDetail(item, l),
+              salary: item.salary,
             ),
           )
+              .toList(growable: false),
+        ),
+      )
           .toList(growable: false);
 
       final workLabel = resolvedWorkName.isEmpty
@@ -494,9 +494,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   }
 
   List<_ContractWorkItem> _mapContractItems(
-    ReportSummary summary,
-    AppLocalizations l,
-  ) {
+      ReportSummary summary,
+      AppLocalizations l,
+      ) {
     final items = summary.contractSummary.items;
     if (items.isEmpty) return const <_ContractWorkItem>[];
 
@@ -509,7 +509,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final aggregationKey = '${workName.toLowerCase()}|${role?.toLowerCase() ?? ''}';
       final aggregation = aggregations.putIfAbsent(
         aggregationKey,
-        () => _ContractWorkAggregation(workName: workName, role: role),
+            () => _ContractWorkAggregation(workName: workName, role: role),
       );
 
       final units = _extractContractUnits(data);
@@ -541,11 +541,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final resolvedUnitLabel = aggregation.unitLabel ?? l.contractWorkUnitFallback;
       final unitsLabel = aggregation.totalUnits > 0
           ? contractUnitCountLabel(
-              localizations: l,
-              contractName: aggregation.workName,
-              unitLabel: resolvedUnitLabel,
-              quantity: aggregation.totalUnits,
-            )
+        localizations: l,
+        contractName: aggregation.workName,
+        unitLabel: resolvedUnitLabel,
+        quantity: aggregation.totalUnits,
+      )
           : l.notAvailableLabel;
 
       double? paymentAmount;
@@ -560,9 +560,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           : l.notAvailableLabel;
 
       final calculationLabel =
-          aggregation.ratePerUnit != null && aggregation.totalUnits > 0
-              ? '$unitsLabel × ${_formatCurrencyValue(aggregation.ratePerUnit!, normalizedSymbol)}'
-              : null;
+      aggregation.ratePerUnit != null && aggregation.totalUnits > 0
+          ? '$unitsLabel × ${_formatCurrencyValue(aggregation.ratePerUnit!, normalizedSymbol)}'
+          : null;
 
       final indicatorColor = aggregation.indicatorColorValue != null
           ? Color(aggregation.indicatorColorValue!)
@@ -651,7 +651,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     } else if (summary != null) {
       final hasContractSummary = _hasContractSummaryData(summary);
       final contractItems =
-          hasContractSummary ? _mapContractItems(summary, l) : const <_ContractWorkItem>[];
+      hasContractSummary ? _mapContractItems(summary, l) : const <_ContractWorkItem>[];
       summaryBody = _SummaryLoadedContent(
         key: const ValueKey('content'),
         summary: summary,
@@ -847,6 +847,8 @@ class _SummaryLoadedContent extends StatelessWidget {
     final currency = summary.currencySymbol;
     final resolvedContractUnits = _resolveContractSummaryTotalUnits(summary.contractSummary);
     final resolvedContractSalary = _resolveContractSummarySalaryAmount(summary.contractSummary);
+    final contractDetails = summary.contractDetails;
+    final hasContractDetails = contractDetails.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -867,6 +869,19 @@ class _SummaryLoadedContent extends StatelessWidget {
           workingDays: summary.hourlySummary.workingDays,
           currencySymbol: currency,
         ),
+        if (hasContractDetails) ...[
+          const SizedBox(height: 24),
+          _SectionTitle(text: localization.reportsContractDetailsTitle),
+          const SizedBox(height: 12),
+          _ContractDetailsCard(
+            details: contractDetails,
+            currencySymbol: currency,
+            subtitle: localization.reportsContractDetailsSubtitle,
+            rateLabel: localization.reportsContractDetailsRateLabel,
+            typeLabel: localization.reportsContractDetailsTypeLabel,
+            totalUnitsLabel: localization.reportsTotalUnitsLabel,
+          ),
+        ],
         if (showContractSummary) ...[
           const SizedBox(height: 24),
           _SectionTitle(text: localization.contractWorkSummaryTitle),
@@ -892,13 +907,13 @@ class _SummaryLoadedContent extends StatelessWidget {
               onPressed: isGeneratingReport ? null : onDownloadReport,
               icon: isGeneratingReport
                   ? SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: AppLoader(
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    )
+                width: 18,
+                height: 18,
+                child: AppLoader(
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              )
                   : const Icon(Icons.download),
               label: Text(localization.historyReportDownloadLabel),
             ),
@@ -1427,6 +1442,330 @@ class _HourlyWorkSummaryCard extends StatelessWidget {
   }
 }
 
+class _ContractDetailsCard extends StatelessWidget {
+  const _ContractDetailsCard({
+    required this.details,
+    required this.currencySymbol,
+    required this.subtitle,
+    required this.rateLabel,
+    required this.typeLabel,
+    required this.totalUnitsLabel,
+  });
+
+  final List<ContractDetail> details;
+  final String currencySymbol;
+  final String subtitle;
+  final String rateLabel;
+  final String typeLabel;
+  final String totalUnitsLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF0F172A),
+    ) ??
+        const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF0F172A),
+        );
+
+    final summaryLabelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: const Color(0xFF6B7280),
+      fontWeight: FontWeight.w600,
+    ) ??
+        const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF6B7280),
+        );
+    final summaryValueStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: const Color(0xFF111827),
+    ) ??
+        const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF111827),
+        );
+    final headerStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+      color: const Color(0xFF475467),
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.3,
+    ) ??
+        const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+          color: Color(0xFF475467),
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F111827),
+            blurRadius: 18,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(subtitle, style: subtitleStyle),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
+                      _ContractHeaderCell(
+                        text: typeLabel,
+                        flex: 4,
+                        style: headerStyle,
+                      ),
+                      _ContractHeaderCell(
+                        text: totalUnitsLabel,
+                        flex: 3,
+                        style: headerStyle,
+                        alignment: Alignment.centerRight,
+                      ),
+                      _ContractHeaderCell(
+                        text: rateLabel,
+                        flex: 3,
+                        style: headerStyle,
+                        alignment: Alignment.centerRight,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...List.generate(details.length, (index) {
+                  final detail = details[index];
+                  final isLast = index == details.length - 1;
+                  return Column(
+                    children: [
+                      _ContractDetailTile(
+                        index: index + 1,
+                        detail: detail,
+                        currencySymbol: currencySymbol,
+                        rateLabel: rateLabel,
+                        typeLabel: typeLabel,
+                        summaryLabelStyle: summaryLabelStyle,
+                        summaryValueStyle: summaryValueStyle,
+                        unitText: detail.unitLabel.isEmpty ? '--' : detail.unitLabel,
+                        unitLabelHeading: totalUnitsLabel,
+                      ),
+                      if (!isLast)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                        ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractDetailTile extends StatelessWidget {
+  const _ContractDetailTile({
+    required this.index,
+    required this.detail,
+    required this.currencySymbol,
+    required this.rateLabel,
+    required this.typeLabel,
+    required this.summaryLabelStyle,
+    required this.summaryValueStyle,
+    required this.unitText,
+    required this.unitLabelHeading,
+  });
+
+  final int index;
+  final ContractDetail detail;
+  final String currencySymbol;
+  final String rateLabel;
+  final String typeLabel;
+  final TextStyle summaryLabelStyle;
+  final TextStyle summaryValueStyle;
+  final String unitText;
+  final String unitLabelHeading;
+
+  @override
+  Widget build(BuildContext context) {
+    final nameStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF111827),
+    ) ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+    final hintStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: const Color(0xFF6B7280),
+      fontWeight: FontWeight.w500,
+    ) ??
+        const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF6B7280),
+        );
+    final chipStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: const Color(0xFF1E3A8A),
+      fontWeight: FontWeight.w600,
+    ) ??
+        const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1E3A8A),
+        );
+
+    final rate = detail.ratePerUnit;
+    final rateText = rate != null
+        ? _formatCurrencyValue(rate, currencySymbol)
+        : '--';
+    final unitLabel = detail.unitLabel.trim();
+    final type = detail.type;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0F172A),
+            blurRadius: 10,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '$index.',
+              style: chipStyle.copyWith(color: const Color(0xFF0F172A)),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(detail.name, style: nameStyle),
+                if (unitLabel.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(unitLabel, style: hintStyle),
+                ],
+                if (type != null && type.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      type.trim(),
+                      style: chipStyle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(unitText, style: summaryValueStyle),
+                  const SizedBox(height: 4),
+                  Text(unitLabelHeading, style: summaryLabelStyle),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(rateText, style: summaryValueStyle),
+                  const SizedBox(height: 4),
+                  Text(rateLabel, style: summaryLabelStyle),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractHeaderCell extends StatelessWidget {
+  const _ContractHeaderCell({
+    required this.text,
+    required this.flex,
+    required this.style,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final String text;
+  final int flex;
+  final TextStyle style;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: flex,
+      child: Align(
+        alignment: alignment,
+        child: Text(text.toUpperCase(), style: style),
+      ),
+    );
+  }
+}
+
 class _SummaryValueTile extends StatelessWidget {
   const _SummaryValueTile({
     required this.label,
@@ -1510,18 +1849,18 @@ class _ContractHighlightTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF4B5563),
-        ) ??
+      fontWeight: FontWeight.w600,
+      color: const Color(0xFF4B5563),
+    ) ??
         const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: Color(0xFF4B5563),
         );
     final valueStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: const Color(0xFF0F172A),
-        ) ??
+      fontWeight: FontWeight.w800,
+      color: const Color(0xFF0F172A),
+    ) ??
         const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w800,
