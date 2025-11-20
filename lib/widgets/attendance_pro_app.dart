@@ -64,6 +64,9 @@ class AttendanceProApp extends StatelessWidget {
             LocalNotificationService.registerAttendanceReminderTapHandler(() async {
               appCubit.showHome(openDashboardOnLogin: true);
             });
+            LocalNotificationService.registerDashboardDeepLinkHandler(() async {
+              appCubit.showHome(openDashboardOnLogin: true);
+            });
             final appRouter = AppRouter(appCubit: appCubit);
 
             return BlocBuilder<LocaleCubit, Locale>(

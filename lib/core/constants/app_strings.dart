@@ -293,6 +293,9 @@ abstract final class AppString {
       'shareNotificationTitle': 'Notifications ready',
       'shareNotificationBody':
           'This is a test notification for sharing AttendancePro.',
+      'dashboardNotificationTitle': 'AttendancePro',
+      'dashboardNotificationBody':
+          'Tap to jump straight to your AttendancePro dashboard.',
       'notificationsPermissionPromptTitle':
           'Stay on track with reminders',
       'notificationsPermissionPromptBody':
@@ -755,6 +758,9 @@ abstract final class AppString {
       'shareNotificationTitle': 'सूचनाएँ तैयार हैं',
       'shareNotificationBody':
           'यह AttendancePro साझा करने के लिए एक परीक्षण सूचना है।',
+      'dashboardNotificationTitle': 'AttendancePro',
+      'dashboardNotificationBody':
+          'टैप करके सीधे अपने AttendancePro डैशबोर्ड पर जाएँ।',
       'notificationsPermissionPromptTitle': 'रिमाइंडर के साथ अपडेट रहें',
       'notificationsPermissionPromptBody':
           'क्या आप AttendancePro को उपस्थिति रिमाइंडर और अपडेट के लिए सूचनाएँ भेजने की अनुमति देना चाहेंगे?',
@@ -1213,6 +1219,9 @@ abstract final class AppString {
       'shareNotificationTitle': 'ਸੂਚਨਾਵਾਂ ਤਿਆਰ ਹਨ',
       'shareNotificationBody':
           'ਇਹ AttendancePro ਨੂੰ ਸਾਂਝਾ ਕਰਨ ਲਈ ਇੱਕ ਟੈਸਟ ਨੋਟੀਫਿਕੇਸ਼ਨ ਹੈ।',
+      'dashboardNotificationTitle': 'AttendancePro',
+      'dashboardNotificationBody':
+          'ਟੈਪ ਕਰਕੇ ਸਿੱਧਾ ਆਪਣੇ AttendancePro ਡੈਸ਼ਬੋਰਡ ਤੇ ਜਾਓ।',
       'notificationsPermissionPromptTitle': 'ਰਿਮਾਇਂਡਰ ਨਾਲ ਜੁੜੇ ਰਹੋ',
       'notificationsPermissionPromptBody':
           'ਕੀ ਤੁਸੀਂ AttendancePro ਨੂੰ ਹਾਜ਼ਰੀ ਰਿਮਾਇਂਡਰ ਅਤੇ ਅਪਡੇਟਾਂ ਲਈ ਨੋਟੀਫਿਕੇਸ਼ਨ ਭੇਜਣ ਦੀ ਆਗਿਆ ਦੇਣਾ ਚਾਹੋਗੇ?',
@@ -1680,6 +1689,9 @@ abstract final class AppString {
       'shareNotificationTitle': 'Notifiche pronte',
       'shareNotificationBody':
           'Questa è una notifica di prova per condividere AttendancePro.',
+      'dashboardNotificationTitle': 'AttendancePro',
+      'dashboardNotificationBody':
+          'Tocca per aprire subito la tua dashboard di AttendancePro.',
       'notificationsPermissionPromptTitle':
           'Rimani aggiornato con i promemoria',
       'notificationsPermissionPromptBody':
