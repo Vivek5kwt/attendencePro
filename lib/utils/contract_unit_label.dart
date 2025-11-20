@@ -57,8 +57,8 @@ String contractUnitQuantityLabel({
   required AppLocalizations localizations,
   required String contractName,
   required String unitLabel,
-  int? completedUnits,
-  int? totalUnits,
+  num? completedUnits,
+  num? totalUnits,
 }) {
   final noun = _resolveContractUnitNoun(
     localizations: localizations,
@@ -100,7 +100,7 @@ String contractUnitCountLabel({
   required AppLocalizations localizations,
   required String contractName,
   required String unitLabel,
-  required int quantity,
+  required num quantity,
 }) {
   final noun = _resolveContractUnitNoun(
     localizations: localizations,
@@ -108,7 +108,10 @@ String contractUnitCountLabel({
     unitLabel: unitLabel,
   );
   final plural = _pluralizeUnitWord(noun, quantity);
-  return '$quantity $plural';
+  final displayQuantity = quantity % 1 == 0
+      ? quantity.toInt().toString()
+      : quantity.toString();
+  return '$displayQuantity $plural';
 }
 
 String resolveContractUnitHint({
@@ -200,7 +203,7 @@ String _resolveContractUnitNoun({
   return _formatUnitNoun(noun);
 }
 
-String _pluralizeUnitWord(String noun, int quantity) {
+String _pluralizeUnitWord(String noun, num quantity) {
   if (quantity == 1) {
     return noun;
   }
