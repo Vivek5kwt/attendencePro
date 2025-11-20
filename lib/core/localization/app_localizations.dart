@@ -261,6 +261,9 @@ class AppLocalizations {
   String get helpSupportPhoneLabel => _value('helpSupportPhoneLabel');
   String get helpSupportPhoneValue => _value('helpSupportPhoneValue');
   String get helpSupportCallButton => _value('helpSupportCallButton');
+  String get helpSupportChatLabel => _value('helpSupportChatLabel');
+  String get helpSupportChatSubtitle => _value('helpSupportChatSubtitle');
+  String get helpSupportChatButton => _value('helpSupportChatButton');
   String get helpSupportHoursLabel => _value('helpSupportHoursLabel');
   String get helpSupportHoursValue => _value('helpSupportHoursValue');
   String get helpSupportResponseTimeLabel =>
