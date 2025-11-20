@@ -1712,25 +1712,9 @@ class _ContractDetailTile extends StatelessWidget {
                 Text(name, style: nameStyle, overflow: TextOverflow.ellipsis),
                 if (type != null && type!.trim().isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('${typeLabel.toUpperCase()}: ', style: hintStyle),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          type!.trim(),
-                          style: chipStyle,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '${typeLabel.toUpperCase()}: ${type!.trim()}',
+                    style: hintStyle,
                   ),
                 ],
               ],
