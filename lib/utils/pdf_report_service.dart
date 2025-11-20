@@ -565,8 +565,16 @@ class PdfReportService {
 
     Directory baseDirectory;
     if (Platform.isAndroid) {
-      final externalDir = await getExternalStorageDirectory();
-      baseDirectory = externalDir ?? await getApplicationDocumentsDirectory();
+      // Prefer an internal directory to avoid storage permission issues on
+      // newer Android versions. If that fails for any reason, gracefully
+      // fall back to the external storage location or, as a last resort, the
+      // temporary directory so the download flow does not crash.
+      try {
+        baseDirectory = await getApplicationDocumentsDirectory();
+      } catch (_) {
+        baseDirectory = await getExternalStorageDirectory() ??
+            await getTemporaryDirectory();
+      }
     } else {
       baseDirectory = await getApplicationDocumentsDirectory();
     }
