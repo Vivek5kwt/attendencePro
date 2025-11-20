@@ -6443,15 +6443,14 @@ class _AttendanceSection extends StatelessWidget {
                 isSubmitting: isSubmitting,
                 isWorkOff: isWorkOff,
                 isLocked: contractActionsLocked,
-                trailingAction:
-                    isWorkOff ? null : _buildSubmitButton(context, l),
+                trailingAction: null,
               ),
             ],
             const SizedBox(height: 24),
             _buildActionButtons(
               context,
               l,
-              includeSubmit: !showContractFields || !contractFieldsEnabled,
+              includeSubmit: true,
             ),
             if (statusMessage != null)
               Container(
