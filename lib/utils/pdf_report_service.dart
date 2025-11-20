@@ -151,7 +151,7 @@ class PdfReportService {
               periodLabel: monthLabel,
             ),
             pw.SizedBox(height: 18),
-            _buildSectionTitle(fonts: fonts, title: 'Daily wages'),
+            _buildSectionTitle(fonts: fonts, title: 'Daily Wise Total'),
             pw.SizedBox(height: 10),
             _buildBorderedTable(
               fonts: fonts,
@@ -675,7 +675,7 @@ class PdfReportService {
     }
 
     return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey800, width: 0.9),
+      border: pw.TableBorder.all(color: PdfColors.black, width: 0.8),
       defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
       children: rows,
     );
@@ -691,7 +691,7 @@ class PdfReportService {
         fonts,
         font: fonts.bold,
         fontSize: 12,
-        color: PdfColors.blueGrey900,
+        color: PdfColors.black,
       ),
     );
   }
