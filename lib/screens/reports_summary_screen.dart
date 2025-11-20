@@ -880,6 +880,8 @@ class _SummaryLoadedContent extends StatelessWidget {
             rateLabel: localization.reportsContractDetailsRateLabel,
             typeLabel: localization.reportsContractDetailsTypeLabel,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
+            dateLabel: localization.attendanceDateLabel,
+            salaryLabel: localization.reportsContractSalaryLabel,
           ),
         ],
         if (showContractSummary) ...[
@@ -1450,6 +1452,8 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.rateLabel,
     required this.typeLabel,
     required this.totalUnitsLabel,
+    required this.dateLabel,
+    required this.salaryLabel,
   });
 
   final List<ContractDetail> details;
@@ -1458,6 +1462,8 @@ class _ContractDetailsCard extends StatelessWidget {
   final String rateLabel;
   final String typeLabel;
   final String totalUnitsLabel;
+  final String dateLabel;
+  final String salaryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -1471,24 +1477,6 @@ class _ContractDetailsCard extends StatelessWidget {
           color: Color(0xFF0F172A),
         );
 
-    final summaryLabelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: const Color(0xFF6B7280),
-          fontWeight: FontWeight.w600,
-        ) ??
-        const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF6B7280),
-        );
-    final summaryValueStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: const Color(0xFF111827),
-        ) ??
-        const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-          color: Color(0xFF111827),
-        );
     final headerStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
           color: const Color(0xFF475467),
           fontWeight: FontWeight.w700,
@@ -1500,6 +1488,40 @@ class _ContractDetailsCard extends StatelessWidget {
           letterSpacing: 0.3,
           color: Color(0xFF475467),
         );
+
+    String _formatUnits(ContractDetail detail) {
+      final unitLabel = detail.unitLabel.trim();
+      final units = detail.totalUnits;
+      if (units != null) {
+        final absolute = units.abs();
+        final isWhole = absolute.floorToDouble() == absolute;
+        final value = isWhole ? units.toStringAsFixed(0) : units.toStringAsFixed(2);
+        return unitLabel.isEmpty ? value : '$value $unitLabel';
+      }
+      if (unitLabel.isNotEmpty) {
+        return unitLabel;
+      }
+      return '--';
+    }
+
+    String _formatSalary(ContractDetail detail) {
+      final salary = detail.salaryAmount;
+      if (salary != null) {
+        return _formatCurrency(salary, currencySymbol);
+      }
+      if (detail.totalUnits != null && detail.ratePerUnit != null) {
+        return _formatCurrency(detail.totalUnits! * detail.ratePerUnit!, currencySymbol);
+      }
+      return '--';
+    }
+
+    String _formatRate(ContractDetail detail) {
+      final rate = detail.ratePerUnit;
+      if (rate != null) {
+        return _formatCurrency(rate, currencySymbol);
+      }
+      return '--';
+    }
 
     return Container(
       width: double.infinity,
@@ -1540,7 +1562,11 @@ class _ContractDetailsCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
+                      _ContractHeaderCell(
+                        text: dateLabel,
+                        flex: 3,
+                        style: headerStyle,
+                      ),
                       _ContractHeaderCell(
                         text: typeLabel,
                         flex: 4,
@@ -1548,13 +1574,19 @@ class _ContractDetailsCard extends StatelessWidget {
                       ),
                       _ContractHeaderCell(
                         text: totalUnitsLabel,
-                        flex: 3,
+                        flex: 2,
                         style: headerStyle,
                         alignment: Alignment.centerRight,
                       ),
                       _ContractHeaderCell(
                         text: rateLabel,
-                        flex: 3,
+                        flex: 2,
+                        style: headerStyle,
+                        alignment: Alignment.centerRight,
+                      ),
+                      _ContractHeaderCell(
+                        text: salaryLabel,
+                        flex: 2,
                         style: headerStyle,
                         alignment: Alignment.centerRight,
                       ),
@@ -1568,15 +1600,14 @@ class _ContractDetailsCard extends StatelessWidget {
                   return Column(
                     children: [
                       _ContractDetailTile(
-                        index: index + 1,
-                        detail: detail,
-                        currencySymbol: currencySymbol,
-                        rateLabel: rateLabel,
+                        dateText: detail.formattedDate ?? '--',
+                        name: detail.name,
+                        type: detail.type,
+                        unitText: _formatUnits(detail),
+                        rateText: _formatRate(detail),
+                        salaryText: _formatSalary(detail),
                         typeLabel: typeLabel,
-                        summaryLabelStyle: summaryLabelStyle,
-                        summaryValueStyle: summaryValueStyle,
-                        unitText: detail.unitLabel.isEmpty ? '--' : detail.unitLabel,
-                        unitLabelHeading: totalUnitsLabel,
+                        valueStyle: subtitleStyle,
                       ),
                       if (!isLast)
                         const Padding(
@@ -1597,26 +1628,24 @@ class _ContractDetailsCard extends StatelessWidget {
 
 class _ContractDetailTile extends StatelessWidget {
   const _ContractDetailTile({
-    required this.index,
-    required this.detail,
-    required this.currencySymbol,
-    required this.rateLabel,
-    required this.typeLabel,
-    required this.summaryLabelStyle,
-    required this.summaryValueStyle,
+    required this.dateText,
+    required this.name,
+    required this.type,
     required this.unitText,
-    required this.unitLabelHeading,
+    required this.rateText,
+    required this.salaryText,
+    required this.typeLabel,
+    required this.valueStyle,
   });
 
-  final int index;
-  final ContractDetail detail;
-  final String currencySymbol;
-  final String rateLabel;
-  final String typeLabel;
-  final TextStyle summaryLabelStyle;
-  final TextStyle summaryValueStyle;
+  final String dateText;
+  final String name;
+  final String? type;
   final String unitText;
-  final String unitLabelHeading;
+  final String rateText;
+  final String salaryText;
+  final String typeLabel;
+  final TextStyle valueStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -1648,13 +1677,6 @@ class _ContractDetailTile extends StatelessWidget {
           color: Color(0xFF1E3A8A),
         );
 
-    final rate = detail.ratePerUnit;
-    final rateText = rate != null
-        ? _formatCurrencyValue(rate, currencySymbol)
-        : '--';
-    final unitLabel = detail.unitLabel.trim();
-    final type = detail.type;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
@@ -1672,11 +1694,14 @@ class _ContractDetailTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 28,
+          Expanded(
+            flex: 3,
             child: Text(
-              '$index.',
-              style: chipStyle.copyWith(color: const Color(0xFF0F172A)),
+              dateText,
+              style: valueStyle.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111827),
+              ),
             ),
           ),
           Expanded(
@@ -1684,54 +1709,63 @@ class _ContractDetailTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(detail.name, style: nameStyle),
-                if (unitLabel.isNotEmpty) ...[
+                Text(name, style: nameStyle, overflow: TextOverflow.ellipsis),
+                if (type != null && type!.trim().isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(unitLabel, style: hintStyle),
-                ],
-                if (type != null && type.trim().isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      type.trim(),
-                      style: chipStyle,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${typeLabel.toUpperCase()}: ', style: hintStyle),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          type!.trim(),
+                          style: chipStyle,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Align(
               alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(unitText, style: summaryValueStyle),
-                  const SizedBox(height: 4),
-                  Text(unitLabelHeading, style: summaryLabelStyle),
-                ],
+              child: Text(
+                unitText,
+                style: valueStyle,
+                textAlign: TextAlign.right,
               ),
             ),
           ),
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Align(
               alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(rateText, style: summaryValueStyle),
-                  const SizedBox(height: 4),
-                  Text(rateLabel, style: summaryLabelStyle),
-                ],
+              child: Text(
+                rateText,
+                style: valueStyle,
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                salaryText,
+                style: valueStyle,
+                textAlign: TextAlign.right,
               ),
             ),
           ),
