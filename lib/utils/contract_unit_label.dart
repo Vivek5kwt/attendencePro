@@ -13,7 +13,8 @@ class _ContractUnitOverride {
 const Map<String, _ContractUnitOverride> _unitOverrides = <String, _ContractUnitOverride>{
   'orange': _ContractUnitOverride(label: 'per crate', hintNoun: 'Crate'),
   'radish': _ContractUnitOverride(label: 'per bin', hintNoun: 'Bin'),
-  'ravanello': _ContractUnitOverride(label: 'per bunch', hintNoun: 'Bunches'),
+  'ravanello':
+      _ContractUnitOverride(label: 'Per 100 Bunches', hintNoun: 'Bunches'),
 };
 
 _ContractUnitOverride? _matchUnitOverride(String contractName) {

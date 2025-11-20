@@ -11,37 +11,37 @@ void main() {
   });
 
   group('formatContractUnitLabel', () {
-    test('removes bunches from count-based labels', () {
+    test('keeps bunches in count-based labels', () {
       final label = formatContractUnitLabel(
         localizations,
         count: 100,
         role: 'Bunches',
       );
 
-      expect(label, equals('per 100'));
+      expect(label, equals('Per 100 Bunches'));
     });
 
-    test('falls back when only bunches role is provided', () {
+    test('shows bunches unit when only role is provided', () {
       final label = formatContractUnitLabel(
         localizations,
         role: 'Bunches',
       );
 
-      expect(label, equals(localizations.contractWorkUnitFallback));
+      expect(label, equals('per 100 bunches'));
     });
 
-    test('removes bunches from fallback labels', () {
+    test('keeps bunches in fallback labels', () {
       final label = formatContractUnitLabel(
         localizations,
         fallbackUnitLabel: 'Price Per 100 Bunches',
       );
 
-      expect(label, equals('Price Per 100'));
+      expect(label, equals('Price Per 100 Bunches'));
     });
   });
 
   group('buildContractRateSubtitle', () {
-    test('omits bunches in formatted subtitle when rate is provided', () {
+    test('keeps bunches in formatted subtitle when rate is provided', () {
       final subtitle = buildContractRateSubtitle(
         localizations,
         rate: 250,
@@ -50,10 +50,10 @@ void main() {
         currencySymbol: '₹',
       );
 
-      expect(subtitle, equals('₹250.0 / per 100'));
+      expect(subtitle, equals('₹250.0 / Per 100 Bunches'));
     });
 
-    test('sanitizes raw price text containing bunches', () {
+    test('keeps bunches in raw price text containing bunches', () {
       final subtitle = buildContractRateSubtitle(
         localizations,
         rawPrice: '₹450 per 100 Bunches',
@@ -61,7 +61,7 @@ void main() {
         role: 'Bunches',
       );
 
-      expect(subtitle, equals('₹450 per 100'));
+      expect(subtitle, equals('₹450 per 100 Bunches'));
     });
   });
 }

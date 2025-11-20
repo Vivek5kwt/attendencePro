@@ -7429,7 +7429,7 @@ class _ContractEntryForm extends StatelessWidget {
                             color: Color(0xFF2563EB),
                           ),
 
-                          // ❌ Removed unit label badge (per bunch / per crate)
+                          // ❌ Removed unit label badge (per 100 bunches / per crate)
                           suffixIcon: null,
                           suffixIconConstraints: const BoxConstraints(
                             minHeight: 0,
