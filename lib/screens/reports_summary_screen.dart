@@ -1728,7 +1728,7 @@ class _ContractWorkSummaryCard extends StatelessWidget {
   });
 
   final String totalUnitsLabel;
-  final int totalUnits;
+  final num totalUnits;
   final String salaryLabel;
   final double salaryAmount;
   final String currencySymbol;
