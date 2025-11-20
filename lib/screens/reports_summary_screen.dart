@@ -65,6 +65,8 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   String? _summaryError;
   int _summaryRequestId = 0;
 
+  bool _isGeneratingReport = false;
+
   bool _missingWork = false;
   String? _selectedWorkId;
   String? _selectedWorkName;
@@ -229,103 +231,71 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     }
   }
 
-  // ===== Safe converters + “contract-like” checks =====
+  // ===== Report helpers =====
 
-  int? _asInt(dynamic v) {
-    if (v == null) return null;
-    if (v is int) return v;
-    if (v is double) return v.round();
-    if (v is String) return int.tryParse(v);
-    return null;
+  Map<DateTime, List<AttendanceHistoryEntryData>> _groupHistoryEntriesByDay(
+      List<AttendanceHistoryEntryData> entries,
+      ) {
+    final grouped = <DateTime, List<AttendanceHistoryEntryData>>{};
+    for (final entry in entries) {
+      final key = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      grouped.putIfAbsent(key, () => <AttendanceHistoryEntryData>[]).add(entry);
+    }
+    return grouped;
   }
 
-  double? _asDouble(dynamic v) {
-    if (v == null) return null;
-    if (v is double) return v;
-    if (v is int) return v.toDouble();
-    if (v is String) return double.tryParse(v);
-    return null;
-  }
-
-  DateTime? _asDate(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    if (v is String) {
-      try {
-        return DateTime.parse(v);
-      } catch (_) {
-        // Try common dd-MM-yyyy
-        final parts = v.split(RegExp(r'[-/ ]'));
-        if (parts.length >= 3) {
-          final d = int.tryParse(parts[0]);
-          final m = int.tryParse(parts[1]);
-          final y = int.tryParse(parts[2]);
-          if (d != null && m != null && y != null) {
-            return DateTime(y, m, d);
-          }
+  String _buildHistoryDetail(
+      AttendanceHistoryEntryData entry,
+      AppLocalizations localization,
+      ) {
+    switch (entry.type) {
+      case AttendanceHistoryEntryType.hourly:
+        final start = _normalizeTimeLabel(entry.startTime).isNotEmpty
+            ? _normalizeTimeLabel(entry.startTime)
+            : '--';
+        final end = _normalizeTimeLabel(entry.endTime).isNotEmpty
+            ? _normalizeTimeLabel(entry.endTime)
+            : '--';
+        final hours = _formatHours(entry.hoursWorked);
+        final overtime = entry.overtimeHours > 0
+            ? ' (+${_formatHours(entry.overtimeHours)} overtime)'
+            : '';
+        final breakLabel = entry.breakDuration?.trim().isNotEmpty == true
+            ? ', Break: ${entry.breakDuration!.trim()}'
+            : '';
+        return '$start - $end ($hours$overtime$breakLabel)';
+      case AttendanceHistoryEntryType.contract:
+        final units = entry.unitsCompleted ?? 0;
+        final rate = entry.ratePerUnit ?? 0;
+        final typeLabel = entry.contractType?.trim().isNotEmpty == true
+            ? entry.contractType!.trim()
+            : localization.reportsContractDetailsTypeLabel;
+        final rateLabel = _formatCurrencyValue(
+          entry.detectedCurrencySymbol ?? '',
+          rate,
+        );
+        return '$units $typeLabel @ $rateLabel';
+      case AttendanceHistoryEntryType.leave:
+        final reason = entry.leaveReason?.trim();
+        if (reason == null || reason.isEmpty) {
+          return localization.attendanceHistoryLeaveEntry;
         }
-      }
+        return reason;
     }
-    return null;
   }
 
-  String _asString(dynamic v) => (v?.toString() ?? '').trim();
-
-  String _resolveContractLabel(dynamic entry) {
-    final primary = _asString(entry?.contractType);
-    if (primary.isNotEmpty) return primary;
-
-    final candidates = <dynamic>{
-      entry?.contractName,
-      entry?.name,
-      entry?.title,
-      entry?.label,
-      entry?.typeLabel,
-      entry?.workName,
-      entry?.unitType,
-    };
-
-    for (final candidate in candidates) {
-      final label = _asString(candidate);
-      if (label.isNotEmpty) return label;
+  String _resolveEntryTypeLabel(
+      AttendanceHistoryEntryType type,
+      AppLocalizations localization,
+      ) {
+    switch (type) {
+      case AttendanceHistoryEntryType.hourly:
+        return localization.attendanceHistoryHourlyEntry;
+      case AttendanceHistoryEntryType.contract:
+        return localization.attendanceHistoryContractEntry;
+      case AttendanceHistoryEntryType.leave:
+        return localization.attendanceHistoryLeaveEntry;
     }
-
-    return '';
-  }
-
-  bool _isContractLikeEntry(dynamic e) {
-    // 1) If enum/type exists and equals contract, accept.
-    try {
-      if (e.type == AttendanceHistoryEntryType.contract) return true;
-    } catch (_) {}
-
-    // 2) Heuristics: any of these indicate contract piecework.
-    final hasUnits = (_asInt(e?.unitsCompleted) ?? 0) > 0;
-    final hasRate = (_asDouble(e?.ratePerUnit) ?? 0) > 0.0;
-    final hasSalary = (_asDouble(e?.salary) ?? 0.0) > 0.0;
-    final hasContractName = _asString(e?.contractType).isNotEmpty;
-
-    return hasUnits || hasRate || hasSalary || hasContractName;
-  }
-
-  ContractReportRow? _toContractRow(dynamic e) {
-    final date = _asDate(e?.date);
-    final type = _resolveContractLabel(e);
-    final units = _asInt(e?.unitsCompleted) ?? 0;
-    final rate = _asDouble(e?.ratePerUnit) ?? 0.0;
-    final salary = _asDouble(e?.salary) ?? 0.0;
-
-    if (date == null) return null; // need a date for the PDF
-    // If nothing at all is present, skip.
-    if (units == 0 && rate == 0.0 && salary == 0.0 && type.isEmpty) return null;
-
-    return ContractReportRow(
-      date: date,
-      contractType: type,
-      unitsCompleted: units,
-      ratePerUnit: rate,
-      salary: salary,
-    );
   }
 
   // ===== UI helpers =====
@@ -337,21 +307,24 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     AppSnackBar.show(context, m, backgroundColor: color);
   }
 
-  Future<void> _downloadMonthlyContractReport() async {
-    if (_selectedWorkId == null) return;
+  Future<void> _downloadAttendanceHistoryReport() async {
+    if (_isGeneratingReport) return;
 
     final l = AppLocalizations.of(context);
     final workId = _selectedWorkId;
     final targetDate = _parseMonth(_selectedMonth);
     final workState = context.read<WorkBloc>().state;
     final storedWorkName = _selectedWorkName?.trim() ?? '';
-    final resolvedWorkName =
-    storedWorkName.isNotEmpty ? storedWorkName : (_resolveSelectedWork(workState)?.name ?? '').trim();
+    final resolvedWorkName = storedWorkName.isNotEmpty
+        ? storedWorkName
+        : (_resolveSelectedWork(workState)?.name ?? '').trim();
 
     if (workId == null || targetDate == null) {
       _showSnack(l.reportDownloadFailedMessage, color: const Color(0xFFB91C1C));
       return;
     }
+
+    setState(() => _isGeneratingReport = true);
 
     try {
       final history = await _historyRepository.fetchHistory(
@@ -361,31 +334,80 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         year: targetDate.year,
       );
 
-      // 🔁 Use tolerant filter (no hard enum dependency)
       final entries = history.entries;
-      final contractLike = entries.where(_isContractLikeEntry).toList(growable: false);
+      final hoursEntries = entries
+          .where(
+            (entry) =>
+                (entry.type == AttendanceHistoryEntryType.hourly ||
+                    entry.type == AttendanceHistoryEntryType.leave) &&
+                entry.isContractEntry != true,
+          )
+          .toList(growable: false);
+      final contractEntries = entries
+          .where(
+            (entry) =>
+                entry.type == AttendanceHistoryEntryType.contract ||
+                entry.isContractEntry == true,
+          )
+          .toList(growable: false);
 
-      // Convert to rows safely
-      final rows = <ContractReportRow>[];
-      for (final e in contractLike) {
-        final row = _toContractRow(e);
-        if (row != null) rows.add(row);
-      }
-
-      if (rows.isEmpty) {
+      if (hoursEntries.isEmpty) {
         _showSnack(l.reportDownloadNoEntriesMessage);
         return;
       }
 
-      final workLabel = resolvedWorkName.isEmpty ? l.attendanceHistoryAllWorks : resolvedWorkName;
+      final summary = HistoryReportSummary(
+        totalHoursWorked: hoursEntries.fold<double>(
+          0,
+          (previous, entry) => previous + entry.hoursWorked + entry.overtimeHours,
+        ),
+        totalHourlySalary: hoursEntries.fold<double>(
+          0,
+          (previous, entry) => previous + entry.salary,
+        ),
+        totalContractSalary: contractEntries.fold<double>(
+          0,
+          (previous, entry) => previous + entry.salary,
+        ),
+        grandTotalEarnings: hoursEntries.fold<double>(
+              0,
+              (previous, entry) => previous + entry.salary,
+            ) +
+            contractEntries.fold<double>(
+              0,
+              (previous, entry) => previous + entry.salary,
+            ),
+      );
 
-      final pdfSummary = _resolvePdfSummaryForPdf();
-      final reportFile = await PdfReportService.generateMonthlyContractReport(
+      final grouped = _groupHistoryEntriesByDay(hoursEntries);
+      final days = grouped.entries
+          .map(
+            (entry) => HistoryReportDay(
+              date: entry.key,
+              entries: entry.value
+                  .map(
+                    (item) => HistoryReportEntry(
+                      workName: item.workName,
+                      typeLabel: _resolveEntryTypeLabel(item.type, l),
+                      detail: _buildHistoryDetail(item, l),
+                      salary: item.salary,
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          )
+          .toList(growable: false);
+
+      final workLabel = resolvedWorkName.isEmpty
+          ? l.attendanceHistoryAllWorks
+          : resolvedWorkName;
+
+      final reportFile = await PdfReportService.generateAttendanceHistoryReport(
         workName: workLabel,
         monthLabel: _selectedMonth,
         currencySymbol: history.currencySymbol,
-        rows: rows,
-        summary: pdfSummary,
+        days: days,
+        summary: summary,
       );
 
       _showSnack(
@@ -393,8 +415,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         color: const Color(0xFF15803D),
       );
 
-      final fileName =
-      reportFile.uri.pathSegments.isNotEmpty ? reportFile.uri.pathSegments.last : reportFile.path;
+      final fileName = reportFile.uri.pathSegments.isNotEmpty
+          ? reportFile.uri.pathSegments.last
+          : reportFile.path;
 
       await LocalNotificationService.showDownloadNotification(
         fileName: fileName,
@@ -412,28 +435,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       _showSnack(msg, color: const Color(0xFFB91C1C));
     } catch (_) {
       _showSnack(l.reportDownloadFailedMessage, color: const Color(0xFFB91C1C));
+    } finally {
+      if (mounted) setState(() => _isGeneratingReport = false);
     }
-  }
-
-  HistoryReportSummary? _resolvePdfSummaryForPdf() {
-    final summary = _summary;
-    if (summary == null) {
-      return null;
-    }
-
-    final totalHours = summary.hourlySummary.totalHours;
-    final totalHourlySalary = summary.hourlySummary.hourlySalary;
-    final totalContractSalary = summary.contractSummary.salaryAmount;
-    final combined = summary.combinedSalary.amount;
-    final grandTotal =
-        combined > 0 ? combined : totalHourlySalary + totalContractSalary;
-
-    return HistoryReportSummary(
-      totalHoursWorked: totalHours,
-      totalHourlySalary: totalHourlySalary,
-      totalContractSalary: totalContractSalary,
-      grandTotalEarnings: grandTotal,
-    );
   }
 
   Work? _findActiveWorkFromState(WorkState state) {
@@ -648,16 +652,17 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final hasContractSummary = _hasContractSummaryData(summary);
       final contractItems =
           hasContractSummary ? _mapContractItems(summary, l) : const <_ContractWorkItem>[];
-        summaryBody = _SummaryLoadedContent(
-          key: const ValueKey('content'),
-          summary: summary,
-          localization: l,
-          selectedMonth: selectedMonth,
-          contractItems: contractItems,
-          showContractSummary: hasContractSummary,
-          canDownloadContractReport: true,
-          onDownloadContractReport: _downloadMonthlyContractReport,
-        );
+      summaryBody = _SummaryLoadedContent(
+        key: const ValueKey('content'),
+        summary: summary,
+        localization: l,
+        selectedMonth: selectedMonth,
+        contractItems: contractItems,
+        showContractSummary: hasContractSummary,
+        canDownloadReport: true,
+        isGeneratingReport: _isGeneratingReport,
+        onDownloadReport: _downloadAttendanceHistoryReport,
+      );
     } else {
       summaryBody = _SummaryEmptyView(
         key: const ValueKey('empty'),
@@ -823,8 +828,9 @@ class _SummaryLoadedContent extends StatelessWidget {
     required this.selectedMonth,
     required this.contractItems,
     required this.showContractSummary,
-    required this.canDownloadContractReport,
-    required this.onDownloadContractReport,
+    required this.canDownloadReport,
+    required this.isGeneratingReport,
+    required this.onDownloadReport,
   });
 
   final ReportSummary summary;
@@ -832,8 +838,9 @@ class _SummaryLoadedContent extends StatelessWidget {
   final String selectedMonth;
   final List<_ContractWorkItem> contractItems;
   final bool showContractSummary;
-  final bool canDownloadContractReport;
-  final VoidCallback onDownloadContractReport;
+  final bool canDownloadReport;
+  final bool isGeneratingReport;
+  final VoidCallback onDownloadReport;
 
   @override
   Widget build(BuildContext context) {
@@ -892,14 +899,23 @@ class _SummaryLoadedContent extends StatelessWidget {
             paymentColumnLabel: localization.reportsTotalPaymentLabel,
           ),
         ],
-        if (canDownloadContractReport) ...[
+        if (canDownloadReport) ...[
           const SizedBox(height: 24),
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton.icon(
-              onPressed: onDownloadContractReport,
-              icon: const Icon(Icons.download),
-              label: Text(localization.reportsSummaryDownloadLabel),
+              onPressed: isGeneratingReport ? null : onDownloadReport,
+              icon: isGeneratingReport
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: AppLoader(
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    )
+                  : const Icon(Icons.download),
+              label: Text(localization.historyReportDownloadLabel),
             ),
           ),
         ],
@@ -2431,4 +2447,53 @@ double _resolveContractSummarySalaryAmount(ContractSummaryData summary) {
     }
   }
   return total;
+}
+
+String _formatCurrencyValue(String symbol, double value) {
+  final resolved = symbol.trim().isEmpty ? '€' : symbol.trim();
+  return '$resolved${value.toStringAsFixed(2)}';
+}
+
+String _formatHours(double hours) {
+  final totalMinutes = (hours * 60).round();
+  final clampedMinutes = totalMinutes < 0 ? 0 : totalMinutes;
+  final resolvedHours = clampedMinutes ~/ 60;
+  final minutes = clampedMinutes % 60;
+  return '${resolvedHours}h ${minutes}m';
+}
+
+String _normalizeTimeLabel(String? raw) {
+  final trimmed = raw?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return '';
+  }
+
+  final dateTimeCandidate = DateTime.tryParse(
+    trimmed.contains('T') ? trimmed : trimmed.replaceFirst(' ', 'T'),
+  );
+  if (dateTimeCandidate != null) {
+    return _formatTimeLabel(
+      TimeOfDay(
+        hour: dateTimeCandidate.hour,
+        minute: dateTimeCandidate.minute,
+      ),
+    );
+  }
+
+  final timeMatch = RegExp(r'(\d{1,2}):(\d{1,2})').firstMatch(trimmed);
+  if (timeMatch != null) {
+    final hour = int.tryParse(timeMatch.group(1) ?? '');
+    final minute = int.tryParse(timeMatch.group(2) ?? '');
+    if (hour != null && minute != null) {
+      return _formatTimeLabel(TimeOfDay(hour: hour, minute: minute));
+    }
+  }
+
+  return trimmed;
+}
+
+String _formatTimeLabel(TimeOfDay time) {
+  final hour = time.hour.toString().padLeft(2, '0');
+  final minute = time.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
 }
