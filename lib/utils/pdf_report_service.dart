@@ -268,83 +268,49 @@ class PdfReportService {
             ),
           ];
 
-          for (final day in days) {
-            final dayTotal = day.entries.fold<double>(
-              0,
-                  (previousValue, entry) => previousValue + entry.salary,
-            );
+          final sortedDays = [...days]..sort((a, b) => a.date.compareTo(b.date));
+          final tableRows = <List<String>>[];
 
-            final tableData = day.entries
-                .map(
-                  (entry) => <String>[
+          for (final day in sortedDays) {
+            for (final entry in day.entries) {
+              tableRows.add(<String>[
+                _formatDate(day.date),
                 entry.typeLabel,
                 entry.workName,
                 entry.detail,
                 _formatCurrency(currencySymbol, entry.salary),
-              ],
-            )
-                .toList(growable: false);
-
-            widgets
-              ..add(pw.SizedBox(height: 18))
-              ..add(
-                pw.Container(
-                  decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.grey300, width: 0.6),
-                    borderRadius: pw.BorderRadius.circular(10),
-                    color: PdfColors.white,
-                  ),
-                  padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: <pw.Widget>[
-                      pw.Text(
-                        _formatDate(day.date),
-                        style: _textStyle(
-                          fonts,
-                          font: fonts.bold,
-                          fontSize: 12,
-                          color: PdfColors.blueGrey800,
-                        ),
-                      ),
-                      pw.SizedBox(height: 10),
-                      _buildStripedTable(
-                        headers: const <String>['Type', 'Work', 'Details', 'Amount'],
-                        data: tableData,
-                        headerStyle: _textStyle(
-                          fonts,
-                          font: fonts.bold,
-                          fontSize: 10,
-                          color: PdfColors.white,
-                        ),
-                        cellStyle: _textStyle(fonts, fontSize: 9),
-                        headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
-                        border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
-                        cellAlignments: const <int, pw.Alignment>{
-                          0: pw.Alignment.centerLeft,
-                          1: pw.Alignment.centerLeft,
-                          2: pw.Alignment.centerLeft,
-                          3: pw.Alignment.centerRight,
-                        },
-                      ),
-                      pw.SizedBox(height: 8),
-                      pw.Align(
-                        alignment: pw.Alignment.centerRight,
-                        child: pw.Text(
-                          'Day total: ${_formatCurrency(currencySymbol, dayTotal)}',
-                          style: _textStyle(
-                            fonts,
-                            font: fonts.bold,
-                            fontSize: 10,
-                            color: PdfColors.blueGrey800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              ]);
+            }
           }
+
+          widgets
+            ..add(pw.SizedBox(height: 18))
+            ..add(
+              _buildSectionTitle(fonts: fonts, title: 'Daily entries'),
+            )
+            ..add(pw.SizedBox(height: 10))
+            ..add(
+              _buildStripedTable(
+                headers: const <String>['Date', 'Type', 'Work', 'Details', 'Amount'],
+                data: tableRows,
+                headerStyle: _textStyle(
+                  fonts,
+                  font: fonts.bold,
+                  fontSize: 10,
+                  color: PdfColors.white,
+                ),
+                cellStyle: _textStyle(fonts, fontSize: 9),
+                headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
+                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
+                cellAlignments: const <int, pw.Alignment>{
+                  0: pw.Alignment.centerLeft,
+                  1: pw.Alignment.centerLeft,
+                  2: pw.Alignment.centerLeft,
+                  3: pw.Alignment.centerLeft,
+                  4: pw.Alignment.centerRight,
+                },
+              ),
+            );
 
           if (summary != null) {
             widgets
