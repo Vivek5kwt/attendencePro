@@ -119,7 +119,8 @@ class PdfReportService {
 
     final monthlyTotals = <List<String>>[];
     var serial = 1;
-    for (final entry in contractTotals.entries) {
+    for (final entry in contractTotals.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key))) {
       monthlyTotals.add(<String>[
         '${serial++}.',
         entry.key,
@@ -127,6 +128,16 @@ class PdfReportService {
         _formatContractCurrency(currencyLabel, entry.value.value),
       ]);
     }
+
+    final monthlyTotalsWithSummary = <List<String>>[
+      ...monthlyTotals,
+      <String>[
+        '',
+        'Total',
+        totalUnits.toString(),
+        _formatContractCurrency(currencyLabel, totalSalary),
+      ],
+    ];
 
     document.addPage(
       pw.MultiPage(
@@ -160,7 +171,7 @@ class PdfReportService {
             _buildBorderedTable(
               fonts: fonts,
               headers: const <String>['Sr. no', 'Contract Type', 'Unit', 'Salary'],
-              data: monthlyTotals,
+              data: monthlyTotalsWithSummary,
               cellAlignments: const <int, pw.Alignment>{
                 0: pw.Alignment.center,
                 1: pw.Alignment.centerLeft,
