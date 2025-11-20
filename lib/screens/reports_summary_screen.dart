@@ -400,6 +400,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         fileName: fileName,
         filePath: reportFile.path,
       );
+    } on UnsupportedError catch (e) {
+      final msg = e.message?.trim().isEmpty ?? true
+          ? l.reportDownloadFailedMessage
+          : e.message!;
+      _showSnack(msg, color: const Color(0xFFB91C1C));
     } on AttendanceHistoryAuthException {
       _showSnack(l.reportDownloadFailedMessage, color: const Color(0xFFB91C1C));
     } on AttendanceHistoryRepositoryException catch (e) {
