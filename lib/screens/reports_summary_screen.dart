@@ -1845,7 +1845,7 @@ class _ContractWorkAggregation {
 
   final String workName;
   final String? role;
-  int totalUnits = 0;
+  num totalUnits = 0;
   double amount = 0;
   double? ratePerUnit;
   String? unitLabel;
@@ -2052,41 +2052,79 @@ String _formatHoursValue(double value) {
   return value.toStringAsFixed(isWhole ? 0 : 1);
 }
 
-int? _extractContractUnits(ContractWorkItemData data) {
-  int? normalize(num? value) {
+num? _extractContractUnits(ContractWorkItemData data) {
+  num? normalize(num? value) {
     if (value == null) {
       return null;
     }
     if (value < 0) {
       return null;
     }
-    if (value is int) {
-      return value;
-    }
-    return value.round();
+    return value;
   }
 
   final unitCount = normalize(data.unitCount);
   if (unitCount != null) {
-    return unitCount;
+    return _normalizeHundredBunchUnits(unitCount, data);
   }
 
   final completed = normalize(data.unitsCompleted);
   if (completed != null) {
-    return completed;
+    return _normalizeHundredBunchUnits(completed, data);
   }
 
   final totalUnits = normalize(data.unitsTotal);
   if (totalUnits != null) {
-    return totalUnits;
+    return _normalizeHundredBunchUnits(totalUnits, data);
   }
 
   final pending = normalize(data.unitsPending);
   if (pending != null) {
-    return pending;
+    return _normalizeHundredBunchUnits(pending, data);
   }
 
   return null;
+}
+
+bool _isHundredBunchContractItem(ContractWorkItemData data) {
+  final title = data.title.toLowerCase();
+  final unitLabel = data.unitLabel?.toLowerCase() ?? '';
+  final role = data.unitRole?.toLowerCase() ?? '';
+
+  if (role == 'bunches') {
+    return true;
+  }
+
+  final mentionsBunch = title.contains('bunch') ||
+      unitLabel.contains('bunch') ||
+      unitLabel.contains('mazz') ||
+      title.contains('mazz');
+  if (!mentionsBunch) {
+    return false;
+  }
+
+  final mentionsHundred = unitLabel.contains('100') ||
+      unitLabel.contains('hundred') ||
+      title.contains('100') ||
+      title.contains('cento');
+
+  return mentionsHundred || role == 'bunches';
+}
+
+num _normalizeHundredBunchUnits(num rawUnits, ContractWorkItemData data) {
+  if (rawUnits <= 0) {
+    return rawUnits;
+  }
+  if (!_isHundredBunchContractItem(data)) {
+    return rawUnits;
+  }
+
+  final normalized = rawUnits / 100;
+  if (normalized % 1 == 0) {
+    return normalized.toInt();
+  }
+
+  return double.parse(normalized.toStringAsFixed(2));
 }
 
 double? _calculateContractItemAmount(ContractWorkItemData data) {
@@ -2098,11 +2136,11 @@ double? _calculateContractItemAmount(ContractWorkItemData data) {
   return null;
 }
 
-int _resolveContractSummaryTotalUnits(ContractSummaryData summary) {
+num _resolveContractSummaryTotalUnits(ContractSummaryData summary) {
   if (summary.totalUnits > 0) {
     return summary.totalUnits;
   }
-  var total = 0;
+  num total = 0;
   for (final item in summary.items) {
     final units = _extractContractUnits(item);
     if (units != null) {
