@@ -324,6 +324,12 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   static const String _alreadySubmittedServerMessage =
       'attendance for this date is already submitted';
 
+  static const Set<String> _alreadySubmittedServerMessages = {
+    _alreadySubmittedServerMessage,
+    'ateendnce alrady marked for today',
+    'attendance already marked for today',
+  };
+
   final DashboardRepository _dashboardRepository = DashboardRepository();
   final AttendanceEntryRepository _attendanceRepository =
       AttendanceEntryRepository();
@@ -4619,7 +4625,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (trimmed.isEmpty) {
       return message;
     }
-    if (trimmed.toLowerCase() == _alreadySubmittedServerMessage) {
+    if (_alreadySubmittedServerMessages.contains(trimmed.toLowerCase())) {
       final formattedDate =
           _formatSelectedDateForAlreadySubmitted(_selectedDate);
       return 'Attendance for ($formattedDate) is already submitted.';
