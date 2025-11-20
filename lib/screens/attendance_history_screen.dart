@@ -1023,10 +1023,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           entry: entry,
           localization: l,
           contractTypes: _contractTypes,
-          validateOptionalTime: _validateOptionalTimeInput,
-          validateMinutes: _validateMinutesInput,
           parseTimeOfDay: _parseTimeOfDay,
-          calculateWorkedMinutes: _calculateWorkedMinutes,
           onError: _showErrorSnackBar,
           resolveContractType: _findContractTypeById,
           onSubmit: ({
@@ -2816,10 +2813,7 @@ class _ContractAttendanceSheet extends StatefulWidget {
     required this.entry,
     required this.localization,
     required this.contractTypes,
-    required this.validateOptionalTime,
-    required this.validateMinutes,
     required this.parseTimeOfDay,
-    required this.calculateWorkedMinutes,
     required this.onError,
     required this.onSubmit,
     required this.resolveContractType,
@@ -2828,10 +2822,7 @@ class _ContractAttendanceSheet extends StatefulWidget {
   final _AttendanceEntry entry;
   final AppLocalizations localization;
   final List<ContractType> contractTypes;
-  final String? Function(String?) validateOptionalTime;
-  final String? Function(String?) validateMinutes;
   final TimeOfDay? Function(String value) parseTimeOfDay;
-  final int Function(TimeOfDay start, TimeOfDay end) calculateWorkedMinutes;
   final void Function(String message) onError;
   final ContractType? Function(int? id) resolveContractType;
   final Future<bool> Function({
@@ -2847,9 +2838,9 @@ class _ContractAttendanceSheet extends StatefulWidget {
 }
 
 class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
-  late final TextEditingController startController;
-  late final TextEditingController endController;
-  late final TextEditingController breakController;
+  late final TimeOfDay? initialStart;
+  late final TimeOfDay? initialEnd;
+  late final int initialBreakMinutes;
   late final List<_ContractBundleEditEntry> bundleEntries;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   bool isSaving = false;
@@ -2858,11 +2849,9 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
   void initState() {
     super.initState();
     final entry = widget.entry;
-    startController = TextEditingController(text: entry.startTime ?? '');
-    endController = TextEditingController(text: entry.endTime ?? '');
-    breakController = TextEditingController(
-      text: entry.breakMinutes > 0 ? entry.breakMinutes.toString() : '0',
-    );
+    initialStart = _safeParseTime(entry.startTime);
+    initialEnd = _safeParseTime(entry.endTime);
+    initialBreakMinutes = entry.breakMinutes > 0 ? entry.breakMinutes : 0;
     bundleEntries = <_ContractBundleEditEntry>[];
 
     void addBundle({ContractType? type, num? count}) {
@@ -2895,13 +2884,18 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
 
   @override
   void dispose() {
-    startController.dispose();
-    endController.dispose();
-    breakController.dispose();
     for (final item in bundleEntries) {
       item.dispose();
     }
     super.dispose();
+  }
+
+  TimeOfDay? _safeParseTime(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return widget.parseTimeOfDay(trimmed);
   }
 
   void _addBundleEntry() {
@@ -2959,37 +2953,14 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
       return;
     }
 
-    final startText = startController.text.trim();
-    final endText = endController.text.trim();
-    final breakMinutes = int.tryParse(breakController.text.trim()) ?? 0;
-    final start =
-        startText.isEmpty ? null : widget.parseTimeOfDay(startText);
-    final end = endText.isEmpty ? null : widget.parseTimeOfDay(endText);
-    if ((startText.isNotEmpty && start == null) ||
-        (endText.isNotEmpty && end == null)) {
-      widget.onError(l.attendanceHistoryLoadFailedMessage);
-      return;
-    }
-    if ((start != null && end == null) || (start == null && end != null)) {
-      widget.onError(l.attendanceHistoryLoadFailedMessage);
-      return;
-    }
-    if (start != null && end != null) {
-      final workedMinutes = widget.calculateWorkedMinutes(start, end);
-      if (workedMinutes <= breakMinutes) {
-        widget.onError(l.attendanceHistoryLoadFailedMessage);
-        return;
-      }
-    }
-
     setState(() {
       isSaving = true;
     });
     final success = await widget.onSubmit(
       bundles: resolvedBundles,
-      start: start,
-      end: end,
-      breakMinutes: breakMinutes,
+      start: initialStart,
+      end: initialEnd,
+      breakMinutes: initialBreakMinutes,
     );
     if (!mounted) {
       return;
@@ -3027,95 +2998,16 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                     ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: startController,
-                decoration: InputDecoration(
-                  labelText: l.startTimeLabel,
-                ),
-                validator: widget.validateOptionalTime,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: endController,
-                decoration: InputDecoration(
-                  labelText: l.endTimeLabel,
-                ),
-                validator: widget.validateOptionalTime,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: breakController,
-                decoration: InputDecoration(
-                  labelText: l.breakLabel,
-                  hintText: '0',
-                ),
-                keyboardType: TextInputType.number,
-                validator: widget.validateMinutes,
-              ),
-              const SizedBox(height: 16),
               ...List<Widget>.generate(bundleEntries.length, (index) {
                 final bundleEntry = bundleEntries[index];
                 return Padding(
                   padding: EdgeInsets.only(
                     bottom: index == bundleEntries.length - 1 ? 0 : 12,
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<ContractType>(
-                          value: bundleEntry.contractType,
-                          decoration: InputDecoration(
-                            labelText: l.contractWorkLabel,
-                          ),
-                          items: widget.contractTypes
-                              .map(
-                                (type) => DropdownMenuItem<ContractType>(
-                                  value: type,
-                                  child: Text(type.name),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: isSaving
-                              ? null
-                              : (value) {
-                                  if (value == null) {
-                                    return;
-                                  }
-                                  setState(() {
-                                    bundleEntry.contractType = value;
-                                  });
-                                },
-                          validator: (value) {
-                            if (value == null) {
-                              return l.contractWorkLoadError;
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: TextFormField(
-                          controller: bundleEntry.controller,
-                          decoration: InputDecoration(
-                            labelText: l.contractWorkUnitsLabel,
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            final trimmed = value?.trim() ?? '';
-                            if (trimmed.isEmpty) {
-                              return l.attendanceUnitsRequired;
-                            }
-                            final parsed = int.tryParse(trimmed);
-                            if (parsed == null || parsed <= 0) {
-                              return l.attendanceUnitsInvalid;
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      IconButton(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 520;
+                      final removeButton = IconButton(
                         tooltip: l.attendanceRemoveBundleTooltip,
                         onPressed: isSaving || bundleEntries.length <= 1
                             ? null
@@ -3126,8 +3018,87 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                                 bundleEntry.dispose();
                               },
                         icon: const Icon(Icons.delete_outline),
-                      ),
-                    ],
+                      );
+
+                      final dropdownField = DropdownButtonFormField<ContractType>(
+                        value: bundleEntry.contractType,
+                        decoration: InputDecoration(
+                          labelText: l.contractWorkLabel,
+                        ),
+                        items: widget.contractTypes
+                            .map(
+                              (type) => DropdownMenuItem<ContractType>(
+                                value: type,
+                                child: Text(type.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: isSaving
+                            ? null
+                            : (value) {
+                                if (value == null) {
+                                  return;
+                                }
+                                setState(() {
+                                  bundleEntry.contractType = value;
+                                });
+                              },
+                        validator: (value) {
+                          if (value == null) {
+                            return l.contractWorkLoadError;
+                          }
+                          return null;
+                        },
+                      );
+
+                      final unitsField = TextFormField(
+                        controller: bundleEntry.controller,
+                        decoration: InputDecoration(
+                          labelText: l.contractWorkUnitsLabel,
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          final trimmed = value?.trim() ?? '';
+                          if (trimmed.isEmpty) {
+                            return l.attendanceUnitsRequired;
+                          }
+                          final parsed = int.tryParse(trimmed);
+                          if (parsed == null || parsed <= 0) {
+                            return l.attendanceUnitsInvalid;
+                          }
+                          return null;
+                        },
+                      );
+
+                      if (isWide) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(child: dropdownField),
+                            const SizedBox(width: 12),
+                            Expanded(child: unitsField),
+                            const SizedBox(width: 12),
+                            removeButton,
+                          ],
+                        );
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(child: dropdownField),
+                              const SizedBox(width: 8),
+                              removeButton,
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          unitsField,
+                        ],
+                      );
+                    },
                   ),
                 );
               }),
