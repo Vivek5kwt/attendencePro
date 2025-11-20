@@ -2248,7 +2248,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       return;
     }
     final l = AppLocalizations.of(context);
-    _showSnack(l.attendanceAlreadyMarkedMessage);
+    final message = _localizeAttendanceServerMessage(
+      l.attendanceAlreadyMarkedMessage,
+    );
+    _showSnack(message);
   }
 
   String? _validateStartTime(String? value) {
@@ -2528,7 +2531,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     final bool shouldUpdateExistingAttendance =
         isContractUpdateAttempt && _isSelectedDateLocked;
     if (_isSelectedDateLocked && !isContractUpdateAttempt) {
-      final message = l.attendanceAlreadyMarkedMessage;
+      final message = _localizeAttendanceServerMessage(
+        l.attendanceAlreadyMarkedMessage,
+      );
       _setAttendanceStatus(message, isError: true);
       _showSnack(message);
       return;
