@@ -455,7 +455,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final selected = await showWorkSelectionDialog(
       context: context,
-      works: works,
       localization: l,
       initialSelectedWorkId: _resolvedWork.id,
       onAddNewWork: () {
@@ -554,7 +553,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final fallbackSelected = await showWorkSelectionDialog(
       context: context,
-      works: updatedWorks,
       localization: l,
       initialSelectedWorkId:
           createdWork?.id ?? activeWork?.id ?? _resolvedWork.id,
@@ -654,7 +652,6 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
     final selectedWork = await showWorkSelectionDialog(
       context: context,
-      works: works,
       localization: l,
       initialSelectedWorkId: activeWork.id,
       onAddNewWork: () {
