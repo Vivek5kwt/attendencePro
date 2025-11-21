@@ -90,7 +90,10 @@ class WorkApi {
     }
   }
 
-  Future<List<Work>> fetchWorks({required String token}) async {
+  Future<WorkPaginationResult> fetchWorksPage({
+    required String token,
+    int page = 1,
+  }) async {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -98,39 +101,21 @@ class WorkApi {
     };
 
     try {
-      final works = <Work>[];
-      var page = 1;
-      var safetyCounter = 0;
-      const maxPages = 50;
+      final uri = Uri.parse('$baseUrl/api/works').replace(
+        queryParameters: <String, String>{'page': page.toString()},
+      );
 
-      while (safetyCounter < maxPages) {
-        safetyCounter++;
-        final uri = Uri.parse('$baseUrl/api/works').replace(
-          queryParameters: <String, String>{'page': page.toString()},
-        );
+      final response = await _client.get(uri, headers: headers);
+      final decoded = _decodeBody(response.body);
 
-        final response = await _client.get(uri, headers: headers);
-        final decoded = _decodeBody(response.body);
-
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          final workItems = _extractWorkItems(decoded);
-          if (workItems.isEmpty) {
-            break;
-          }
-          works.addAll(workItems.map(Work.fromJson));
-
-          final nextPage = _extractNextPage(decoded, currentPage: page);
-          if (nextPage == null || nextPage <= page) {
-            break;
-          }
-          page = nextPage;
-          continue;
-        }
-
-        throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final workItems = _extractWorkItems(decoded);
+        final works = workItems.map(Work.fromJson).toList(growable: false);
+        final nextPage = _extractNextPage(decoded, currentPage: page);
+        return WorkPaginationResult(works: works, nextPage: nextPage);
       }
 
-      return works;
+      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
     } on SocketException {
       throw ApiException('Unable to reach the server. Please check your connection.');
     } on HttpException {
@@ -138,6 +123,14 @@ class WorkApi {
     } on FormatException {
       throw ApiException('Received an invalid response from the server.');
     }
+  }
+
+  Future<List<Work>> fetchWorks({
+    required String token,
+    int page = 1,
+  }) async {
+    final result = await fetchWorksPage(token: token, page: page);
+    return result.works;
   }
 
   Future<Map<String, dynamic>?> deleteWork({
@@ -343,4 +336,16 @@ class WorkApi {
 
     return const [];
   }
+}
+
+class WorkPaginationResult {
+  const WorkPaginationResult({
+    required this.works,
+    this.nextPage,
+  });
+
+  final List<Work> works;
+  final int? nextPage;
+
+  bool get hasMore => nextPage != null;
 }

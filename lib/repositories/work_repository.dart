@@ -19,13 +19,26 @@ class WorkRepository {
     return UserProfile.fromSession(details);
   }
 
-  Future<List<Work>> fetchWorks() async {
+  Future<List<Work>> fetchWorks({int page = 1}) async {
     final token = await _sessionManager.getToken();
     if (token == null || token.isEmpty) {
       throw const WorkAuthException();
     }
     try {
-      return await _api.fetchWorks(token: token);
+      return await _api.fetchWorks(token: token, page: page);
+    } on ApiException catch (e) {
+      throw WorkRepositoryException(e.message);
+    }
+  }
+
+  Future<WorkPaginationResult> fetchWorksPage({int page = 1}) async {
+    final token = await _sessionManager.getToken();
+    if (token == null || token.isEmpty) {
+      throw const WorkAuthException();
+    }
+
+    try {
+      return await _api.fetchWorksPage(token: token, page: page);
     } on ApiException catch (e) {
       throw WorkRepositoryException(e.message);
     }
