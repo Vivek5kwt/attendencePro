@@ -91,7 +91,6 @@ class WorkApi {
   }
 
   Future<List<Work>> fetchWorks({required String token}) async {
-    final uri = Uri.parse('$baseUrl/api/works');
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -99,15 +98,39 @@ class WorkApi {
     };
 
     try {
-      final response = await _client.get(uri, headers: headers);
-      final decoded = _decodeBody(response.body);
+      final works = <Work>[];
+      var page = 1;
+      var safetyCounter = 0;
+      const maxPages = 50;
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final workItems = _extractWorkItems(decoded);
-        return workItems.map(Work.fromJson).toList();
+      while (safetyCounter < maxPages) {
+        safetyCounter++;
+        final uri = Uri.parse('$baseUrl/api/works').replace(
+          queryParameters: <String, String>{'page': page.toString()},
+        );
+
+        final response = await _client.get(uri, headers: headers);
+        final decoded = _decodeBody(response.body);
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          final workItems = _extractWorkItems(decoded);
+          if (workItems.isEmpty) {
+            break;
+          }
+          works.addAll(workItems.map(Work.fromJson));
+
+          final nextPage = _extractNextPage(decoded, currentPage: page);
+          if (nextPage == null || nextPage <= page) {
+            break;
+          }
+          page = nextPage;
+          continue;
+        }
+
+        throw ApiException(_extractErrorMessage(decoded, response.statusCode));
       }
 
-      throw ApiException(_extractErrorMessage(decoded, response.statusCode));
+      return works;
     } on SocketException {
       throw ApiException('Unable to reach the server. Please check your connection.');
     } on HttpException {
@@ -217,6 +240,75 @@ class WorkApi {
     }
 
     return decoded.toString();
+  }
+
+  int? _extractNextPage(
+    Map<String, dynamic>? decoded, {
+    required int currentPage,
+  }) {
+    if (decoded == null) return null;
+
+    final queue = Queue<dynamic>()..add(decoded);
+    while (queue.isNotEmpty) {
+      final current = queue.removeFirst();
+
+      if (current is Map<String, dynamic>) {
+        final nextPage = _parseInt(current['next_page'] ?? current['nextPage']);
+        if (nextPage != null) return nextPage;
+
+        final nextPageUrl = current['next_page_url'] ?? current['nextPageUrl'];
+        if (nextPageUrl is String && nextPageUrl.trim().isNotEmpty) {
+          final query = Uri.tryParse(nextPageUrl)?.queryParameters['page'];
+          final parsedFromUrl = _parseInt(query);
+          if (parsedFromUrl != null) return parsedFromUrl;
+        }
+
+        final lastPage = _parseInt(current['last_page'] ?? current['lastPage']);
+        final reportedCurrent =
+            _parseInt(current['current_page'] ?? current['currentPage']);
+        if (lastPage != null) {
+          final activePage = reportedCurrent ?? currentPage;
+          if (activePage < lastPage) return activePage + 1;
+        }
+
+        final hasMore = _parseBool(
+          current['has_more'] ?? current['hasMore'] ?? current['has_next'],
+        );
+        if (hasMore == true) return currentPage + 1;
+
+        queue.addAll(current.values);
+      } else if (current is Map) {
+        queue.addAll((current as Map).values);
+      } else if (current is List) {
+        queue.addAll(current);
+      }
+    }
+
+    return null;
+  }
+
+  int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) return null;
+      return int.tryParse(trimmed);
+    }
+    return null;
+  }
+
+  bool? _parseBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.toLowerCase().trim();
+      if (['true', '1', 'yes'].contains(normalized)) return true;
+      if (['false', '0', 'no'].contains(normalized)) return false;
+    }
+    return null;
   }
 
   List<Map<String, dynamic>> _extractWorkItems(Map<String, dynamic>? decoded) {
