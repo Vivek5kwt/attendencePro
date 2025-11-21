@@ -20,7 +20,7 @@ class AuthApi {
   final http.Client _httpClient;
 
   AuthApi({
-    this.baseUrl = 'https://attendancepro.shauryacoder.com',
+    this.baseUrl = 'https://attendencepro.com',
     http.Client? httpClient,
   }) : _httpClient = LoggingClient(httpClient);
 
