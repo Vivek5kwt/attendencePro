@@ -82,3 +82,7 @@ class WorkProfileRefreshed extends WorkEvent {
 class WorkCleared extends WorkEvent {
   const WorkCleared();
 }
+
+class WorkLoadMore extends WorkEvent {
+  const WorkLoadMore();
+}
