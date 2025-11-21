@@ -183,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final selectedWork = await showWorkSelectionDialog(
       context: context,
-      works: works,
       localization: l,
       initialSelectedWorkId: activeWork.id,
       onAddNewWork: () {

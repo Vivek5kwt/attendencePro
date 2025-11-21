@@ -798,7 +798,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     final l = AppLocalizations.of(context);
     final selected = await showWorkSelectionDialog(
       context: context,
-      works: works,
       localization: l,
       initialSelectedWorkId: _selectedWorkId ?? _resolveSelectedWork(context.read<WorkBloc>().state)?.id,
     );

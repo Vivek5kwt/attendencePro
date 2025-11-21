@@ -1,254 +1,41 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
+import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/work.dart';
+import 'app_loader.dart';
 
 const _kAddNewWorkResult = '__add_new_work__';
 const _kEditWorkResultPrefix = '__edit_work__:';
 
+
 Future<Work?> showWorkSelectionDialog({
   required BuildContext context,
-  required List<Work> works,
   required AppLocalizations localization,
   String? initialSelectedWorkId,
   VoidCallback? onAddNewWork,
   ValueChanged<Work>? onEditWork,
 }) async {
-  final visibleWorks = works;
-
-  if (visibleWorks.isEmpty) {
-    return null;
-  }
+  final workBloc = context.read<WorkBloc>();
 
   final result = await showDialog<String>(
     context: context,
     barrierDismissible: true,
     barrierColor: const Color(0xCC111827),
     builder: (dialogContext) {
-      var selectedId = _initialWorkId(
-        works: visibleWorks,
-        initialSelectedWorkId: initialSelectedWorkId,
-      );
-
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            final mediaQuery = MediaQuery.of(context);
-            final double availableWidth = mediaQuery.size.width - 32;
-            final double maxDialogWidth = math.min(
-              420,
-              availableWidth > 0 ? availableWidth : mediaQuery.size.width,
-            );
-            final double minDialogWidth = math.min(280, maxDialogWidth);
-            final double maxDialogHeight = math.min(
-              math.max(mediaQuery.size.height * 0.82, 360),
-              520,
-            );
-
-            return Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: Container(
-                        width: maxDialogWidth,
-                        height: math.max(0, maxDialogHeight - 32),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFE7F1FF), Color(0xFFF7FAFF)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          borderRadius: BorderRadius.circular(36),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    constraints: BoxConstraints(
-                      minWidth: minDialogWidth,
-                      maxWidth: maxDialogWidth,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x33111B2B),
-                          blurRadius: 40,
-                          offset: Offset(0, 28),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Material(
-                        color: Colors.white,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxHeight: maxDialogHeight),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  height: 44,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Positioned.fill(
-                                        child: Align(
-                                          alignment: Alignment.center,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 48,
-                                            ),
-                                            child: Text(
-                                              localization.selectWorkTitle,
-                                              textAlign: TextAlign.center,
-                                              softWrap: true,
-                                              style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleLarge
-                                                      ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFF111827),
-                                              ) ??
-                                                  const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF111827),
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: _DialogCloseButton(
-                                          onPressed: () {
-                                            Navigator.of(dialogContext).pop();
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 32),
-                                Flexible(
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxHeight: math.min(
-                                        mediaQuery.size.height * 0.5,
-                                        360,
-                                      ),
-                                    ),
-                                    child: Scrollbar(
-                                      thumbVisibility: visibleWorks.length > 3,
-                                      interactive: true,
-                                      child: ListView.separated(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        physics: const BouncingScrollPhysics(),
-                                        keyboardDismissBehavior:
-                                            ScrollViewKeyboardDismissBehavior
-                                                .onDrag,
-                                        itemCount: visibleWorks.length,
-                                        itemBuilder: (context, index) {
-                                          final work = visibleWorks[index];
-                                          return _WorkSelectionTile(
-                                            work: work,
-                                            isSelected: work.id == selectedId,
-                                            localization: localization,
-                                            onTap: () {
-                                              setState(() {
-                                                selectedId = work.id;
-                                              });
-                                            },
-                                            onEdit: onEditWork == null
-                                                ? null
-                                                : () {
-                                                    Navigator.of(dialogContext)
-                                                        .pop(
-                                                      '$_kEditWorkResultPrefix${work.id}',
-                                                    );
-                                                  },
-                                          );
-                                        },
-                                        separatorBuilder: (_, __) =>
-                                            const SizedBox(height: 12),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (onAddNewWork != null) ...[
-                                  const SizedBox(height: 16),
-                                  _AddNewWorkLink(
-                                    localization: localization,
-                                    onTap: () {
-                                      Navigator.of(dialogContext)
-                                          .pop(_kAddNewWorkResult);
-                                    },
-                                  ),
-                                ],
-                                const SizedBox(height: 24),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 56,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      if (selectedId == null) {
-                                        Navigator.of(dialogContext).pop();
-                                        return;
-                                      }
-                                      Navigator.of(dialogContext)
-                                          .pop(selectedId);
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                      ),
-                                      backgroundColor:
-                                      const Color(0xFF2563EB),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(20),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: Text(
-                                      localization.confirmSelectionButton,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ) ??
-                                          const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+      return BlocProvider.value(
+        value: workBloc,
+        child: _WorkSelectionDialog(
+          localization: localization,
+          initialSelectedWorkId: initialSelectedWorkId,
+          onAddNewWork: onAddNewWork,
+          onEditWork: onEditWork,
         ),
       );
     },
@@ -265,7 +52,8 @@ Future<Work?> showWorkSelectionDialog({
 
   if (result.startsWith(_kEditWorkResultPrefix)) {
     final workId = result.substring(_kEditWorkResultPrefix.length);
-    for (final work in visibleWorks) {
+    final workState = workBloc.state;
+    for (final work in workState.works) {
       if (work.id == workId) {
         onEditWork?.call(work);
         break;
@@ -274,7 +62,8 @@ Future<Work?> showWorkSelectionDialog({
     return null;
   }
 
-  for (final work in visibleWorks) {
+  final workState = workBloc.state;
+  for (final work in workState.works) {
     if (work.id == result) {
       return work;
     }
@@ -282,6 +71,331 @@ Future<Work?> showWorkSelectionDialog({
   return null;
 }
 
+class _WorkSelectionDialog extends StatefulWidget {
+  const _WorkSelectionDialog({
+    required this.localization,
+    this.initialSelectedWorkId,
+    this.onAddNewWork,
+    this.onEditWork,
+  });
+
+  final AppLocalizations localization;
+  final String? initialSelectedWorkId;
+  final VoidCallback? onAddNewWork;
+  final ValueChanged<Work>? onEditWork;
+
+  @override
+  State<_WorkSelectionDialog> createState() => _WorkSelectionDialogState();
+}
+
+class _WorkSelectionDialogState extends State<_WorkSelectionDialog> {
+  final ScrollController _scrollController = ScrollController();
+  String? _selectedId;
+  WorkState? _lastWorkState;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialState = context.read<WorkBloc>().state;
+    _selectedId = _initialWorkId(
+      works: initialState.works,
+      initialSelectedWorkId: widget.initialSelectedWorkId,
+    );
+    _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+    final metrics = _scrollController.position;
+    final state = _lastWorkState ?? context.read<WorkBloc>().state;
+    final trigger = metrics.maxScrollExtent == 0
+        ? 0
+        : metrics.maxScrollExtent - 120;
+    final shouldLoadMore =
+        metrics.pixels >= trigger && state.nextPage != null && !state.isLoadingMore;
+    if (shouldLoadMore) {
+      context.read<WorkBloc>().add(const WorkLoadMore());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final double availableWidth = mediaQuery.size.width - 32;
+    final double maxDialogWidth = math.min(
+      420,
+      availableWidth > 0 ? availableWidth : mediaQuery.size.width,
+    );
+    final double minDialogWidth = math.min(280, maxDialogWidth);
+    final double maxDialogHeight = math.min(
+      math.max(mediaQuery.size.height * 0.82, 360),
+      520,
+    );
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  width: maxDialogWidth,
+                  height: math.max(0, maxDialogHeight - 32),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFE7F1FF), Color(0xFFF7FAFF)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(36),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              constraints: BoxConstraints(
+                minWidth: minDialogWidth,
+                maxWidth: maxDialogWidth,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33111B2B),
+                    blurRadius: 40,
+                    offset: Offset(0, 28),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Material(
+                  color: Colors.white,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxDialogHeight),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+                      child: BlocBuilder<WorkBloc, WorkState>(
+                        builder: (context, state) {
+                          _lastWorkState = state;
+                          final works = state.works;
+                          final hasSelection = works.any((w) => w.id == _selectedId);
+                          if (!hasSelection && works.isNotEmpty) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  _selectedId = _initialWorkId(
+                                    works: works,
+                                    initialSelectedWorkId: widget.initialSelectedWorkId,
+                                  );
+                                });
+                              }
+                            });
+                          }
+
+                          if (state.isLoading && works.isEmpty) {
+                            return const Center(child: AppLoader());
+                          }
+
+                          if (works.isEmpty) {
+                            return _buildEmptyContent(context);
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildTitle(context),
+                              const SizedBox(height: 32),
+                              _buildList(context, works, state),
+                              if (widget.onAddNewWork != null) ...[
+                                const SizedBox(height: 16),
+                                _AddNewWorkLink(
+                                  localization: widget.localization,
+                                  onTap: () {
+                                    Navigator.of(context).pop(_kAddNewWorkResult);
+                                  },
+                                ),
+                              ],
+                              const SizedBox(height: 24),
+                              _buildConfirmButton(context),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitle(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 48,
+                ),
+                child: Text(
+                  widget.localization.selectWorkTitle,
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                  style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF111827),
+                          ) ??
+                      const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyContent(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildTitle(context),
+        const SizedBox(height: 32),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 32),
+          child: AppLoader(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildList(BuildContext context, List<Work> works, WorkState state) {
+    final mediaQuery = MediaQuery.of(context);
+    final isLoadingMore = state.isLoadingMore;
+
+    return Flexible(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: math.min(
+            mediaQuery.size.height * 0.5,
+            360,
+          ),
+        ),
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: works.length > 3,
+          interactive: true,
+          child: ListView.separated(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(
+              vertical: 8,
+            ),
+            physics: const BouncingScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            itemCount: works.length + (isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= works.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final work = works[index];
+              return _WorkSelectionTile(
+                work: work,
+                isSelected: work.id == _selectedId,
+                localization: widget.localization,
+                onTap: () {
+                  setState(() {
+                    _selectedId = work.id;
+                  });
+                },
+                onEdit: widget.onEditWork == null
+                    ? null
+                    : () {
+                        Navigator.of(context).pop(
+                          '$_kEditWorkResultPrefix${work.id}',
+                        );
+                      },
+              );
+            },
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConfirmButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: () {
+          if (_selectedId == null) {
+            Navigator.of(context).pop();
+            return;
+          }
+          Navigator.of(context).pop(_selectedId);
+        },
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+          ),
+          backgroundColor: const Color(0xFF2563EB),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          widget.localization.confirmSelectionButton,
+          style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ) ??
+              const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+        ),
+      ),
+    );
+  }
+}
 String? _initialWorkId({
   required List<Work> works,
   String? initialSelectedWorkId,
