@@ -2930,9 +2930,19 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
     initialBreakMinutes = entry.breakMinutes > 0 ? entry.breakMinutes : 0;
     bundleEntries = <_ContractBundleEditEntry>[];
 
+    ContractType? resolveInitialType([ContractType? type]) {
+      if (type != null) {
+        return type;
+      }
+      final availableTypes = _availableContractTypes();
+      if (availableTypes.isNotEmpty) {
+        return availableTypes.first;
+      }
+      return widget.contractTypes.isNotEmpty ? widget.contractTypes.first : null;
+    }
+
     void addBundle({ContractType? type, num? count}) {
-      final resolvedType = type ??
-          (widget.contractTypes.isNotEmpty ? widget.contractTypes.first : null);
+      final resolvedType = resolveInitialType(type);
       bundleEntries.add(
         _ContractBundleEditEntry(
           id:
@@ -2966,6 +2976,20 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
     super.dispose();
   }
 
+  List<ContractType> _availableContractTypes({
+    _ContractBundleEditEntry? excludingEntry,
+  }) {
+    final selectedIds = bundleEntries
+        .where((entry) =>
+            entry != excludingEntry && entry.contractType != null)
+        .map((entry) => entry.contractType!.id)
+        .toSet();
+
+    return widget.contractTypes
+        .where((type) => !selectedIds.contains(type.id))
+        .toList();
+  }
+
   TimeOfDay? _safeParseTime(String? value) {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) {
@@ -2975,15 +2999,17 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
   }
 
   void _addBundleEntry() {
+    final availableTypes = _availableContractTypes();
+    if (availableTypes.isEmpty) {
+      return;
+    }
+
     setState(() {
-      final resolvedType = widget.contractTypes.isNotEmpty
-          ? widget.contractTypes.first
-          : null;
       bundleEntries.add(
         _ContractBundleEditEntry(
           id:
               'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
-          contractType: resolvedType,
+          contractType: availableTypes.first,
         ),
       );
     });
@@ -3076,6 +3102,13 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
               const SizedBox(height: 16),
               ...List<Widget>.generate(bundleEntries.length, (index) {
                 final bundleEntry = bundleEntries[index];
+                final availableContractTypes =
+                    _availableContractTypes(excludingEntry: bundleEntry);
+                final dropdownOptions = <ContractType>{
+                  if (bundleEntry.contractType != null)
+                    bundleEntry.contractType!,
+                  ...availableContractTypes,
+                }.toList();
                 return Padding(
                   padding: EdgeInsets.only(
                     bottom: index == bundleEntries.length - 1 ? 0 : 12,
@@ -3101,7 +3134,8 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                         decoration: InputDecoration(
                           labelText: l.contractWorkLabel,
                         ),
-                        items: widget.contractTypes
+                        isExpanded: true,
+                        items: dropdownOptions
                             .map(
                               (type) => DropdownMenuItem<ContractType>(
                                 value: type,
@@ -3113,6 +3147,13 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                             ? null
                             : (value) {
                                 if (value == null) {
+                                  return;
+                                }
+                                final isAlreadySelected = bundleEntries
+                                    .where((entry) => entry != bundleEntry)
+                                    .any((entry) =>
+                                        entry.contractType?.id == value.id);
+                                if (isAlreadySelected) {
                                   return;
                                 }
                                 setState(() {
@@ -3179,14 +3220,15 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                 );
               }),
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: isSaving ? null : _addBundleEntry,
-                  icon: const Icon(Icons.add),
-                  label: Text(l.attendanceAddBundleButton),
+              if (_availableContractTypes().isNotEmpty)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: isSaving ? null : _addBundleEntry,
+                    icon: const Icon(Icons.add),
+                    label: Text(l.attendanceAddBundleButton),
+                  ),
                 ),
-              ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
