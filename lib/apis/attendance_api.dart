@@ -12,7 +12,7 @@ import 'logging_client.dart';
 
 class AttendanceApi {
   AttendanceApi({
-    this.baseUrl = 'https://attendancepro.shauryacoder.com',
+    this.baseUrl = 'https://attendencepro.com',
     http.Client? httpClient,
   }) : _client = LoggingClient(httpClient);
 

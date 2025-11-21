@@ -9,7 +9,7 @@ import 'logging_client.dart';
 
 class ContentApi {
   ContentApi({
-    this.baseUrl = 'https://attendancepro.shauryacoder.com',
+    this.baseUrl = 'https://attendencepro.com',
     http.Client? httpClient,
   }) : _client = LoggingClient(httpClient);
 
