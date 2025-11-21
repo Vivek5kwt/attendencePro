@@ -417,6 +417,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         ? _AttendanceEntryType.contract
         : _mapEntryType(data.type);
 
+    final resolvedUnits = _resolveUnitsCompleted(data);
+
     return _AttendanceEntry(
       date: data.date,
       workName: data.workName,
@@ -430,7 +432,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       hoursWorked: data.hoursWorked,
       overtimeHours: data.overtimeHours,
       contractType: data.contractType,
-      unitsCompleted: data.unitsCompleted,
+      unitsCompleted: resolvedUnits,
       ratePerUnit: data.ratePerUnit,
       leaveReason: data.leaveReason,
       salary: data.salary,
@@ -444,6 +446,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
   bool? _extractIsContractEntry(AttendanceHistoryEntryData data) {
     return data.isContractEntry;
+  }
+
+  int? _resolveUnitsCompleted(AttendanceHistoryEntryData data) {
+    if (data.unitsCompleted != null && data.unitsCompleted! > 0) {
+      return data.unitsCompleted;
+    }
+
+    if (data.contractBundles.isNotEmpty) {
+      final totalUnits = data.contractBundles.fold<num>(
+        0,
+        (sum, bundle) => sum + bundle.count,
+      );
+
+      if (totalUnits > 0) {
+        return totalUnits % 1 == 0 ? totalUnits.toInt() : totalUnits.round();
+      }
+    }
+
+    return data.unitsCompleted;
   }
 
   String? _resolveWorkId(String workName) {
@@ -869,11 +890,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         entry.breakMinutes > 0 ? ', Break: ${entry.breakMinutes}m' : '';
         return '$start - $end ($hours$overtime$breakLabel)';
       case _AttendanceEntryType.contract:
-        final units = entry.unitsCompleted ?? 0;
+        final units = _resolveContractUnits(entry);
         final rate = entry.ratePerUnit ?? 0;
         final typeLabel = _resolveContractTypeLabel(entry, localization);
         final rateLabel = _formatCurrencyValue(_currencySymbol, rate);
-        return '$units $typeLabel @ $rateLabel';
+        return '${_formatBundleUnits(units)} $typeLabel @ $rateLabel';
       case _AttendanceEntryType.leave:
         final reason = entry.leaveReason?.trim();
         if (reason == null || reason.isEmpty) {
@@ -881,6 +902,16 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         }
         return reason;
     }
+  }
+
+  num _resolveContractUnits(_AttendanceEntry entry) {
+    if (entry.contractBundles.isNotEmpty) {
+      return entry.contractBundles.fold<num>(
+        0,
+        (sum, bundle) => sum + bundle.count,
+      );
+    }
+    return entry.unitsCompleted ?? 0;
   }
 
   Future<void> _showWorkPicker() async {
