@@ -309,21 +309,71 @@ class WorkApi {
       return const [];
     }
 
+    Map<String, dynamic>? mapOrNull(Object? value) {
+      if (value is Map<String, dynamic>) return value;
+      if (value is Map) {
+        return value.map(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+      }
+      return null;
+    }
+
+    List<Map<String, dynamic>> _mapList(Object? value) {
+      if (value is! List) return const [];
+      final maps = <Map<String, dynamic>>[];
+      for (final element in value) {
+        final map = mapOrNull(element);
+        if (map != null) {
+          maps.add(map);
+        }
+      }
+      return maps;
+    }
+
+    bool _looksLikeWork(Map<String, dynamic> map) {
+      const keys = {
+        'id',
+        'work_id',
+        'workId',
+        'name',
+        'title',
+        'hourly_rate',
+        'is_contract',
+      };
+      return keys.any(map.containsKey);
+    }
+
+    List<Map<String, dynamic>> _filterWorkItems(List<Map<String, dynamic>> items) {
+      final filtered = items.where(_looksLikeWork).toList(growable: false);
+      return filtered.isNotEmpty ? filtered : const [];
+    }
+
+    Map<String, dynamic>? dataWrapper = mapOrNull(decoded['data']);
+    if (dataWrapper != null) {
+      final nestedData = _filterWorkItems(_mapList(dataWrapper['data']))
+          .followedBy(_filterWorkItems(_mapList(dataWrapper['works'])));
+      if (nestedData.isNotEmpty) {
+        return nestedData.toList(growable: false);
+      }
+    }
+
+    final directData = _filterWorkItems(_mapList(decoded['data']));
+    if (directData.isNotEmpty) {
+      return directData;
+    }
+
+    final directWorks = _filterWorkItems(_mapList(decoded['works']));
+    if (directWorks.isNotEmpty) {
+      return directWorks;
+    }
+
     final queue = Queue<dynamic>()..add(decoded);
     while (queue.isNotEmpty) {
       final current = queue.removeFirst();
 
       if (current is List) {
-        final maps = <Map<String, dynamic>>[];
-        for (final element in current) {
-          if (element is Map) {
-            maps.add(
-              element.map(
-                (key, value) => MapEntry(key.toString(), value),
-              ),
-            );
-          }
-        }
+        final maps = _filterWorkItems(_mapList(current));
         if (maps.isNotEmpty) {
           return maps;
         }
