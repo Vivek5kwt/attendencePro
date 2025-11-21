@@ -243,6 +243,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return _refreshWorks();
   }
 
+  bool _onScrollNotification(
+    ScrollNotification notification,
+    WorkState state,
+  ) {
+    if (notification is ScrollUpdateNotification ||
+        notification is OverscrollNotification) {
+      final metrics = notification.metrics;
+      final triggerPosition =
+          metrics.maxScrollExtent == 0 ? 0 : metrics.maxScrollExtent - 100;
+      final shouldLoadMore =
+          metrics.pixels >= triggerPosition && state.nextPage != null;
+      if (shouldLoadMore && !state.isLoadingMore) {
+        context.read<WorkBloc>().add(const WorkLoadMore());
+      }
+    }
+
+    return false;
+  }
+
   void _openWorkDetail(Work work) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -870,41 +889,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return RefreshIndicator(
       onRefresh: () => _handleRefresh(state),
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 24),
-        itemCount: works.length + 2,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildHomeBanner(l);
-          }
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) =>
+            _onScrollNotification(notification, state),
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 24),
+          itemCount: works.length + 2 + (state.isLoadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _buildHomeBanner(l);
+            }
 
-          if (index == 1) {
+            if (index == 1) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _AddNewWorkCard(
+                  title: l.addNewWorkLabel,
+                  subtitle: l.editWorkSubtitle,
+                  onTap: _showAddWorkDialog,
+                ),
+              );
+            }
+
+            if (index >= works.length + 2) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final work = works[index - 2];
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _AddNewWorkCard(
-                title: l.addNewWorkLabel,
-                subtitle: l.editWorkSubtitle,
-                onTap: _showAddWorkDialog,
+              child: _buildWorkCard(
+                work,
+                l,
+                isDeleting: state.deletingWorkId == work.id,
+                isActivating:
+                    activatingWorkId == work.id && isActivationInProgress,
+                activationInProgress: isActivationInProgress,
               ),
             );
-          }
-
-          final work = works[index - 2];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildWorkCard(
-              work,
-              l,
-              isDeleting: state.deletingWorkId == work.id,
-              isActivating:
-                  activatingWorkId == work.id && isActivationInProgress,
-              activationInProgress: isActivationInProgress,
-            ),
-          );
-        },
-        separatorBuilder: (context, index) =>
-            SizedBox(height: index <= 1 ? 14 : 12),
+          },
+          separatorBuilder: (context, index) =>
+              SizedBox(height: index <= 1 ? 14 : 12),
+        ),
       ),
     );
   }

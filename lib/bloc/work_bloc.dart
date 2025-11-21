@@ -18,6 +18,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         super(const WorkState()) {
     on<WorkStarted>(_onStarted);
     on<WorkRefreshed>(_onRefreshed);
+    on<WorkLoadMore>(_onLoadMore);
     on<WorkAdded>(_onAdded);
     on<WorkDeleted>(_onDeleted);
     on<WorkUpdated>(_onUpdated);
@@ -45,8 +46,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
 
     final profile = await _repository.loadUserProfile();
     try {
-      final fetchedWorks = await _repository.fetchWorks();
-      final works = _arrangeWorks(fetchedWorks);
+      final result = await _repository.fetchWorksPage();
+      final works = _arrangeWorks(result.works);
       emit(
         state.copyWith(
           loadStatus: WorkLoadStatus.success,
@@ -57,6 +58,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           userUsername: profile.username,
           userCountryCode: profile.countryCode,
           userLanguage: profile.language,
+          currentPage: result.works.isEmpty ? 0 : 1,
+          nextPage: result.nextPage,
+          isLoadingMore: false,
         ),
       );
     } on WorkAuthException {
@@ -71,6 +75,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           userUsername: profile.username,
           userCountryCode: profile.countryCode,
           userLanguage: profile.language,
+          currentPage: 0,
+          nextPage: null,
+          isLoadingMore: false,
           feedbackKind: WorkFeedbackKind.load,
         ),
       );
@@ -86,6 +93,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           userUsername: profile.username,
           userCountryCode: profile.countryCode,
           userLanguage: profile.language,
+          currentPage: 0,
+          nextPage: null,
+          isLoadingMore: false,
           feedbackKind: WorkFeedbackKind.load,
         ),
       );
@@ -101,6 +111,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           userUsername: profile.username,
           userCountryCode: profile.countryCode,
           userLanguage: profile.language,
+          currentPage: 0,
+          nextPage: null,
+          isLoadingMore: false,
           feedbackKind: WorkFeedbackKind.load,
         ),
       );
@@ -119,13 +132,16 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     );
 
     try {
-      final fetchedWorks = await _repository.fetchWorks();
-      final works = _arrangeWorks(fetchedWorks);
+      final result = await _repository.fetchWorksPage();
+      final works = _arrangeWorks(result.works);
       emit(
         state.copyWith(
           isRefreshing: false,
           loadStatus: WorkLoadStatus.success,
           works: works,
+          currentPage: result.works.isEmpty ? 0 : 1,
+          nextPage: result.nextPage,
+          isLoadingMore: false,
         ),
       );
       event.completer?.complete();
@@ -137,6 +153,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           works: const <Work>[],
           requiresAuthentication: true,
           feedbackKind: WorkFeedbackKind.refresh,
+          currentPage: 0,
+          nextPage: null,
+          isLoadingMore: false,
         ),
       );
       event.completer?.complete();
@@ -146,6 +165,7 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           isRefreshing: false,
           lastErrorMessage: e.message,
           feedbackKind: WorkFeedbackKind.refresh,
+          isLoadingMore: false,
         ),
       );
       event.completer?.complete();
@@ -155,9 +175,79 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           isRefreshing: false,
           lastErrorMessage: 'Unable to refresh works. Please try again.',
           feedbackKind: WorkFeedbackKind.refresh,
+          isLoadingMore: false,
         ),
       );
       event.completer?.complete();
+    }
+  }
+
+  Future<void> _onLoadMore(
+    WorkLoadMore event,
+    Emitter<WorkState> emit,
+  ) async {
+    if (state.isLoadingMore || state.nextPage == null) {
+      return;
+    }
+
+    emit(
+      state.copyWith(
+        isLoadingMore: true,
+        lastErrorMessage: null,
+        lastSuccessMessage: null,
+      ),
+    );
+
+    try {
+      final nextPage = state.nextPage!;
+      final result = await _repository.fetchWorksPage(page: nextPage);
+      final previousOrder = <String, int>{};
+      for (var i = 0; i < state.works.length; i++) {
+        previousOrder[state.works[i].id] = i;
+      }
+
+      final merged = [...state.works];
+      for (final work in result.works) {
+        final exists = merged.any((item) => item.id == work.id);
+        if (!exists) {
+          merged.add(work);
+        }
+      }
+
+      emit(
+        state.copyWith(
+          works: _arrangeWorks(
+            merged,
+            previousOrder: previousOrder,
+          ),
+          currentPage: nextPage,
+          nextPage: result.nextPage,
+          isLoadingMore: false,
+          loadStatus: WorkLoadStatus.success,
+        ),
+      );
+    } on WorkAuthException {
+      emit(
+        state.copyWith(
+          isLoadingMore: false,
+          requiresAuthentication: true,
+          feedbackKind: WorkFeedbackKind.load,
+        ),
+      );
+    } on WorkRepositoryException catch (e) {
+      emit(
+        state.copyWith(
+          isLoadingMore: false,
+          lastErrorMessage: e.message,
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          isLoadingMore: false,
+          lastErrorMessage: 'Unable to load more works. Please try again.',
+        ),
+      );
     }
   }
 
@@ -185,7 +275,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
-      var fetchedWorks = await _repository.fetchWorks();
+      var fetchedPage = await _repository.fetchWorksPage();
+      var fetchedWorks = fetchedPage.works;
       Work? createdWork;
       for (final work in fetchedWorks) {
         if (!previousWorkIds.contains(work.id)) {
@@ -199,7 +290,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
             work: createdWork,
             pending: event.pendingContractWorks,
           );
-          fetchedWorks = await _repository.fetchWorks();
+          fetchedPage = await _repository.fetchWorksPage();
+          fetchedWorks = fetchedPage.works;
           for (final work in fetchedWorks) {
             if (work.id == createdWork!.id) {
               createdWork = work;
@@ -245,6 +337,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           loadStatus: WorkLoadStatus.success,
           lastSuccessMessage: successMessage,
           feedbackKind: WorkFeedbackKind.add,
+          currentPage: fetchedWorks.isEmpty ? 0 : 1,
+          nextPage: fetchedPage.nextPage,
+          isLoadingMore: false,
         ),
       );
       if (createdWork != null && !createdWork.isActive) {
@@ -316,7 +411,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
         isContract: event.isContract,
       );
       final successMessage = (result.message ?? '').trim();
-      var fetchedWorks = await _repository.fetchWorks();
+      var fetchedPage = await _repository.fetchWorksPage();
+      var fetchedWorks = fetchedPage.works;
       Work? updatedWork;
       for (final work in fetchedWorks) {
         if (work.id == event.work.id) {
@@ -330,7 +426,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
             work: updatedWork,
             pending: event.pendingContractWorks,
           );
-          fetchedWorks = await _repository.fetchWorks();
+          fetchedPage = await _repository.fetchWorksPage();
+          fetchedWorks = fetchedPage.works;
           for (final work in fetchedWorks) {
             if (work.id == event.work.id) {
               updatedWork = work;
@@ -375,6 +472,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           loadStatus: WorkLoadStatus.success,
           lastSuccessMessage: successMessage,
           feedbackKind: WorkFeedbackKind.update,
+          currentPage: fetchedWorks.isEmpty ? 0 : 1,
+          nextPage: fetchedPage.nextPage,
+          isLoadingMore: false,
         ),
       );
     } on WorkAuthException {
@@ -511,7 +611,8 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
     try {
       final result = await _repository.activateWork(event.work);
       final successMessage = (result.message ?? '').trim();
-      final fetchedWorks = await _repository.fetchWorks();
+      final fetchedPage = await _repository.fetchWorksPage();
+      final fetchedWorks = fetchedPage.works;
 
       final previousOrder = <String, int>{};
       for (var i = 0; i < state.works.length; i++) {
@@ -531,6 +632,9 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
           loadStatus: WorkLoadStatus.success,
           lastSuccessMessage: successMessage,
           feedbackKind: WorkFeedbackKind.activate,
+          currentPage: fetchedWorks.isEmpty ? 0 : 1,
+          nextPage: fetchedPage.nextPage,
+          isLoadingMore: false,
         ),
       );
     } on WorkAuthException {
