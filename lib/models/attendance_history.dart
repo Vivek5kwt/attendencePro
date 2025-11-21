@@ -956,6 +956,8 @@ List<dynamic>? _extractBundleList(Map<String, dynamic> json, [int depth = 0]) {
     'bundles',
     'contract_bundles',
     'contractBundles',
+    'contract_details',
+    'contractDetails',
     'contract_entries',
     'contractEntries',
     'bundle_items',
