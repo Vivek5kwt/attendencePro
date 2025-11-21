@@ -28,6 +28,9 @@ class WorkState extends Equatable {
     this.userCountryCode,
     this.userLanguage,
     this.feedbackKind,
+    this.currentPage = 0,
+    this.nextPage,
+    this.isLoadingMore = false,
   });
 
   final WorkLoadStatus loadStatus;
@@ -48,6 +51,9 @@ class WorkState extends Equatable {
   final String? userCountryCode;
   final String? userLanguage;
   final WorkFeedbackKind? feedbackKind;
+  final int currentPage;
+  final int? nextPage;
+  final bool isLoadingMore;
 
   bool get isLoading => loadStatus == WorkLoadStatus.loading;
 
@@ -72,6 +78,9 @@ class WorkState extends Equatable {
     String? userUsername,
     String? userCountryCode,
     String? userLanguage,
+    int? currentPage,
+    Object? nextPage = _sentinel,
+    bool? isLoadingMore,
   }) {
     return WorkState(
       loadStatus: loadStatus ?? this.loadStatus,
@@ -94,15 +103,18 @@ class WorkState extends Equatable {
       activatingWorkId: identical(activatingWorkId, _sentinel)
           ? this.activatingWorkId
           : activatingWorkId as String?,
-      feedbackKind: identical(feedbackKind, _sentinel)
-          ? this.feedbackKind
-          : feedbackKind as WorkFeedbackKind?,
       userName: userName ?? this.userName,
       userEmail: userEmail ?? this.userEmail,
       userPhone: userPhone ?? this.userPhone,
       userUsername: userUsername ?? this.userUsername,
       userCountryCode: userCountryCode ?? this.userCountryCode,
       userLanguage: userLanguage ?? this.userLanguage,
+      currentPage: currentPage ?? this.currentPage,
+      nextPage: identical(nextPage, _sentinel) ? this.nextPage : nextPage as int?,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      feedbackKind: identical(feedbackKind, _sentinel)
+          ? this.feedbackKind
+          : feedbackKind as WorkFeedbackKind?,
     );
   }
 
@@ -134,6 +146,9 @@ class WorkState extends Equatable {
         userUsername,
         userCountryCode,
         userLanguage,
+        currentPage,
+        nextPage,
+        isLoadingMore,
         feedbackKind,
       ];
 }
