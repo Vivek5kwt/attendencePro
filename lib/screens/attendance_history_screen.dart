@@ -1030,6 +1030,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
 
+    final scopedContractTypes = _filterContractTypesForEntry(entry);
+    if (scopedContractTypes.isEmpty) {
+      _showErrorSnackBar(l.contractWorkLoadError);
+      return;
+    }
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -1040,7 +1046,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         return _ContractAttendanceSheet(
           entry: entry,
           localization: l,
-          contractTypes: _contractTypes,
+          contractTypes: scopedContractTypes,
           parseTimeOfDay: _parseTimeOfDay,
           onError: _showErrorSnackBar,
           resolveContractType: _findContractTypeById,
@@ -1067,6 +1073,58 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         );
       },
     );
+  }
+
+  List<ContractType> _filterContractTypesForEntry(_AttendanceEntry entry) {
+    final workId = entry.workId ?? _resolveWorkId(entry.workName);
+    final bundleTypeIds = entry.contractBundles
+        .map((bundle) => bundle.contractTypeId?.toString())
+        .where((id) => id != null && id!.isNotEmpty)
+        .cast<String>()
+        .toSet();
+
+    final filteredByWork = workId == null
+        ? const <ContractType>[]
+        : _contractTypes
+            .where(
+              (type) => _extractWorkIdFromContractType(type.additionalData) ==
+                  workId,
+            )
+            .toList();
+
+    if (filteredByWork.isNotEmpty) {
+      if (bundleTypeIds.isEmpty) {
+        return filteredByWork;
+      }
+      final matchingBundles = filteredByWork
+          .where((type) => bundleTypeIds.contains(type.id))
+          .toList();
+      return matchingBundles.isNotEmpty ? matchingBundles : filteredByWork;
+    }
+
+    if (bundleTypeIds.isNotEmpty) {
+      final matchingBundles = _contractTypes
+          .where((type) => bundleTypeIds.contains(type.id))
+          .toList();
+      if (matchingBundles.isNotEmpty) {
+        return matchingBundles;
+      }
+    }
+
+    return _contractTypes;
+  }
+
+  String? _extractWorkIdFromContractType(Map<String, dynamic> data) {
+    const possibleKeys = ['work_id', 'workId', 'work'];
+    for (final key in possibleKeys) {
+      final value = data[key];
+      if (value == null) continue;
+      final resolved = value.toString().trim();
+      if (resolved.isNotEmpty) {
+        return resolved;
+      }
+    }
+    return null;
   }
 
   Future<bool> _submitHourlyAttendance({
