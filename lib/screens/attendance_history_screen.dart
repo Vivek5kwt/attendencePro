@@ -174,7 +174,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
 
     try {
-      final works = await _workRepository.fetchWorks();
+      final works = await _fetchAllWorks();
       if (!mounted) {
         return;
       }
@@ -288,6 +288,24 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         _selectedWork = _availableWorks.isNotEmpty ? _availableWorks.first : '';
         _currencySymbol = '€';
       });
+    }
+  }
+
+  Future<List<Work>> _fetchAllWorks() async {
+    final List<Work> allWorks = <Work>[];
+    int? currentPage = 1;
+
+    try {
+      while (currentPage != null) {
+        final result =
+            await _workRepository.fetchWorksPage(page: currentPage);
+        allWorks.addAll(result.works);
+        currentPage = result.nextPage;
+      }
+
+      return allWorks;
+    } on WorkRepositoryException {
+      rethrow;
     }
   }
 
