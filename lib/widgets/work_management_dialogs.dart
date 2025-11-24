@@ -384,7 +384,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
 
     return BlocConsumer<WorkBloc, WorkState>(
       listenWhen: (previous, current) =>
-      previous.addStatus != current.addStatus,
+          previous.addStatus != current.addStatus,
       listener: (blocContext, state) {
         if (state.addStatus == WorkActionStatus.success) {
           _clearForm();
@@ -401,6 +401,11 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
       },
       builder: (blocContext, state) {
         final isSaving = state.addStatus == WorkActionStatus.inProgress;
+        final errorMessage = state.addStatus == WorkActionStatus.failure
+            ? (state.lastErrorMessage?.trim().isNotEmpty ?? false
+                ? state.lastErrorMessage!.trim()
+                : 'A work with this name already exists. Please use a different name.')
+            : null;
 
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -473,6 +478,46 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
                                 ),
                               ],
                             ),
+
+                            if (errorMessage != null) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF4F3),
+                                  border: Border.all(color: const Color(0xFFFFB4AC)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: Color(0xFFB3261E),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        errorMessage,
+                                        style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: const Color(0xFF410E0B),
+                                                  fontWeight: FontWeight.w600,
+                                                ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF410E0B),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
 
                             const SizedBox(height: 16),
 
