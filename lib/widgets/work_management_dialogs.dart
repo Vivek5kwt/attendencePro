@@ -390,6 +390,13 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
           _clearForm();
           Navigator.of(context).pop();
           blocContext.read<WorkBloc>().add(const WorkAddStatusCleared());
+        } else if (state.addStatus == WorkActionStatus.failure) {
+          final message = state.lastErrorMessage?.trim() ?? '';
+          _showRootSnack(
+            message.isNotEmpty
+                ? message
+                : 'Unable to save work. Please try again.',
+          );
         }
       },
       builder: (blocContext, state) {
