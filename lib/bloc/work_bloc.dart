@@ -330,6 +330,21 @@ class WorkBloc extends Bloc<WorkEvent, WorkState> {
       }
 
       final works = _arrangeWorks(fetchedWorks);
+
+      if (createdWork == null && fetchedWorks.length == previousWorkIds.length) {
+        final duplicateMessage = successMessage.isNotEmpty
+            ? successMessage
+            : 'This work already exists.';
+
+        emit(
+          state.copyWith(
+            addStatus: WorkActionStatus.failure,
+            lastErrorMessage: duplicateMessage,
+            feedbackKind: WorkFeedbackKind.add,
+          ),
+        );
+        return;
+      }
       emit(
         state.copyWith(
           addStatus: WorkActionStatus.success,
