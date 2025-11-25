@@ -249,11 +249,13 @@ class PdfReportService {
 
           for (final day in sortedDays) {
             for (final entry in day.entries) {
+              final totalHoursLabel = _formatHours(entry.totalHours);
+
               tableRows.add(<String>[
                 _formatDate(day.date),
                 entry.typeLabel,
                 entry.workName,
-                _formatHours(entry.totalHours),
+                totalHoursLabel,
                 _formatCurrency(currencySymbol, entry.salary),
               ]);
             }
