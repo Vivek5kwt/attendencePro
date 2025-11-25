@@ -8442,6 +8442,7 @@ class _AttendancePreviewSummaryCard extends StatelessWidget {
                       label: salaryLabel,
                       value: salaryValue!.trim(),
                       color: const Color(0xFF16A34A),
+                      leadingIcon: Icons.euro_rounded,
                     ),
                   ),
               ],
@@ -8473,38 +8474,36 @@ class _PreviewHighlightCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
+    this.leadingIcon,
   });
 
   final String label;
   final String value;
   final Color color;
+  final IconData? leadingIcon;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withOpacity(0.12)),
-      ),
-      child: Row(
+    Widget buildValue(TextAlign align) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment:
+            align == TextAlign.right ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              '$label:',
-              style: const TextStyle(
-                color: Color(0xFF475569),
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
+          if (leadingIcon != null) ...[
+            Icon(
+              leadingIcon,
+              size: 18,
+              color: color,
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 6),
+          ],
           Flexible(
             child: Text(
               value,
-              textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: align,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w800,
@@ -8513,7 +8512,61 @@ class _PreviewHighlightCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 220;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withOpacity(0.12)),
+          ),
+          child: isCompact
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$label:',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF475569),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    buildValue(TextAlign.left),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '$label:',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF475569),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: buildValue(TextAlign.right),
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }
