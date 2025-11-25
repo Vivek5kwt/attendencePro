@@ -1,9 +1,11 @@
+import 'contract_type.dart';
 import 'attendance_request.dart' show AttendanceContractBundle;
 
 class AttendanceHistoryData {
   const AttendanceHistoryData({
     required this.entries,
     required this.currencySymbol,
+    this.contractTypes = const <ContractType>[],
   });
 
   factory AttendanceHistoryData.fromResponse(
@@ -50,14 +52,18 @@ class AttendanceHistoryData {
         ? '€'
         : detectedCurrency!.trim();
 
+    final contractTypes = _parseContractTypes(data ?? root);
+
     return AttendanceHistoryData(
       entries: resolvedEntries,
       currencySymbol: currencySymbol,
+      contractTypes: contractTypes,
     );
   }
 
   final List<AttendanceHistoryEntryData> entries;
   final String currencySymbol;
+  final List<ContractType> contractTypes;
 }
 
 class AttendanceHistoryEntryData {
@@ -349,6 +355,49 @@ List<dynamic>? _extractEntriesList(Map<String, dynamic>? data,
   }
 
   return null;
+}
+
+List<ContractType> _parseContractTypes(Map<String, dynamic>? data) {
+  if (data == null || data.isEmpty) return const <ContractType>[];
+
+  final collected = <ContractType>[];
+
+  void appendFromSource(dynamic source) {
+    if (source == null) return;
+    if (source is Iterable) {
+      for (final entry in source) {
+        final map = _ensureMap(entry);
+        if (map != null) {
+          collected.add(ContractType.fromJson(map));
+        }
+      }
+      return;
+    }
+
+    if (source is Map) {
+      appendFromSource(source.values);
+    }
+  }
+
+  appendFromSource(data['contract_types']);
+  appendFromSource(data['contractTypes']);
+  appendFromSource(data['contracts']);
+  appendFromSource(data['global_contracts']);
+  appendFromSource(data['globalContracts']);
+  appendFromSource(data['user_contracts']);
+  appendFromSource(data['userContracts']);
+  appendFromSource(data['user_contract_types']);
+  appendFromSource(data['userContractTypes']);
+
+  final seen = <String>{};
+  final unique = <ContractType>[];
+  for (final type in collected) {
+    if (seen.add(type.id)) {
+      unique.add(type);
+    }
+  }
+
+  return unique;
 }
 
 String? _extractCurrencySymbol(Map<String, dynamic>? data) {
