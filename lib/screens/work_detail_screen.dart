@@ -2265,6 +2265,23 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _showSnack(message);
   }
 
+  void _applyAlreadySubmittedLock(String message) {
+    if (!mounted) {
+      return;
+    }
+    if (!_isAlreadySubmittedResponseMessage(message)) {
+      return;
+    }
+    final normalizedSelectedDate = _normalizeDateOnly(_selectedDate);
+    final normalizedToday = _normalizeDateOnly(DateTime.now());
+    setState(() {
+      if (normalizedSelectedDate == normalizedToday) {
+        _isTodayAttendanceMarked = true;
+      }
+      _updateAttendanceLockForDate(normalizedSelectedDate, isLocked: true);
+    });
+  }
+
   String? _validateStartTime(String? value) {
     if (!_shouldValidateHourlyFields()) {
       return null;
@@ -2623,6 +2640,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         );
         _setAttendanceStatus(message, isError: true);
         _showSnack(message);
+        _applyAlreadySubmittedLock(message);
       } catch (_) {
         if (!mounted) {
           return;
@@ -2864,6 +2882,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       );
       _setAttendanceStatus(message, isError: true);
       _showSnack(message);
+      _applyAlreadySubmittedLock(message);
     } catch (_) {
       if (!mounted) {
         return;
@@ -2873,6 +2892,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           : l.attendancePreviewFetchFailed;
       _setAttendanceStatus(message, isError: true);
       _showSnack(message);
+      _applyAlreadySubmittedLock(message);
     } finally {
       if (mounted) {
         setState(() {
@@ -4677,16 +4697,25 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     return '$day/$month/${normalized.year}';
   }
 
+  bool _isAlreadySubmittedResponseMessage(String message) {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) {
+      return false;
+    }
+    final lowerCased = trimmed.toLowerCase();
+    return _alreadySubmittedServerMessages.contains(lowerCased) ||
+        lowerCased.contains('already marked for today') ||
+        lowerCased.contains('already submitted for today') ||
+        lowerCased.contains('makred for today');
+  }
+
   String _localizeAttendanceServerMessage(String message) {
     final trimmed = message.trim();
     if (trimmed.isEmpty) {
       return message;
     }
     final lowerCased = trimmed.toLowerCase();
-    final isAlreadySubmitted = _alreadySubmittedServerMessages.contains(lowerCased) ||
-        lowerCased.contains('already marked for today') ||
-        lowerCased.contains('already submitted for today') ||
-        lowerCased.contains('makred for today');
+    final isAlreadySubmitted = _isAlreadySubmittedResponseMessage(lowerCased);
 
     if (isAlreadySubmitted) {
       final formattedDate =
@@ -6735,7 +6764,7 @@ class _AttendanceSection extends StatelessWidget {
     double? height,
   }) {
     final resolvedHeight = height ?? 48;
-    return SizedBox(
+    final button = SizedBox(
       height: resolvedHeight,
       child: ElevatedButton(
         onPressed: (isSubmitting || isSubmitLocked) ? null : onSubmit,
@@ -6770,6 +6799,29 @@ class _AttendanceSection extends StatelessWidget {
               ),
       ),
     );
+
+    if (isSubmitLocked && onAttendanceLockedTap != null) {
+      return Stack(
+        children: [
+          button,
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onAttendanceLockedTap,
+                  splashColor: Colors.white.withOpacity(0.08),
+                  highlightColor: Colors.white.withOpacity(0.04),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return button;
   }
 
 
