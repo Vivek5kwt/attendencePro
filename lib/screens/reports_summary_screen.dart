@@ -1655,6 +1655,7 @@ class _ContractDetailsCard extends StatelessWidget {
                 ...List.generate(details.length, (index) {
                   final detail = details[index];
                   final isLast = index == details.length - 1;
+                  final unitText = _formatUnitCount(detail.totalUnits);
                   return Column(
                     children: [
                       _ContractDetailTile(
@@ -1665,7 +1666,7 @@ class _ContractDetailsCard extends StatelessWidget {
                         typeLabel: typeLabel,
                         summaryLabelStyle: summaryLabelStyle,
                         summaryValueStyle: summaryValueStyle,
-                        unitText: detail.unitLabel.isEmpty ? '--' : detail.unitLabel,
+                        unitText: unitText,
                         unitLabelHeading: totalUnitsLabel,
                       ),
                       if (!isLast)
@@ -2529,6 +2530,16 @@ double _resolveContractSummarySalaryAmount(ContractSummaryData summary) {
     }
   }
   return total;
+}
+
+String _formatUnitCount(num? units) {
+  if (units == null) {
+    return '--';
+  }
+
+  final doubleValue = units.toDouble();
+  final isWholeNumber = doubleValue.floorToDouble() == doubleValue;
+  return isWholeNumber ? doubleValue.toInt().toString() : doubleValue.toString();
 }
 
 String _formatCurrencyValue(num value, String symbol) {
