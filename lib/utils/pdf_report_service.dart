@@ -93,17 +93,23 @@ class PdfReportService {
     final document = pw.Document(theme: fonts.theme);
 
     final contractTotals = <String, MapEntry<int, double>>{};
+    final contractLabels = <String, String>{};
     var totalUnits = 0;
     var totalSalary = 0.0;
 
     final currencyLabel = _resolveCurrencyLabel(currencySymbol);
 
     final tableData = rows.map((row) {
-      final label = row.contractType.isEmpty ? '-' : row.contractType;
-      final entry = contractTotals[label];
+      final rawLabel = row.contractType.trim();
+      final label = rawLabel.isEmpty ? '-' : rawLabel;
+      final normalizedLabel = label.toLowerCase();
+
+      final entry = contractTotals[normalizedLabel];
       final updatedUnits = (entry?.key ?? 0) + row.unitsCompleted;
       final updatedSalary = (entry?.value ?? 0) + row.salary;
-      contractTotals[label] = MapEntry(updatedUnits, updatedSalary);
+
+      contractTotals[normalizedLabel] = MapEntry(updatedUnits, updatedSalary);
+      contractLabels.putIfAbsent(normalizedLabel, () => label);
 
       totalUnits += row.unitsCompleted;
       totalSalary += row.salary;
@@ -122,9 +128,10 @@ class PdfReportService {
     // Preserve the original insertion order so the monthly totals table mirrors
     // the sequence of contract types shown in the daily entries.
     for (final entry in contractTotals.entries) {
+      final displayLabel = contractLabels[entry.key] ?? entry.key;
       monthlyTotals.add(<String>[
         '${serial++}.',
-        entry.key,
+        displayLabel,
         entry.value.key.toString(),
         _formatContractCurrency(currencyLabel, entry.value.value),
       ]);
