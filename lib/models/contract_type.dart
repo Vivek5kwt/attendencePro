@@ -98,7 +98,16 @@ class ContractType {
   }
 
   static double _parseRate(Map<String, dynamic> json) {
-    const possibleKeys = ['rate', 'rate_per_unit', 'ratePerUnit', 'unit_rate', 'unitRate'];
+    const possibleKeys = [
+      'rate',
+      'rate_per_unit',
+      'ratePerUnit',
+      'unit_rate',
+      'unitRate',
+      'salary',
+      'salary_per_unit',
+      'salaryPerUnit',
+    ];
 
     for (final key in possibleKeys) {
       final value = json[key];
