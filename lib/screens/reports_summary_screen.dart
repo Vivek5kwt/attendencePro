@@ -9,6 +9,7 @@ import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
 import '../models/attendance_history.dart';
+import '../models/contract_type.dart';
 import '../models/report_summary.dart';
 import '../models/work.dart';
 import '../repositories/attendance_history_repository.dart';
@@ -300,12 +301,31 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   }
 
   String _resolveContractTypeLabel(
-      AttendanceHistoryEntryData entry,
-      AppLocalizations localization,
-      ) {
+    AttendanceHistoryEntryData entry,
+    AppLocalizations localization, {
+    Map<String, ContractType>? contractTypeLookup,
+  }) {
     final explicit = entry.contractType?.trim();
     if (explicit != null && explicit.isNotEmpty) {
       return explicit;
+    }
+
+    final lookup = contractTypeLookup;
+    if (lookup != null && lookup.isNotEmpty && entry.contractBundles.isNotEmpty) {
+      final seen = <String>{};
+      final labels = <String>[];
+
+      for (final bundle in entry.contractBundles) {
+        final type = lookup[bundle.contractTypeId.toString()];
+        final name = type?.name.trim();
+        if (name != null && name.isNotEmpty && seen.add(name)) {
+          labels.add(name);
+        }
+      }
+
+      if (labels.isNotEmpty) {
+        return labels.join(', ');
+      }
     }
 
     return localization.contractWorkUnitFallback;
@@ -348,6 +368,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       );
 
       final entries = history.entries;
+      final contractTypeLookup = <String, ContractType>{
+        for (final type in history.contractTypes) type.id: type,
+      };
       final hoursEntries = entries
           .where(
             (entry) =>
@@ -401,7 +424,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             .map(
               (entry) => ContractReportRow(
                 date: entry.date,
-                contractType: _resolveContractTypeLabel(entry, l),
+                contractType: _resolveContractTypeLabel(
+                  entry,
+                  l,
+                  contractTypeLookup: contractTypeLookup,
+                ),
                 unitsCompleted: entry.unitsCompleted ?? 0,
                 ratePerUnit: entry.ratePerUnit ?? 0,
                 salary: entry.salary,
