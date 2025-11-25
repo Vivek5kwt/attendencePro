@@ -305,19 +305,16 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     AppLocalizations localization, {
     Map<String, ContractType>? contractTypeLookup,
   }) {
-    final explicit = entry.contractType?.trim();
-    if (explicit != null && explicit.isNotEmpty) {
-      return explicit;
-    }
-
     final lookup = contractTypeLookup;
     if (lookup != null && lookup.isNotEmpty && entry.contractBundles.isNotEmpty) {
       final seen = <String>{};
       final labels = <String>[];
 
       for (final bundle in entry.contractBundles) {
-        final type = lookup[bundle.contractTypeId.toString()];
-        final name = type?.name.trim();
+        final name = _contractTypeNameFromLookup(
+          bundle.contractTypeId.toString(),
+          lookup,
+        );
         if (name != null && name.isNotEmpty && seen.add(name)) {
           labels.add(name);
         }
@@ -328,7 +325,55 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       }
     }
 
+    final explicit = entry.contractType?.trim();
+    final mappedExplicit = _contractTypeNameFromLookup(explicit, lookup);
+    if (mappedExplicit != null && mappedExplicit.isNotEmpty) {
+      return mappedExplicit;
+    }
+
+    if (explicit != null && explicit.isNotEmpty) {
+      return explicit;
+    }
+
     return localization.contractWorkUnitFallback;
+  }
+
+  String? _contractTypeNameFromLookup(
+    String? idOrName,
+    Map<String, ContractType>? lookup,
+  ) {
+    if (lookup == null || lookup.isEmpty) {
+      return null;
+    }
+
+    final raw = idOrName?.trim();
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    final directMatch = lookup[raw];
+    if (directMatch != null && directMatch.name.trim().isNotEmpty) {
+      return directMatch.name.trim();
+    }
+
+    final numericId = int.tryParse(raw)?.toString();
+    if (numericId != null) {
+      final numericMatch = lookup[numericId];
+      if (numericMatch != null && numericMatch.name.trim().isNotEmpty) {
+        return numericMatch.name.trim();
+      }
+    }
+
+    for (final type in lookup.values) {
+      if (type.id == raw || type.id == numericId || type.name.trim() == raw) {
+        final resolved = type.name.trim();
+        if (resolved.isNotEmpty) {
+          return resolved;
+        }
+      }
+    }
+
+    return null;
   }
 
   // ===== UI helpers =====
