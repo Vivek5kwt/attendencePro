@@ -3960,12 +3960,16 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               _normalizeContractText(map['name']) ?? _normalizeContractText(map['title']);
           final type =
               _normalizeContractText(map['type']) ?? _normalizeContractText(map['role']);
-          final combinedTitle = _combineContractTitle(name, type);
-          final rate = _parseContractRateValue(map);
+          final contractType =
+              contractId != null ? _findContractTypeById(contractId) : null;
+          final combinedTitle =
+              _combineContractTitle(name ?? contractType?.name, type);
+          final rate = _parseContractRateValue(map) ?? contractType?.rate;
           final rawPrice = _extractContractPriceText(map);
-          final unitLabel = _extractContractUnitLabel(map);
+          final unitLabel =
+              _extractContractUnitLabel(map) ?? contractType?.unitLabel;
           final count = _extractContractCount(map);
-          final roleLabel = _extractContractRole(map);
+          final roleLabel = _extractContractRole(map) ?? contractType?.role;
 
           final resolvedUnitLabel = resolveContractUnitLabel(
             localizations: l,
