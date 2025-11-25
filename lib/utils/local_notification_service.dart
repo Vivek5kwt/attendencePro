@@ -475,6 +475,8 @@ class LocalNotificationService {
 
     final scheduleMode = await _preferredAndroidScheduleMode();
 
+    final reminderCopy = await _resolveAttendanceReminderCopy();
+
     final notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         _attendanceReminderChannel.id,
@@ -498,8 +500,6 @@ class LocalNotificationService {
         presentSound: true,
       ),
     );
-
-    final reminderCopy = await _resolveAttendanceReminderCopy();
 
     final prefs = await SharedPreferences.getInstance();
     final reminderTime = _resolveReminderTime(prefs);
