@@ -113,7 +113,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
   List<_ContractSummaryRow> _summaryRows = const <_ContractSummaryRow>[];
   bool _isLoadingSummary = false;
   String? _summaryError;
-  int _summaryTotalUnits = 0;
+  double _summaryTotalUnits = 0;
   double _summarySalaryAmount = 0;
 
   final Set<String> _pendingDeletionIds = <String>{};
@@ -299,11 +299,14 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     return List<_ContractSummaryRow>.generate(types.length, (i) {
       final t = types[i];
       final metadata = t.additionalData;
-      final count = _summaryNormalizeUnits(
-        _summaryExtractContractCount(metadata),
-      );
       final fallbackUnitLabel = _summaryExtractContractUnitLabel(metadata) ??
           (t.unitLabel.isNotEmpty ? t.unitLabel : null);
+      final count = _normalizeContractUnits(
+        _summaryExtractContractCount(metadata),
+        title: t.name,
+        unitLabel: fallbackUnitLabel,
+        role: t.role,
+      );
       final resolvedUnitLabel = resolveContractUnitLabel(
         localizations: l,
         contractName: t.name,
@@ -366,11 +369,31 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         : summary.currencySymbol;
     final aggregations = <String, _ContractSummaryAggregation>{};
 
-    int? _extractUnits(ContractWorkItemData data) {
-      return _summaryNormalizeUnits(data.unitCount) ??
-          _summaryNormalizeUnits(data.unitsCompleted) ??
-          _summaryNormalizeUnits(data.unitsTotal) ??
-          _summaryNormalizeUnits(data.unitsPending);
+    num? _extractUnits(ContractWorkItemData data) {
+      return _normalizeContractUnits(
+            data.unitCount,
+            title: data.title,
+            unitLabel: data.unitLabel,
+            role: data.unitRole,
+          ) ??
+          _normalizeContractUnits(
+            data.unitsCompleted,
+            title: data.title,
+            unitLabel: data.unitLabel,
+            role: data.unitRole,
+          ) ??
+          _normalizeContractUnits(
+            data.unitsTotal,
+            title: data.title,
+            unitLabel: data.unitLabel,
+            role: data.unitRole,
+          ) ??
+          _normalizeContractUnits(
+            data.unitsPending,
+            title: data.title,
+            unitLabel: data.unitLabel,
+            role: data.unitRole,
+          );
     }
 
     for (final item in items) {
@@ -413,7 +436,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     }
 
     final rows = <_ContractSummaryRow>[];
-    var totalUnits = 0;
+    var totalUnits = 0.0;
     var totalSalary = 0.0;
     var rowIndex = 1;
 
@@ -492,7 +515,43 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     return null;
   }
 
-  int? _summaryNormalizeUnits(num? value) {
+  bool _isHundredBunchContract({
+    required String? title,
+    required String? unitLabel,
+    required String? role,
+  }) {
+    final normalizedTitle = title?.toLowerCase() ?? '';
+    final normalizedUnitLabel = unitLabel?.toLowerCase() ?? '';
+    final normalizedRole = role?.toLowerCase() ?? '';
+
+    if (normalizedRole == 'bunches') {
+      return true;
+    }
+
+    final mentionsBunch = normalizedTitle.contains('bunch') ||
+        normalizedUnitLabel.contains('bunch') ||
+        normalizedUnitLabel.contains('mazz') ||
+        normalizedTitle.contains('mazz') ||
+        normalizedTitle.contains('ravanello') ||
+        normalizedUnitLabel.contains('ravanello');
+    if (!mentionsBunch) {
+      return false;
+    }
+
+    final mentionsHundred = normalizedUnitLabel.contains('100') ||
+        normalizedUnitLabel.contains('hundred') ||
+        normalizedTitle.contains('100') ||
+        normalizedTitle.contains('cento');
+
+    return mentionsHundred || normalizedRole == 'bunches';
+  }
+
+  num? _normalizeContractUnits(
+    num? value, {
+    required String? title,
+    required String? unitLabel,
+    required String? role,
+  }) {
     if (value == null) {
       return null;
     }
@@ -503,8 +562,20 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     if (doubleValue < 0) {
       return null;
     }
-    final rounded = doubleValue.round();
-    return rounded;
+
+    if (_isHundredBunchContract(
+      title: title,
+      unitLabel: unitLabel,
+      role: role,
+    )) {
+      final normalized = doubleValue / 100;
+      if (normalized % 1 == 0) {
+        return normalized.toInt();
+      }
+      return double.parse(normalized.toStringAsFixed(2));
+    }
+
+    return doubleValue.round();
   }
 
   String? _summaryExtractContractUnitLabel(Map<String, dynamic> data) {
@@ -2737,7 +2808,7 @@ class _ContractSummaryAggregation {
 
   final String workName;
   String? role;
-  int totalUnits = 0;
+  double totalUnits = 0;
   double amount = 0;
   double? ratePerUnit;
   String? unitLabel;
@@ -2751,7 +2822,7 @@ class _ContractSummaryComputation {
   });
 
   final List<_ContractSummaryRow> rows;
-  final int totalUnits;
+  final double totalUnits;
   final double totalSalary;
 }
 
