@@ -15,6 +15,7 @@ import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
+import '../utils/contract_unit_label.dart';
 import '../utils/history_entry_hours.dart';
 import '../utils/responsive.dart';
 import '../utils/snackbar.dart';
@@ -498,6 +499,21 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     return null;
   }
 
+  ContractType? _findContractTypeByName(String name) {
+    final normalized = name.trim().toLowerCase();
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    for (final type in _contractTypes) {
+      if (type.name.trim().toLowerCase() == normalized) {
+        return type;
+      }
+    }
+
+    return null;
+  }
+
   int _parseBreakMinutes(String? label) {
     if (label == null || label.trim().isEmpty) {
       return 0;
@@ -766,6 +782,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
               (entry) => ContractReportRow(
             date: entry.date,
             contractType: _resolveContractTypeLabel(entry, l),
+            unitLabel: _resolveContractUnitLabel(entry, l),
             unitsCompleted: entry.unitsCompleted ?? 0,
             ratePerUnit: entry.ratePerUnit ?? 0,
             salary: entry.salary,
@@ -905,6 +922,40 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     return localization.contractWorkUnitFallback;
+  }
+
+  String _resolveContractUnitLabel(
+    _AttendanceEntry entry,
+    AppLocalizations localization,
+  ) {
+    for (final bundle in entry.contractBundles) {
+      final type = _findContractTypeById(bundle.contractTypeId);
+      if (type != null && type.unitLabel.trim().isNotEmpty) {
+        return resolveContractUnitLabel(
+          localizations: localization,
+          contractName: type.name,
+          unitLabel: type.unitLabel,
+        );
+      }
+    }
+
+    final explicit = entry.contractType?.trim();
+    if (explicit != null && explicit.isNotEmpty) {
+      final typeByName = _findContractTypeByName(explicit);
+      if (typeByName != null && typeByName.unitLabel.trim().isNotEmpty) {
+        return resolveContractUnitLabel(
+          localizations: localization,
+          contractName: typeByName.name,
+          unitLabel: typeByName.unitLabel,
+        );
+      }
+    }
+
+    return resolveContractUnitLabel(
+      localizations: localization,
+      contractName: explicit ?? localization.contractWorkUnitFallback,
+      unitLabel: localization.contractWorkUnitFallback,
+    );
   }
 
   String? _resolveContractTypeName(String idOrName) {

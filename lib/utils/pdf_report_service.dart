@@ -10,6 +10,7 @@ class ContractReportRow {
   const ContractReportRow({
     required this.date,
     required this.contractType,
+    required this.unitLabel,
     required this.unitsCompleted,
     required this.ratePerUnit,
     required this.salary,
@@ -17,6 +18,7 @@ class ContractReportRow {
 
   final DateTime date;
   final String contractType;
+  final String unitLabel;
   final int unitsCompleted;
   final double ratePerUnit;
   final double salary;
@@ -118,7 +120,7 @@ class PdfReportService {
         _formatContractDate(row.date),
         label,
         row.unitsCompleted.toString(),
-        _formatContractCurrency(currencyLabel, row.ratePerUnit),
+        _formatContractRate(currencyLabel, row.ratePerUnit, row.unitLabel),
         _formatContractCurrency(currencyLabel, row.salary),
       ];
     }).toList(growable: false);
@@ -571,6 +573,15 @@ class PdfReportService {
 
   static String _formatContractCurrency(String currencyLabel, double amount) {
     return '${_formatNumber(amount)} $currencyLabel';
+  }
+
+  static String _formatContractRate(
+    String currencyLabel,
+    double rate,
+    String unitLabel,
+  ) {
+    final sanitizedUnit = unitLabel.trim().isEmpty ? 'per unit' : unitLabel.trim();
+    return '${_formatNumber(rate)} $currencyLabel / $sanitizedUnit';
   }
 
   static String _formatNumber(double value) {
