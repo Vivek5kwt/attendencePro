@@ -8199,6 +8199,8 @@ class _AttendancePreviewSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final maxHeight = MediaQuery.of(context).size.height * 0.82;
+    final hasHours = hoursValue != null && hoursValue!.trim().isNotEmpty;
+    final trimmedHoursValue = hoursValue?.trim();
 
     return SafeArea(
       top: false,
@@ -8291,7 +8293,7 @@ class _AttendancePreviewSheet extends StatelessWidget {
                       _AttendancePreviewSummaryCard(
                         hoursLabel: hoursLabel,
                         hoursValue:
-                            hasHours ? '${hoursValue!.trim()} (H)' : null,
+                            hasHours ? '${trimmedHoursValue!} (H)' : null,
                         salaryLabel: salaryLabel,
                         salaryValue: salaryValue,
                         entries: entries,
