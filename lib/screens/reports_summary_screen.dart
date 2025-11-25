@@ -344,13 +344,26 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     if (_isGeneratingReport) return;
 
     final l = AppLocalizations.of(context);
-    final workId = _selectedWorkId;
-    final targetDate = _parseMonth(_selectedMonth);
     final workState = context.read<WorkBloc>().state;
+    Work? resolvedWork;
+    if (_selectedWorkId != null) {
+      for (final work in workState.works) {
+        if (work.id == _selectedWorkId) {
+          resolvedWork = work;
+          break;
+        }
+      }
+    }
+
+    resolvedWork ??= _resolveSelectedWork(workState);
+    resolvedWork ??= _findActiveWorkFromState(workState);
+    resolvedWork ??= workState.works.isNotEmpty ? workState.works.first : null;
+    final workId = resolvedWork?.id;
+    final targetDate = _parseMonth(_selectedMonth);
     final storedWorkName = _selectedWorkName?.trim() ?? '';
     final resolvedWorkName = storedWorkName.isNotEmpty
         ? storedWorkName
-        : (_resolveSelectedWork(workState)?.name ?? '').trim();
+        : (resolvedWork?.name ?? '').trim();
 
     if (workId == null || targetDate == null) {
       _showSnack(l.reportDownloadFailedMessage, color: const Color(0xFFB91C1C));
