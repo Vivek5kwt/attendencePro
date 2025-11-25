@@ -1524,7 +1524,7 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
           final type = rawType ?? rawRole;
           final combinedTitle = _combineWorkContractTitle(name, type);
           final rate = _parseWorkContractRate(map);
-          final rawPrice = _normalizeWorkContractText(map['price']);
+          final rawPrice = _extractWorkContractPriceText(map);
           final unitLabel = _extractWorkContractUnitLabel(map);
           final resolvedUnitLabel = resolveContractUnitLabel(
             localizations: l,
@@ -1824,7 +1824,17 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
   }
 
   num? _parseWorkContractRate(Map<String, dynamic> data) {
-    const keys = <String>['rate_per_unit', 'ratePerUnit', 'rate', 'price', 'amount'];
+    const keys = <String>[
+      'rate_per_unit',
+      'ratePerUnit',
+      'rate',
+      'price',
+      'amount',
+      'contract_rate',
+      'contractRate',
+      'rate_value',
+      'rateValue',
+    ];
     for (final key in keys) {
       final value = data[key];
       if (value == null) continue;
@@ -1843,6 +1853,32 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
         }
       }
     }
+    return null;
+  }
+
+  String? _extractWorkContractPriceText(Map<String, dynamic> data) {
+    const keys = <String>[
+      'price',
+      'amount',
+      'rate_label',
+      'rateLabel',
+      'rate_text',
+      'rateText',
+      'rate_display',
+      'rateDisplay',
+      'rate_string',
+      'rateString',
+      'contract_rate',
+      'contractRate',
+    ];
+
+    for (final key in keys) {
+      final normalized = _normalizeWorkContractText(data[key]);
+      if (normalized != null) {
+        return normalized;
+      }
+    }
+
     return null;
   }
 
