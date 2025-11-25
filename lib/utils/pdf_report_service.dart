@@ -40,12 +40,14 @@ class HistoryReportEntry {
     required this.typeLabel,
     required this.totalHours,
     required this.salary,
+    this.contractTypeLabel,
   });
 
   final String workName;
   final String typeLabel;
   final double totalHours;
   final double salary;
+  final String? contractTypeLabel;
 }
 
 class HistoryReportSummary {
@@ -259,11 +261,16 @@ class PdfReportService {
           for (final day in sortedDays) {
             for (final entry in day.entries) {
               final totalHoursLabel = _formatHours(entry.totalHours);
+              final contractName =
+                  entry.contractTypeLabel?.trim().isNotEmpty == true
+                      ? entry.contractTypeLabel!.trim()
+                      : '-';
 
               tableRows.add(<String>[
                 _formatDate(day.date),
                 entry.typeLabel,
                 entry.workName,
+                contractName,
                 totalHoursLabel,
                 _formatCurrency(currencySymbol, entry.salary),
               ]);
@@ -278,7 +285,14 @@ class PdfReportService {
             ..add(pw.SizedBox(height: 10))
             ..add(
               _buildStripedTable(
-                headers: const <String>['Date', 'Type', 'Work', 'Total Hours', 'Amount'],
+                headers: const <String>[
+                  'Date',
+                  'Type',
+                  'Work',
+                  'Contract',
+                  'Total Hours',
+                  'Amount',
+                ],
                 data: tableRows,
                 headerStyle: _textStyle(
                   fonts,
@@ -293,8 +307,9 @@ class PdfReportService {
                   0: pw.Alignment.centerLeft,
                   1: pw.Alignment.centerLeft,
                   2: pw.Alignment.centerLeft,
-                  3: pw.Alignment.centerRight,
+                  3: pw.Alignment.centerLeft,
                   4: pw.Alignment.centerRight,
+                  5: pw.Alignment.centerRight,
                 },
               ),
             );

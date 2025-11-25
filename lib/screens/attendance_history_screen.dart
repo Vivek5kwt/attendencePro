@@ -824,6 +824,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     typeLabel: _resolveEntryTypeLabel(item.type, l),
                     totalHours: _resolveEntryTotalHours(item),
                     salary: item.salary,
+                    contractTypeLabel:
+                        (item.type == _AttendanceEntryType.contract ||
+                                item.isContractEntry == true)
+                            ? _resolveContractTypeLabel(item, l)
+                            : null,
                   ),
                 )
                     .toList(growable: false),
