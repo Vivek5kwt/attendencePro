@@ -16,6 +16,7 @@ import '../repositories/reports_repository.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
 import '../utils/contract_unit_label.dart';
+import '../utils/history_entry_hours.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/work_selection_dialog.dart';
@@ -359,7 +360,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final summary = HistoryReportSummary(
         totalHoursWorked: hoursEntries.fold<double>(
           0,
-              (previous, entry) => previous + entry.hoursWorked + entry.overtimeHours,
+              (previous, entry) => previous + resolveEntryTotalHours(entry),
         ),
         totalHourlySalary: hoursEntries.fold<double>(
           0,
@@ -389,7 +390,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 (item) => HistoryReportEntry(
               workName: item.workName,
               typeLabel: _resolveEntryTypeLabel(item.type, l),
-              totalHours: item.hoursWorked + item.overtimeHours,
+              totalHours: resolveEntryTotalHours(item),
               salary: item.salary,
             ),
           )

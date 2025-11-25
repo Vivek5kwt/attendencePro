@@ -15,6 +15,7 @@ import '../repositories/contract_type_repository.dart';
 import '../repositories/work_repository.dart';
 import '../utils/local_notification_service.dart';
 import '../utils/pdf_report_service.dart';
+import '../utils/history_entry_hours.dart';
 import '../utils/responsive.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_loader.dart';
@@ -687,8 +688,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
     final totalHoursWorked = hoursEntries.fold<double>(
       0,
-      (previousValue, entry) =>
-          previousValue + entry.hoursWorked + entry.overtimeHours,
+      (previousValue, entry) => previousValue + resolveEntryTotalHours(entry),
     );
     final totalHourlySalary = hoursEntries.fold<double>(
       0,
@@ -769,7 +769,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       (item) => HistoryReportEntry(
                     workName: item.workName,
                     typeLabel: _resolveEntryTypeLabel(item.type, l),
-                    totalHours: item.hoursWorked + item.overtimeHours,
+                    totalHours: resolveEntryTotalHours(item),
                     salary: item.salary,
                   ),
                 )
