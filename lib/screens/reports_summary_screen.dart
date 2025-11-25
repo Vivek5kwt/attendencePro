@@ -389,7 +389,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 (item) => HistoryReportEntry(
               workName: item.workName,
               typeLabel: _resolveEntryTypeLabel(item.type, l),
-              detail: _buildHistoryDetail(item, l),
+              totalHours: item.hoursWorked + item.overtimeHours,
               salary: item.salary,
             ),
           )

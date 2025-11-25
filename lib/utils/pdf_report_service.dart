@@ -36,13 +36,13 @@ class HistoryReportEntry {
   const HistoryReportEntry({
     required this.workName,
     required this.typeLabel,
-    required this.detail,
+    required this.totalHours,
     required this.salary,
   });
 
   final String workName;
   final String typeLabel;
-  final String detail;
+  final double totalHours;
   final double salary;
 }
 
@@ -253,7 +253,7 @@ class PdfReportService {
                 _formatDate(day.date),
                 entry.typeLabel,
                 entry.workName,
-                entry.detail,
+                _formatHours(entry.totalHours),
                 _formatCurrency(currencySymbol, entry.salary),
               ]);
             }
@@ -267,7 +267,7 @@ class PdfReportService {
             ..add(pw.SizedBox(height: 10))
             ..add(
               _buildStripedTable(
-                headers: const <String>['Date', 'Type', 'Work', 'Details', 'Amount'],
+                headers: const <String>['Date', 'Type', 'Work', 'Total Hours', 'Amount'],
                 data: tableRows,
                 headerStyle: _textStyle(
                   fonts,
@@ -282,7 +282,7 @@ class PdfReportService {
                   0: pw.Alignment.centerLeft,
                   1: pw.Alignment.centerLeft,
                   2: pw.Alignment.centerLeft,
-                  3: pw.Alignment.centerLeft,
+                  3: pw.Alignment.centerRight,
                   4: pw.Alignment.centerRight,
                 },
               ),

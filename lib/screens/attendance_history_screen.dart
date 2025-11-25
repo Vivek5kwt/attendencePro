@@ -764,16 +764,16 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             .map(
               (entry) => HistoryReportDay(
             date: entry.key,
-            entries: entry.value
-                .map(
-                  (item) => HistoryReportEntry(
-                workName: item.workName,
-                typeLabel: _resolveEntryTypeLabel(item.type, l),
-                detail: _buildHistoryDetail(item, l),
-                salary: item.salary,
-              ),
-            )
-                .toList(growable: false),
+                entries: entry.value
+                    .map(
+                      (item) => HistoryReportEntry(
+                    workName: item.workName,
+                    typeLabel: _resolveEntryTypeLabel(item.type, l),
+                    totalHours: item.hoursWorked + item.overtimeHours,
+                    salary: item.salary,
+                  ),
+                )
+                    .toList(growable: false),
           ),
         )
             .toList(growable: false);
