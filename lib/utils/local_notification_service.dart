@@ -412,6 +412,7 @@ class LocalNotificationService {
 
     final payload = response.payload?.trim();
     if (payload == null || payload.isEmpty) {
+      await _handleDashboardDeepLink();
       return;
     }
 
@@ -419,6 +420,7 @@ class LocalNotificationService {
 
     if (parsedPayload == null) {
       await _openDownloadedReport(payload);
+      await _handleDashboardDeepLink();
       return;
     }
 
@@ -480,6 +482,10 @@ class LocalNotificationService {
         channelDescription: _attendanceReminderChannel.description,
         importance: Importance.high,
         priority: Priority.high,
+        styleInformation: BigTextStyleInformation(
+          reminderCopy.body,
+          contentTitle: reminderCopy.title,
+        ),
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
