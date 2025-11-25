@@ -8290,7 +8290,8 @@ class _AttendancePreviewSheet extends StatelessWidget {
                       const SizedBox(height: 24),
                       _AttendancePreviewSummaryCard(
                         hoursLabel: hoursLabel,
-                        hoursValue: hoursValue,
+                        hoursValue:
+                            hasHours ? '${hoursValue!.trim()} (H)' : null,
                         salaryLabel: salaryLabel,
                         salaryValue: salaryValue,
                         entries: entries,
@@ -8485,23 +8486,28 @@ class _PreviewHighlightCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: color.withOpacity(0.12)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF475569),
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                color: Color(0xFF475569),
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 20,
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+              ),
             ),
           ),
         ],
