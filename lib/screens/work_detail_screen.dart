@@ -2244,6 +2244,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (!mounted) {
       return;
     }
+    _showAttendanceAlreadyMarkedMessage();
+  }
+
+  void _handleAttendanceLockedTap() {
+    if (!mounted) {
+      return;
+    }
+    _showAttendanceAlreadyMarkedMessage();
+  }
+
+  void _showAttendanceAlreadyMarkedMessage() {
+    if (!mounted) {
+      return;
+    }
     final l = AppLocalizations.of(context);
     final message = _localizeAttendanceServerMessage(
       l.attendanceAlreadyMarkedMessage,
@@ -3700,6 +3714,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         breakValidator: _validateBreakMinutes,
         statusMessage: _attendanceStatusMessage,
         isStatusError: _attendanceStatusIsError,
+        onAttendanceLockedTap: _handleAttendanceLockedTap,
       );
     }
 
@@ -6240,6 +6255,7 @@ class _AttendanceSection extends StatelessWidget {
     required this.bundleUnitsValidator,
     this.statusMessage,
     this.isStatusError = false,
+    this.onAttendanceLockedTap,
   });
 
   final String dateLabel;
@@ -6280,6 +6296,7 @@ class _AttendanceSection extends StatelessWidget {
   final String? Function(_ContractBundleFormEntry, String?) bundleUnitsValidator;
   final String? statusMessage;
   final bool isStatusError;
+  final VoidCallback? onAttendanceLockedTap;
 
   @override
   Widget build(BuildContext context) {
@@ -6388,6 +6405,7 @@ class _AttendanceSection extends StatelessWidget {
                   required String? Function(String?) validator,
                   required Widget customField,
                   required Color accentColor,
+                  required VoidCallback? onLockedTap,
                 }) {
                   return _AttendanceTimeCard(
                     label: label,
@@ -6402,6 +6420,7 @@ class _AttendanceSection extends StatelessWidget {
                         !isSubmitting && !isWorkOff && !areHourlyFieldsLocked,
                     customField: customField,
                     isCompact: isCompact,
+                    onLockedTap: onLockedTap,
                   );
                 }
 
@@ -6423,6 +6442,8 @@ class _AttendanceSection extends StatelessWidget {
                         onFieldChanged();
                       },
                     ),
+                    onLockedTap:
+                        areHourlyFieldsLocked ? onAttendanceLockedTap : null,
                   ),
                   buildCard(
                     label: l.endTimeLabel,
@@ -6441,6 +6462,8 @@ class _AttendanceSection extends StatelessWidget {
                         onFieldChanged();
                       },
                     ),
+                    onLockedTap:
+                        areHourlyFieldsLocked ? onAttendanceLockedTap : null,
                   ),
                   _AttendanceTimeCard(
                     label: l.breakLabel,
@@ -6464,6 +6487,8 @@ class _AttendanceSection extends StatelessWidget {
                       },
                     ),
                     isCompact: isCompact,
+                    onLockedTap:
+                        areHourlyFieldsLocked ? onAttendanceLockedTap : null,
                   ),
                 ];
 
@@ -7832,6 +7857,7 @@ class _AttendanceTimeCard extends StatelessWidget {
     this.inputFormatters = const <TextInputFormatter>[],
     this.customField,
     this.isCompact = false,
+    this.onLockedTap,
   });
 
   final String label;
@@ -7846,6 +7872,7 @@ class _AttendanceTimeCard extends StatelessWidget {
   final List<TextInputFormatter> inputFormatters;
   final Widget? customField;
   final bool isCompact;
+  final VoidCallback? onLockedTap;
 
   @override
   Widget build(BuildContext context) {
@@ -7909,7 +7936,7 @@ class _AttendanceTimeCard extends StatelessWidget {
           ),
         );
 
-    return Container(
+    final card = Container(
       decoration: BoxDecoration(
         color: cardBackgroundColor,
         borderRadius: BorderRadius.circular(isCompact ? 22 : 26),
@@ -7937,6 +7964,18 @@ class _AttendanceTimeCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (!enabled && onLockedTap != null) {
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: onLockedTap,
+        child: AbsorbPointer(
+          child: card,
+        ),
+      );
+    }
+
+    return card;
   }
 }
 
