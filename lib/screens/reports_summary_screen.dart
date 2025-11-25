@@ -299,6 +299,18 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     }
   }
 
+  String _resolveContractTypeLabel(
+      AttendanceHistoryEntryData entry,
+      AppLocalizations localization,
+      ) {
+    final explicit = entry.contractType?.trim();
+    if (explicit != null && explicit.isNotEmpty) {
+      return explicit;
+    }
+
+    return localization.contractWorkUnitFallback;
+  }
+
   // ===== UI helpers =====
 
   void _showSnack(String message, {Color? color}) {
@@ -339,20 +351,20 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       final hoursEntries = entries
           .where(
             (entry) =>
-        (entry.type == AttendanceHistoryEntryType.hourly ||
-            entry.type == AttendanceHistoryEntryType.leave) &&
-            entry.isContractEntry != true,
-      )
+                (entry.type == AttendanceHistoryEntryType.hourly ||
+                    entry.type == AttendanceHistoryEntryType.leave) &&
+                entry.isContractEntry != true,
+          )
           .toList(growable: false);
       final contractEntries = entries
           .where(
             (entry) =>
-        entry.type == AttendanceHistoryEntryType.contract ||
-            entry.isContractEntry == true,
-      )
+                entry.type == AttendanceHistoryEntryType.contract ||
+                entry.isContractEntry == true,
+          )
           .toList(growable: false);
 
-      if (hoursEntries.isEmpty) {
+      if (entries.isEmpty) {
         _showSnack(l.reportDownloadNoEntriesMessage);
         return;
       }
@@ -380,7 +392,49 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             ),
       );
 
-      final grouped = _groupHistoryEntriesByDay(hoursEntries);
+      final workLabel = resolvedWorkName.isEmpty
+          ? l.attendanceHistoryAllWorks
+          : resolvedWorkName;
+
+      if (hoursEntries.isEmpty && contractEntries.isNotEmpty) {
+        final rows = contractEntries
+            .map(
+              (entry) => ContractReportRow(
+                date: entry.date,
+                contractType: _resolveContractTypeLabel(entry, l),
+                unitsCompleted: entry.unitsCompleted ?? 0,
+                ratePerUnit: entry.ratePerUnit ?? 0,
+                salary: entry.salary,
+              ),
+            )
+            .toList(growable: false);
+
+        final reportFile = await PdfReportService.generateMonthlyContractReport(
+          workName: workLabel,
+          monthLabel: _selectedMonth,
+          currencySymbol: history.currencySymbol,
+          rows: rows,
+          summary: summary,
+        );
+
+        _showSnack(
+          l.reportDownloadSuccessMessage(reportFile.path),
+          color: const Color(0xFF15803D),
+        );
+
+        final fileName = reportFile.uri.pathSegments.isNotEmpty
+            ? reportFile.uri.pathSegments.last
+            : reportFile.path;
+
+        await LocalNotificationService.showDownloadNotification(
+          fileName: fileName,
+          filePath: reportFile.path,
+        );
+
+        return;
+      }
+
+      final grouped = _groupHistoryEntriesByDay(entries);
       final days = grouped.entries
           .map(
             (entry) => HistoryReportDay(
@@ -398,10 +452,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         ),
       )
           .toList(growable: false);
-
-      final workLabel = resolvedWorkName.isEmpty
-          ? l.attendanceHistoryAllWorks
-          : resolvedWorkName;
 
       final reportFile = await PdfReportService.generateAttendanceHistoryReport(
         workName: workLabel,
