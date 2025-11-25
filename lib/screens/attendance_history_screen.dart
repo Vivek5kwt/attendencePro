@@ -528,6 +528,42 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 
+  AttendanceHistoryEntryType _mapHistoryEntryType(_AttendanceEntryType type) {
+    switch (type) {
+      case _AttendanceEntryType.hourly:
+        return AttendanceHistoryEntryType.hourly;
+      case _AttendanceEntryType.contract:
+        return AttendanceHistoryEntryType.contract;
+      case _AttendanceEntryType.leave:
+        return AttendanceHistoryEntryType.leave;
+    }
+  }
+
+  AttendanceHistoryEntryData _asHistoryEntryData(_AttendanceEntry entry) {
+    return AttendanceHistoryEntryData(
+      date: entry.date,
+      workName: entry.workName,
+      type: _mapHistoryEntryType(entry.type),
+      attendanceId: entry.attendanceId,
+      startTime: entry.startTime,
+      endTime: entry.endTime,
+      breakDuration: entry.breakDuration,
+      hoursWorked: entry.hoursWorked,
+      overtimeHours: entry.overtimeHours,
+      contractType: entry.contractType,
+      unitsCompleted: entry.unitsCompleted,
+      ratePerUnit: entry.ratePerUnit,
+      leaveReason: entry.leaveReason,
+      salary: entry.salary,
+      contractBundles: entry.contractBundles,
+      isContractEntry: entry.isContractEntry,
+    );
+  }
+
+  double _resolveEntryTotalHours(_AttendanceEntry entry) {
+    return resolveEntryTotalHours(_asHistoryEntryData(entry));
+  }
+
   Work? _resolveInitialWork(List<Work> works) {
     final initialWork = widget.initialWork;
     if (initialWork == null) {
@@ -688,7 +724,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
     final totalHoursWorked = hoursEntries.fold<double>(
       0,
-      (previousValue, entry) => previousValue + resolveEntryTotalHours(entry),
+      (previousValue, entry) => previousValue + _resolveEntryTotalHours(entry),
     );
     final totalHourlySalary = hoursEntries.fold<double>(
       0,
@@ -769,7 +805,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       (item) => HistoryReportEntry(
                     workName: item.workName,
                     typeLabel: _resolveEntryTypeLabel(item.type, l),
-                    totalHours: resolveEntryTotalHours(item),
+                    totalHours: _resolveEntryTotalHours(item),
                     salary: item.salary,
                   ),
                 )
