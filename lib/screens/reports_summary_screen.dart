@@ -338,6 +338,48 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     return localization.contractWorkUnitFallback;
   }
 
+  String _resolveContractUnitLabel(
+    AttendanceHistoryEntryData entry,
+    AppLocalizations localization, {
+    Map<String, ContractType>? contractTypeLookup,
+  }) {
+    final lookup = contractTypeLookup;
+
+    if (lookup != null && lookup.isNotEmpty) {
+      for (final bundle in entry.contractBundles) {
+        final type = lookup[bundle.contractTypeId.toString()];
+        if (type != null && type.unitLabel.trim().isNotEmpty) {
+          return resolveContractUnitLabel(
+            localizations: localization,
+            contractName: type.name,
+            unitLabel: type.unitLabel,
+          );
+        }
+      }
+
+      final explicit = entry.contractType?.trim();
+      if (explicit != null && explicit.isNotEmpty) {
+        for (final type in lookup.values) {
+          if (type.name == explicit && type.unitLabel.trim().isNotEmpty) {
+            return resolveContractUnitLabel(
+              localizations: localization,
+              contractName: type.name,
+              unitLabel: type.unitLabel,
+            );
+          }
+        }
+      }
+    }
+
+    final fallbackName = entry.contractType?.trim();
+    return resolveContractUnitLabel(
+      localizations: localization,
+      contractName:
+          fallbackName != null && fallbackName.isNotEmpty ? fallbackName : localization.contractWorkUnitFallback,
+      unitLabel: localization.contractWorkUnitFallback,
+    );
+  }
+
   String? _contractTypeNameFromLookup(
     String? idOrName,
     Map<String, ContractType>? lookup,
@@ -483,6 +525,11 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
               (entry) => ContractReportRow(
                 date: entry.date,
                 contractType: _resolveContractTypeLabel(
+                  entry,
+                  l,
+                  contractTypeLookup: contractTypeLookup,
+                ),
+                unitLabel: _resolveContractUnitLabel(
                   entry,
                   l,
                   contractTypeLookup: contractTypeLookup,
