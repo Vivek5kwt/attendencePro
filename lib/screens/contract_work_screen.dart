@@ -257,7 +257,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       final computedRows = _buildSummaryRows(summary, localizations);
       final resolvedTotalUnits = computedRows.totalUnits > 0
           ? computedRows.totalUnits
-          : summary.contractSummary.totalUnits;
+          : summary.contractSummary.totalUnits.toDouble();
       final resolvedSalary = computedRows.totalSalary > 0
           ? computedRows.totalSalary
           : summary.contractSummary.salaryAmount;
