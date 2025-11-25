@@ -3962,7 +3962,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
               _normalizeContractText(map['type']) ?? _normalizeContractText(map['role']);
           final combinedTitle = _combineContractTitle(name, type);
           final rate = _parseContractRateValue(map);
-          final rawPrice = _normalizeContractText(map['price']);
+          final rawPrice = _extractContractPriceText(map);
           final unitLabel = _extractContractUnitLabel(map);
           final count = _extractContractCount(map);
           final roleLabel = _extractContractRole(map);
@@ -4057,13 +4057,49 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
   }
 
   num? _parseContractRateValue(Map<String, dynamic> data) {
-    const keys = <String>['rate_per_unit', 'ratePerUnit', 'rate', 'price', 'amount'];
+    const keys = <String>[
+      'rate_per_unit',
+      'ratePerUnit',
+      'rate',
+      'price',
+      'amount',
+      'contract_rate',
+      'contractRate',
+      'rate_value',
+      'rateValue',
+    ];
     for (final key in keys) {
       final parsed = _parseContractNumericValue(data[key]);
       if (parsed != null) {
         return parsed;
       }
     }
+    return null;
+  }
+
+  String? _extractContractPriceText(Map<String, dynamic> data) {
+    const keys = <String>[
+      'price',
+      'amount',
+      'rate_label',
+      'rateLabel',
+      'rate_text',
+      'rateText',
+      'rate_display',
+      'rateDisplay',
+      'rate_string',
+      'rateString',
+      'contract_rate',
+      'contractRate',
+    ];
+
+    for (final key in keys) {
+      final normalized = _normalizeContractText(data[key]);
+      if (normalized != null) {
+        return normalized;
+      }
+    }
+
     return null;
   }
 
