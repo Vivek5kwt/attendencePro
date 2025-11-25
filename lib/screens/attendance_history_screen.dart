@@ -881,11 +881,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       _AttendanceEntry entry,
       AppLocalizations localization,
       ) {
-    final explicit = entry.contractType?.trim();
-    if (explicit != null && explicit.isNotEmpty) {
-      return explicit;
-    }
-
     if (entry.contractBundles.isNotEmpty) {
       final seen = <String>{};
       final labels = <String>[];
@@ -903,7 +898,41 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       }
     }
 
+    final explicit = entry.contractType?.trim();
+    if (explicit != null && explicit.isNotEmpty) {
+      final resolved = _resolveContractTypeName(explicit);
+      return resolved ?? explicit;
+    }
+
     return localization.contractWorkUnitFallback;
+  }
+
+  String? _resolveContractTypeName(String idOrName) {
+    final normalized = idOrName.trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    for (final type in _contractTypes) {
+      if (type.id == normalized ||
+          type.name.trim().toLowerCase() == normalized.toLowerCase()) {
+        final resolved = type.name.trim();
+        if (resolved.isNotEmpty) {
+          return resolved;
+        }
+      }
+    }
+
+    final numeric = int.tryParse(normalized)?.toString();
+    if (numeric != null) {
+      final numericMatch = _findContractTypeById(int.tryParse(numeric));
+      final resolved = numericMatch?.name.trim();
+      if (resolved != null && resolved.isNotEmpty) {
+        return resolved;
+      }
+    }
+
+    return null;
   }
 
   String _buildHistoryDetail(
