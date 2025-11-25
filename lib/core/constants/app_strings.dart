@@ -365,8 +365,8 @@ abstract final class AppString {
           'Review the details below before saving your attendance entry.',
       'attendancePreviewConfirmButton': 'Confirm & Save',
       'attendancePreviewCancelButton': 'Edit entry',
-      'attendancePreviewHoursLabel': 'Calculated hours',
-      'attendancePreviewSalaryLabel': 'Calculated salary',
+      'attendancePreviewHoursLabel': 'Calculated Hours',
+      'attendancePreviewSalaryLabel': 'Calculated Salary',
       'attendancePreviewValidationPrompt': 'Are these hours correct?',
       'attendancePreviewFetchFailed':
           'Unable to preview attendance. Please try again.',
