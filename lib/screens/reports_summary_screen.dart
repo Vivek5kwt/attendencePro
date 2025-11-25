@@ -578,6 +578,15 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
               typeLabel: _resolveEntryTypeLabel(item.type, l),
               totalHours: resolveEntryTotalHours(item),
               salary: item.salary,
+              contractTypeLabel:
+                  (item.type == AttendanceHistoryEntryType.contract ||
+                          item.isContractEntry == true)
+                      ? _resolveContractTypeLabel(
+                          item,
+                          l,
+                          contractTypeLookup: contractTypeLookup,
+                        )
+                      : null,
             ),
           )
               .toList(growable: false),
