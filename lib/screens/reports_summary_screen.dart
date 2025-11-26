@@ -1770,7 +1770,8 @@ class _ContractDetailsCard extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(bottom: 4),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: tableWidth),
+                  constraints:
+                      BoxConstraints(minWidth: tableWidth, maxWidth: tableWidth),
                   child: Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
