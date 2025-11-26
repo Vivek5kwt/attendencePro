@@ -2034,7 +2034,7 @@ class _ContractDetailsCard extends StatelessWidget {
                       final salary = detail.salaryAmount ??
                           ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
                       final salaryText = salary > 0
-                          ? _formatCurrencyValueWithSuffix(
+                          ? _formatCurrencyValue(
                               salary,
                               currencySymbol,
                             )
@@ -2139,7 +2139,7 @@ class _ContractDetailsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '${salaryLabel.toUpperCase()} = ${_formatCurrencyValueWithSuffix(resolvedTotalSalary, currencySymbol)}',
+                  '${salaryLabel.toUpperCase()} = ${_formatCurrencyValue(resolvedTotalSalary, currencySymbol)}',
                   style: summaryValueStyle.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -2173,10 +2173,14 @@ class _ContractHeaderCell extends StatelessWidget {
       flex: flex,
       child: Align(
         alignment: alignment,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: alignment,
-          child: Text(text.toUpperCase(), style: style),
+        child: Text(
+          text.toUpperCase(),
+          style: style,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: alignment == Alignment.centerRight
+              ? TextAlign.right
+              : TextAlign.left,
         ),
       ),
     );
@@ -2870,21 +2874,14 @@ String _formatUnitCount(num? units) {
 
 String _formatCurrencyValue(num value, String symbol) {
   final doubleValue = value.toDouble();
-  final resolvedSymbol = symbol.trim().isEmpty ? '€' : symbol.trim();
+  final normalizedSymbol = symbol.trim();
+  final resolvedSymbol = normalizedSymbol.isEmpty
+      ? '€'
+      : (normalizedSymbol.toLowerCase() == 'euro' ? '€' : normalizedSymbol);
   final isWhole = doubleValue.floorToDouble() == doubleValue;
   final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
   final prefix = doubleValue < 0 ? '-' : '';
   return '$prefix$resolvedSymbol$formatted';
-}
-
-String _formatCurrencyValueWithSuffix(num value, String symbol) {
-  final trimmedSymbol = symbol.trim().isEmpty ? 'Euro' : symbol.trim();
-  final doubleValue = value.toDouble();
-  final isWhole = doubleValue.floorToDouble() == doubleValue;
-  final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
-  final prefix = doubleValue < 0 ? '-' : '';
-
-  return '$prefix$formatted $trimmedSymbol';
 }
 
 String _formatHours(double hours) {
