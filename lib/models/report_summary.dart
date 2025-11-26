@@ -219,6 +219,27 @@ class ContractSummaryData {
     }
 
     if (rawItems == null) {
+      final monthlyContracts = _normalizeItems(
+        json['monthly_contract_summary'] ?? json['monthlyContractSummary'],
+      );
+
+      if (monthlyContracts != null) {
+        rawItems = monthlyContracts.map((entry) {
+          final map = _ensureMap(entry);
+          if (map == null) return null;
+          return <String, dynamic>{
+            'title': map['contract_name'] ?? map['name'],
+            'amount': map['salary'] ?? map['amount'],
+            'total_units': map['units'] ?? map['total_units'],
+            'unit_label': map['unit_label'] ?? 'Unit',
+            'rate_per_unit': map['rate_per_unit'],
+            'role': map['type'],
+          };
+        }).whereType<Map<String, dynamic>>();
+      }
+    }
+
+    if (rawItems == null) {
       final combined = <dynamic>[];
       void append(dynamic source) {
         final normalized = _normalizeItems(source);
@@ -351,6 +372,51 @@ class ContractDetail {
 }
 
 List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
+  final monthlySource = _normalizeContractDetailSource(
+    json['monthly_contract_summary'] ?? json['monthlyContractSummary'],
+  );
+
+  if (monthlySource != null && monthlySource.isNotEmpty) {
+    final details = <ContractDetail>[];
+    for (final entry in monthlySource) {
+      final map = _ensureMap(entry);
+      if (map == null) {
+        continue;
+      }
+
+      details.add(
+        ContractDetail(
+          id: _parseNullableInt(map, const ['id', 'contract_type_id', 'contractTypeId']),
+          name: _parseString(
+            map,
+            const ['contract_name', 'name', 'title'],
+            fallback: 'Contract Work',
+          ),
+          type: _parseString(map, const ['type', 'contract_type', 'contractType']),
+          ratePerUnit: _parseNullableDouble(
+            map,
+            const ['rate_per_unit', 'ratePerUnit', 'rate'],
+          ),
+          unitLabel: _parseString(
+            map,
+            const ['unit_label', 'unitLabel', 'unit'],
+            fallback: 'Unit',
+          ),
+          totalUnits: _parseNullableDouble(
+            map,
+            const ['units', 'total_units', 'totalUnits'],
+          ),
+          salaryAmount: _parseNullableDouble(
+            map,
+            const ['salary', 'amount', 'total_salary', 'totalSalary'],
+          ),
+          date: null,
+        ),
+      );
+    }
+    return details;
+  }
+
   final source = json['contract_details'] ?? json['contractDetails'];
   final normalized = _normalizeContractDetailSource(source);
   if (normalized == null) {

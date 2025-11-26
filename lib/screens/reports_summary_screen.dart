@@ -565,11 +565,36 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             )
             .toList(growable: false);
 
+        final monthlySummaryDetails = (_summary?.contractDetails ?? const <ContractDetail>[]) 
+            .where((detail) {
+          final name = detail.name.trim();
+          final units = detail.totalUnits ?? 0;
+          final salary = detail.salaryAmount ??
+              ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
+          return name.isNotEmpty || units > 0 || salary > 0;
+        }).map((detail) {
+          final resolvedName = detail.name.trim().isEmpty
+              ? l.notAvailableLabel
+              : detail.name.trim();
+          final resolvedUnits = (detail.totalUnits ?? 0).round();
+          final resolvedSalary = detail.salaryAmount ??
+              ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
+          return ContractMonthlySummary(
+            name: resolvedName,
+            units: resolvedUnits,
+            salary: resolvedSalary,
+          );
+        }).toList(growable: false);
+
+        final monthlyTotalsOverride =
+            monthlySummaryDetails.isEmpty ? null : monthlySummaryDetails;
+
         final reportFile = await PdfReportService.generateMonthlyContractReport(
           workName: workLabel,
           monthLabel: _selectedMonth,
           currencySymbol: history.currencySymbol,
           rows: rows,
+          monthlyTotalsOverride: monthlyTotalsOverride,
           summary: summary,
         );
 
@@ -2049,7 +2074,7 @@ class _ContractDetailsCard extends StatelessWidget {
           const SizedBox(height: 18),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -2059,12 +2084,18 @@ class _ContractDetailsCard extends StatelessWidget {
               children: [
                 Text(
                   '${totalUnitsLabel.toUpperCase()} = ${_formatUnitCount(resolvedTotalUnits)}',
-                  style: summaryValueStyle.copyWith(fontSize: 16),
+                  style: summaryValueStyle.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   '${salaryLabel.toUpperCase()} = ${_formatCurrencyValueWithSuffix(resolvedTotalSalary, currencySymbol)}',
-                  style: summaryValueStyle.copyWith(fontSize: 16),
+                  style: summaryValueStyle.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
