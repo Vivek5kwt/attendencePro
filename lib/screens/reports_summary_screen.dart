@@ -1981,7 +1981,7 @@ class _ContractDetailsCard extends StatelessWidget {
                   : summaryValueStyle;
               final rowPadding = EdgeInsets.symmetric(
                 horizontal: isCompact ? 10 : 14,
-                vertical: isCompact ? 10 : 12,
+                vertical: isCompact ? 8 : 10,
               );
 
               return Container(
@@ -1996,7 +1996,7 @@ class _ContractDetailsCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: isCompact ? 10 : 12,
-                        vertical: isCompact ? 8 : 10,
+                        vertical: isCompact ? 6 : 8,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
