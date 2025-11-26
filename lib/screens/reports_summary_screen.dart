@@ -1226,7 +1226,6 @@ class _SummaryLoadedContent extends StatelessWidget {
             currencySymbol: currency,
             subtitle: localization.reportsContractDetailsSubtitle,
             nameLabel: localization.reportsContractDetailsNameLabel,
-            typeLabel: localization.reportsContractDetailsTypeLabel,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
             salaryLabel: localization.reportsContractSalaryLabel,
             emptyValueLabel: localization.notAvailableLabel,
@@ -1800,7 +1799,6 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.currencySymbol,
     required this.subtitle,
     required this.nameLabel,
-    required this.typeLabel,
     required this.totalUnitsLabel,
     required this.salaryLabel,
     required this.totalUnits,
@@ -1812,7 +1810,6 @@ class _ContractDetailsCard extends StatelessWidget {
   final String currencySymbol;
   final String subtitle;
   final String nameLabel;
-  final String typeLabel;
   final String totalUnitsLabel;
   final String salaryLabel;
   final num totalUnits;
@@ -1936,17 +1933,12 @@ class _ContractDetailsCard extends StatelessWidget {
                         children: [
                           _ContractHeaderCell(
                             text: 'Sr.no',
-                            flex: 1,
+                            flex: 2,
                             style: tableHeaderStyle,
                           ),
                           _ContractHeaderCell(
                             text: nameLabel,
-                            flex: 5,
-                            style: tableHeaderStyle,
-                          ),
-                          _ContractHeaderCell(
-                            text: typeLabel,
-                            flex: 3,
+                            flex: 4,
                             style: tableHeaderStyle,
                           ),
                           _ContractHeaderCell(
@@ -1978,9 +1970,6 @@ class _ContractDetailsCard extends StatelessWidget {
                       final nameText = (detail.name.trim().isNotEmpty)
                           ? detail.name.trim()
                           : emptyValueLabel;
-                      final typeText = (detail.type?.trim().isNotEmpty ?? false)
-                          ? detail.type!.trim()
-                          : emptyValueLabel;
                       final isLast = index == details.length - 1;
                       final radius = isLast
                           ? const BorderRadius.vertical(bottom: Radius.circular(20))
@@ -2003,7 +1992,7 @@ class _ContractDetailsCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                flex: 1,
+                                flex: 2,
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
@@ -2015,7 +2004,7 @@ class _ContractDetailsCard extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                flex: 5,
+                                flex: 4,
                                 child: Text(
                                   nameText,
                                   style: tableLabelStyle.copyWith(
@@ -2023,21 +2012,6 @@ class _ContractDetailsCard extends StatelessWidget {
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    typeText,
-                                    style: tableLabelStyle.copyWith(
-                                      color: const Color(0xFF4B5563),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
                                 ),
                               ),
                               Expanded(
