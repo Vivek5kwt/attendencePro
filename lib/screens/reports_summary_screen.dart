@@ -565,7 +565,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             )
             .toList(growable: false);
 
-        final monthlySummaryDetails = (_summary?.contractDetails ?? const <ContractDetail>[]) 
+        final monthlySummaryDetails = (_summary?.monthlyContractDetails.isNotEmpty == true
+                ? _summary!.monthlyContractDetails
+                : _summary?.contractDetails ?? const <ContractDetail>[])
             .where((detail) {
           final name = detail.name.trim();
           final units = detail.totalUnits ?? 0;
@@ -1960,7 +1962,7 @@ class _ContractDetailsCard extends StatelessWidget {
                         children: [
                           _ContractHeaderCell(
                             text: 'Sr.no',
-                            flex: 2,
+                            flex: 1,
                             style: tableHeaderStyle,
                           ),
                           _ContractHeaderCell(
@@ -1970,7 +1972,7 @@ class _ContractDetailsCard extends StatelessWidget {
                           ),
                           _ContractHeaderCell(
                             text: totalUnitsLabel,
-                            flex: 3,
+                            flex: 2,
                             style: tableHeaderStyle,
                             alignment: Alignment.centerRight,
                           ),
@@ -2019,7 +2021,7 @@ class _ContractDetailsCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                flex: 2,
+                                flex: 1,
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
@@ -2042,7 +2044,7 @@ class _ContractDetailsCard extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                flex: 3,
+                                flex: 2,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: FittedBox(
