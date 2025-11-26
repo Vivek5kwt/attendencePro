@@ -1764,169 +1764,189 @@ class _ContractDetailsCard extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final isCompact = constraints.maxWidth < 760;
-              final tableWidth = isCompact ? 760.0 : constraints.maxWidth;
+              final tableHeaderStyle = isCompact
+                  ? headerStyle.copyWith(fontSize: (headerStyle.fontSize ?? 12) - 1)
+                  : headerStyle;
+              final tableLabelStyle = isCompact
+                  ? summaryLabelStyle.copyWith(
+                      fontSize: (summaryLabelStyle.fontSize ?? 12) - 1,
+                    )
+                  : summaryLabelStyle;
+              final tableValueStyle = isCompact
+                  ? summaryValueStyle.copyWith(
+                      fontSize: (summaryValueStyle.fontSize ?? 20) - 4,
+                    )
+                  : summaryValueStyle;
+              final rowPadding = EdgeInsets.symmetric(
+                horizontal: isCompact ? 10 : 14,
+                vertical: isCompact ? 10 : 12,
+              );
 
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(bottom: 4),
-                child: ConstrainedBox(
-                  constraints:
-                      BoxConstraints(minWidth: tableWidth, maxWidth: tableWidth),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+              return Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 10 : 12,
+                        vertical: isCompact ? 8 : 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius:
+                            const BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      child: Row(
+                        children: [
+                          _ContractHeaderCell(
+                            text: '#',
+                            flex: 1,
+                            style: tableHeaderStyle,
+                          ),
+                          _ContractHeaderCell(
+                            text: nameLabel,
+                            flex: 4,
+                            style: tableHeaderStyle,
+                          ),
+                          _ContractHeaderCell(
+                            text: typeLabel,
+                            flex: 3,
+                            style: tableHeaderStyle,
+                          ),
+                          _ContractHeaderCell(
+                            text: rateLabel,
+                            flex: 3,
+                            style: tableHeaderStyle,
+                            alignment: Alignment.centerRight,
+                          ),
+                          _ContractHeaderCell(
+                            text: totalUnitsLabel,
+                            flex: 3,
+                            style: tableHeaderStyle,
+                            alignment: Alignment.centerRight,
+                          ),
+                          _ContractHeaderCell(
+                            text: salaryLabel,
+                            flex: 3,
+                            style: tableHeaderStyle,
+                            alignment: Alignment.centerRight,
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius:
-                                const BorderRadius.vertical(top: Radius.circular(20)),
-                          ),
+                    ...List.generate(details.length, (index) {
+                      final detail = details[index];
+                      final salary = detail.salaryAmount ??
+                          ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
+                      final salaryText = salary > 0
+                          ? _formatCurrencyValue(salary, currencySymbol)
+                          : '--';
+                      final unitText = _formatUnitCount(detail.totalUnits);
+                      final typeText =
+                          (detail.type?.trim().isNotEmpty ?? false)
+                              ? detail.type!.trim()
+                              : '--';
+                      final rateValue = detail.ratePerUnit ?? 0;
+                      final rateText = rateValue > 0
+                          ? _formatCurrencyValue(rateValue, currencySymbol)
+                          : '--';
+                      final isLast = index == details.length - 1;
+                      final radius = isLast
+                          ? const BorderRadius.vertical(bottom: Radius.circular(20))
+                          : BorderRadius.zero;
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          color:
+                              index.isEven ? Colors.white : const Color(0xFFF9FAFB),
+                          borderRadius: radius,
+                          border: isLast
+                              ? const Border.all(color: Color(0xFFE5E7EB))
+                              : const Border(
+                                  top: BorderSide(color: Color(0xFFE5E7EB)),
+                                  bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                                ),
+                        ),
+                        child: Padding(
+                          padding: rowPadding,
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
-                              _ContractHeaderCell(
-                                text: nameLabel,
+                              SizedBox(
+                                width: 28,
+                                child: Text(
+                                  '${index + 1}.',
+                                  style: tableLabelStyle.copyWith(
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
                                 flex: 4,
-                                style: headerStyle,
+                                child: Text(
+                                  detail.name,
+                                  style: tableValueStyle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              _ContractHeaderCell(
-                                text: typeLabel,
+                              Expanded(
                                 flex: 3,
-                                style: headerStyle,
+                                child: Text(
+                                  typeText,
+                                  style: tableLabelStyle.copyWith(
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              _ContractHeaderCell(
-                                text: rateLabel,
+                              Expanded(
                                 flex: 3,
-                                style: headerStyle,
-                                alignment: Alignment.centerRight,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      rateText,
+                                      style: tableValueStyle,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              _ContractHeaderCell(
-                                text: totalUnitsLabel,
+                              Expanded(
                                 flex: 3,
-                                style: headerStyle,
-                                alignment: Alignment.centerRight,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(unitText, style: tableValueStyle),
+                                  ),
+                                ),
                               ),
-                              _ContractHeaderCell(
-                                text: salaryLabel,
+                              Expanded(
                                 flex: 3,
-                                style: headerStyle,
-                                alignment: Alignment.centerRight,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(salaryText, style: tableValueStyle),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        ...List.generate(details.length, (index) {
-                          final detail = details[index];
-                          final salary = detail.salaryAmount ??
-                              ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
-                          final salaryText = salary > 0
-                              ? _formatCurrencyValue(salary, currencySymbol)
-                              : '--';
-                          final unitText = _formatUnitCount(detail.totalUnits);
-                          final typeText =
-                              (detail.type?.trim().isNotEmpty ?? false)
-                                  ? detail.type!.trim()
-                                  : '--';
-                          final rateValue = detail.ratePerUnit ?? 0;
-                          final rateText = rateValue > 0
-                              ? _formatCurrencyValue(rateValue, currencySymbol)
-                              : '--';
-                          final isLast = index == details.length - 1;
-                          final radius = isLast
-                              ? const BorderRadius.vertical(bottom: Radius.circular(20))
-                              : BorderRadius.zero;
-                          return DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: index.isEven
-                                  ? Colors.white
-                                  : const Color(0xFFF9FAFB),
-                              borderRadius: radius,
-                              border: isLast
-                                  ? const Border.all(color: Color(0xFFE5E7EB))
-                                  : const Border(
-                                      top: BorderSide(color: Color(0xFFE5E7EB)),
-                                      bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                                    ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(
-                                    width: 28,
-                                    child: Text(
-                                      '${index + 1}.',
-                                      style: summaryLabelStyle.copyWith(
-                                        color: const Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 4,
-                                    child: Text(
-                                      detail.name,
-                                      style: summaryValueStyle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      typeText,
-                                      style: summaryLabelStyle.copyWith(
-                                        color: const Color(0xFF0F172A),
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        rateText,
-                                        style: summaryValueStyle,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(unitText, style: summaryValueStyle),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(salaryText, style: summaryValueStyle),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
+                      );
+                    }),
+                  ],
                 ),
               );
             },
@@ -1979,7 +1999,11 @@ class _ContractHeaderCell extends StatelessWidget {
       flex: flex,
       child: Align(
         alignment: alignment,
-        child: Text(text.toUpperCase(), style: style),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: alignment,
+          child: Text(text.toUpperCase(), style: style),
+        ),
       ),
     );
   }
