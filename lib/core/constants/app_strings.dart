@@ -251,9 +251,9 @@ abstract final class AppString {
       'reportsWorkingDaysLabel': 'Working Days',
       'reportsAverageHoursPerDayLabel': 'Average Hours/Day',
       'reportsLastPayoutLabel': 'Last Payout',
-      'reportsTotalUnitsLabel': 'Unit',
+      'reportsTotalUnitsLabel': 'Total Units',
       'reportsTotalPaymentLabel': 'Total Payment',
-      'reportsContractSalaryLabel': 'Salary',
+      'reportsContractSalaryLabel': 'Contract Salary',
       'reportsContractDetailsTitle': 'Contract Details',
       'reportsContractDetailsSubtitle':
           'Configured unit rates for this work',

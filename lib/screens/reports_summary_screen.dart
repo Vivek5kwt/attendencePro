@@ -1785,44 +1785,43 @@ class _ContractDetailsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!isCompact)
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isCompact ? 10 : 12,
-                          vertical: isCompact ? 8 : 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius:
-                              const BorderRadius.vertical(top: Radius.circular(20)),
-                        ),
-                        child: Row(
-                          children: [
-                            _ContractHeaderCell(
-                              text: 'Sr.no',
-                              flex: 1,
-                              style: tableHeaderStyle,
-                            ),
-                            _ContractHeaderCell(
-                              text: typeLabel,
-                              flex: 5,
-                              style: tableHeaderStyle,
-                            ),
-                            _ContractHeaderCell(
-                              text: totalUnitsLabel,
-                              flex: 3,
-                              style: tableHeaderStyle,
-                              alignment: Alignment.centerRight,
-                            ),
-                            _ContractHeaderCell(
-                              text: salaryLabel,
-                              flex: 3,
-                              style: tableHeaderStyle,
-                              alignment: Alignment.centerRight,
-                            ),
-                          ],
-                        ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 10 : 12,
+                        vertical: isCompact ? 8 : 10,
                       ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius:
+                            const BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      child: Row(
+                        children: [
+                          _ContractHeaderCell(
+                            text: 'Sr.no',
+                            flex: 1,
+                            style: tableHeaderStyle,
+                          ),
+                          _ContractHeaderCell(
+                            text: typeLabel,
+                            flex: 5,
+                            style: tableHeaderStyle,
+                          ),
+                          _ContractHeaderCell(
+                            text: totalUnitsLabel,
+                            flex: 3,
+                            style: tableHeaderStyle,
+                            alignment: Alignment.centerRight,
+                          ),
+                          _ContractHeaderCell(
+                            text: salaryLabel,
+                            flex: 3,
+                            style: tableHeaderStyle,
+                            alignment: Alignment.centerRight,
+                          ),
+                        ],
+                      ),
+                    ),
                     ...List.generate(details.length, (index) {
                       final detail = details[index];
                       final salary = detail.salaryAmount ??
@@ -1841,88 +1840,6 @@ class _ContractDetailsCard extends StatelessWidget {
                       final radius = isLast
                           ? const BorderRadius.vertical(bottom: Radius.circular(20))
                           : BorderRadius.zero;
-
-                      if (isCompact) {
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            left: 10,
-                            right: 10,
-                            bottom: index == details.length - 1 ? 10 : 0,
-                            top: index == 0 ? 10 : 8,
-                          ),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x0F111827),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isCompact ? 12 : 14,
-                                vertical: isCompact ? 12 : 16,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${index + 1}.',
-                                        style: tableLabelStyle.copyWith(
-                                          color: const Color(0xFF0F172A),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          typeText,
-                                          style: tableLabelStyle.copyWith(
-                                            color: const Color(0xFF0F172A),
-                                          ),
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _ContractValueTile(
-                                          label: totalUnitsLabel,
-                                          value: unitText,
-                                          labelStyle: tableLabelStyle,
-                                          valueStyle: tableValueStyle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: _ContractValueTile(
-                                          label: salaryLabel,
-                                          value: salaryText,
-                                          labelStyle: tableLabelStyle,
-                                          valueStyle: tableValueStyle,
-                                          alignment: Alignment.centerRight,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
                       return DecoratedBox(
                         decoration: BoxDecoration(
                           color:
@@ -2017,42 +1934,6 @@ class _ContractDetailsCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ContractValueTile extends StatelessWidget {
-  const _ContractValueTile({
-    required this.label,
-    required this.value,
-    required this.labelStyle,
-    required this.valueStyle,
-    this.alignment = Alignment.centerLeft,
-  });
-
-  final String label;
-  final String value;
-  final TextStyle labelStyle;
-  final TextStyle valueStyle;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: alignment == Alignment.centerRight
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: labelStyle.copyWith(color: const Color(0xFF6B7280)),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: valueStyle.copyWith(color: const Color(0xFF0F172A)),
-        ),
-      ],
     );
   }
 }

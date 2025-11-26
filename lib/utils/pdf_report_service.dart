@@ -186,8 +186,8 @@ class PdfReportService {
               fonts: fonts,
               headers: const <String>['Label', 'Amount'],
               data: <List<String>>[
-                <String>['Unit', totalUnits.toString()],
-                <String>['Salary', _formatContractCurrency(currencyLabel, totalSalary)],
+                <String>['Total Unit', totalUnits.toString()],
+                <String>['Net Salary', _formatContractCurrency(currencyLabel, totalSalary)],
               ],
               cellAlignments: const <int, pw.Alignment>{
                 0: pw.Alignment.center,
@@ -429,7 +429,7 @@ class PdfReportService {
     if (summary.totalContractSalary > 0) {
       rows.add(
         MapEntry(
-          'Total Salary',
+          'Total Contract Salary',
           _formatCurrency(currencySymbol, summary.totalContractSalary),
         ),
       );
