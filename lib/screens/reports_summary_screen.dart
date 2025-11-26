@@ -1006,13 +1006,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                     child: child,
                   ),
                 ),
-                layoutBuilder: (currentChild, previousChildren) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
-                ),
                 child: summaryBody,
               ),
             ],
