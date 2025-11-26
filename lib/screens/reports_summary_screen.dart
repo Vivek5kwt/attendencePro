@@ -492,8 +492,16 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       );
 
       final entries = history.entries;
+      final dailyContractRows = _summary?.dailyContractRows ?? const <DailyContractRow>[];
       final contractTypeLookup = <String, ContractType>{
         for (final type in history.contractTypes) type.id: type,
+      };
+      final contractDetailLookup = <int, ContractDetail>{
+        for (final detail in (_summary?.monthlyContractDetails.isNotEmpty == true
+                ? _summary!.monthlyContractDetails
+                : _summary?.contractDetails ?? const <ContractDetail>[])
+            .where((detail) => detail.id != null))
+          detail.id!: detail,
       };
       final hoursEntries = entries
           .where(
@@ -511,11 +519,15 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           )
           .toList(growable: false);
 
-      if (entries.isEmpty) {
+      if (entries.isEmpty && dailyContractRows.isEmpty) {
         _showSnack(l.reportDownloadNoEntriesMessage);
         return;
       }
 
+      final useDailyContractRows = dailyContractRows.isNotEmpty;
+      final dailyContractSalary = useDailyContractRows
+          ? dailyContractRows.fold<double>(0, (previous, row) => previous + row.salary)
+          : 0;
       final summary = HistoryReportSummary(
         totalHoursWorked: hoursEntries.fold<double>(
           0,
@@ -525,28 +537,60 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           0,
               (previous, entry) => previous + entry.salary,
         ),
-        totalContractSalary: contractEntries.fold<double>(
-          0,
-              (previous, entry) => previous + entry.salary,
-        ),
+        totalContractSalary: useDailyContractRows
+            ? dailyContractSalary
+            : contractEntries.fold<double>(
+                0,
+                    (previous, entry) => previous + entry.salary,
+              ),
         grandTotalEarnings: hoursEntries.fold<double>(
           0,
               (previous, entry) => previous + entry.salary,
         ) +
-            contractEntries.fold<double>(
-              0,
-                  (previous, entry) => previous + entry.salary,
-            ),
+            (useDailyContractRows
+                ? dailyContractSalary
+                : contractEntries.fold<double>(
+                    0,
+                        (previous, entry) => previous + entry.salary,
+                  )),
       );
 
       final workLabel = resolvedWorkName.isEmpty
           ? l.attendanceHistoryAllWorks
           : resolvedWorkName;
 
-      if (hoursEntries.isEmpty && contractEntries.isNotEmpty) {
-        final rows = contractEntries
-            .map(
-              (entry) => ContractReportRow(
+      if (hoursEntries.isEmpty && (contractEntries.isNotEmpty || useDailyContractRows)) {
+        final rows = useDailyContractRows
+            ? dailyContractRows
+                .map(
+                  (row) {
+                final detail =
+                    row.contractTypeId != null ? contractDetailLookup[row.contractTypeId!] : null;
+                final resolvedTypeLabel = row.contractName.trim().isNotEmpty
+                    ? row.contractName.trim()
+                    : (detail?.name.trim().isNotEmpty == true
+                        ? detail!.name.trim()
+                        : l.contractWorkContractTypeLabel);
+                final resolvedUnitLabel = row.unitLabel?.trim().isNotEmpty == true
+                    ? row.unitLabel!.trim()
+                    : (detail?.unitLabel.trim().isNotEmpty == true
+                        ? detail!.unitLabel.trim()
+                        : l.contractWorkUnitFallback);
+
+                return ContractReportRow(
+                  date: row.date,
+                  contractType: resolvedTypeLabel,
+                  unitLabel: resolvedUnitLabel,
+                  unitsCompleted: row.units,
+                  ratePerUnit: row.ratePerUnit ?? detail?.ratePerUnit ?? 0,
+                  salary: row.salary,
+                );
+              },
+            )
+                .toList(growable: false)
+            : contractEntries
+                .map(
+                  (entry) => ContractReportRow(
                 date: entry.date,
                 contractType: _resolveContractTypeLabel(
                   entry,
@@ -563,7 +607,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 salary: entry.salary,
               ),
             )
-            .toList(growable: false);
+                .toList(growable: false);
 
         final monthlySummaryDetails = (_summary?.monthlyContractDetails.isNotEmpty == true
                 ? _summary!.monthlyContractDetails

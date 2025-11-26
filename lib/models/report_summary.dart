@@ -9,6 +9,7 @@ class ReportSummary {
     required this.currencySymbol,
     required this.monthlyContractDetails,
     required this.contractDetails,
+    required this.dailyContractRows,
   });
 
   factory ReportSummary.fromJson(Map<String, dynamic> json) {
@@ -60,6 +61,7 @@ class ReportSummary {
     final contractDetails = monthlyContractDetails.isNotEmpty
         ? monthlyContractDetails
         : _parseContractDetails(data);
+    final dailyContractRows = _parseDailyContractRows(data);
 
     return ReportSummary(
       combinedSalary: CombinedSalaryData.fromJson(
@@ -77,6 +79,7 @@ class ReportSummary {
       currencySymbol: currencySymbol,
       monthlyContractDetails: monthlyContractDetails,
       contractDetails: contractDetails,
+      dailyContractRows: dailyContractRows,
     );
   }
 
@@ -87,6 +90,7 @@ class ReportSummary {
   final String currencySymbol;
   final List<ContractDetail> monthlyContractDetails;
   final List<ContractDetail> contractDetails;
+  final List<DailyContractRow> dailyContractRows;
 }
 
 class CombinedSalaryData {
@@ -379,6 +383,67 @@ class ContractDetail {
   }
 }
 
+class DailyContractRow {
+  const DailyContractRow({
+    required this.date,
+    required this.contractName,
+    required this.units,
+    required this.salary,
+    this.contractTypeId,
+    this.ratePerUnit,
+    this.unitLabel,
+  });
+
+  static DailyContractRow? tryParse(Map<String, dynamic> json) {
+    final date = _parseNullableDate(
+      json,
+      const ['date', 'entry_date', 'entryDate', 'work_date', 'workDate'],
+    );
+    if (date == null) return null;
+
+    final salary = _parseNullableDouble(
+      json,
+      const ['salary', 'amount', 'total_salary', 'totalSalary'],
+    );
+    final units = _parseNullableDouble(
+      json,
+      const ['units', 'quantity', 'unit_count', 'unitCount'],
+    );
+    final ratePerUnit = _parseNullableDouble(
+      json,
+      const ['rate_per_unit', 'ratePerUnit', 'rate', 'price_per_unit', 'pricePerUnit'],
+    );
+
+    return DailyContractRow(
+      date: date,
+      contractName: _parseString(
+        json,
+        const ['contract_name', 'contractName', 'name', 'title'],
+        fallback: 'Contract',
+      ),
+      contractTypeId: _parseNullableInt(
+        json,
+        const ['contract_type_id', 'contractTypeId', 'type_id', 'typeId'],
+      ),
+      units: units?.round() ?? 0,
+      ratePerUnit: ratePerUnit,
+      salary: salary ?? 0,
+      unitLabel: _parseString(
+        json,
+        const ['unit_label', 'unitLabel', 'unit', 'unit_name', 'unitName'],
+      ),
+    );
+  }
+
+  final DateTime date;
+  final String contractName;
+  final int units;
+  final double salary;
+  final int? contractTypeId;
+  final double? ratePerUnit;
+  final String? unitLabel;
+}
+
 List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
   final source = json['contract_details'] ?? json['contractDetails'];
   final normalized = _normalizeContractDetailSource(source);
@@ -394,6 +459,31 @@ List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
     }
   }
   return details;
+}
+
+List<DailyContractRow> _parseDailyContractRows(Map<String, dynamic> json) {
+  final source = _normalizeContractDetailSource(
+    json['daily_contract_rows'] ?? json['dailyContractRows'],
+  );
+
+  if (source == null || source.isEmpty) {
+    return const <DailyContractRow>[];
+  }
+
+  final rows = <DailyContractRow>[];
+  for (final entry in source) {
+    final map = _ensureMap(entry);
+    if (map == null) {
+      continue;
+    }
+
+    final parsed = DailyContractRow.tryParse(map);
+    if (parsed != null) {
+      rows.add(parsed);
+    }
+  }
+
+  return rows;
 }
 
 List<ContractDetail> _parseMonthlyContractDetails(Map<String, dynamic> json) {
@@ -711,6 +801,13 @@ DateTime? _parseNullableDate(Map<String, dynamic> json, List<String> keys) {
       if (trimmed.isEmpty) continue;
       final parsed = DateTime.tryParse(trimmed);
       if (parsed != null) return parsed;
+
+      try {
+        final custom = DateFormat('dd/MMM/yyyy').parse(trimmed);
+        return custom;
+      } catch (_) {
+        // Ignore and continue trying other keys
+      }
     }
   }
   return null;
