@@ -659,13 +659,30 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   Future<void> _openAddWorkDialog() async {
     await showAddWorkDialog(context: context);
     if (!mounted) return;
-    unawaited(_refreshWorks());
+    unawaited(_refreshWorksAndSummary());
   }
 
   Future<void> _openEditWorkDialog(Work work) async {
     await showEditWorkDialog(context: context, work: work);
     if (!mounted) return;
-    unawaited(_refreshWorks());
+    unawaited(_refreshWorksAndSummary());
+  }
+
+  Future<void> _refreshWorksAndSummary() async {
+    await _refreshWorks();
+    if (!mounted) return;
+
+    final workState = context.read<WorkBloc>().state;
+    final selectedWork = _resolveSelectedWork(workState);
+    if (!mounted) return;
+
+    setState(() {
+      _selectedWorkId = selectedWork?.id;
+      _selectedWorkName = selectedWork?.name;
+    });
+
+    // Always reload the summary so the latest work details are reflected.
+    _loadSummary();
   }
 
   Future<void> _refreshWorks() {
