@@ -69,11 +69,17 @@ class ContractMonthlySummary {
     required this.name,
     required this.units,
     required this.salary,
+    this.date,
+    this.ratePerUnit,
+    this.unitLabel,
   });
 
   final String name;
   final int units;
   final double salary;
+  final DateTime? date;
+  final double? ratePerUnit;
+  final String? unitLabel;
 }
 
 class PdfReportService {
@@ -149,16 +155,34 @@ class PdfReportService {
     final hasOverride = overrideTotals != null && overrideTotals.isNotEmpty;
     var serial = 1;
 
+    final hasDetailedOverride = hasOverride &&
+        overrideTotals!.any((item) => item.date != null || item.ratePerUnit != null);
+
     if (hasOverride) {
       totalUnits = 0;
       totalSalary = 0;
       for (final entry in overrideTotals!) {
-        monthlyTotals.add(<String>[
+        final rateLabel = entry.ratePerUnit != null
+            ? _formatContractRate(
+                currencyLabel,
+                entry.ratePerUnit!,
+                entry.unitLabel?.trim().isNotEmpty == true
+                    ? entry.unitLabel!.trim()
+                    : 'unit',
+              )
+            : '-';
+
+        final dataRow = <String>[
           '${serial++}.',
+          if (hasDetailedOverride)
+            entry.date != null ? _formatContractDate(entry.date!) : '-',
           entry.name,
           entry.units.toString(),
+          if (hasDetailedOverride) rateLabel,
           _formatContractCurrency(currencyLabel, entry.salary),
-        ]);
+        ];
+
+        monthlyTotals.add(dataRow);
         totalUnits += entry.units;
         totalSalary += entry.salary;
       }
@@ -175,6 +199,10 @@ class PdfReportService {
         ]);
       }
     }
+
+    final monthlyHeaders = hasDetailedOverride
+        ? const <String>['Sr. no', 'Date', 'Contract Type', 'Unit', 'Rate', 'Salary']
+        : const <String>['Sr. no', 'Contract Type', 'Unit', 'Salary'];
 
     document.addPage(
       pw.MultiPage(
@@ -207,14 +235,23 @@ class PdfReportService {
             pw.SizedBox(height: 10),
             _buildBorderedTable(
               fonts: fonts,
-              headers: const <String>['Sr. no', 'Contract Type', 'Unit', 'Salary'],
+              headers: monthlyHeaders,
               data: monthlyTotals,
-              cellAlignments: const <int, pw.Alignment>{
-                0: pw.Alignment.center,
-                1: pw.Alignment.centerLeft,
-                2: pw.Alignment.center,
-                3: pw.Alignment.center,
-              },
+              cellAlignments: hasDetailedOverride
+                  ? const <int, pw.Alignment>{
+                      0: pw.Alignment.center,
+                      1: pw.Alignment.centerLeft,
+                      2: pw.Alignment.centerLeft,
+                      3: pw.Alignment.center,
+                      4: pw.Alignment.center,
+                      5: pw.Alignment.center,
+                    }
+                  : const <int, pw.Alignment>{
+                      0: pw.Alignment.center,
+                      1: pw.Alignment.centerLeft,
+                      2: pw.Alignment.center,
+                      3: pw.Alignment.center,
+                    },
             ),
             pw.SizedBox(height: 16),
             _buildBorderedTable(
