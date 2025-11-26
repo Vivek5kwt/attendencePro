@@ -1798,7 +1798,7 @@ class _ContractDetailsCard extends StatelessWidget {
                       child: Row(
                         children: [
                           _ContractHeaderCell(
-                            text: '#',
+                            text: 'Sr.no',
                             flex: 1,
                             style: tableHeaderStyle,
                           ),
@@ -1827,7 +1827,10 @@ class _ContractDetailsCard extends StatelessWidget {
                       final salary = detail.salaryAmount ??
                           ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
                       final salaryText = salary > 0
-                          ? _formatCurrencyValue(salary, currencySymbol)
+                          ? _formatCurrencyValueWithSuffix(
+                              salary,
+                              currencySymbol,
+                            )
                           : '--';
                       final unitText = _formatUnitCount(detail.totalUnits);
                       final typeText = (detail.type?.trim().isNotEmpty ?? false)
@@ -1923,7 +1926,7 @@ class _ContractDetailsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${salaryLabel.toUpperCase()} = ${_formatCurrencyValue(resolvedTotalSalary, currencySymbol)}',
+                  '${salaryLabel.toUpperCase()} = ${_formatCurrencyValueWithSuffix(resolvedTotalSalary, currencySymbol)}',
                   style: summaryValueStyle.copyWith(fontSize: 16),
                 ),
               ],
@@ -2656,6 +2659,16 @@ String _formatCurrencyValue(num value, String symbol) {
   final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
   final prefix = doubleValue < 0 ? '-' : '';
   return '$prefix$resolvedSymbol$formatted';
+}
+
+String _formatCurrencyValueWithSuffix(num value, String symbol) {
+  final trimmedSymbol = symbol.trim().isEmpty ? 'Euro' : symbol.trim();
+  final doubleValue = value.toDouble();
+  final isWhole = doubleValue.floorToDouble() == doubleValue;
+  final formatted = doubleValue.abs().toStringAsFixed(isWhole ? 0 : 2);
+  final prefix = doubleValue < 0 ? '-' : '';
+
+  return '$prefix$formatted $trimmedSymbol';
 }
 
 String _formatHours(double hours) {
