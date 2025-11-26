@@ -116,7 +116,10 @@ class PdfReportService {
 
     final currencyLabel = _resolveCurrencyLabel(currencySymbol);
 
-    final tableData = rows.map((row) {
+    final sortedRows = [...rows]
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final tableData = sortedRows.map((row) {
       final rawLabel = row.contractType.trim();
       final label = rawLabel.isEmpty ? '-' : rawLabel;
       final normalizedLabel = label.toLowerCase();
