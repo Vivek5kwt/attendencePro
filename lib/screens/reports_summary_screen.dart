@@ -1090,9 +1090,11 @@ class _SummaryLoadedContent extends StatelessWidget {
             details: contractDetails,
             currencySymbol: currency,
             subtitle: localization.reportsContractDetailsSubtitle,
-            rateLabel: localization.reportsContractDetailsRateLabel,
             typeLabel: localization.reportsContractDetailsTypeLabel,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
+            salaryLabel: localization.reportsContractSalaryLabel,
+            totalUnits: resolvedContractUnits,
+            totalSalary: resolvedContractSalary,
           ),
         ],
         if (showContractSummary) ...[
@@ -1660,17 +1662,21 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.details,
     required this.currencySymbol,
     required this.subtitle,
-    required this.rateLabel,
     required this.typeLabel,
     required this.totalUnitsLabel,
+    required this.salaryLabel,
+    required this.totalUnits,
+    required this.totalSalary,
   });
 
   final List<ContractDetail> details;
   final String currencySymbol;
   final String subtitle;
-  final String rateLabel;
   final String typeLabel;
   final String totalUnitsLabel;
+  final String salaryLabel;
+  final num totalUnits;
+  final double totalSalary;
 
   @override
   Widget build(BuildContext context) {
@@ -1714,6 +1720,17 @@ class _ContractDetailsCard extends StatelessWidget {
           color: Color(0xFF475467),
         );
 
+    final resolvedTotalUnits = totalUnits > 0
+        ? totalUnits
+        : details.fold<num>(0, (sum, item) => sum + (item.totalUnits ?? 0));
+    final resolvedTotalSalary = totalSalary > 0
+        ? totalSalary
+        : details.fold<double>(0, (sum, item) {
+            final amount = item.salaryAmount ??
+                ((item.ratePerUnit ?? 0) * (item.totalUnits ?? 0));
+            return sum + amount;
+          });
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -1732,9 +1749,10 @@ class _ContractDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(subtitle, style: subtitleStyle),
+          const SizedBox(height: 14),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
@@ -1743,13 +1761,11 @@ class _ContractDetailsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(subtitle, style: subtitleStyle),
-                const SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Row(
                     children: [
@@ -1766,7 +1782,7 @@ class _ContractDetailsCard extends StatelessWidget {
                         alignment: Alignment.centerRight,
                       ),
                       _ContractHeaderCell(
-                        text: rateLabel,
+                        text: salaryLabel,
                         flex: 3,
                         style: headerStyle,
                         alignment: Alignment.centerRight,
@@ -1774,179 +1790,105 @@ class _ContractDetailsCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
                 ...List.generate(details.length, (index) {
                   final detail = details[index];
-                  final isLast = index == details.length - 1;
+                  final salary = detail.salaryAmount ??
+                      ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
+                  final salaryText = salary > 0
+                      ? _formatCurrencyValue(salary, currencySymbol)
+                      : '--';
                   final unitText = _formatUnitCount(detail.totalUnits);
-                  return Column(
-                    children: [
-                      _ContractDetailTile(
-                        index: index + 1,
-                        detail: detail,
-                        currencySymbol: currencySymbol,
-                        rateLabel: rateLabel,
-                        typeLabel: typeLabel,
-                        summaryLabelStyle: summaryLabelStyle,
-                        summaryValueStyle: summaryValueStyle,
-                        unitText: unitText,
-                        unitLabelHeading: totalUnitsLabel,
-                      ),
-                      if (!isLast)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                  final radius = index == details.length - 1
+                      ? const BorderRadius.vertical(bottom: Radius.circular(20))
+                      : BorderRadius.zero;
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: index.isEven
+                          ? Colors.white
+                          : const Color(0xFFF9FAFB),
+                      borderRadius: radius,
+                      border: Border(
+                        top: const BorderSide(color: Color(0xFFE5E7EB)),
+                        bottom: BorderSide(
+                          color: index == details.length - 1
+                              ? Colors.transparent
+                              : const Color(0xFFE5E7EB),
                         ),
-                    ],
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 28,
+                            child: Text(
+                              '${index + 1}.',
+                              style: summaryLabelStyle.copyWith(
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(detail.name, style: summaryValueStyle),
+                                if (detail.type?.trim().isNotEmpty == true) ...[
+                                  const SizedBox(height: 4),
+                                  Text(detail.type!.trim(), style: summaryLabelStyle),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(unitText, style: summaryValueStyle),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(salaryText, style: summaryValueStyle),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ContractDetailTile extends StatelessWidget {
-  const _ContractDetailTile({
-    required this.index,
-    required this.detail,
-    required this.currencySymbol,
-    required this.rateLabel,
-    required this.typeLabel,
-    required this.summaryLabelStyle,
-    required this.summaryValueStyle,
-    required this.unitText,
-    required this.unitLabelHeading,
-  });
-
-  final int index;
-  final ContractDetail detail;
-  final String currencySymbol;
-  final String rateLabel;
-  final String typeLabel;
-  final TextStyle summaryLabelStyle;
-  final TextStyle summaryValueStyle;
-  final String unitText;
-  final String unitLabelHeading;
-
-  @override
-  Widget build(BuildContext context) {
-    final nameStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: const Color(0xFF111827),
-    ) ??
-        const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF111827),
-        );
-    final hintStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
-      color: const Color(0xFF6B7280),
-      fontWeight: FontWeight.w500,
-    ) ??
-        const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF6B7280),
-        );
-    final chipStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: const Color(0xFF1E3A8A),
-      fontWeight: FontWeight.w600,
-    ) ??
-        const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1E3A8A),
-        );
-
-    final rate = detail.ratePerUnit;
-    final rateText = rate != null
-        ? _formatCurrencyValue(rate, currencySymbol)
-        : '--';
-    final unitLabel = detail.unitLabel.trim();
-    final type = detail.type;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A0F172A),
-            blurRadius: 10,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              '$index.',
-              style: chipStyle.copyWith(color: const Color(0xFF0F172A)),
+          const SizedBox(height: 18),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-          ),
-          Expanded(
-            flex: 4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(detail.name, style: nameStyle),
-                if (unitLabel.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(unitLabel, style: hintStyle),
-                ],
-                if (type != null && type.trim().isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      type.trim(),
-                      style: chipStyle,
-                    ),
-                  ),
-                ],
+                Text(
+                  '${totalUnitsLabel.toUpperCase()} = ${_formatUnitCount(resolvedTotalUnits)}',
+                  style: summaryValueStyle.copyWith(fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${salaryLabel.toUpperCase()} = ${_formatCurrencyValue(resolvedTotalSalary, currencySymbol)}',
+                  style: summaryValueStyle.copyWith(fontSize: 16),
+                ),
               ],
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(unitText, style: summaryValueStyle),
-                  const SizedBox(height: 4),
-                  Text(unitLabelHeading, style: summaryLabelStyle),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(rateText, style: summaryValueStyle),
-                  const SizedBox(height: 4),
-                  Text(rateLabel, style: summaryLabelStyle),
-                ],
-              ),
             ),
           ),
         ],
