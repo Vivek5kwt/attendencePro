@@ -1094,9 +1094,7 @@ class _SummaryLoadedContent extends StatelessWidget {
             details: contractDetails,
             currencySymbol: currency,
             subtitle: localization.reportsContractDetailsSubtitle,
-            nameLabel: localization.contractWorkHeader,
             typeLabel: localization.reportsContractDetailsTypeLabel,
-            rateLabel: localization.reportsContractDetailsRateLabel,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
             salaryLabel: localization.reportsContractSalaryLabel,
             totalUnits: resolvedContractUnits,
@@ -1668,9 +1666,7 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.details,
     required this.currencySymbol,
     required this.subtitle,
-    required this.nameLabel,
     required this.typeLabel,
-    required this.rateLabel,
     required this.totalUnitsLabel,
     required this.salaryLabel,
     required this.totalUnits,
@@ -1680,9 +1676,7 @@ class _ContractDetailsCard extends StatelessWidget {
   final List<ContractDetail> details;
   final String currencySymbol;
   final String subtitle;
-  final String nameLabel;
   final String typeLabel;
-  final String rateLabel;
   final String totalUnitsLabel;
   final String salaryLabel;
   final num totalUnits;
@@ -1809,20 +1803,9 @@ class _ContractDetailsCard extends StatelessWidget {
                             style: tableHeaderStyle,
                           ),
                           _ContractHeaderCell(
-                            text: nameLabel,
-                            flex: 4,
-                            style: tableHeaderStyle,
-                          ),
-                          _ContractHeaderCell(
                             text: typeLabel,
-                            flex: 3,
+                            flex: 5,
                             style: tableHeaderStyle,
-                          ),
-                          _ContractHeaderCell(
-                            text: rateLabel,
-                            flex: 3,
-                            style: tableHeaderStyle,
-                            alignment: Alignment.centerRight,
                           ),
                           _ContractHeaderCell(
                             text: totalUnitsLabel,
@@ -1847,14 +1830,9 @@ class _ContractDetailsCard extends StatelessWidget {
                           ? _formatCurrencyValue(salary, currencySymbol)
                           : '--';
                       final unitText = _formatUnitCount(detail.totalUnits);
-                      final typeText =
-                          (detail.type?.trim().isNotEmpty ?? false)
-                              ? detail.type!.trim()
-                              : '--';
-                      final rateValue = detail.ratePerUnit ?? 0;
-                      final rateText = rateValue > 0
-                          ? _formatCurrencyValue(rateValue, currencySymbol)
-                          : '--';
+                      final typeText = (detail.type?.trim().isNotEmpty ?? false)
+                          ? detail.type!.trim()
+                          : detail.name;
                       final isLast = index == details.length - 1;
                       final radius = isLast
                           ? const BorderRadius.vertical(bottom: Radius.circular(20))
@@ -1886,16 +1864,7 @@ class _ContractDetailsCard extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                flex: 4,
-                                child: Text(
-                                  detail.name,
-                                  style: tableValueStyle,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
+                                flex: 5,
                                 child: Text(
                                   typeText,
                                   style: tableLabelStyle.copyWith(
@@ -1903,20 +1872,6 @@ class _ContractDetailsCard extends StatelessWidget {
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Expanded(
-                                flex: 3,
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      rateText,
-                                      style: tableValueStyle,
-                                    ),
-                                  ),
                                 ),
                               ),
                               Expanded(
