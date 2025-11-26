@@ -7,6 +7,7 @@ class ReportSummary {
     required this.contractSummary,
     required this.breakdown,
     required this.currencySymbol,
+    required this.monthlyContractDetails,
     required this.contractDetails,
   });
 
@@ -55,6 +56,11 @@ class ReportSummary {
     ) ??
         '€';
 
+    final monthlyContractDetails = _parseMonthlyContractDetails(data);
+    final contractDetails = monthlyContractDetails.isNotEmpty
+        ? monthlyContractDetails
+        : _parseContractDetails(data);
+
     return ReportSummary(
       combinedSalary: CombinedSalaryData.fromJson(
         combinedJson.isEmpty ? data : combinedJson,
@@ -69,7 +75,8 @@ class ReportSummary {
         breakdownJson.isEmpty ? data : breakdownJson,
       ),
       currencySymbol: currencySymbol,
-      contractDetails: _parseContractDetails(data),
+      monthlyContractDetails: monthlyContractDetails,
+      contractDetails: contractDetails,
     );
   }
 
@@ -78,6 +85,7 @@ class ReportSummary {
   final ContractSummaryData contractSummary;
   final SummaryBreakdown breakdown;
   final String currencySymbol;
+  final List<ContractDetail> monthlyContractDetails;
   final List<ContractDetail> contractDetails;
 }
 
@@ -372,51 +380,6 @@ class ContractDetail {
 }
 
 List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
-  final monthlySource = _normalizeContractDetailSource(
-    json['monthly_contract_summary'] ?? json['monthlyContractSummary'],
-  );
-
-  if (monthlySource != null && monthlySource.isNotEmpty) {
-    final details = <ContractDetail>[];
-    for (final entry in monthlySource) {
-      final map = _ensureMap(entry);
-      if (map == null) {
-        continue;
-      }
-
-      details.add(
-        ContractDetail(
-          id: _parseNullableInt(map, const ['id', 'contract_type_id', 'contractTypeId']),
-          name: _parseString(
-            map,
-            const ['contract_name', 'name', 'title'],
-            fallback: 'Contract Work',
-          ),
-          type: _parseString(map, const ['type', 'contract_type', 'contractType']),
-          ratePerUnit: _parseNullableDouble(
-            map,
-            const ['rate_per_unit', 'ratePerUnit', 'rate'],
-          ),
-          unitLabel: _parseString(
-            map,
-            const ['unit_label', 'unitLabel', 'unit'],
-            fallback: 'Unit',
-          ),
-          totalUnits: _parseNullableDouble(
-            map,
-            const ['units', 'total_units', 'totalUnits'],
-          ),
-          salaryAmount: _parseNullableDouble(
-            map,
-            const ['salary', 'amount', 'total_salary', 'totalSalary'],
-          ),
-          date: null,
-        ),
-      );
-    }
-    return details;
-  }
-
   final source = json['contract_details'] ?? json['contractDetails'];
   final normalized = _normalizeContractDetailSource(source);
   if (normalized == null) {
@@ -429,6 +392,55 @@ List<ContractDetail> _parseContractDetails(Map<String, dynamic> json) {
     if (map != null) {
       details.add(ContractDetail.fromJson(map));
     }
+  }
+  return details;
+}
+
+List<ContractDetail> _parseMonthlyContractDetails(Map<String, dynamic> json) {
+  final monthlySource = _normalizeContractDetailSource(
+    json['monthly_contract_summary'] ?? json['monthlyContractSummary'],
+  );
+
+  if (monthlySource == null || monthlySource.isEmpty) {
+    return const <ContractDetail>[];
+  }
+
+  final details = <ContractDetail>[];
+  for (final entry in monthlySource) {
+    final map = _ensureMap(entry);
+    if (map == null) {
+      continue;
+    }
+
+    details.add(
+      ContractDetail(
+        id: _parseNullableInt(map, const ['id', 'contract_type_id', 'contractTypeId']),
+        name: _parseString(
+          map,
+          const ['contract_name', 'name', 'title'],
+          fallback: 'Contract Work',
+        ),
+        type: _parseString(map, const ['type', 'contract_type', 'contractType']),
+        ratePerUnit: _parseNullableDouble(
+          map,
+          const ['rate_per_unit', 'ratePerUnit', 'rate'],
+        ),
+        unitLabel: _parseString(
+          map,
+          const ['unit_label', 'unitLabel', 'unit'],
+          fallback: 'Unit',
+        ),
+        totalUnits: _parseNullableDouble(
+          map,
+          const ['units', 'total_units', 'totalUnits'],
+        ),
+        salaryAmount: _parseNullableDouble(
+          map,
+          const ['salary', 'amount', 'total_salary', 'totalSalary'],
+        ),
+        date: null,
+      ),
+    );
   }
   return details;
 }

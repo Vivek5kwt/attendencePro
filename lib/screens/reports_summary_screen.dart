@@ -1220,7 +1220,9 @@ class _SummaryLoadedContent extends StatelessWidget {
     final currency = summary.currencySymbol;
     final resolvedContractUnits = _resolveContractSummaryTotalUnits(summary.contractSummary);
     final resolvedContractSalary = _resolveContractSummarySalaryAmount(summary.contractSummary);
-    final contractDetails = summary.contractDetails;
+    final contractDetails = summary.monthlyContractDetails.isNotEmpty
+        ? summary.monthlyContractDetails
+        : summary.contractDetails;
     final hasContractDetails = contractDetails.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1250,8 +1252,8 @@ class _SummaryLoadedContent extends StatelessWidget {
             details: contractDetails,
             currencySymbol: currency,
             subtitle: localization.reportsContractDetailsSubtitle,
-            nameLabel: localization.reportsContractDetailsNameLabel,
-            totalUnitsLabel: localization.reportsTotalUnitsLabel,
+            nameLabel: localization.contractWorkContractTypeLabel,
+            totalUnitsLabel: localization.contractWorkUnitsLabel,
             salaryLabel: localization.reportsContractSalaryLabel,
             emptyValueLabel: localization.notAvailableLabel,
             totalUnits: resolvedContractUnits,
