@@ -1000,11 +1000,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
                 duration: const Duration(milliseconds: 250),
                 transitionBuilder: (child, animation) => FadeTransition(
                   opacity: animation,
-                  child: SizeTransition(
-                    sizeFactor: animation,
-                    axisAlignment: -1,
-                    child: child,
-                  ),
+                  child: child,
                 ),
                 child: summaryBody,
               ),
