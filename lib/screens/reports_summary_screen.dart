@@ -1809,7 +1809,7 @@ class _ContractDetailsCard extends StatelessWidget {
                             : const Color(0xFFF9FAFB),
                         borderRadius: radius,
                         border: isLast
-                            ? Border.all(color: const Color(0xFFE5E7EB))
+                            ? const Border.all(color: Color(0xFFE5E7EB))
                             : const Border(
                                 top: BorderSide(color: Color(0xFFE5E7EB)),
                                 bottom: BorderSide(color: Color(0xFFE5E7EB)),
