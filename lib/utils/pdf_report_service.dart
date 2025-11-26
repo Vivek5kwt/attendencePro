@@ -64,6 +64,18 @@ class HistoryReportSummary {
   final double grandTotalEarnings;
 }
 
+class ContractMonthlySummary {
+  const ContractMonthlySummary({
+    required this.name,
+    required this.units,
+    required this.salary,
+  });
+
+  final String name;
+  final int units;
+  final double salary;
+}
+
 class PdfReportService {
   const PdfReportService._();
 
@@ -87,6 +99,7 @@ class PdfReportService {
     required String monthLabel,
     required String currencySymbol,
     required List<ContractReportRow> rows,
+    List<ContractMonthlySummary>? monthlyTotalsOverride,
     HistoryReportSummary? summary,
   }) async {
     if (rows.isEmpty) {
@@ -128,17 +141,36 @@ class PdfReportService {
     }).toList(growable: false);
 
     final monthlyTotals = <List<String>>[];
+    final overrideTotals = monthlyTotalsOverride?.where((item) =>
+        item.name.trim().isNotEmpty || item.units > 0 || item.salary > 0);
+    final hasOverride = overrideTotals != null && overrideTotals.isNotEmpty;
     var serial = 1;
-    // Preserve the original insertion order so the monthly totals table mirrors
-    // the sequence of contract types shown in the daily entries.
-    for (final entry in contractTotals.entries) {
-      final displayLabel = contractLabels[entry.key] ?? entry.key;
-      monthlyTotals.add(<String>[
-        '${serial++}.',
-        displayLabel,
-        entry.value.key.toString(),
-        _formatContractCurrency(currencyLabel, entry.value.value),
-      ]);
+
+    if (hasOverride) {
+      totalUnits = 0;
+      totalSalary = 0;
+      for (final entry in overrideTotals!) {
+        monthlyTotals.add(<String>[
+          '${serial++}.',
+          entry.name,
+          entry.units.toString(),
+          _formatContractCurrency(currencyLabel, entry.salary),
+        ]);
+        totalUnits += entry.units;
+        totalSalary += entry.salary;
+      }
+    } else {
+      // Preserve the original insertion order so the monthly totals table mirrors
+      // the sequence of contract types shown in the daily entries.
+      for (final entry in contractTotals.entries) {
+        final displayLabel = contractLabels[entry.key] ?? entry.key;
+        monthlyTotals.add(<String>[
+          '${serial++}.',
+          displayLabel,
+          entry.value.key.toString(),
+          _formatContractCurrency(currencyLabel, entry.value.value),
+        ]);
+      }
     }
 
     document.addPage(
