@@ -284,7 +284,8 @@ class PdfReportService {
             )
             ..add(pw.SizedBox(height: 10))
             ..add(
-              _buildStripedTable(
+              _buildBorderedTable(
+                fonts: fonts,
                 headers: const <String>[
                   'Date',
                   'Type',
@@ -294,15 +295,6 @@ class PdfReportService {
                   'Amount',
                 ],
                 data: tableRows,
-                headerStyle: _textStyle(
-                  fonts,
-                  font: fonts.bold,
-                  fontSize: 10,
-                  color: PdfColors.white,
-                ),
-                cellStyle: _textStyle(fonts, fontSize: 9),
-                headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
-                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.4),
                 cellAlignments: const <int, pw.Alignment>{
                   0: pw.Alignment.centerLeft,
                   1: pw.Alignment.centerLeft,
