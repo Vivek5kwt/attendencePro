@@ -526,31 +526,31 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
 
       final useDailyContractRows = dailyContractRows.isNotEmpty;
       final dailyContractSalary = useDailyContractRows
-          ? dailyContractRows.fold<double>(0, (previous, row) => previous + row.salary)
-          : 0;
+          ? dailyContractRows.fold<double>(0.0, (previous, row) => previous + row.salary)
+          : 0.0;
       final summary = HistoryReportSummary(
         totalHoursWorked: hoursEntries.fold<double>(
-          0,
+          0.0,
               (previous, entry) => previous + resolveEntryTotalHours(entry),
         ),
         totalHourlySalary: hoursEntries.fold<double>(
-          0,
+          0.0,
               (previous, entry) => previous + entry.salary,
         ),
         totalContractSalary: useDailyContractRows
             ? dailyContractSalary
             : contractEntries.fold<double>(
-                0,
+                0.0,
                     (previous, entry) => previous + entry.salary,
               ),
         grandTotalEarnings: hoursEntries.fold<double>(
-          0,
+          0.0,
               (previous, entry) => previous + entry.salary,
         ) +
             (useDailyContractRows
                 ? dailyContractSalary
                 : contractEntries.fold<double>(
-                    0,
+                    0.0,
                         (previous, entry) => previous + entry.salary,
                   )),
       );
@@ -1936,7 +1936,7 @@ class _ContractDetailsCard extends StatelessWidget {
         : details.fold<num>(0, (sum, item) => sum + (item.totalUnits ?? 0));
     final resolvedTotalSalary = totalSalary > 0
         ? totalSalary
-        : details.fold<double>(0, (sum, item) {
+        : details.fold<double>(0.0, (sum, item) {
             final amount = item.salaryAmount ??
                 ((item.ratePerUnit ?? 0) * (item.totalUnits ?? 0));
             return sum + amount;
