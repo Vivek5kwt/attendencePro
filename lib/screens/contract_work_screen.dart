@@ -2311,147 +2311,221 @@ class _ContractSummaryTable extends StatelessWidget {
       );
     }
 
-    final tableRows = <Widget>[const _ContractSummaryTableRow.header()];
+    Widget tableContent;
 
     if (isLoading) {
-      tableRows.add(
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: responsive.scale(24)),
-          child: const SizedBox(
-            height: 32,
-            width: 32,
-            child: AppLoader(size: 32),
-          ),
+      tableContent = Padding(
+        padding: EdgeInsets.symmetric(vertical: responsive.scale(24)),
+        child: const SizedBox(
+          height: 32,
+          width: 32,
+          child: AppLoader(size: 32),
         ),
       );
     } else if (hasError) {
-      tableRows.add(
-        buildStatusMessage(
-          resolvedError,
-          action: onRetry == null
-              ? null
-              : TextButton.icon(
-            onPressed: onRetry,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF2563EB),
-              textStyle: TextStyle(
-                fontSize: responsive.scaleText(13),
-                fontWeight: FontWeight.w600,
+      tableContent = buildStatusMessage(
+        resolvedError,
+        action: onRetry == null
+            ? null
+            : TextButton.icon(
+                onPressed: onRetry,
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2563EB),
+                  textStyle: TextStyle(
+                    fontSize: responsive.scaleText(13),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(l.retryButtonLabel),
               ),
-            ),
-            icon: const Icon(Icons.refresh, size: 18),
-            label: Text(l.retryButtonLabel),
-          ),
-        ),
       );
     } else if (hasRows) {
-      tableRows.add(const Divider(height: 1, color: Color(0xFFE5E7EB)));
-      for (var i = 0; i < rows.length; i++) {
-        tableRows.add(
-          _ContractSummaryTableRow(
-            index: rows[i].index,
-            workName: rows[i].workName,
-            units: rows[i].units,
-            payment: rows[i].payment,
-          ),
+      final headerStyle = TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: responsive.scaleText(13),
+        color: const Color(0xFF111827),
+      );
+      final valueStyle = TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: responsive.scaleText(13),
+        color: const Color(0xFF1F2937),
+      );
+      final secondaryValueStyle = valueStyle.copyWith(color: const Color(0xFF4B5563));
+
+      TableRow buildRow({
+        required List<Widget> cells,
+        bool isHeader = false,
+      }) {
+        final backgroundColor = isHeader ? const Color(0xFFF3F4F6) : Colors.white;
+        return TableRow(
+          decoration: BoxDecoration(color: backgroundColor),
+          children: cells
+              .map(
+                (cell) => Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.scale(12),
+                    vertical: responsive.scale(isHeader ? 12 : 10),
+                  ),
+                  child: cell,
+                ),
+              )
+              .toList(),
         );
-        if (i != rows.length - 1) {
-          tableRows.add(const Divider(height: 1, color: Color(0xFFE5E7EB)));
-        }
       }
-    } else {
-      tableRows.add(
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: responsive.scale(16),
-            vertical: responsive.scale(24),
+
+      tableContent = ClipRRect(
+        borderRadius: BorderRadius.circular(responsive.scale(12)),
+        child: Table(
+          columnWidths: {
+            0: FixedColumnWidth(responsive.scale(40)),
+            1: const FlexColumnWidth(3),
+            2: const FlexColumnWidth(2),
+            3: const FlexColumnWidth(2),
+          },
+          border: const TableBorder(
+            horizontalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+            verticalInside: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+            top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+            bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+            left: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+            right: BorderSide(color: Color(0xFFE5E7EB), width: 1),
           ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE0EAFF), Color(0xFFF5F8FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(responsive.scale(18)),
+          children: [
+            buildRow(
+              isHeader: true,
+              cells: [
+                Text('#', style: headerStyle),
+                Text('Contract Name', style: headerStyle),
+                Text('Total Units', style: headerStyle),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('Total Payment', style: headerStyle),
+                ),
+              ],
             ),
-            child: Padding(
-              padding: EdgeInsets.all(responsive.scale(20)),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: responsive.scale(64),
-                    width: responsive.scale(64),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF2563EB),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(responsive.scale(14)),
-                      child: Image.asset(
-                        AppAssets.contractWork,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: responsive.scale(16)),
+            ...rows.map(
+              (row) => buildRow(
+                cells: [
+                  Text('${row.index}.', style: secondaryValueStyle),
                   Text(
-                    emptyMessage,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E3A8A),
-                      fontSize: responsive.scaleText(15),
-                    ) ??
-                        TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E3A8A),
-                          fontSize: responsive.scaleText(15),
-                        ),
+                    row.workName,
+                    style: valueStyle,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
-                  SizedBox(height: responsive.scale(12)),
                   Text(
-                    l.contractWorkEmptyHelperText,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF1F2937),
-                      fontSize: responsive.scaleText(13),
-                    ) ??
-                        TextStyle(
-                          color: const Color(0xFF1F2937),
-                          fontSize: responsive.scaleText(13),
-                        ),
+                    row.units,
+                    style: secondaryValueStyle,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  if (onEmptyAction != null) ...[
-                    SizedBox(height: responsive.scale(18)),
-                    FilledButton.icon(
-                      onPressed: onEmptyAction,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2563EB),
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: responsive.scale(20),
-                          vertical: responsive.scale(12),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            responsive.scale(14),
-                          ),
-                        ),
-                        textStyle: TextStyle(
-                          fontSize: responsive.scaleText(14),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      icon: const Icon(Icons.add_circle_outline, size: 20),
-                      label: Text(
-                        emptyActionLabel ?? l.addContractWorkButton,
-                      ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      row.payment,
+                      style: secondaryValueStyle,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
-                  ],
+                  ),
                 ],
               ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      tableContent = Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.scale(16),
+          vertical: responsive.scale(24),
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE0EAFF), Color(0xFFF5F8FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(responsive.scale(18)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(responsive.scale(20)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: responsive.scale(64),
+                  width: responsive.scale(64),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF2563EB),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(responsive.scale(14)),
+                    child: Image.asset(
+                      AppAssets.contractWork,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                SizedBox(height: responsive.scale(16)),
+                Text(
+                  emptyMessage,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E3A8A),
+                        fontSize: responsive.scaleText(15),
+                      ) ??
+                      TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E3A8A),
+                        fontSize: responsive.scaleText(15),
+                      ),
+                ),
+                SizedBox(height: responsive.scale(12)),
+                Text(
+                  l.contractWorkEmptyHelperText,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF1F2937),
+                        fontSize: responsive.scaleText(13),
+                      ) ??
+                      TextStyle(
+                        color: const Color(0xFF1F2937),
+                        fontSize: responsive.scaleText(13),
+                      ),
+                ),
+                if (onEmptyAction != null) ...[
+                  SizedBox(height: responsive.scale(18)),
+                  FilledButton.icon(
+                    onPressed: onEmptyAction,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: responsive.scale(20),
+                        vertical: responsive.scale(12),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          responsive.scale(14),
+                        ),
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: responsive.scaleText(14),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_circle_outline, size: 20),
+                    label: Text(
+                      emptyActionLabel ?? l.addContractWorkButton,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -2496,97 +2570,7 @@ class _ContractSummaryTable extends StatelessWidget {
               borderRadius: BorderRadius.circular(responsive.scale(14)),
               border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            child: Column(children: tableRows),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ContractSummaryTableRow extends StatelessWidget {
-  const _ContractSummaryTableRow({
-    super.key,
-    required this.index,
-    required this.workName,
-    required this.units,
-    required this.payment,
-  }) : isHeader = false;
-
-  const _ContractSummaryTableRow.header({super.key})
-      : index = null,
-        workName = 'Work Name',
-        units = 'Total Units',
-        payment = 'Total Payment',
-        isHeader = true;
-
-  final int? index;
-  final String workName;
-  final String units;
-  final String payment;
-  final bool isHeader;
-
-  @override
-  Widget build(BuildContext context) {
-    final responsive = context.responsive;
-    final baseStyle = TextStyle(
-      fontWeight: isHeader ? FontWeight.w700 : FontWeight.w600,
-      fontSize: responsive.scaleText(13),
-      color: isHeader ? const Color(0xFF111827) : const Color(0xFF1F2937),
-    );
-    final secondaryStyle = baseStyle.copyWith(
-      fontWeight: isHeader ? FontWeight.w700 : FontWeight.w500,
-      color: isHeader ? const Color(0xFF111827) : const Color(0xFF4B5563),
-    );
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: responsive.scale(16),
-        vertical: responsive.scale(isHeader ? 12 : 14),
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.transparent,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: responsive.scale(32),
-            child: Text(
-              isHeader ? '#' : '${index ?? ''}.',
-              style: secondaryStyle,
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              workName,
-              style: baseStyle,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              units,
-              style: secondaryStyle,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                payment,
-                textAlign: TextAlign.right,
-                style: secondaryStyle,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
+            child: tableContent,
           ),
         ],
       ),
