@@ -1920,6 +1920,7 @@ class _ContractDetailsCard extends StatelessWidget {
           color: Color(0xFF111827),
         );
     final headerStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+      fontSize: 12,
       color: const Color(0xFF475467),
       fontWeight: FontWeight.w700,
       letterSpacing: 0.3,
