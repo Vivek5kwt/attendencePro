@@ -325,6 +325,16 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       }
     }
 
+    // When we have contract metadata but no bundle linkage, fall back to the
+    // sole available contract name instead of the generic unit placeholder so
+    // the PDF shows the actual contract selected by the user.
+    if (lookup != null && lookup.length == 1) {
+      final single = lookup.values.first.name.trim();
+      if (single.isNotEmpty) {
+        return single;
+      }
+    }
+
     final explicit = entry.contractType?.trim();
     final mappedExplicit = _contractTypeNameFromLookup(explicit, lookup);
     if (mappedExplicit != null && mappedExplicit.isNotEmpty) {
@@ -353,6 +363,18 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             localizations: localization,
             contractName: type.name,
             unitLabel: type.unitLabel,
+          );
+        }
+      }
+
+      if (lookup.length == 1) {
+        final single = lookup.values.first;
+        final name = single.name.trim();
+        if (name.isNotEmpty) {
+          return resolveContractUnitLabel(
+            localizations: localization,
+            contractName: name,
+            unitLabel: single.unitLabel,
           );
         }
       }
