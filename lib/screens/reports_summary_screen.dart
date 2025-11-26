@@ -2012,18 +2012,18 @@ class _ContractDetailsCard extends StatelessWidget {
                           ),
                           _ContractHeaderCell(
                             text: nameLabel,
-                            flex: 4,
+                            flex: 2,
                             style: tableHeaderStyle,
                           ),
                           _ContractHeaderCell(
                             text: totalUnitsLabel,
-                            flex: 2,
+                            flex: 1,
                             style: tableHeaderStyle,
                             alignment: Alignment.centerRight,
                           ),
                           _ContractHeaderCell(
                             text: salaryLabel,
-                            flex: 3,
+                            flex: 1,
                             style: tableHeaderStyle,
                             alignment: Alignment.centerRight,
                           ),
@@ -2071,25 +2071,22 @@ class _ContractDetailsCard extends StatelessWidget {
                                   alignment: Alignment.centerLeft,
                                   child: Text(
                                     '${index + 1}.',
-                                    style: tableLabelStyle.copyWith(
-                                      color: const Color(0xFF0F172A),
-                                    ),
+                                    style: tableValueStyle,
                                   ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 4,
-                                child: Text(
-                                  nameText,
-                                  style: tableLabelStyle.copyWith(
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               Expanded(
                                 flex: 2,
+                                child: Text(
+                                  nameText,
+                                  style: tableValueStyle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+
+                              Expanded(
+                                flex: 1,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: FittedBox(
@@ -2099,8 +2096,9 @@ class _ContractDetailsCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              SizedBox(width: 5,),
                               Expanded(
-                                flex: 3,
+                                flex: 1,
                                 child: Align(
                                   alignment: Alignment.centerRight,
                                   child: FittedBox(
