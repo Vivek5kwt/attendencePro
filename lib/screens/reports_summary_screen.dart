@@ -998,13 +998,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
               const SizedBox(height: 16),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
-                layoutBuilder: (currentChild, previousChildren) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
-                ),
                 child: summaryBody,
               ),
             ],
