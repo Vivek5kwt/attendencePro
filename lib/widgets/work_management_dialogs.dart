@@ -1398,26 +1398,27 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
       unawaited(_refreshWorkDetails(showError: false));
       unawaited(_loadContractTypes());
     } on ContractTypeRepositoryException catch (error) {
+      final exists = await _refreshWorkContractsAfterDeleteAttempt(contractId);
       if (!mounted) {
         return;
       }
-      setState(() {
-        _deletingWorkContractIds.remove(contractId);
-      });
-      final message = error.message.trim().isEmpty
-          ? l.contractWorkTypeDeleteFailedMessage
-          : error.message;
+      final message = exists
+          ? (error.message.trim().isEmpty
+              ? l.contractWorkTypeDeleteFailedMessage
+              : error.message)
+          : l.contractWorkTypeDeletedMessage;
       AppSnackBar.show(widget.rootContext, message);
-      unawaited(_refreshWorkDetails());
     } catch (_) {
+      final exists = await _refreshWorkContractsAfterDeleteAttempt(contractId);
       if (!mounted) {
         return;
       }
-      setState(() {
-        _deletingWorkContractIds.remove(contractId);
-      });
-      AppSnackBar.show(widget.rootContext, l.contractWorkTypeDeleteFailedMessage);
-      unawaited(_refreshWorkDetails());
+      AppSnackBar.show(
+        widget.rootContext,
+        exists
+            ? l.contractWorkTypeDeleteFailedMessage
+            : l.contractWorkTypeDeletedMessage,
+      );
     }
   }
 
@@ -1440,6 +1441,14 @@ class _EditWorkDialogState extends State<_EditWorkDialog> {
     } catch (_) {
       return true;
     }
+  }
+
+  Future<bool> _refreshWorkContractsAfterDeleteAttempt(String contractId) async {
+    await _refreshWorkDetails(showError: false);
+    if (!mounted) {
+      return true;
+    }
+    return _workContracts.any((item) => item.id == contractId);
   }
 
   Widget _buildWorkInfoSection(BuildContext context) {
