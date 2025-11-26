@@ -303,6 +303,8 @@ class AppLocalizations {
       _value('reportsContractDetailsTitle');
   String get reportsContractDetailsSubtitle =>
       _value('reportsContractDetailsSubtitle');
+  String get reportsContractDetailsNameLabel =>
+      _value('reportsContractDetailsNameLabel');
   String get reportsContractDetailsRateLabel =>
       _value('reportsContractDetailsRateLabel');
   String get reportsContractDetailsTypeLabel =>

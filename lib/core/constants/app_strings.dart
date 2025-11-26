@@ -257,6 +257,7 @@ abstract final class AppString {
       'reportsContractDetailsTitle': 'Contract Details',
       'reportsContractDetailsSubtitle':
           'Configured unit rates for this work',
+      'reportsContractDetailsNameLabel': 'Name',
       'reportsContractDetailsRateLabel': 'Rate / Unit',
       'reportsContractDetailsTypeLabel': 'Type',
       'reportsBreakdownSuffix': 'Breakdown',
@@ -722,6 +723,7 @@ abstract final class AppString {
       'reportsContractSalaryLabel': 'कॉन्ट्रैक्ट वेतन',
       'reportsContractDetailsTitle': 'कॉन्ट्रैक्ट विवरण',
       'reportsContractDetailsSubtitle': 'इस काम के लिए तय यूनिट दरें',
+      'reportsContractDetailsNameLabel': 'नाम',
       'reportsContractDetailsRateLabel': 'दर / यूनिट',
       'reportsContractDetailsTypeLabel': 'प्रकार',
       'reportsBreakdownSuffix': 'विवरण',
@@ -1183,6 +1185,7 @@ abstract final class AppString {
       'reportsContractSalaryLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਤਨਖਾਹ',
       'reportsContractDetailsTitle': 'ਕਾਂਟ੍ਰੈਕਟ ਵੇਰਵਾ',
       'reportsContractDetailsSubtitle': 'ਇਸ ਕੰਮ ਲਈ ਤੈਅ ਕੀਤੀਆਂ ਯੂਨਿਟ ਦਰਾਂ',
+      'reportsContractDetailsNameLabel': 'ਨਾਮ',
       'reportsContractDetailsRateLabel': 'ਦਰ / ਯੂਨਿਟ',
       'reportsContractDetailsTypeLabel': 'ਕਿਸਮ',
       'reportsBreakdownSuffix': 'ਖਾਕਾ',
@@ -1652,6 +1655,7 @@ abstract final class AppString {
       'reportsContractDetailsTitle': 'Dettagli del contratto',
       'reportsContractDetailsSubtitle':
           'Tariffe per unità configurate per questo lavoro',
+      'reportsContractDetailsNameLabel': 'Nome',
       'reportsContractDetailsRateLabel': 'Tariffa / unità',
       'reportsContractDetailsTypeLabel': 'Tipo',
       'reportsBreakdownSuffix': 'Dettaglio',
