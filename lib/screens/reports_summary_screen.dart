@@ -1095,6 +1095,7 @@ class _SummaryLoadedContent extends StatelessWidget {
             currencySymbol: currency,
             subtitle: localization.reportsContractDetailsSubtitle,
             typeLabel: localization.reportsContractDetailsTypeLabel,
+            rateLabel: localization.reportsContractDetailsRateLabel,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
             salaryLabel: localization.reportsContractSalaryLabel,
             totalUnits: resolvedContractUnits,
@@ -1667,6 +1668,7 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.currencySymbol,
     required this.subtitle,
     required this.typeLabel,
+    required this.rateLabel,
     required this.totalUnitsLabel,
     required this.salaryLabel,
     required this.totalUnits,
@@ -1677,6 +1679,7 @@ class _ContractDetailsCard extends StatelessWidget {
   final String currencySymbol;
   final String subtitle;
   final String typeLabel;
+  final String rateLabel;
   final String totalUnitsLabel;
   final String salaryLabel;
   final num totalUnits;
@@ -1814,7 +1817,7 @@ class _ContractDetailsCard extends StatelessWidget {
                             alignment: Alignment.centerRight,
                           ),
                           _ContractHeaderCell(
-                            text: salaryLabel,
+                            text: rateLabel,
                             flex: 3,
                             style: tableHeaderStyle,
                             alignment: Alignment.centerRight,
@@ -1826,10 +1829,14 @@ class _ContractDetailsCard extends StatelessWidget {
                       final detail = details[index];
                       final salary = detail.salaryAmount ??
                           ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
-                      final salaryText = salary > 0
-                          ? _formatCurrencyValue(salary, currencySymbol)
-                          : '--';
-                      final unitText = _formatUnitCount(detail.totalUnits);
+                      final rateText = detail.ratePerUnit != null
+                          ? _formatCurrencyValue(detail.ratePerUnit!, currencySymbol)
+                          : (salary > 0
+                              ? _formatCurrencyValue(salary, currencySymbol)
+                              : '--');
+                      final unitText = detail.unitLabel.trim().isNotEmpty
+                          ? detail.unitLabel.trim()
+                          : _formatUnitCount(detail.totalUnits);
                       final typeText = (detail.type?.trim().isNotEmpty ?? false)
                           ? detail.type!.trim()
                           : detail.name;
@@ -1892,7 +1899,7 @@ class _ContractDetailsCard extends StatelessWidget {
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     alignment: Alignment.centerRight,
-                                    child: Text(salaryText, style: tableValueStyle),
+                                    child: Text(rateText, style: tableValueStyle),
                                   ),
                                 ),
                               ),
