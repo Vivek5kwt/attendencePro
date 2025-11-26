@@ -1794,28 +1794,27 @@ class _ContractDetailsCard extends StatelessWidget {
                   final detail = details[index];
                   final salary = detail.salaryAmount ??
                       ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
-                  final salaryText = salary > 0
-                      ? _formatCurrencyValue(salary, currencySymbol)
-                      : '--';
-                  final unitText = _formatUnitCount(detail.totalUnits);
-                  final radius = index == details.length - 1
-                      ? const BorderRadius.vertical(bottom: Radius.circular(20))
-                      : BorderRadius.zero;
-                  return DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: index.isEven
-                          ? Colors.white
-                          : const Color(0xFFF9FAFB),
-                      borderRadius: radius,
-                      border: Border(
-                        top: const BorderSide(color: Color(0xFFE5E7EB)),
-                        bottom: BorderSide(
-                          color: index == details.length - 1
-                              ? Colors.transparent
-                              : const Color(0xFFE5E7EB),
-                        ),
+                    final salaryText = salary > 0
+                        ? _formatCurrencyValue(salary, currencySymbol)
+                        : '--';
+                    final unitText = _formatUnitCount(detail.totalUnits);
+                    final isLast = index == details.length - 1;
+                    final radius = isLast
+                        ? const BorderRadius.vertical(bottom: Radius.circular(20))
+                        : BorderRadius.zero;
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: index.isEven
+                            ? Colors.white
+                            : const Color(0xFFF9FAFB),
+                        borderRadius: radius,
+                        border: isLast
+                            ? Border.all(const Color(0xFFE5E7EB))
+                            : const Border(
+                                top: BorderSide(color: Color(0xFFE5E7EB)),
+                                bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
                       ),
-                    ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
