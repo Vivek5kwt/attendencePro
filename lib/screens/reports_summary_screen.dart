@@ -1090,7 +1090,9 @@ class _SummaryLoadedContent extends StatelessWidget {
             details: contractDetails,
             currencySymbol: currency,
             subtitle: localization.reportsContractDetailsSubtitle,
+            nameLabel: localization.contractWorkHeader,
             typeLabel: localization.reportsContractDetailsTypeLabel,
+            rateLabel: localization.reportsContractDetailsRateLabel,
             totalUnitsLabel: localization.reportsTotalUnitsLabel,
             salaryLabel: localization.reportsContractSalaryLabel,
             totalUnits: resolvedContractUnits,
@@ -1662,7 +1664,9 @@ class _ContractDetailsCard extends StatelessWidget {
     required this.details,
     required this.currencySymbol,
     required this.subtitle,
+    required this.nameLabel,
     required this.typeLabel,
+    required this.rateLabel,
     required this.totalUnitsLabel,
     required this.salaryLabel,
     required this.totalUnits,
@@ -1672,7 +1676,9 @@ class _ContractDetailsCard extends StatelessWidget {
   final List<ContractDetail> details;
   final String currencySymbol;
   final String subtitle;
+  final String nameLabel;
   final String typeLabel;
+  final String rateLabel;
   final String totalUnitsLabel;
   final String salaryLabel;
   final num totalUnits;
@@ -1751,121 +1757,174 @@ class _ContractDetailsCard extends StatelessWidget {
         children: [
           Text(subtitle, style: subtitleStyle),
           const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  child: Row(
-                    children: [
-                      _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
-                      _ContractHeaderCell(
-                        text: typeLabel,
-                        flex: 4,
-                        style: headerStyle,
-                      ),
-                      _ContractHeaderCell(
-                        text: totalUnitsLabel,
-                        flex: 3,
-                        style: headerStyle,
-                        alignment: Alignment.centerRight,
-                      ),
-                      _ContractHeaderCell(
-                        text: salaryLabel,
-                        flex: 3,
-                        style: headerStyle,
-                        alignment: Alignment.centerRight,
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 760;
+              final tableWidth = isCompact ? 760.0 : constraints.maxWidth;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(bottom: 4),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: tableWidth),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius:
+                                const BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          child: Row(
+                            children: [
+                              _ContractHeaderCell(text: '#', flex: 1, style: headerStyle),
+                              _ContractHeaderCell(
+                                text: nameLabel,
+                                flex: 4,
+                                style: headerStyle,
+                              ),
+                              _ContractHeaderCell(
+                                text: typeLabel,
+                                flex: 3,
+                                style: headerStyle,
+                              ),
+                              _ContractHeaderCell(
+                                text: rateLabel,
+                                flex: 3,
+                                style: headerStyle,
+                                alignment: Alignment.centerRight,
+                              ),
+                              _ContractHeaderCell(
+                                text: totalUnitsLabel,
+                                flex: 3,
+                                style: headerStyle,
+                                alignment: Alignment.centerRight,
+                              ),
+                              _ContractHeaderCell(
+                                text: salaryLabel,
+                                flex: 3,
+                                style: headerStyle,
+                                alignment: Alignment.centerRight,
+                              ),
+                            ],
+                          ),
+                        ),
+                        ...List.generate(details.length, (index) {
+                          final detail = details[index];
+                          final salary = detail.salaryAmount ??
+                              ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
+                          final salaryText = salary > 0
+                              ? _formatCurrencyValue(salary, currencySymbol)
+                              : '--';
+                          final unitText = _formatUnitCount(detail.totalUnits);
+                          final typeText =
+                              (detail.type?.trim().isNotEmpty ?? false)
+                                  ? detail.type!.trim()
+                                  : '--';
+                          final rateValue = detail.ratePerUnit ?? 0;
+                          final rateText = rateValue > 0
+                              ? _formatCurrencyValue(rateValue, currencySymbol)
+                              : '--';
+                          final isLast = index == details.length - 1;
+                          final radius = isLast
+                              ? const BorderRadius.vertical(bottom: Radius.circular(20))
+                              : BorderRadius.zero;
+                          return DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: index.isEven
+                                  ? Colors.white
+                                  : const Color(0xFFF9FAFB),
+                              borderRadius: radius,
+                              border: isLast
+                                  ? const Border.all(color: Color(0xFFE5E7EB))
+                                  : const Border(
+                                      top: BorderSide(color: Color(0xFFE5E7EB)),
+                                      bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                                    ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: 28,
+                                    child: Text(
+                                      '${index + 1}.',
+                                      style: summaryLabelStyle.copyWith(
+                                        color: const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 4,
+                                    child: Text(
+                                      detail.name,
+                                      style: summaryValueStyle,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(
+                                      typeText,
+                                      style: summaryLabelStyle.copyWith(
+                                        color: const Color(0xFF0F172A),
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        rateText,
+                                        style: summaryValueStyle,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(unitText, style: summaryValueStyle),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(salaryText, style: summaryValueStyle),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
                   ),
                 ),
-                ...List.generate(details.length, (index) {
-                  final detail = details[index];
-                  final salary = detail.salaryAmount ??
-                      ((detail.ratePerUnit ?? 0) * (detail.totalUnits ?? 0));
-                    final salaryText = salary > 0
-                        ? _formatCurrencyValue(salary, currencySymbol)
-                        : '--';
-                    final unitText = _formatUnitCount(detail.totalUnits);
-                    final isLast = index == details.length - 1;
-                    final radius = isLast
-                        ? const BorderRadius.vertical(bottom: Radius.circular(20))
-                        : BorderRadius.zero;
-                    return DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: index.isEven
-                            ? Colors.white
-                            : const Color(0xFFF9FAFB),
-                        borderRadius: radius,
-                        border: isLast
-                            ? const Border.all(color: Color(0xFFE5E7EB))
-                            : const Border(
-                                top: BorderSide(color: Color(0xFFE5E7EB)),
-                                bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                              ),
-                      ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 28,
-                            child: Text(
-                              '${index + 1}.',
-                              style: summaryLabelStyle.copyWith(
-                                color: const Color(0xFF0F172A),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 4,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(detail.name, style: summaryValueStyle),
-                                if (detail.type?.trim().isNotEmpty == true) ...[
-                                  const SizedBox(height: 4),
-                                  Text(detail.type!.trim(), style: summaryLabelStyle),
-                                ],
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(unitText, style: summaryValueStyle),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(salaryText, style: summaryValueStyle),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 18),
           Container(
