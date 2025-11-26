@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../bloc/work_bloc.dart';
+import '../bloc/work_event.dart';
 import '../bloc/work_state.dart';
 import '../core/constants/app_assets.dart';
 import '../core/localization/app_localizations.dart';
@@ -20,6 +21,7 @@ import '../utils/contract_unit_label.dart';
 import '../utils/history_entry_hours.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_loader.dart';
+import '../widgets/work_management_dialogs.dart';
 import '../widgets/work_selection_dialog.dart';
 
 class ReportsSummaryScreen extends StatefulWidget {
@@ -654,6 +656,24 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     }
   }
 
+  Future<void> _openAddWorkDialog() async {
+    await showAddWorkDialog(context: context);
+    if (!mounted) return;
+    unawaited(_refreshWorks());
+  }
+
+  Future<void> _openEditWorkDialog(Work work) async {
+    await showEditWorkDialog(context: context, work: work);
+    if (!mounted) return;
+    unawaited(_refreshWorks());
+  }
+
+  Future<void> _refreshWorks() {
+    final completer = Completer<void>();
+    context.read<WorkBloc>().add(WorkRefreshed(completer: completer));
+    return completer.future;
+  }
+
   Work? _findActiveWorkFromState(WorkState state) {
     if (state.works.isEmpty) return null;
     for (final work in state.works) {
@@ -1014,16 +1034,110 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
   Future<void> _handleChangeWork(List<Work> works) async {
     if (!mounted || works.isEmpty) return;
     final l = AppLocalizations.of(context);
+    final workBloc = context.read<WorkBloc>();
+    final previousWorkIds = workBloc.state.works.map((work) => work.id).toSet();
+    var addWorkRequested = false;
+    final addDialogCompletion = Completer<void>();
+
+    Future<void> startAddWorkFlow() async {
+      addWorkRequested = true;
+      try {
+        await _openAddWorkDialog();
+      } finally {
+        if (!addDialogCompletion.isCompleted) {
+          addDialogCompletion.complete();
+        }
+      }
+    }
+
     final selected = await showWorkSelectionDialog(
       context: context,
       localization: l,
-      initialSelectedWorkId: _selectedWorkId ?? _resolveSelectedWork(context.read<WorkBloc>().state)?.id,
+      initialSelectedWorkId:
+          _selectedWorkId ?? _resolveSelectedWork(workBloc.state)?.id,
+      onAddNewWork: () {
+        if (!mounted) {
+          if (!addDialogCompletion.isCompleted) {
+            addDialogCompletion.complete();
+          }
+          return;
+        }
+        unawaited(startAddWorkFlow());
+      },
+      onEditWork: (work) {
+        if (!mounted) {
+          return;
+        }
+        unawaited(_openEditWorkDialog(work));
+      },
     );
-    if (!mounted || selected == null) return;
-    if (selected.id == _selectedWorkId) return;
+
+    if (!mounted) return;
+
+    if (selected != null) {
+      if (selected.id == _selectedWorkId) return;
+      setState(() {
+        _selectedWorkId = selected.id;
+        _selectedWorkName = selected.name;
+      });
+      _loadSummary();
+      return;
+    }
+
+    if (!addWorkRequested) {
+      return;
+    }
+
+    await addDialogCompletion.future;
+    if (!mounted) {
+      return;
+    }
+
+    bool hasNewWork(WorkState state) {
+      final works = state.works;
+      if (works.length > previousWorkIds.length) {
+        return true;
+      }
+      for (final work in works) {
+        if (!previousWorkIds.contains(work.id)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    WorkState updatedState = workBloc.state;
+
+    if (!hasNewWork(updatedState)) {
+      try {
+        updatedState = await workBloc.stream
+            .firstWhere(hasNewWork)
+            .timeout(const Duration(seconds: 3));
+      } on TimeoutException {
+        updatedState = workBloc.state;
+      }
+      if (!mounted) {
+        return;
+      }
+    }
+
+    Work? createdWork;
+    for (final work in updatedState.works) {
+      if (!previousWorkIds.contains(work.id)) {
+        createdWork = work;
+        break;
+      }
+    }
+
+    final targetWork = createdWork ?? _findActiveWorkFromState(updatedState);
+
+    if (targetWork == null) {
+      return;
+    }
+
     setState(() {
-      _selectedWorkId = selected.id;
-      _selectedWorkName = selected.name;
+      _selectedWorkId = targetWork.id;
+      _selectedWorkName = targetWork.name;
     });
     _loadSummary();
   }
