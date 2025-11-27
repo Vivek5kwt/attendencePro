@@ -321,7 +321,7 @@ class _AddWorkDialogState extends State<_AddWorkDialog> {
             workNameOptions: kContractWorkDefaultWorkNameOptions,
             defaultRoleOptions: kContractWorkDefaultRoleOptions,
             availableRoles: availableRoles,
-            initialRoleValue: null,
+            initialRoleValue: 'Crate',
             formatRoleDisplay: contractWorkFormatRoleDisplay,
             deferApiCalls: true,
           );
