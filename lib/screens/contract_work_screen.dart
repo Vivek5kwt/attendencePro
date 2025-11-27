@@ -1576,11 +1576,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
       return;
     }
 
-    final existingUnitLabel = type?.unitLabel?.trim();
-    final resolvedUnitLabel =
-        (existingUnitLabel != null && existingUnitLabel.isNotEmpty)
-            ? existingUnitLabel
-            : l.contractWorkUnitFallback;
+    final resolvedUnitLabel = _resolveRateHint(l);
     final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
 
     if (!mounted) return;
