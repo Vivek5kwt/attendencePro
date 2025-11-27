@@ -2786,12 +2786,7 @@ class _ContractEntryTile extends StatelessWidget {
                 labelStyle: labelStyle,
                 valueStyle: valueStyle,
               ),
-              _InfoStatMiniCard(
-                label: localization.contractWorkRateLabel,
-                value: priceLabel,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-              ),
+
             ],
           ),
           if (entry.contractBundles.isNotEmpty) ...[
