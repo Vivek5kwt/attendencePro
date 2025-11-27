@@ -2786,6 +2786,12 @@ class _ContractEntryTile extends StatelessWidget {
                 labelStyle: labelStyle,
                 valueStyle: valueStyle,
               ),
+              _InfoStatMiniCard(
+                label: localization.contractWorkTotalSalaryLabel,
+                value: _formatCurrencyValue(currencySymbol, entry.salary),
+                labelStyle: labelStyle,
+                valueStyle: valueStyle,
+              ),
             ],
           ),
           if (entry.contractBundles.isNotEmpty) ...[
