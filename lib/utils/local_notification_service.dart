@@ -435,6 +435,7 @@ class LocalNotificationService {
 
     if (type == _payloadTypeAttendanceReminder) {
       await _handleAttendanceReminderDeepLink();
+      await _handleDashboardDeepLink();
       return;
     }
 
