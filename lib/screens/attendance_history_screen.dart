@@ -1197,6 +1197,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       builder: (context) {
         return _ContractAttendanceSheet(
           entry: entry,
+          currencySymbol: _currencySymbol,
           localization: l,
           contractTypes: scopedContractTypes,
           parseTimeOfDay: _parseTimeOfDay,
@@ -3039,6 +3040,7 @@ class _HourlyAttendanceSheetState extends State<_HourlyAttendanceSheet> {
 class _ContractAttendanceSheet extends StatefulWidget {
   const _ContractAttendanceSheet({
     required this.entry,
+    required this.currencySymbol,
     required this.localization,
     required this.contractTypes,
     required this.parseTimeOfDay,
@@ -3048,6 +3050,7 @@ class _ContractAttendanceSheet extends StatefulWidget {
   });
 
   final _AttendanceEntry entry;
+  final String currencySymbol;
   final AppLocalizations localization;
   final List<ContractType> contractTypes;
   final TimeOfDay? Function(String value) parseTimeOfDay;
@@ -3073,6 +3076,12 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   bool isSaving = false;
 
+  void _handleBundleChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -3095,14 +3104,14 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
 
     void addBundle({ContractType? type, num? count}) {
       final resolvedType = resolveInitialType(type);
-      bundleEntries.add(
-        _ContractBundleEditEntry(
-          id:
-              'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
-          contractType: resolvedType,
-          initialCount: count,
-        ),
+      final entry = _ContractBundleEditEntry(
+        id:
+            'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
+        contractType: resolvedType,
+        initialCount: count,
       );
+      entry.controller.addListener(_handleBundleChanged);
+      bundleEntries.add(entry);
     }
 
     if (entry.contractBundles.isNotEmpty) {
@@ -3123,6 +3132,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
   @override
   void dispose() {
     for (final item in bundleEntries) {
+      item.controller.removeListener(_handleBundleChanged);
       item.dispose();
     }
     super.dispose();
@@ -3150,6 +3160,45 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
     return widget.parseTimeOfDay(trimmed);
   }
 
+  List<_ContractBundleSummary> _resolveBundleSummaries() {
+    final l = widget.localization;
+    return bundleEntries.map((entry) {
+      final type = entry.contractType;
+      final contractName = type?.name ?? l.contractWorkLabel;
+      final unitLabel = type != null
+          ? resolveContractUnitLabel(
+              localizations: l,
+              contractName: contractName,
+              unitLabel: type.unitLabel,
+            )
+          : l.contractWorkUnitFallback;
+      final rate = type?.rate ?? widget.entry.ratePerUnit ?? 0;
+      final units = num.tryParse(entry.controller.text.trim()) ??
+          entry.initialCount ??
+          0;
+
+      return _ContractBundleSummary(
+        contractName: contractName,
+        unitLabel: unitLabel,
+        rate: rate,
+        units: units,
+      );
+    }).toList();
+  }
+
+  num _calculateEnteredUnits() {
+    num total = 0;
+    for (final entry in bundleEntries) {
+      final parsed = num.tryParse(entry.controller.text.trim());
+      if (parsed != null) {
+        total += parsed;
+      } else if (entry.initialCount != null) {
+        total += entry.initialCount!;
+      }
+    }
+    return total;
+  }
+
   void _addBundleEntry() {
     final availableTypes = _availableContractTypes();
     if (availableTypes.isEmpty) {
@@ -3157,13 +3206,13 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
     }
 
     setState(() {
-      bundleEntries.add(
-        _ContractBundleEditEntry(
-          id:
-              'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
-          contractType: availableTypes.first,
-        ),
+      final entry = _ContractBundleEditEntry(
+        id:
+            'bundle-${DateTime.now().microsecondsSinceEpoch}-${bundleEntries.length}',
+        contractType: availableTypes.first,
       );
+      entry.controller.addListener(_handleBundleChanged);
+      bundleEntries.add(entry);
     });
   }
 
@@ -3251,6 +3300,13 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                       fontWeight: FontWeight.w700,
                     ),
               ),
+              const SizedBox(height: 12),
+              _ContractBundleSummaryCard(
+                summaries: _resolveBundleSummaries(),
+                localization: l,
+                currencySymbol: widget.currencySymbol,
+                totalUnits: _calculateEnteredUnits(),
+              ),
               const SizedBox(height: 16),
               ...List<Widget>.generate(bundleEntries.length, (index) {
                 final bundleEntry = bundleEntries[index];
@@ -3276,6 +3332,8 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                                 setState(() {
                                   bundleEntries.remove(bundleEntry);
                                 });
+                                bundleEntry.controller
+                                    .removeListener(_handleBundleChanged);
                                 bundleEntry.dispose();
                               },
                         icon: const Icon(Icons.delete_outline),
@@ -3417,7 +3475,8 @@ class _ContractBundleEditEntry {
     required this.id,
     this.contractType,
     num? initialCount,
-  }) : controller = TextEditingController(
+  })  : initialCount = initialCount,
+        controller = TextEditingController(
           text: initialCount != null && initialCount > 0
               ? _formatBundleUnits(initialCount)
               : '',
@@ -3426,10 +3485,158 @@ class _ContractBundleEditEntry {
   final String id;
   ContractType? contractType;
   final TextEditingController controller;
+  final num? initialCount;
 
   void dispose() {
     controller.dispose();
   }
+}
+
+class _ContractBundleSummaryCard extends StatelessWidget {
+  const _ContractBundleSummaryCard({
+    required this.summaries,
+    required this.localization,
+    required this.currencySymbol,
+    required this.totalUnits,
+  });
+
+  final List<_ContractBundleSummary> summaries;
+  final AppLocalizations localization;
+  final String currencySymbol;
+  final num totalUnits;
+
+  @override
+  Widget build(BuildContext context) {
+    if (summaries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+
+    final labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF6B7280),
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        );
+
+    final valueStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
+        ) ??
+        const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+        );
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E7FF)),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(localization.contractWorkLabel, style: titleStyle),
+          const SizedBox(height: 10),
+          ...summaries.map((summary) {
+            final unitText = summary.units > 0
+                ? contractUnitCountLabel(
+                    localizations: localization,
+                    contractName: summary.contractName,
+                    unitLabel: summary.unitLabel,
+                    quantity: summary.units,
+                  )
+                : localization.notAvailableLabel;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          summary.contractName,
+                          style: valueStyle,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _formatCurrencyValue(currencySymbol, summary.rate),
+                        style: valueStyle,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          summary.unitLabel,
+                          style: labelStyle,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        unitText,
+                        style: labelStyle,
+                        textAlign: TextAlign.right,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+          const Divider(height: 18, color: Color(0xFFE5E7EB)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(localization.contractWorkUnitsLabel, style: labelStyle),
+              Text(
+                totalUnits > 0
+                    ? '${_formatBundleUnits(totalUnits)} ${localization.contractWorkUnitsLabel}'
+                    : localization.notAvailableLabel,
+                style: valueStyle,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContractBundleSummary {
+  const _ContractBundleSummary({
+    required this.contractName,
+    required this.unitLabel,
+    required this.rate,
+    required this.units,
+  });
+
+  final String contractName;
+  final String unitLabel;
+  final double rate;
+  final num units;
 }
 
 SplayTreeMap<DateTime, List<_AttendanceEntry>> _groupEntriesByDay(
