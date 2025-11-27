@@ -32,13 +32,12 @@ String resolveContractUnitLabel({
   required String contractName,
   required String unitLabel,
 }) {
-  final override = _matchUnitOverride(contractName);
-  if (override != null) {
-    return override.label;
-  }
-
   final trimmedLabel = unitLabel.trim();
   if (trimmedLabel.isEmpty) {
+    final override = _matchUnitOverride(contractName);
+    if (override != null) {
+      return override.label;
+    }
     return localizations.contractWorkUnitFallback;
   }
 
@@ -48,6 +47,14 @@ String resolveContractUnitLabel({
     if (inferred != null) {
       return inferred;
     }
+  }
+
+  // Only apply overrides when the unit label is missing or generic so we don't
+  // replace explicitly selected unit labels (e.g., crate instead of bunches).
+  final override = _matchUnitOverride(contractName);
+  if (override != null &&
+      (trimmedLabel.isEmpty || trimmedLabel.toLowerCase() == 'per unit')) {
+    return override.label;
   }
 
   return trimmedLabel;
