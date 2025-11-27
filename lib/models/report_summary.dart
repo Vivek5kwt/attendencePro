@@ -105,6 +105,10 @@ class CombinedSalaryData {
       amount: _parseDouble(json, const [
         'amount',
         'total',
+        'payable_amount',
+        'payableAmount',
+        'total_amount',
+        'totalAmount',
         'combined_salary',
         'combinedSalary',
         'total_salary',
@@ -164,6 +168,10 @@ class HourlySummaryData {
         'total',
         'salary',
         'amount',
+        'payable_amount',
+        'payableAmount',
+        'total_amount',
+        'totalAmount',
       ]),
       workingDays: _parseInt(json, const [
         'working_days',
@@ -284,6 +292,10 @@ class ContractSummaryData {
       salaryAmount: _parseDouble(json, const [
         'salary_amount',
         'salaryAmount',
+        'payable_amount',
+        'payableAmount',
+        'total_amount',
+        'totalAmount',
         'total_salary',
         'totalSalary',
         'amount',
@@ -351,6 +363,10 @@ class ContractDetail {
         'salaryAmount',
         'salary',
         'amount',
+        'payable_amount',
+        'payableAmount',
+        'total_amount',
+        'totalAmount',
         'total_salary',
         'totalSalary',
         'payment',
@@ -403,7 +419,16 @@ class DailyContractRow {
 
     final salary = _parseNullableDouble(
       json,
-      const ['salary', 'amount', 'total_salary', 'totalSalary'],
+      const [
+        'salary',
+        'amount',
+        'payable_amount',
+        'payableAmount',
+        'total_amount',
+        'totalAmount',
+        'total_salary',
+        'totalSalary',
+      ],
     );
     final units = _parseNullableDouble(
       json,
@@ -526,7 +551,16 @@ List<ContractDetail> _parseMonthlyContractDetails(Map<String, dynamic> json) {
         ),
         salaryAmount: _parseNullableDouble(
           map,
-          const ['salary', 'amount', 'total_salary', 'totalSalary'],
+          const [
+            'salary',
+            'amount',
+            'payable_amount',
+            'payableAmount',
+            'total_amount',
+            'totalAmount',
+            'total_salary',
+            'totalSalary',
+          ],
         ),
         date: null,
       ),
