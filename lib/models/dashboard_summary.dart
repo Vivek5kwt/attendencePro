@@ -13,7 +13,17 @@ class DashboardSummary {
     return DashboardSummary(
       workId: _parseWorkId(data),
       totalHours: _parseDouble(data['total_hours'] ?? data['totalHours']) ?? 0,
-      totalSalary: _parseDouble(data['total_salary'] ?? data['totalSalary']) ?? 0,
+      totalSalary: _parseDouble(
+            data['total_salary'] ??
+            data['totalSalary'] ??
+            data['salary'] ??
+            data['amount'] ??
+            data['payable_amount'] ??
+            data['payableAmount'] ??
+            data['total_amount'] ??
+            data['totalAmount'],
+          ) ??
+          0,
       todayEntry: today is Map<String, dynamic>
           ? DashboardAttendanceEntry.fromJson(today)
           : null,
@@ -94,8 +104,16 @@ class DashboardAttendanceEntry {
     final breakDurationText = _resolveBreakText(json);
     final totalHours =
         _parseDouble(json['total_hours'] ?? json['hours'] ?? json['totalHours']);
-    final totalSalary =
-        _parseDouble(json['total_salary'] ?? json['salary'] ?? json['totalSalary']);
+    final totalSalary = _parseDouble(
+      json['total_salary'] ??
+          json['salary'] ??
+          json['amount'] ??
+          json['payable_amount'] ??
+          json['payableAmount'] ??
+          json['total_amount'] ??
+          json['totalAmount'] ??
+          json['totalSalary'],
+    );
     final isLeave = _parseBool(json['is_leave'] ?? json['leave'] ?? json['isLeave']);
 
     return DashboardAttendanceEntry(
