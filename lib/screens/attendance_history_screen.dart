@@ -2781,14 +2781,14 @@ class _ContractEntryTile extends StatelessWidget {
                 valueStyle: valueStyle,
               ),
               _InfoStatMiniCard(
-                label: localization.contractWorkRateLabel,
-                value: priceLabel,
+                label: localization.contractWorkTotalSalaryLabel,
+                value: _formatCurrencyValue(currencySymbol, entry.salary),
                 labelStyle: labelStyle,
                 valueStyle: valueStyle,
               ),
               _InfoStatMiniCard(
-                label: localization.contractWorkTotalSalaryLabel,
-                value: _formatCurrencyValue(currencySymbol, entry.salary),
+                label: localization.contractWorkRateLabel,
+                value: priceLabel,
                 labelStyle: labelStyle,
                 valueStyle: valueStyle,
               ),
