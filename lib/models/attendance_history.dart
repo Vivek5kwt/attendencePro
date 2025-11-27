@@ -199,6 +199,8 @@ class AttendanceHistoryEntryData {
     final salaryAmount = _parseAmountFromKeys(
       json,
       const [
+        'salary_amount',
+        'salaryAmount',
         'salary',
         'amount',
         'total_salary',
