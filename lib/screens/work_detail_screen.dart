@@ -3420,23 +3420,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       }
     }
 
-    final userDefined = <ContractType>[];
-    final matchingGlobal = <ContractType>[];
+    final matchingTypes =
+        types.where((type) => _contractTypeMatchesCurrentWork(type)).toList();
 
-    for (final type in types) {
-      final isUserDefined = !(type.isDefault || type.isGlobal);
-      if (isUserDefined) {
-        userDefined.add(type);
-        continue;
-      }
-
-      if (_contractTypeMatchesCurrentWork(type)) {
-        matchingGlobal.add(type);
-      }
-    }
-
-    if (userDefined.isNotEmpty || matchingGlobal.isNotEmpty) {
-      return <ContractType>[...userDefined, ...matchingGlobal];
+    if (matchingTypes.isNotEmpty) {
+      return matchingTypes;
     }
 
     return const <ContractType>[];
@@ -3446,7 +3434,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (type.additionalData.isEmpty) {
       return false;
     }
-    return _mapMatchesCurrentWork(type.additionalData.cast<dynamic, dynamic>());
+
+    final workId =
+        _extractWorkIdFromMap(type.additionalData.cast<dynamic, dynamic>());
+    if (workId == null) {
+      return false;
+    }
+
+    return workId == _resolvedWork.id;
   }
 
   Set<String> _extractAssociatedContractTypeIds() {
