@@ -1375,6 +1375,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
 
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
+  late final TextEditingController _unitLabelController;
   late final List<String> _workNameOptions;
   late final List<String> _roleOptions;
   late final bool _isRoleLocked;
@@ -1393,6 +1394,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     _rateController = TextEditingController(
       text: type != null ? type.rate.toStringAsFixed(2) : '',
     );
+    _unitLabelController = TextEditingController(text: type?.unitLabel ?? '');
     _isRoleLocked = _shouldLockRole(type);
     _isRateEditable = _shouldAllowRateEditing(type);
 
@@ -1497,6 +1499,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
   void dispose() {
     _nameController.dispose();
     _rateController.dispose();
+    _unitLabelController.dispose();
     super.dispose();
   }
 
@@ -1549,6 +1552,18 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     }
   }
 
+  String _resolveUnitLabelSuggestion(AppLocalizations l) {
+    final contractName = _nameController.text.trim().isNotEmpty
+        ? _nameController.text.trim()
+        : (_selectedWorkName?.trim() ?? '');
+
+    return resolveContractUnitLabel(
+      localizations: l,
+      contractName: contractName,
+      unitLabel: _unitLabelController.text,
+    );
+  }
+
   Future<void> _handleSave() async {
     final l = AppLocalizations.of(context);
 
@@ -1576,7 +1591,9 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
       return;
     }
 
-    final resolvedUnitLabel = _resolveRateHint(l);
+    final resolvedUnitLabel = _unitLabelController.text.trim().isEmpty
+        ? _resolveUnitLabelSuggestion(l)
+        : _unitLabelController.text.trim();
     final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
 
     if (!mounted) return;
@@ -2097,6 +2114,75 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
                                   ),
                             ),
                           ],
+
+                          const SizedBox(height: 20),
+                          Text(
+                            l.contractWorkUnitLabel,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
+                            ) ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1F2937),
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE0F2FE),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    '📏',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _unitLabelController,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: _resolveUnitLabelSuggestion(l),
+                                      hintStyle: textTheme.bodyMedium?.copyWith(
+                                        color: const Color(0xFF9CA3AF),
+                                      ) ??
+                                          const TextStyle(
+                                            color: Color(0xFF9CA3AF),
+                                          ),
+                                    ),
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF111827),
+                                    ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF111827),
+                                          fontSize: 16,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
 
                           const SizedBox(height: 20),
                           Text(
