@@ -3077,6 +3077,30 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   bool isSaving = false;
 
+  ContractType? _resolveEntryContractType() {
+    final entryTypeLabel = widget.entry.contractType?.trim();
+    if (entryTypeLabel == null || entryTypeLabel.isEmpty) {
+      return null;
+    }
+
+    final directIdMatch = int.tryParse(entryTypeLabel);
+    if (directIdMatch != null) {
+      final typeById = widget.resolveContractType(directIdMatch);
+      if (typeById != null) {
+        return typeById;
+      }
+    }
+
+    if (widget.contractTypes.isEmpty) {
+      return null;
+    }
+
+    return widget.contractTypes.firstWhere(
+      (type) => type.name.toLowerCase() == entryTypeLabel.toLowerCase(),
+      orElse: () => widget.contractTypes.first,
+    );
+  }
+
   void _handleBundleChanged() {
     if (mounted) {
       setState(() {});
@@ -3126,7 +3150,8 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
       final fallbackCount = entry.unitsCompleted != null && entry.unitsCompleted! > 0
           ? entry.unitsCompleted
           : null;
-      addBundle(count: fallbackCount);
+      final resolvedEntryType = _resolveEntryContractType();
+      addBundle(type: resolvedEntryType, count: fallbackCount);
     }
   }
 
