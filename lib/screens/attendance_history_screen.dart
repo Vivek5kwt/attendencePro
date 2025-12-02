@@ -1177,12 +1177,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     await _ensureContractTypesLoaded();
-    if (_contractTypes.isEmpty) {
-      _showErrorSnackBar(l.contractWorkLoadError);
-      return;
-    }
 
-    final scopedContractTypes = _filterContractTypesForEntry(entry);
+    final scopedContractTypes = _buildAvailableContractTypesForEdit(
+      entry,
+      l,
+    );
     if (scopedContractTypes.isEmpty) {
       _showErrorSnackBar(l.contractWorkLoadError);
       return;
@@ -1265,6 +1264,60 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     return _contractTypes;
+  }
+
+  List<ContractType> _buildAvailableContractTypesForEdit(
+    _AttendanceEntry entry,
+    AppLocalizations localization,
+  ) {
+    final scopedTypes = _filterContractTypesForEntry(entry);
+    if (scopedTypes.isNotEmpty) {
+      return scopedTypes;
+    }
+
+    final inferredTypes = <String, ContractType>{};
+
+    for (final bundle in entry.contractBundles) {
+      final id = bundle.contractTypeId.toString();
+      if (inferredTypes.containsKey(id)) {
+        continue;
+      }
+
+      inferredTypes[id] = ContractType(
+        id: id,
+        name: _resolveContractTypeLabel(entry, localization),
+        rate: entry.ratePerUnit ?? 0,
+        unitLabel: _resolveContractUnitLabel(entry, localization),
+        isDefault: true,
+        isGlobal: false,
+        type: 'contract',
+        rawJson: {
+          if (entry.workId != null) 'work_id': entry.workId,
+        },
+      );
+    }
+
+    if (inferredTypes.isNotEmpty) {
+      return inferredTypes.values.toList(growable: false);
+    }
+
+    final fallbackName = _resolveContractTypeLabel(entry, localization);
+    return [
+      ContractType(
+        id: entry.contractType?.trim().isNotEmpty == true
+            ? entry.contractType!.trim()
+            : 'contract-entry-${entry.date.microsecondsSinceEpoch}',
+        name: fallbackName,
+        rate: entry.ratePerUnit ?? 0,
+        unitLabel: _resolveContractUnitLabel(entry, localization),
+        isDefault: true,
+        isGlobal: false,
+        type: 'contract',
+        rawJson: {
+          if (entry.workId != null) 'work_id': entry.workId,
+        },
+      ),
+    ];
   }
 
   String? _extractWorkIdFromContractType(Map<String, dynamic> data) {
