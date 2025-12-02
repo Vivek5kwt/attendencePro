@@ -139,6 +139,13 @@ class AppLocalizations {
   String get contractWorkPricePerCrateLabel =>
       _value('contractWorkPricePerCrateLabel');
   String get contractWorkUnitLabel => _value('contractWorkUnitLabel');
+  String get contractWorkUnitLabelHint => _value('contractWorkUnitLabelHint');
+  String get contractWorkUnitHelperTitle =>
+      _value('contractWorkUnitHelperTitle');
+  String get contractWorkUnitHelperDescription =>
+      _value('contractWorkUnitHelperDescription');
+  String get contractWorkUnitHelperReminder =>
+      _value('contractWorkUnitHelperReminder');
   String get contractWorkSubtypeLabel => _value('contractWorkSubtypeLabel');
   String get contractWorkSubtypeHint => _value('contractWorkSubtypeHint');
   String get contractWorkSubtypeCustomOption =>
