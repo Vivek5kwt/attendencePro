@@ -3265,7 +3265,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
         return;
       }
       final countText = item.controller.text.trim();
-      final count = int.tryParse(countText);
+      final count = num.tryParse(countText);
       if (count == null || count <= 0) {
         widget.onError(l.attendanceUnitsInvalid);
         return;
@@ -3409,13 +3409,16 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                         decoration: InputDecoration(
                           labelText: l.contractWorkUnitsLabel,
                         ),
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          signed: false,
+                          decimal: true,
+                        ),
                         validator: (value) {
                           final trimmed = value?.trim() ?? '';
                           if (trimmed.isEmpty) {
                             return l.attendanceUnitsRequired;
                           }
-                          final parsed = int.tryParse(trimmed);
+                          final parsed = num.tryParse(trimmed);
                           if (parsed == null || parsed <= 0) {
                             return l.attendanceUnitsInvalid;
                           }
