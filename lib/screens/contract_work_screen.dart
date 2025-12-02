@@ -16,7 +16,6 @@ import '../models/work.dart';
 import '../repositories/contract_type_repository.dart';
 import '../repositories/reports_repository.dart';
 import '../utils/contract_work_display.dart';
-import '../utils/contract_unit_label.dart';
 import '../utils/responsive.dart';
 import '../utils/snackbar.dart';
 import '../utils/work_contract_filter.dart';
@@ -307,21 +306,20 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
         unitLabel: fallbackUnitLabel,
         role: t.role,
       );
-      final resolvedUnitLabel = resolveContractUnitLabel(
-        localizations: l,
-        contractName: t.name,
-        unitLabel: fallbackUnitLabel ?? l.contractWorkUnitFallback,
-      );
+      final resolvedUnitLabel =
+          fallbackUnitLabel?.trim().isNotEmpty == true
+              ? fallbackUnitLabel!
+              : l.contractWorkUnitFallback;
       final currencySymbol =
           _summaryExtractCurrencySymbol(metadata) ?? '€';
-      final unitsLabel = count != null
-          ? contractUnitCountLabel(
-              localizations: l,
-              contractName: t.name,
-              unitLabel: resolvedUnitLabel,
-              quantity: count,
-            )
-          : l.notAvailableLabel;
+      String? unitsLabel;
+      if (count != null) {
+        final displayCount =
+            count % 1 == 0 ? count.toInt().toString() : count.toString();
+        final unitDisplay =
+            resolvedUnitLabel.trim().isEmpty ? l.contractWorkUnitsLabel : resolvedUnitLabel;
+        unitsLabel = '$displayCount $unitDisplay';
+      }
       final paymentAmount = count != null ? t.rate * count : null;
       final paymentLabel = paymentAmount != null
           ? _formatCurrencyValue(paymentAmount, currencySymbol)
@@ -329,7 +327,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       return _ContractSummaryRow(
         index: i + 1,
         workName: _formatWorkNameWithRole(t.name, t.role),
-        units: unitsLabel,
+        units: unitsLabel ?? l.notAvailableLabel,
         payment: paymentLabel,
       );
     });
@@ -423,12 +421,7 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
       final fallbackUnitLabel = (item.unitLabel?.trim().isNotEmpty ?? false)
           ? item.unitLabel!.trim()
           : l.contractWorkUnitFallback;
-      final resolvedUnitLabel = resolveContractUnitLabel(
-        localizations: l,
-        contractName: workName,
-        unitLabel: fallbackUnitLabel,
-      );
-      aggregation.unitLabel ??= resolvedUnitLabel;
+      aggregation.unitLabel ??= fallbackUnitLabel;
 
       if (item.amount > 0) {
         aggregation.amount += item.amount;
@@ -441,14 +434,18 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
     var rowIndex = 1;
 
     for (final aggregation in aggregations.values) {
-      final unitsLabel = aggregation.totalUnits > 0
-          ? contractUnitCountLabel(
-              localizations: l,
-              contractName: aggregation.workName,
-              unitLabel: aggregation.unitLabel ?? l.contractWorkUnitFallback,
-              quantity: aggregation.totalUnits,
-            )
-          : l.notAvailableLabel;
+      late final String unitsLabel;
+      if (aggregation.totalUnits > 0) {
+        final displayUnits = aggregation.totalUnits % 1 == 0
+            ? aggregation.totalUnits.toInt().toString()
+            : aggregation.totalUnits.toString();
+        final unitLabel = (aggregation.unitLabel ?? l.contractWorkUnitsLabel).trim();
+        final resolvedUnitLabel =
+            unitLabel.isEmpty ? l.contractWorkUnitsLabel : unitLabel;
+        unitsLabel = '$displayUnits $resolvedUnitLabel';
+      } else {
+        unitsLabel = l.notAvailableLabel;
+      }
 
       double? paymentAmount;
       if (aggregation.ratePerUnit != null && aggregation.totalUnits > 0) {
@@ -951,11 +948,8 @@ class _ContractWorkScreenState extends State<ContractWorkScreen> {
                           final t = _userContractTypes[i];
                           final isBusy =
                           _pendingDeletionIds.contains(t.id);
-                          final unitLabel = resolveContractUnitLabel(
-                            localizations: l,
-                            contractName: t.name,
-                            unitLabel: t.unitLabel,
-                          );
+                          final unitLabel =
+                              t.unitLabel.trim().isNotEmpty ? t.unitLabel : l.contractWorkUnitFallback;
                           final roleSuffix =
                               t.displayRole == null ? '' : ' · ${t.displayRole}';
                           return _ManageTypeRow(
@@ -1375,7 +1369,6 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
 
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
-  late final TextEditingController _unitLabelController;
   late final List<String> _workNameOptions;
   late final List<String> _roleOptions;
   late final bool _isRoleLocked;
@@ -1394,7 +1387,6 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     _rateController = TextEditingController(
       text: type != null ? type.rate.toStringAsFixed(2) : '',
     );
-    _unitLabelController = TextEditingController(text: type?.unitLabel ?? '');
     _isRoleLocked = _shouldLockRole(type);
     _isRateEditable = _shouldAllowRateEditing(type);
 
@@ -1499,7 +1491,6 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
   void dispose() {
     _nameController.dispose();
     _rateController.dispose();
-    _unitLabelController.dispose();
     super.dispose();
   }
 
@@ -1552,18 +1543,6 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     }
   }
 
-  String _resolveUnitLabelSuggestion(AppLocalizations l) {
-    final contractName = _nameController.text.trim().isNotEmpty
-        ? _nameController.text.trim()
-        : (_selectedWorkName?.trim() ?? '');
-
-    return resolveContractUnitLabel(
-      localizations: l,
-      contractName: contractName,
-      unitLabel: _unitLabelController.text,
-    );
-  }
-
   Future<void> _handleSave() async {
     final l = AppLocalizations.of(context);
 
@@ -1591,9 +1570,9 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
       return;
     }
 
-    final resolvedUnitLabel = _unitLabelController.text.trim().isEmpty
-        ? _resolveUnitLabelSuggestion(l)
-        : _unitLabelController.text.trim();
+    final resolvedUnitLabel = widget.type?.unitLabel?.trim().isNotEmpty == true
+        ? widget.type!.unitLabel
+        : 'per unit';
     final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
 
     if (!mounted) return;
@@ -2114,75 +2093,6 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
                                   ),
                             ),
                           ],
-
-                          const SizedBox(height: 20),
-                          Text(
-                            l.contractWorkUnitLabel,
-                            style: textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1F2937),
-                            ) ??
-                                const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1F2937),
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF9FAFB),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE0F2FE),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: const Text(
-                                    '📏',
-                                    style: TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _unitLabelController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: _resolveUnitLabelSuggestion(l),
-                                      hintStyle: textTheme.bodyMedium?.copyWith(
-                                        color: const Color(0xFF9CA3AF),
-                                      ) ??
-                                          const TextStyle(
-                                            color: Color(0xFF9CA3AF),
-                                          ),
-                                    ),
-                                    style: textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF111827),
-                                    ) ??
-                                        const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF111827),
-                                          fontSize: 16,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
 
                           const SizedBox(height: 20),
                           Text(
