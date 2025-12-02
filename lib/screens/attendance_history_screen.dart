@@ -3326,6 +3326,13 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                       fontWeight: FontWeight.w700,
                     ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                l.attendanceUnitsHelper,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
               const SizedBox(height: 12),
               _ContractBundleSummaryCard(
                 summaries: _resolveBundleSummaries(),
@@ -3408,6 +3415,7 @@ class _ContractAttendanceSheetState extends State<_ContractAttendanceSheet> {
                         controller: bundleEntry.controller,
                         decoration: InputDecoration(
                           labelText: l.contractWorkUnitsLabel,
+                          helperText: l.attendanceUnitsHelper,
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
                           signed: false,
