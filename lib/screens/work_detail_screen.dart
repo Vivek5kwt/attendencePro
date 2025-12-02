@@ -1565,6 +1565,25 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     }
     _isCompletingMissedAttendance = true;
 
+    final summaryData = _resolvedWork.additionalData['summary'];
+    final totalHours = _dashboardSummary?.totalHours ??
+        _parseDoubleSafely(summaryData?['total_hours'] ?? summaryData?['totalHours'] ??
+            summaryData?['hours']);
+    final totalSalary = _dashboardSummary?.totalSalary ??
+        _parseDoubleSafely(
+          summaryData?['total_salary'] ??
+              summaryData?['totalSalary'] ??
+              summaryData?['salary'] ??
+              summaryData?['amount'] ??
+              summaryData?['payable_amount'] ??
+              summaryData?['payableAmount'] ??
+              summaryData?['total_amount'] ??
+              summaryData?['totalAmount'],
+        );
+    final currencyPrefix = _resolveCurrencyPrefix(
+      _dashboardSummary?.raw ?? summaryData,
+    );
+
     final response = await showModalBottomSheet<Map<String, dynamic>?>(
       context: context,
       isScrollControlled: true,
@@ -1573,6 +1592,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
           dates: _pendingMissedDates.toList(growable: false),
           workId: _resolvedWork.id,
           workName: _resolvedWork.name,
+          currencyPrefix: currencyPrefix,
+          totalHours: totalHours,
+          totalSalary: totalSalary,
           localization: l,
           dateFormatter: _formatDate,
           isContractWork: _resolvedWork.isContract,
@@ -4861,6 +4883,9 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
     required this.dates,
     required this.workId,
     required this.workName,
+    required this.currencyPrefix,
+    required this.totalHours,
+    required this.totalSalary,
     required this.localization,
     required this.dateFormatter,
     required this.isContractWork,
@@ -4876,6 +4901,9 @@ class _MissedAttendanceCompletionSheet extends StatefulWidget {
   final List<DateTime> dates;
   final String workId;
   final String workName;
+  final String? currencyPrefix;
+  final double? totalHours;
+  final double? totalSalary;
   final AppLocalizations localization;
   final String Function(DateTime) dateFormatter;
   final bool isContractWork;
@@ -5004,10 +5032,79 @@ class _MissedAttendanceCompletionSheetState
     }
   }
 
+  String? _formatTotalHours() {
+    final hours = widget.totalHours;
+    if (hours == null) {
+      return null;
+    }
+    return '${hours.toStringAsFixed(2)} h';
+  }
+
+  String? _formatTotalSalary() {
+    final salary = widget.totalSalary;
+    if (salary == null) {
+      return null;
+    }
+    final prefix = widget.currencyPrefix;
+    final formattedAmount = salary.toStringAsFixed(2);
+    if (prefix == null || prefix.trim().isEmpty) {
+      return formattedAmount;
+    }
+    return '$prefix $formattedAmount';
+  }
+
+  Widget _buildSummaryChip({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ) ??
+                TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFF0F172A),
+                  fontWeight: FontWeight.w700,
+                ) ??
+                const TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = widget.localization;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final hoursText = _formatTotalHours();
+    final salaryText = _formatTotalSalary();
 
     return FractionallySizedBox(
       heightFactor: 0.95,
@@ -5102,6 +5199,27 @@ class _MissedAttendanceCompletionSheetState
                                       color: Color(0xFF2563EB),
                                     ),
                               ),
+                              if (hoursText != null || salaryText != null) ...[
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    if (hoursText != null)
+                                      _buildSummaryChip(
+                                        label: l.totalHoursLabel,
+                                        value: hoursText,
+                                        color: const Color(0xFF2563EB),
+                                      ),
+                                    if (salaryText != null)
+                                      _buildSummaryChip(
+                                        label: l.totalSalaryLabel,
+                                        value: salaryText,
+                                        color: const Color(0xFF059669),
+                                      ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -5836,6 +5954,24 @@ class _MissedAttendanceFormData {
     breakMinutesController.dispose();
     contractUnitsController.dispose();
   }
+}
+
+double? _parseDoubleSafely(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is num) {
+    return value.toDouble();
+  }
+  if (value is String) {
+    final sanitized =
+        value.replaceAll(',', '').replaceAll(RegExp(r'[^0-9.\-]'), '').trim();
+    if (sanitized.isEmpty) {
+      return null;
+    }
+    return double.tryParse(sanitized);
+  }
+  return null;
 }
 
 class _TimeDropdownOption {
