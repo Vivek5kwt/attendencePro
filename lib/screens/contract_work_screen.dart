@@ -1369,6 +1369,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
 
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
+  late final TextEditingController _unitLabelController;
   late final List<String> _workNameOptions;
   late final List<String> _roleOptions;
   late final bool _isRoleLocked;
@@ -1386,6 +1387,9 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     _nameController = TextEditingController(text: type?.name ?? '');
     _rateController = TextEditingController(
       text: type != null ? type.rate.toStringAsFixed(2) : '',
+    );
+    _unitLabelController = TextEditingController(
+      text: (type?.unitLabel.trim().isNotEmpty ?? false) ? type!.unitLabel : '',
     );
     _isRoleLocked = _shouldLockRole(type);
     _isRateEditable = _shouldAllowRateEditing(type);
@@ -1491,6 +1495,7 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
   void dispose() {
     _nameController.dispose();
     _rateController.dispose();
+    _unitLabelController.dispose();
     super.dispose();
   }
 
@@ -1550,6 +1555,9 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
     final name = _nameController.text.trim();
     final rate = double.tryParse(_rateController.text.trim());
     final resolvedRole = _selectedRoleValue?.trim() ?? '';
+    final resolvedUnitLabel = _unitLabelController.text.trim().isNotEmpty
+        ? _unitLabelController.text.trim()
+        : l.contractWorkUnitFallback;
 
     const resolvedContractKind = 'fixed';
 
@@ -1570,9 +1578,6 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
       return;
     }
 
-    final resolvedUnitLabel = widget.type?.unitLabel?.trim().isNotEmpty == true
-        ? widget.type!.unitLabel
-        : 'per unit';
     final resolvedName = type == null || widget.isNameEditable ? name : type!.name;
 
     if (!mounted) return;
@@ -2163,6 +2168,139 @@ class _ContractTypeSheetState extends State<ContractTypeSheet> {
                                           color: Color(0xFF111827),
                                           fontSize: 16,
                                         ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Text(
+                            l.contractWorkUnitLabel,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1F2937),
+                            ) ??
+                                const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1F2937),
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons.inventory_2_outlined,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _unitLabelController,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: l.contractWorkUnitLabelHint,
+                                      hintStyle: textTheme.bodyMedium?.copyWith(
+                                        color: const Color(0xFF9CA3AF),
+                                      ) ??
+                                          const TextStyle(
+                                            color: Color(0xFF9CA3AF),
+                                          ),
+                                    ),
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF111827),
+                                    ) ??
+                                        const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF111827),
+                                          fontSize: 16,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F6FF),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE0EAFF)),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.lightbulb_rounded,
+                                  color: Color(0xFF2563EB),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l.contractWorkUnitHelperTitle,
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF111827),
+                                        ) ??
+                                            const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF111827),
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        l.contractWorkUnitHelperDescription,
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: const Color(0xFF4B5563),
+                                        ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF4B5563),
+                                              fontSize: 12,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        l.contractWorkUnitHelperReminder,
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: const Color(0xFF1F2937),
+                                          fontWeight: FontWeight.w600,
+                                        ) ??
+                                            const TextStyle(
+                                              color: Color(0xFF1F2937),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],

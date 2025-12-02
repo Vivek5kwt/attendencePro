@@ -144,6 +144,13 @@ abstract final class AppString {
       'contractWorkPricePerCrateHint': 'Price Per 1 Crate',
       'contractWorkPricePerBunchesHint': 'Price Per 100 Bunches',
       'contractWorkUnitLabel': 'Unit label',
+      'contractWorkUnitLabelHint':
+          'Describe the unit (e.g., per crate, per task)',
+      'contractWorkUnitHelperTitle': 'What are units?',
+      'contractWorkUnitHelperDescription':
+          'Units are the items or tasks your team will count later (for example crates, bins, or pieces).',
+      'contractWorkUnitHelperReminder':
+          'Workers will enter how many units they finished when logging this work.',
       'contractWorkSubtypeLabel': 'Type',
       'contractWorkSubtypeHint': 'Select type',
       'contractWorkSubtypeCustomOption': 'Custom subtype',
@@ -609,6 +616,12 @@ abstract final class AppString {
       'contractWorkPricePerCrateHint': 'प्रति 1 क्रेट मूल्य',
       'contractWorkPricePerBunchesHint': 'प्रति 100 गुच्छे मूल्य',
       'contractWorkUnitLabel': 'इकाई लेबल',
+      'contractWorkUnitLabelHint': 'इकाई का विवरण दें (जैसे प्रति क्रेट, प्रति कार्य)',
+      'contractWorkUnitHelperTitle': 'इकाइयाँ क्या हैं?',
+      'contractWorkUnitHelperDescription':
+          'इकाइयाँ वे आइटम या कार्य हैं जिन्हें आपकी टीम बाद में गिनेगी (जैसे क्रेट, बिन या पीस)।',
+      'contractWorkUnitHelperReminder':
+          'कार्य लॉग करते समय कर्मचारी बताएंगे कि उन्होंने कितनी इकाइयाँ पूरी कीं।',
       'contractWorkSubtypeLabel': 'प्रकार',
       'contractWorkSubtypeHint': 'प्रकार चुनें',
       'contractWorkSubtypeCustomOption': 'कस्टम उप प्रकार',
@@ -1072,6 +1085,13 @@ abstract final class AppString {
       'contractWorkPricePerCrateHint': '1 ਕਰੇਟ ਪ੍ਰਤੀ ਕੀਮਤ',
       'contractWorkPricePerBunchesHint': '100 ਗੁੱਛਿਆਂ ਪ੍ਰਤੀ ਕੀਮਤ',
       'contractWorkUnitLabel': 'ਯੂਨਿਟ ਲੇਬਲ',
+      'contractWorkUnitLabelHint':
+          'ਯੂਨਿਟ ਦਾ ਵੇਰਵਾ ਦਿਓ (ਜਿਵੇਂ ਪ੍ਰਤੀ ਕਰੇਟ, ਪ੍ਰਤੀ ਕੰਮ)',
+      'contractWorkUnitHelperTitle': 'ਯੂਨਿਟ ਕੀ ਹਨ?',
+      'contractWorkUnitHelperDescription':
+          'ਯੂਨਿਟ ਉਹ ਆਈਟਮ ਜਾਂ ਕੰਮ ਹਨ ਜੋ ਤੁਹਾਡੀ ਟੀਮ ਬਾਅਦ ਵਿੱਚ ਗਿਣੇਗੀ (ਜਿਵੇਂ ਕਰੇਟ, ਬਿਨ ਜਾਂ ਪੀਸ)।',
+      'contractWorkUnitHelperReminder':
+          'ਕੰਮ ਲੌਗ ਕਰਦਿਆਂ ਕਰਮਚਾਰੀ ਦੱਸਣਗੇ ਕਿ ਉਨ੍ਹਾਂ ਨੇ ਕਿੰਨੇ ਯੂਨਿਟ ਪੂਰੇ ਕੀਤੇ।',
       'contractWorkSubtypeLabel': 'ਕਿਸਮ',
       'contractWorkSubtypeHint': 'ਕਿਸਮ ਚੁਣੋ',
       'contractWorkSubtypeCustomOption': 'ਕਸਟਮ ਉਪ-ਕਿਸਮ',
@@ -1540,6 +1560,13 @@ abstract final class AppString {
       'contractWorkPricePerCrateHint': 'Prezzo per 1 cassetta',
       'contractWorkPricePerBunchesHint': 'Prezzo per 100 mazzi',
       'contractWorkUnitLabel': 'Etichetta unità',
+      'contractWorkUnitLabelHint':
+          'Descrivi l\'unità (es. per cassetta, per attività)',
+      'contractWorkUnitHelperTitle': 'Cosa sono le unità?',
+      'contractWorkUnitHelperDescription':
+          'Le unità sono gli articoli o le attività che il team conterà più tardi (ad esempio cassette, cassoni o pezzi).',
+      'contractWorkUnitHelperReminder':
+          'Chi registra il lavoro inserirà quante unità ha completato.',
       'contractWorkSubtypeLabel': 'Tipo',
       'contractWorkSubtypeHint': 'Seleziona tipo',
       'contractWorkSubtypeCustomOption': 'Sottotipo personalizzato',
