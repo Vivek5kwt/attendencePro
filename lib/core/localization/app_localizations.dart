@@ -402,6 +402,7 @@ class AppLocalizations {
   String get attendanceInvalidTimeFormat =>
       _value('attendanceInvalidTimeFormat');
   String get attendanceBreakInvalid => _value('attendanceBreakInvalid');
+  String get attendanceUnitsHelper => _value('attendanceUnitsHelper');
   String get attendanceUnitsRequired => _value('attendanceUnitsRequired');
   String get attendanceUnitsInvalid => _value('attendanceUnitsInvalid');
   String get attendanceRateRequired => _value('attendanceRateRequired');

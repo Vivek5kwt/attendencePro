@@ -339,6 +339,8 @@ abstract final class AppString {
       'attendanceEndTimeRequired': 'End time is required',
       'attendanceInvalidTimeFormat': 'Please enter time in HH:MM format',
       'attendanceBreakInvalid': 'Enter break time in minutes',
+      'attendanceUnitsHelper':
+          'Add the number of items or tasks you finished (for example, boxes picked or calls completed). If you are unsure, check your contract or ask your supervisor.',
       'attendanceUnitsRequired': 'Units are required',
       'attendanceUnitsInvalid': 'Enter a valid number of units',
       'attendanceRateRequired': 'Rate per unit is required',
@@ -804,6 +806,8 @@ abstract final class AppString {
       'attendanceEndTimeRequired': 'समाप्ति समय आवश्यक है',
       'attendanceInvalidTimeFormat': 'कृपया समय HH:MM प्रारूप में दर्ज करें',
       'attendanceBreakInvalid': 'ब्रेक समय मिनटों में दर्ज करें',
+      'attendanceUnitsHelper':
+          'आपने कितने आइटम या कार्य पूरे किए (जैसे टोकरियाँ तोड़ीं या कॉल पूरी कीं) यह संख्या भरें। यदि निश्चित नहीं हों, तो अनुबंध देखें या सुपरवाइज़र से पूछें।',
       'attendanceUnitsRequired': 'इकाइयाँ दर्ज करना आवश्यक है',
       'attendanceUnitsInvalid': 'कृपया मान्य इकाइयों की संख्या दर्ज करें',
       'attendanceRateRequired': 'प्रति इकाई दर आवश्यक है',
@@ -1266,6 +1270,8 @@ abstract final class AppString {
       'attendanceEndTimeRequired': 'ਖਤਮ ਕਰਨ ਦਾ ਸਮਾਂ ਲਾਜ਼ਮੀ ਹੈ',
       'attendanceInvalidTimeFormat': 'ਕਿਰਪਾ ਕਰਕੇ ਸਮਾਂ HH:MM ਫਾਰਮੈਟ ਵਿੱਚ ਦਰਜ ਕਰੋ',
       'attendanceBreakInvalid': 'ਬ੍ਰੇਕ ਦਾ ਸਮਾਂ ਮਿੰਟਾਂ ਵਿੱਚ ਲਿਖੋ',
+      'attendanceUnitsHelper':
+          'ਤੁਸੀਂ ਕਿੰਨੇ ਆਈਟਮ ਜਾਂ ਕੰਮ ਪੂਰੇ ਕੀਤੇ ਹਨ (ਜਿਵੇਂ ਕ੍ਰੇਟਾਂ ਚੁੱਕੀਆਂ ਜਾਂ ਡਿਲੀਵਰੀਆਂ ਕੀਤੀਆਂ) ਇਹ ਗਿਣਤੀ ਦਰਜ ਕਰੋ। ਜੇ ਨਿਸ਼ਚਿਤ ਨਹੀਂ ਹੋ, ਤਾਂ ਕਾਂਟ੍ਰੈਕਟ ਵੇਖੋ ਜਾਂ ਸੁਪਰਵਾਈਜ਼ਰ ਨਾਲ ਪੁੱਛੋ।',
       'attendanceUnitsRequired': 'ਯੂਨਿਟ ਦਰਜ ਕਰਨਾ ਲਾਜ਼ਮੀ ਹੈ',
       'attendanceUnitsInvalid': 'ਕਿਰਪਾ ਕਰਕੇ ਯੂਨਿਟਾਂ ਦੀ ਵੈਧ ਗਿਣਤੀ ਦਰਜ ਕਰੋ',
       'attendanceRateRequired': 'ਪ੍ਰਤੀ ਯੂਨਿਟ ਦਰ ਲਾਜ਼ਮੀ ਹੈ',
@@ -1738,6 +1744,8 @@ abstract final class AppString {
       'attendanceEndTimeRequired': "L'orario di fine è obbligatorio",
       'attendanceInvalidTimeFormat': 'Inserisci l\'orario nel formato HH:MM',
       'attendanceBreakInvalid': 'Inserisci la pausa in minuti',
+      'attendanceUnitsHelper':
+          'Inserisci quante attività o pezzi hai completato (es. cassette raccolte o consegne effettuate). Se hai dubbi, controlla il contratto o chiedi al tuo supervisore.',
       'attendanceUnitsRequired': 'Inserisci il numero di unità',
       'attendanceUnitsInvalid': 'Inserisci un numero di unità valido',
       'attendanceRateRequired': 'Inserisci la tariffa per unità',
