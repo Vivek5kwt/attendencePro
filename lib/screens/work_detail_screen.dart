@@ -4252,16 +4252,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final currencyPrefix = _resolveCurrencyPrefix(summary.raw);
       final stats = <_SummaryStat>[];
 
-      if (totalHours > 0) {
-        stats.add(
-          _SummaryStat(
-            title: l.totalHoursLabel,
-            value: '${totalHours.toStringAsFixed(2)} h',
-            color: const Color(0xFF2563EB),
-            icon: Icons.access_time_filled,
-          ),
-        );
-      }
+      stats.add(
+        _SummaryStat(
+          title: l.totalHoursLabel,
+          value: '${totalHours.toStringAsFixed(2)} h',
+          color: const Color(0xFF2563EB),
+          icon: Icons.access_time_filled,
+        ),
+      );
 
       stats.add(
         _SummaryStat(
