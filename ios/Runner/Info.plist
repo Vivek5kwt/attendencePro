@@ -47,6 +47,8 @@
         <array>
                 <string>whatsapp</string>
         </array>
+        <key>GADApplicationIdentifier</key>
+        <string>ca-app-pub-2148868058414204~9892988888</string>
         <key>CADisableMinimumFrameDurationOnPhone</key>
         <true/>
         <key>UIApplicationSupportsIndirectInputEvents</key>
