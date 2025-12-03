@@ -5,6 +5,7 @@ import '../bloc/locale_cubit.dart';
 import '../bloc/work_bloc.dart';
 import '../bloc/work_event.dart';
 import '../core/localization/app_localizations.dart';
+import '../data/country_codes.dart';
 import '../repositories/user_repository.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_loader.dart';
@@ -22,6 +23,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _countryCodeController = TextEditingController();
+  final _countrySearchController = TextEditingController();
+  final FocusNode _countrySearchFocusNode = FocusNode();
+
+  late final List<CountryCodeOption> _countryCodeOptions;
+  late CountryCodeOption _selectedCountry;
 
   late final UserRepository _repository;
 
@@ -29,11 +35,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isSaving = false;
   String? _languageCode;
   String? _errorMessage;
+  bool _showInlineCountryPicker = false;
+  String _countrySearchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _repository = UserRepository();
+    _countryCodeOptions = CountryCodes.all;
+    _selectedCountry = _countryCodeOptions.firstWhere(
+      (country) => country.isoCode == 'IT',
+      orElse: () => _countryCodeOptions.first,
+    );
     _languageCode = context.read<LocaleCubit>().state.languageCode;
     _loadProfile();
   }
@@ -47,7 +60,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nameController.text = profile.name ?? '';
         _usernameController.text = profile.username ?? '';
         _phoneController.text = profile.phone ?? '';
-        _countryCodeController.text = profile.countryCode ?? '';
+        if (profile.countryCode != null && profile.countryCode!.isNotEmpty) {
+          _selectedCountry = _countryCodeOptions.firstWhere(
+            (country) => country.dialCode == profile.countryCode,
+            orElse: () => _selectedCountry,
+          );
+          _countryCodeController.text = _selectedCountry.dialCode;
+        } else {
+          _countryCodeController.text = _selectedCountry.dialCode;
+        }
         if ((profile.language ?? '').isNotEmpty) {
           _languageCode = profile.language;
         }
@@ -67,6 +88,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _usernameController.dispose();
     _phoneController.dispose();
     _countryCodeController.dispose();
+    _countrySearchController.dispose();
+    _countrySearchFocusNode.dispose();
     super.dispose();
   }
 
@@ -133,6 +156,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _errorMessage = l.profileUpdateFailed;
       });
     }
+  }
+
+  void _toggleInlineCountryPicker() {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _showInlineCountryPicker = !_showInlineCountryPicker;
+      if (!_showInlineCountryPicker) {
+        _countrySearchQuery = '';
+        _countrySearchController.clear();
+      }
+    });
+    if (_showInlineCountryPicker) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _countrySearchFocusNode.requestFocus();
+        }
+      });
+    }
+  }
+
+  void _closeInlineCountryPicker() {
+    if (!_showInlineCountryPicker) return;
+    setState(() {
+      _showInlineCountryPicker = false;
+      _countrySearchQuery = '';
+      _countrySearchController.clear();
+    });
+  }
+
+  void _onCountrySearchChanged(String value) {
+    setState(() {
+      _countrySearchQuery = value.trim();
+    });
+  }
+
+  void _handleCountrySelected(CountryCodeOption country) {
+    setState(() {
+      _selectedCountry = country;
+      _countryCodeController.text = country.dialCode;
+      _showInlineCountryPicker = false;
+      _countrySearchQuery = '';
+      _countrySearchController.clear();
+    });
   }
 
   @override
@@ -251,11 +317,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         },
                                       ),
                                       const SizedBox(height: 20),
-                                      _ProfileField(
-                                        controller: _countryCodeController,
+                                      _CountryCodePicker(
                                         label: l.profileCountryCodeLabel,
                                         hint: l.profileCountryCodeHint,
-                                        keyboardType: TextInputType.text,
+                                        selectedCountry: _selectedCountry,
+                                        countryCodeController:
+                                            _countryCodeController,
+                                        countrySearchController:
+                                            _countrySearchController,
+                                        countrySearchFocusNode:
+                                            _countrySearchFocusNode,
+                                        countryOptions: _countryCodeOptions,
+                                        showInlinePicker:
+                                            _showInlineCountryPicker,
+                                        onTogglePicker: _toggleInlineCountryPicker,
+                                        onClosePicker: _closeInlineCountryPicker,
+                                        onSearchChanged: _onCountrySearchChanged,
+                                        searchQuery: _countrySearchQuery,
+                                        onCountrySelected: _handleCountrySelected,
                                         validator: (value) {
                                           if (value == null ||
                                               value.trim().isEmpty) {
@@ -365,6 +444,317 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
+    );
+  }
+}
+
+class _CountryCodePicker extends StatelessWidget {
+  const _CountryCodePicker({
+    required this.label,
+    required this.hint,
+    required this.selectedCountry,
+    required this.countryCodeController,
+    required this.countrySearchController,
+    required this.countrySearchFocusNode,
+    required this.countryOptions,
+    required this.showInlinePicker,
+    required this.onTogglePicker,
+    required this.onClosePicker,
+    required this.onSearchChanged,
+    required this.searchQuery,
+    required this.onCountrySelected,
+    required this.validator,
+  });
+
+  final String label;
+  final String hint;
+  final CountryCodeOption selectedCountry;
+  final TextEditingController countryCodeController;
+  final TextEditingController countrySearchController;
+  final FocusNode countrySearchFocusNode;
+  final List<CountryCodeOption> countryOptions;
+  final bool showInlinePicker;
+  final VoidCallback onTogglePicker;
+  final VoidCallback onClosePicker;
+  final ValueChanged<String> onSearchChanged;
+  final String searchQuery;
+  final ValueChanged<CountryCodeOption> onCountrySelected;
+  final String? Function(String?) validator;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final dialCodeStyle = textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
+
+    return TapRegion(
+      onTapOutside: (_) => onClosePicker(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ) ??
+                const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          FormField<String>(
+            initialValue: countryCodeController.text,
+            validator: validator,
+            builder: (state) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InkWell(
+                    onTap: onTogglePicker,
+                    borderRadius: BorderRadius.circular(16),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color.alphaBlend(
+                          colorScheme.primary.withOpacity(0.04),
+                          colorScheme.surface,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: state.hasError
+                              ? colorScheme.error
+                              : colorScheme.outline.withOpacity(0.4),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  countryFlag(selectedCountry.isoCode),
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(selectedCountry.dialCode, style: dialCodeStyle),
+                              ],
+                            ),
+                            Icon(
+                              showInlinePicker
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color: colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (showInlinePicker) ...[
+                    const SizedBox(height: 12),
+                    _InlineCountryPicker(
+                      searchHint: hint,
+                      searchController: countrySearchController,
+                      searchFocusNode: countrySearchFocusNode,
+                      onSearchChanged: onSearchChanged,
+                      searchQuery: searchQuery,
+                      countryOptions: countryOptions,
+                      selectedCountry: selectedCountry,
+                      onCountrySelected: (country) {
+                        countryCodeController.text = country.dialCode;
+                        state.didChange(country.dialCode);
+                        onCountrySelected(country);
+                      },
+                    ),
+                  ],
+                  if (state.hasError) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      state.errorText ?? '',
+                      style: TextStyle(
+                        color: colorScheme.error,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineCountryPicker extends StatelessWidget {
+  const _InlineCountryPicker({
+    required this.searchHint,
+    required this.searchController,
+    required this.searchFocusNode,
+    required this.onSearchChanged,
+    required this.searchQuery,
+    required this.countryOptions,
+    required this.selectedCountry,
+    required this.onCountrySelected,
+  });
+
+  final String searchHint;
+  final TextEditingController searchController;
+  final FocusNode searchFocusNode;
+  final ValueChanged<String> onSearchChanged;
+  final String searchQuery;
+  final List<CountryCodeOption> countryOptions;
+  final CountryCodeOption selectedCountry;
+  final ValueChanged<CountryCodeOption> onCountrySelected;
+
+  List<CountryCodeOption> get _visibleCountryOptions {
+    if (searchQuery.isEmpty) return countryOptions;
+    final query = searchQuery.toLowerCase();
+    return countryOptions.where((country) {
+      final name = country.name.toLowerCase();
+      return name.contains(query) ||
+          country.dialCode.contains(searchQuery) ||
+          country.isoCode.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final filtered = _visibleCountryOptions;
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: searchController,
+            focusNode: searchFocusNode,
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              hintText: searchHint,
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Color.alphaBlend(
+                colorScheme.primary.withOpacity(0.03),
+                colorScheme.surface,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 260),
+            child: filtered.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        AppLocalizations.of(context).noCountryCodeResults,
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium,
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemBuilder: (context, index) {
+                      final country = filtered[index];
+                      final isActive =
+                          country.isoCode == selectedCountry.isoCode;
+                      return InkWell(
+                        onTap: () => onCountrySelected(country),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 6,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                countryFlag(country.isoCode),
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      country.name,
+                                      style: textTheme.bodyLarge?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ) ??
+                                          const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      country.dialCode,
+                                      style: textTheme.bodySmall?.copyWith(
+                                            color: textTheme.bodySmall?.color
+                                                ?.withOpacity(0.7),
+                                          ) ??
+                                          const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isActive)
+                                Icon(
+                                  Icons.check_circle,
+                                  color: const Color(0xFF22C55E),
+                                  size: 20,
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: colorScheme.outline.withOpacity(0.2),
+                    ),
+                    itemCount: filtered.length,
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
