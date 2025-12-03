@@ -7,11 +7,11 @@ class AdHelper {
 
   static const String _androidDashboardBannerAdUnitId =
       String.fromEnvironment('ANDROID_DASHBOARD_BANNER_AD_UNIT_ID',
-          defaultValue: 'ca-app-pub-3940256099942544/6300978111');
+          defaultValue: 'ca-app-pub-2148868058414204/3020458775');
 
   static const String _iosDashboardBannerAdUnitId =
       String.fromEnvironment('IOS_DASHBOARD_BANNER_AD_UNIT_ID',
-          defaultValue: 'ca-app-pub-3940256099942544/2934735716');
+          defaultValue: 'ca-app-pub-2148868058414204/3020458775');
 
   static String get dashboardBannerAdUnitId {
     if (Platform.isAndroid) {
