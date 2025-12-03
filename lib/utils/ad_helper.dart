@@ -20,6 +20,6 @@ class AdHelper {
     if (Platform.isIOS) {
       return _iosDashboardBannerAdUnitId;
     }
-    return BannerAd.testAdUnitId;
+    throw UnsupportedError('Unsupported platform');
   }
 }
