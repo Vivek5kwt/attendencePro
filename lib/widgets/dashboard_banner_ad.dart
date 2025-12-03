@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../core/localization/app_localizations.dart';
 import '../utils/ad_helper.dart';
+import '../utils/ad_preload_service.dart';
 
 class DashboardBannerAd extends StatefulWidget {
   const DashboardBannerAd({super.key, required this.localization});
@@ -20,13 +21,24 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
   @override
   void initState() {
     super.initState();
-    _loadAd();
+    _usePreloadedAdOrLoad();
   }
 
   @override
   void dispose() {
     _bannerAd?.dispose();
     super.dispose();
+  }
+
+  void _usePreloadedAdOrLoad() {
+    final preloaded = AdPreloadService.instance.takeDashboardBanner();
+    if (preloaded != null) {
+      _bannerAd = preloaded;
+      _isLoaded = true;
+      return;
+    }
+
+    _loadAd();
   }
 
   void _loadAd() {
