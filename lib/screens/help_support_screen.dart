@@ -11,7 +11,18 @@ class HelpSupportScreen extends StatelessWidget {
   Future<void> _launchUri(BuildContext context, Uri uri) async {
     final localization = AppLocalizations.of(context);
 
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (!await canLaunchUrl(uri)) {
+      AppSnackBar.show(context, localization.helpSupportLaunchFailed);
+      return;
+    }
+
+    LaunchMode mode = LaunchMode.externalApplication;
+
+    if (uri.scheme == 'mailto' || uri.scheme == 'tel') {
+      mode = LaunchMode.externalNonBrowserApplication;
+    }
+
+    if (!await launchUrl(uri, mode: mode)) {
       AppSnackBar.show(context, localization.helpSupportLaunchFailed);
     }
   }
