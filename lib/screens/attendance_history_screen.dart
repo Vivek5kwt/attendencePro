@@ -77,6 +77,8 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   String? _errorMessage;
   String _currencySymbol = '€';
 
+  bool _hasUpdatedEntries = false;
+
   int _entriesRequestId = 0;
   bool _isGeneratingReport = false;
 
@@ -1375,6 +1377,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         );
       }
       await _loadEntries();
+      _hasUpdatedEntries = true;
       _showSuccessSnackBar(
         AppLocalizations.of(context).attendanceSubmitSuccess,
       );
@@ -1420,6 +1423,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         ratePerUnit: ratePerUnit,
       );
       await _loadEntries();
+      _hasUpdatedEntries = true;
       _showSuccessSnackBar(
         AppLocalizations.of(context).attendanceSubmitSuccess,
       );
@@ -1469,6 +1473,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         breakMinutes: breakMinutes,
       );
       await _loadEntries();
+      _hasUpdatedEntries = true;
       _showSuccessSnackBar(
         AppLocalizations.of(context).attendanceSubmitSuccess,
       );
@@ -1737,48 +1742,54 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           color: colorScheme.onSurface,
         );
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor:
-        theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(16),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.of(context).pop(_hasUpdatedEntries);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor:
+              theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          titleSpacing: 16,
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Image.asset(
+                  AppAssets.history,
+                  width: 24,
+                  height: 24,
+                  color: colorScheme.primary,
+                ),
               ),
-              child: Image.asset(
-                AppAssets.history,
-                width: 24,
-                height: 24,
-                color: colorScheme.primary,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l.attendanceHistoryLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: titleStyle,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l.attendanceHistoryLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: titleStyle,
-              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
+              onPressed: () => Navigator.of(context).pop(_hasUpdatedEntries),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
-        ],
+        body: scaffoldBody,
       ),
-      body: scaffoldBody,
     );
   }
 
