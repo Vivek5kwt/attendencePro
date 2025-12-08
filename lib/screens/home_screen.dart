@@ -694,6 +694,9 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               titleSpacing: 5,
+              systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+              ),
               leading: Builder(
                 builder: (context) {
                   return IconButton(
