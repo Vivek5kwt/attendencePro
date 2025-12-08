@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openAttendanceHistory() async {
     if (!mounted) return;
     final didUpdateAttendance = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<void>(
+      MaterialPageRoute<bool>(
         builder: (context) => const AttendanceHistoryScreen(),
       ),
     );
