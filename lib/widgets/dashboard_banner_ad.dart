@@ -17,6 +17,7 @@ class DashboardBannerAd extends StatefulWidget {
 class _DashboardBannerAdState extends State<DashboardBannerAd> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
+  AdWidget? _adWidget;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
   @override
   void dispose() {
     _bannerAd?.dispose();
+    _adWidget = null;
     super.dispose();
   }
 
@@ -35,6 +37,7 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
     if (preloaded != null && preloaded.responseInfo != null) {
       _bannerAd = preloaded;
       _isLoaded = true;
+      _adWidget = AdWidget(ad: preloaded);
       return;
     }
 
@@ -46,6 +49,9 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
   }
 
   void _loadAd() {
+    _bannerAd?.dispose();
+    _adWidget = null;
+
     final banner = BannerAd(
       adUnitId: AdHelper.dashboardBannerAdUnitId,
       request: const AdRequest(),
@@ -55,6 +61,7 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
           setState(() {
             _bannerAd = ad as BannerAd;
             _isLoaded = true;
+            _adWidget = AdWidget(ad: _bannerAd!);
           });
         },
         onAdFailedToLoad: (ad, error) {
@@ -62,6 +69,7 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
           setState(() {
             _bannerAd = null;
             _isLoaded = false;
+            _adWidget = null;
           });
         },
       ),
@@ -75,6 +83,7 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final banner = _bannerAd;
+    final adWidget = _adWidget;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -86,12 +95,13 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
           border: Border.all(color: const Color(0xFFE0EDFF)),
         ),
         padding: const EdgeInsets.all(20),
-        child: _isLoaded && banner != null && banner.responseInfo != null
+        child: _isLoaded && banner != null && adWidget != null &&
+                banner.responseInfo != null
             ? Center(
                 child: SizedBox(
                   width: banner.size.width.toDouble(),
                   height: banner.size.height.toDouble(),
-                  child: AdWidget(ad: banner),
+                  child: adWidget,
                 ),
               )
             : Row(
