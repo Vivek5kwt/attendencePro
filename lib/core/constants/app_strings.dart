@@ -251,6 +251,13 @@ abstract final class AppString {
       'logoutLabel': 'Logout',
       'reportsSummaryLabel': 'Reports & Summary',
       'reportsSummaryMonth': 'October 2025',
+      'reportsSummaryIntroTitle': 'Reports, made clearer',
+      'reportsSummaryIntroSubtitle':
+          'Review your month at a glance, switch works, and export a PDF summary anytime.',
+      'reportsSummaryIntroDownloadHint':
+          'Download a ready-to-share report when your data looks right.',
+      'reportsSummaryExportCta': 'Export PDF',
+      'reportsActiveWorkLabel': 'Active work',
       'reportsCombinedSalaryTitle': 'Total Combined Salary',
       'reportsHoursWorkedSuffix': 'hours worked',
       'reportsUnitsCompletedSuffix': 'units completed',

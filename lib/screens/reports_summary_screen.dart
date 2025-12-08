@@ -1069,6 +1069,13 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _ReportsSummaryIntroCard(
+                title: l.reportsSummaryIntroTitle,
+                subtitle: l.reportsSummaryIntroSubtitle,
+                downloadHint: l.reportsSummaryIntroDownloadHint,
+                exportCta: l.reportsSummaryExportCta,
+              ),
+              const SizedBox(height: 16),
               _MonthSelector(
                 label: l.reportsSummaryMonth,
                 selectedMonth: selectedMonth,
@@ -1079,6 +1086,7 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
               Row(
                 children: [
                   _ActiveWorkBadge(
+                    label: l.reportsActiveWorkLabel,
                     workName: hasSelectedWork ? activeWorkName : l.notAvailableLabel,
                   ),
                   const SizedBox(width: 12),
@@ -1475,13 +1483,17 @@ class _SummaryEmptyView extends StatelessWidget {
 }
 
 class _ActiveWorkBadge extends StatelessWidget {
-  const _ActiveWorkBadge({required this.workName});
+  const _ActiveWorkBadge({
+    required this.label,
+    required this.workName,
+  });
 
+  final String label;
   final String workName;
 
   @override
   Widget build(BuildContext context) {
-    final label = Theme.of(context).textTheme.labelLarge?.copyWith(
+    final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
       fontWeight: FontWeight.w600,
       color: const Color(0xFF1F2937),
       fontSize: 13,
@@ -1491,7 +1503,7 @@ class _ActiveWorkBadge extends StatelessWidget {
           color: Color(0xFF1F2937),
           fontSize: 13,
         );
-    final workStyle = label.copyWith(fontSize: 11, fontWeight: FontWeight.w600);
+    final workStyle = labelStyle.copyWith(fontSize: 11, fontWeight: FontWeight.w600);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -1508,9 +1520,133 @@ class _ActiveWorkBadge extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Active Work', style: label),
+                Text(this.label, style: labelStyle),
                 const SizedBox(height: 2),
                 Text(workName, style: workStyle, softWrap: true),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportsSummaryIntroCard extends StatelessWidget {
+  const _ReportsSummaryIntroCard({
+    required this.title,
+    required this.subtitle,
+    required this.downloadHint,
+    required this.exportCta,
+  });
+
+  final String title;
+  final String subtitle;
+  final String downloadHint;
+  final String exportCta;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF0B172A),
+        ) ??
+        const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF0B172A),
+        );
+
+    final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF374151),
+          height: 1.5,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF374151),
+          height: 1.5,
+        );
+
+    final hintStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: const Color(0xFF2563EB),
+          fontWeight: FontWeight.w700,
+        ) ??
+        const TextStyle(
+          color: Color(0xFF2563EB),
+          fontWeight: FontWeight.w700,
+        );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFEFF6FF),
+            Color(0xFFF8FAFC),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.summarize_outlined,
+              color: Color(0xFF1D4ED8),
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: titleStyle),
+                const SizedBox(height: 8),
+                Text(subtitle, style: subtitleStyle),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1D4ED8).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.file_download_outlined, size: 18, color: Color(0xFF1D4ED8)),
+                          const SizedBox(width: 6),
+                          Text(
+                            exportCta,
+                            style: const TextStyle(
+                              color: Color(0xFF1D4ED8),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        downloadHint,
+                        style: hintStyle,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
