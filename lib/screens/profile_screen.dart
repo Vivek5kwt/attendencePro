@@ -137,6 +137,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isSaving = false;
       });
+
+      await Future.delayed(const Duration(milliseconds: 350));
+
+      if (!mounted) return;
+      await Navigator.of(context).maybePop(true);
     } on UserAuthException {
       if (!mounted) return;
       setState(() {
