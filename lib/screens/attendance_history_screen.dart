@@ -20,6 +20,7 @@ import '../utils/history_entry_hours.dart';
 import '../utils/responsive.dart';
 import '../utils/snackbar.dart';
 import '../widgets/app_loader.dart';
+import '../widgets/work_management_dialogs.dart';
 
 const List<String> _kMonthNames = <String>[
   'January',
@@ -1167,6 +1168,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     );
   }
 
+  Future<void> _openAddWorkDialog() async {
+    await showAddWorkDialog(context: context);
+    if (!mounted) {
+      return;
+    }
+    await _loadWorks();
+  }
+
   Future<void> _openContractEditSheet(_AttendanceEntry entry) async {
     final l = AppLocalizations.of(context);
     final workId = entry.workId ?? _workLookup[_selectedWork]?.id;
@@ -1624,7 +1633,11 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         isError: true,
       );
     } else if (_missingWork && _entries.isEmpty) {
-      content = _StatusMessage(message: l.startTrackingAttendance);
+      content = _StatusMessage(
+        message: l.startTrackingAttendance,
+        actionLabel: l.addYourFirstWork,
+        onAction: _openAddWorkDialog,
+      );
     } else {
       final historyWidget = viewEntries.isEmpty
           ? _EmptyState(
@@ -1776,10 +1789,17 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 }
 
 class _StatusMessage extends StatelessWidget {
-  const _StatusMessage({required this.message, this.isError = false});
+  const _StatusMessage({
+    required this.message,
+    this.isError = false,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String message;
   final bool isError;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -1796,6 +1816,8 @@ class _StatusMessage extends StatelessWidget {
           fontWeight: FontWeight.w600,
         );
 
+    final hasAction = actionLabel != null && onAction != null;
+
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
@@ -1805,17 +1827,36 @@ class _StatusMessage extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: border),
         ),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: textStyle,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: textStyle,
+            ),
+            if (hasAction) ...[
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: onAction,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+                child: Text(actionLabel!),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
-}
 
-class _LoadingOverlay extends StatelessWidget {
+  }
+
+  class _LoadingOverlay extends StatelessWidget {
   const _LoadingOverlay();
 
   @override
