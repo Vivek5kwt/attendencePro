@@ -607,11 +607,14 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
 
   Future<void> _openDrawerAttendanceHistory() async {
     if (!mounted) return;
-    await Navigator.of(context).push(
+    final didUpdateAttendance = await Navigator.of(context).push<bool>(
       MaterialPageRoute<void>(
         builder: (_) => const AttendanceHistoryScreen(),
       ),
     );
+
+    if (!mounted || didUpdateAttendance != true) return;
+    await _refreshWorks();
   }
 
   Future<void> _openDrawerProfile() async {
