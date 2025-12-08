@@ -32,11 +32,15 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
 
   void _usePreloadedAdOrLoad() {
     final preloaded = AdPreloadService.instance.takeDashboardBanner();
-    if (preloaded != null) {
+    if (preloaded != null && preloaded.responseInfo != null) {
       _bannerAd = preloaded;
       _isLoaded = true;
       return;
     }
+
+    // If a preloaded ad exists but hasn't finished loading, dispose it and
+    // start a fresh load to avoid inserting an un-loaded banner into the tree.
+    preloaded?.dispose();
 
     _loadAd();
   }
@@ -82,7 +86,7 @@ class _DashboardBannerAdState extends State<DashboardBannerAd> {
           border: Border.all(color: const Color(0xFFE0EDFF)),
         ),
         padding: const EdgeInsets.all(20),
-        child: _isLoaded && banner != null
+        child: _isLoaded && banner != null && banner.responseInfo != null
             ? Center(
                 child: SizedBox(
                   width: banner.size.width.toDouble(),
