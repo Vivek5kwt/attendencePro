@@ -288,6 +288,13 @@ class AppLocalizations {
   String get logoutLabel => _value('logoutLabel');
   String get reportsSummaryLabel => _value('reportsSummaryLabel');
   String get reportsSummaryMonth => _value('reportsSummaryMonth');
+  String get reportsSummaryIntroTitle => _value('reportsSummaryIntroTitle');
+  String get reportsSummaryIntroSubtitle =>
+      _value('reportsSummaryIntroSubtitle');
+  String get reportsSummaryIntroDownloadHint =>
+      _value('reportsSummaryIntroDownloadHint');
+  String get reportsSummaryExportCta => _value('reportsSummaryExportCta');
+  String get reportsActiveWorkLabel => _value('reportsActiveWorkLabel');
   String get reportsCombinedSalaryTitle =>
       _value('reportsCombinedSalaryTitle');
   String get reportsHoursWorkedSuffix =>
