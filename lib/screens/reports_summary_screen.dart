@@ -986,7 +986,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         selectedMonth: selectedMonth,
         contractItems: contractItems,
         showContractSummary: hasContractSummary,
-        canDownloadReport: true,
         isGeneratingReport: _isGeneratingReport,
         onDownloadReport: _downloadAttendanceHistoryReport,
       );
@@ -1272,7 +1271,6 @@ class _SummaryLoadedContent extends StatelessWidget {
     required this.selectedMonth,
     required this.contractItems,
     required this.showContractSummary,
-    required this.canDownloadReport,
     required this.isGeneratingReport,
     required this.onDownloadReport,
   });
@@ -1282,7 +1280,6 @@ class _SummaryLoadedContent extends StatelessWidget {
   final String selectedMonth;
   final List<_ContractWorkItem> contractItems;
   final bool showContractSummary;
-  final bool canDownloadReport;
   final bool isGeneratingReport;
   final VoidCallback onDownloadReport;
 
@@ -1346,26 +1343,6 @@ class _SummaryLoadedContent extends StatelessWidget {
             emptyValueLabel: localization.notAvailableLabel,
             totalUnits: resolvedContractUnits,
             totalSalary: resolvedContractSalary,
-          ),
-        ],
-        if (canDownloadReport) ...[
-          const SizedBox(height: 24),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: isGeneratingReport ? null : onDownloadReport,
-              icon: isGeneratingReport
-                  ? SizedBox(
-                width: 18,
-                height: 18,
-                child: AppLoader(
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              )
-                  : const Icon(Icons.download),
-              label: Text(localization.historyReportDownloadLabel),
-            ),
           ),
         ],
       ],
