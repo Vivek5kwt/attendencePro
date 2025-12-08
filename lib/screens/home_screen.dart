@@ -168,7 +168,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final workState = context.read<WorkBloc>().state;
     final works = workState.works;
     if (works.isEmpty) {
-      _showAddWorkDialog();
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const ReportsSummaryScreen(),
+        ),
+      );
       return;
     }
 
