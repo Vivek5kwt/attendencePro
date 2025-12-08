@@ -156,11 +156,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openAttendanceHistory() async {
     if (!mounted) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const AttendanceHistoryScreen(),
       ),
     );
+
+    if (!mounted) return;
+    await _refreshWorks();
   }
 
   Future<void> _openReportsSummary() async {
