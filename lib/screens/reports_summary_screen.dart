@@ -963,6 +963,8 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       summaryBody = _SummaryEmptyView(
         key: const ValueKey('missing'),
         message: l.noWorkAddedYet,
+        actionLabel: l.addYourFirstWork,
+        onAction: _openAddWorkDialog,
       );
     } else if (error != null && error.isNotEmpty) {
       summaryBody = _SummaryErrorView(
@@ -1447,9 +1449,16 @@ class _SummaryErrorView extends StatelessWidget {
 }
 
 class _SummaryEmptyView extends StatelessWidget {
-  const _SummaryEmptyView({super.key, required this.message});
+  const _SummaryEmptyView({
+    super.key,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -1476,6 +1485,14 @@ class _SummaryEmptyView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(message, textAlign: TextAlign.center, style: style),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onAction,
+              icon: const Icon(Icons.add),
+              label: Text(actionLabel!),
+            ),
+          ],
         ],
       ),
     );
