@@ -947,11 +947,14 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     storedWorkName.isNotEmpty ? storedWorkName : (selectedWork?.name ?? '').trim();
     final hasSelectedWork = selectedWork != null || resolvedWorkNameCandidate.isNotEmpty;
     final activeWorkName = resolvedWorkNameCandidate.isNotEmpty ? resolvedWorkNameCandidate : l.notAvailableLabel;
+    final canChangeWork = workState.works.length > 1;
+    final hasAnyWork = workState.works.isNotEmpty;
 
     final summary = _summary;
     final error = _summaryError;
     final isLoading = _isLoadingSummary;
     final currencySymbol = summary?.currencySymbol ?? '€';
+    final canDownloadReport = summary != null && !_missingWork && error == null && !isLoading;
 
     Widget summaryBody;
     if (isLoading) {
@@ -1071,48 +1074,60 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ReportsSummaryIntroCard(
-                title: l.reportsSummaryIntroTitle,
-                subtitle: l.reportsSummaryIntroSubtitle,
-                downloadHint: l.reportsSummaryIntroDownloadHint,
-                exportCta: l.reportsSummaryExportCta,
-              ),
-              const SizedBox(height: 16),
-              _MonthSelector(
-                label: l.reportsSummaryMonth,
-                selectedMonth: selectedMonth,
-                months: months,
-                onMonthSelected: _onMonthSelected,
-              ),
-              const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _ActiveWorkBadge(
-                    label: l.reportsActiveWorkLabel,
-                    workName: hasSelectedWork ? activeWorkName : l.notAvailableLabel,
+                  Expanded(
+                    child: _MonthSelector(
+                      label: l.reportsSummaryMonth,
+                      selectedMonth: selectedMonth,
+                      months: months,
+                      onMonthSelected: _onMonthSelected,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  TextButton(
-                    onPressed: () => _handleChangeWork(workState.works),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF2563EB),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    child: Text(
-                      l.changeWorkButton,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2563EB),
-                      ) ??
-                          const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2563EB),
-                          ),
-                    ),
+                  _ExportPdfButton(
+                    label: l.reportsSummaryExportCta,
+                    onPressed: canDownloadReport && !_isGeneratingReport
+                        ? _downloadAttendanceHistoryReport
+                        : null,
+                    isLoading: _isGeneratingReport,
                   ),
                 ],
               ),
+              if (hasAnyWork) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _ActiveWorkBadge(
+                      label: l.reportsActiveWorkLabel,
+                      workName: hasSelectedWork ? activeWorkName : l.notAvailableLabel,
+                    ),
+                    if (canChangeWork) ...[
+                      const SizedBox(width: 12),
+                      TextButton(
+                        onPressed: () => _handleChangeWork(workState.works),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF2563EB),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        child: Text(
+                          l.changeWorkButton,
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF2563EB),
+                          ) ??
+                              const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2563EB),
+                              ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
@@ -1549,130 +1564,6 @@ class _ActiveWorkBadge extends StatelessWidget {
   }
 }
 
-class _ReportsSummaryIntroCard extends StatelessWidget {
-  const _ReportsSummaryIntroCard({
-    required this.title,
-    required this.subtitle,
-    required this.downloadHint,
-    required this.exportCta,
-  });
-
-  final String title;
-  final String subtitle;
-  final String downloadHint;
-  final String exportCta;
-
-  @override
-  Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: const Color(0xFF0B172A),
-        ) ??
-        const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Color(0xFF0B172A),
-        );
-
-    final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: const Color(0xFF374151),
-          height: 1.5,
-        ) ??
-        const TextStyle(
-          color: Color(0xFF374151),
-          height: 1.5,
-        );
-
-    final hintStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: const Color(0xFF2563EB),
-          fontWeight: FontWeight.w700,
-        ) ??
-        const TextStyle(
-          color: Color(0xFF2563EB),
-          fontWeight: FontWeight.w700,
-        );
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEFF6FF),
-            Color(0xFFF8FAFC),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2563EB).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.summarize_outlined,
-              color: Color(0xFF1D4ED8),
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: titleStyle),
-                const SizedBox(height: 8),
-                Text(subtitle, style: subtitleStyle),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1D4ED8).withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.file_download_outlined, size: 18, color: Color(0xFF1D4ED8)),
-                          const SizedBox(width: 6),
-                          Text(
-                            exportCta,
-                            style: const TextStyle(
-                              color: Color(0xFF1D4ED8),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        downloadHint,
-                        style: hintStyle,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.text});
 
@@ -1691,6 +1582,51 @@ class _SectionTitle extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: Color(0xFF111827),
           ),
+    );
+  }
+}
+
+class _ExportPdfButton extends StatelessWidget {
+  const _ExportPdfButton({
+    required this.label,
+    required this.onPressed,
+    required this.isLoading,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          side: const BorderSide(color: Color(0xFF2563EB)),
+          foregroundColor: const Color(0xFF2563EB),
+        ),
+        icon: isLoading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: AppLoader(size: 18, color: const Color(0xFF2563EB)),
+              )
+            : const Icon(Icons.picture_as_pdf_outlined),
+        label: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF2563EB),
+              ) ??
+              const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2563EB),
+              ),
+        ),
+      ),
     );
   }
 }
