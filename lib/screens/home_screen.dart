@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -44,7 +45,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const String _shareLink = 'https://attendencepro.com/';
+  static const String _androidShareLink =
+      'https://play.google.com/store/apps/details?id=com.attendancepro.app';
+  static const String _iosShareLink =
+      'https://apps.apple.com/us/app/attendencepro/id6756402956';
+  static const String _defaultShareLink = 'https://attendencepro.com/';
+
+  String get _shareLink {
+    if (Platform.isIOS) return _iosShareLink;
+    if (Platform.isAndroid) return _androidShareLink;
+    return _defaultShareLink;
+  }
 
   static const String _currencySymbol = '€';
 
