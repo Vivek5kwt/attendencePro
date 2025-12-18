@@ -462,140 +462,11 @@ class LocalNotificationService {
       await initialize();
     }
 
-    final permissionGranted = await hasNotificationPermissions();
-    if (!permissionGranted) {
-      debugPrint(
-        '[LocalNotificationService] Notifications permission not granted. '
-        'Attendance reminder scheduling skipped.',
-      );
-      await _plugin.cancel(_attendanceReminderNotificationId);
-      return;
-    }
-
-    await _ensureTimeZoneSetup();
-
-    final scheduleMode = await _preferredAndroidScheduleMode();
-
-    final reminderCopy = await _resolveAttendanceReminderCopy();
-
-    final notificationDetails = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _attendanceReminderChannel.id,
-        _attendanceReminderChannel.name,
-        channelDescription: _attendanceReminderChannel.description,
-        importance: Importance.high,
-        priority: Priority.high,
-        styleInformation: BigTextStyleInformation(
-          reminderCopy.body,
-          contentTitle: reminderCopy.title,
-        ),
-      ),
-      iOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: false,
-        presentSound: true,
-      ),
-      macOS: DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: false,
-        presentSound: true,
-      ),
-    );
-
-    final prefs = await SharedPreferences.getInstance();
-    final reminderTime = _resolveReminderTime(prefs);
-    final lastMarkedEpoch = prefs.getInt(_lastAttendanceMarkedKey);
-    final now = tz.TZDateTime.now(tz.local);
-
-    final DateTime? lastMarkedDate = lastMarkedEpoch == null
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(lastMarkedEpoch);
-    final bool markedToday =
-        lastMarkedDate != null && _isSameDate(lastMarkedDate, now);
-
-    var scheduledDate = _nextReminderTime(
-      now,
-      hour: reminderTime.hour,
-      minute: reminderTime.minute,
-    );
-    String schedulingReason =
-        'Scheduling reminder for today at the configured time.';
-    if (markedToday) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-      schedulingReason =
-          'Attendance already marked today. Scheduling reminder for the next day.';
-    } else if (now.isAfter(scheduledDate)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-      schedulingReason =
-          'Current time is past the configured reminder. Scheduling for tomorrow.';
-    } else if (now.isAtSameMomentAs(scheduledDate)) {
-      schedulingReason =
-          'Current time matches the configured reminder. Scheduling it immediately for today.';
-    }
-
     await _plugin.cancel(_attendanceReminderNotificationId);
     debugPrint(
-      '[LocalNotificationService] Cancelled existing attendance reminder (id: '
-      '$_attendanceReminderNotificationId).',
+      '[LocalNotificationService] Attendance reminders are now managed by the '
+      'backend. Local scheduling has been disabled.',
     );
-    debugPrint(
-      '[LocalNotificationService] $schedulingReason\n'
-      '  • Configured reminder time: '
-          '${_formatReminderTimeLabel(reminderTime)}\n'
-      '  • Now: ${now.toString()}\n'
-      '  • Last marked date: ${lastMarkedDate?.toIso8601String() ?? 'never'}\n'
-      '  • Scheduling mode: $scheduleMode\n'
-      '  • Scheduled fire time: ${scheduledDate.toString()}',
-    );
-
-    try {
-      await _scheduleAttendanceReminder(
-        date: scheduledDate,
-        details: notificationDetails,
-        scheduleMode: scheduleMode,
-        copy: reminderCopy,
-      );
-
-      if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle &&
-          !await _isAttendanceReminderPending()) {
-        debugPrint(
-          '[LocalNotificationService] Exact alarm scheduling appears to be '
-          'blocked. Retrying attendance reminder with inexact mode.',
-        );
-        await _scheduleAttendanceReminder(
-          date: scheduledDate,
-          details: notificationDetails,
-          scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          copy: reminderCopy,
-        );
-      }
-    } on PlatformException catch (error, stackTrace) {
-      final isExactAlarmError = error.code == 'exact_alarms_not_permitted';
-      final alreadyInexact =
-          scheduleMode == AndroidScheduleMode.inexactAllowWhileIdle;
-
-      if (!isExactAlarmError || alreadyInexact) {
-        debugPrint('Failed to schedule daily attendance reminder: $error');
-        debugPrint('$stackTrace');
-        rethrow;
-      }
-
-      debugPrint(
-        'Exact alarm scheduling is not permitted. Falling back to inexact scheduling.',
-      );
-      debugPrint('$stackTrace');
-      debugPrint(
-        '[LocalNotificationService] Retrying scheduling with inexact mode for '
-        '${scheduledDate.toString()}.',
-      );
-
-      await _scheduleAttendanceReminder(
-        date: scheduledDate,
-        details: notificationDetails,
-        scheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        copy: reminderCopy,
-      );
-    }
   }
 
   static Future<void> onAttendanceMarked({DateTime? timestamp}) async {
@@ -603,30 +474,17 @@ class LocalNotificationService {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final markTime = timestamp ?? DateTime.now();
-    final normalized = DateTime(markTime.year, markTime.month, markTime.day);
-    await prefs.setInt(
-      _lastAttendanceMarkedKey,
-      normalized.millisecondsSinceEpoch,
-    );
+    if (!_initialized) {
+      await initialize();
+    }
 
-    await scheduleDailyAttendanceReminder();
+    await _plugin.cancel(_attendanceReminderNotificationId);
   }
 
   static Future<void> updateAttendanceReminderTime(TimeOfDay time) async {
     if (kIsWeb) {
       return;
     }
-
-    final prefs = await SharedPreferences.getInstance();
-    final reminderTime =
-        _clampReminderTime(_ReminderTime(hour: time.hour, minute: time.minute));
-    final formatted =
-        _formatStoredReminderTime(reminderTime.hour, reminderTime.minute);
-    await prefs.setString(_attendanceReminderTimeKey, formatted);
-
-    await scheduleDailyAttendanceReminder();
   }
 
   static Future<TimeOfDay> currentAttendanceReminderTime() async {

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../apis/auth_api.dart';
 import '../data/phone_number_metadata.dart';
 import '../repositories/auth_repository.dart';
+import '../utils/fcm_service.dart';
 import '../utils/session_manager.dart';
 
 abstract class AuthState {}
@@ -150,6 +151,7 @@ class AuthCubit extends Cubit<AuthState> {
         language: language,
       );
       await _persistSessionFromResponse(response);
+      await setupFCM();
       emit(AuthAuthenticated(data: response));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
@@ -197,6 +199,7 @@ class AuthCubit extends Cubit<AuthState> {
       final response =
           await _repository.login(login, password, countryCode: countryCode);
       await _persistSessionFromResponse(response);
+      await setupFCM();
       emit(AuthAuthenticated(data: response));
     } on ApiException catch (e) {
       emit(AuthError(e.message));
