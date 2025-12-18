@@ -4,6 +4,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 StreamSubscription<String>? _tokenRefreshSubscription;
 
+void _logToken(String? token) {
+  final cleanedToken = token?.trim();
+  if (cleanedToken == null || cleanedToken.isEmpty) {
+    print('FCM TOKEN: unavailable');
+    return;
+  }
+
+  print('FCM TOKEN: $cleanedToken');
+}
+
 Future<void> setupFCM() async {
   final messaging = FirebaseMessaging.instance;
 
@@ -14,12 +24,10 @@ Future<void> setupFCM() async {
   );
 
   final token = await messaging.getToken();
-  if (token != null) {
-    print("FCM TOKEN: $token");
-  }
+  _logToken(token);
 
   _tokenRefreshSubscription ??=
-      messaging.onTokenRefresh.listen((token) => print("FCM TOKEN: $token"));
+      messaging.onTokenRefresh.listen((token) => _logToken(token));
 }
 
 Future<void> disposeFCM() async {
