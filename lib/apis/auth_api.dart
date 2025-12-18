@@ -29,6 +29,7 @@ class AuthApi {
     String login,
     String password, {
     String? countryCode,
+    String? fcmToken,
   }) async {
     final uri = Uri.parse('$baseUrl/api/auth/login');
     final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
@@ -38,6 +39,9 @@ class AuthApi {
     };
     if (countryCode != null && countryCode.trim().isNotEmpty) {
       payload['country_code'] = countryCode.trim();
+    }
+    if (fcmToken != null && fcmToken.trim().isNotEmpty) {
+      payload['fcm_token'] = fcmToken.trim();
     }
     final body = jsonEncode(payload);
 
@@ -52,6 +56,7 @@ class AuthApi {
     required String phone,
     required String countryCode,
     required String language,
+    String? fcmToken,
   }) async {
     final uri = Uri.parse('$baseUrl/api/auth/register');
     final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
@@ -63,6 +68,7 @@ class AuthApi {
       'phone': phone,
       'country_code': countryCode,
       'language': language,
+      if (fcmToken != null && fcmToken.trim().isNotEmpty) 'fcm_token': fcmToken.trim(),
     });
     print('djsjd $body');
     return _sendPost(uri, headers: headers, body: body);

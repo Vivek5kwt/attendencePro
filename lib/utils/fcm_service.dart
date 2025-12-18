@@ -49,6 +49,20 @@ Future<void> _handleToken(String? token) async {
   await _syncTokenWithBackend(token);
 }
 
+Future<String?> fetchFcmToken() async {
+  final messaging = FirebaseMessaging.instance;
+
+  await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  final token = await messaging.getToken();
+  _logToken(token);
+  return token?.trim();
+}
+
 Future<void> setupFCM() async {
   final messaging = FirebaseMessaging.instance;
 
