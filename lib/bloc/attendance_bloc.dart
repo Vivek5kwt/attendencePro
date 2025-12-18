@@ -3,7 +3,6 @@ import 'package:uuid/uuid.dart';
 
 import '../models/student.dart';
 import '../repositories/attendance_repository.dart';
-import '../utils/local_notification_service.dart';
 import 'attendance_event.dart';
 import 'attendance_state.dart';
 
@@ -74,7 +73,6 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
       emit(AttendanceLoading());
       try {
         await repository.saveStudents(current.students);
-        await LocalNotificationService.onAttendanceMarked();
         emit(current.copyWith(lastSaved: DateTime.now()));
       } catch (e) {
         emit(AttendanceError('Failed to save attendance'));
