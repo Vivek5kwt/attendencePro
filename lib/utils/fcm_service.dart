@@ -62,7 +62,7 @@ Future<void> setupFCM() async {
   await _handleToken(token);
 
   _tokenRefreshSubscription ??=
-      messaging.onTokenRefresh.asyncMap(_handleToken).listen((_) {});
+      messaging.onTokenRefresh.listen((token) => unawaited(_handleToken(token)));
 }
 
 Future<void> disposeFCM() async {
