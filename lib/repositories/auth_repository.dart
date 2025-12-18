@@ -9,8 +9,14 @@ class AuthRepository {
     String login,
     String password, {
     String? countryCode,
+    String? fcmToken,
   }) {
-    return _api.login(login, password, countryCode: countryCode);
+    return _api.login(
+      login,
+      password,
+      countryCode: countryCode,
+      fcmToken: fcmToken,
+    );
   }
 
   Future<Map<String, dynamic>> register({
@@ -21,6 +27,7 @@ class AuthRepository {
     required String phone,
     required String countryCode,
     required String language,
+    String? fcmToken,
   }) {
     return _api.register(
       name: name,
@@ -30,6 +37,7 @@ class AuthRepository {
       phone: phone,
       countryCode: countryCode,
       language: language,
+      fcmToken: fcmToken,
     );
   }
 

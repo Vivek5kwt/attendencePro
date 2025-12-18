@@ -141,6 +141,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     emit(AuthLoading());
     try {
+      final fcmToken = await fetchFcmToken();
       final response = await _repository.register(
         name: name,
         email: email,
@@ -149,6 +150,7 @@ class AuthCubit extends Cubit<AuthState> {
         phone: phone,
         countryCode: countryCode,
         language: language,
+        fcmToken: fcmToken,
       );
       await _persistSessionFromResponse(response);
       await setupFCM();
@@ -196,8 +198,9 @@ class AuthCubit extends Cubit<AuthState> {
 
     emit(AuthLoading());
     try {
+      final fcmToken = await fetchFcmToken();
       final response =
-          await _repository.login(login, password, countryCode: countryCode);
+          await _repository.login(login, password, countryCode: countryCode, fcmToken: fcmToken);
       await _persistSessionFromResponse(response);
       await setupFCM();
       emit(AuthAuthenticated(data: response));
