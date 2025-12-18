@@ -45,6 +45,8 @@ class AuthApi {
     }
     final body = jsonEncode(payload);
 
+    print('LOGIN REQUEST BODY: $body');
+
     return _sendPost(uri, headers: headers, body: body);
   }
 
@@ -70,7 +72,7 @@ class AuthApi {
       'language': language,
       if (fcmToken != null && fcmToken.trim().isNotEmpty) 'fcm_token': fcmToken.trim(),
     });
-    print('djsjd $body');
+    print('REGISTER REQUEST BODY: $body');
     return _sendPost(uri, headers: headers, body: body);
   }
 
