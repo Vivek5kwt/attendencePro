@@ -15,9 +15,7 @@ import '../repositories/reports_repository.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
-import '../utils/local_notification_service.dart';
 import '../utils/responsive.dart';
-import 'notification_permission_prompt.dart';
 
 class AttendanceProApp extends StatelessWidget {
   final AttendanceRepository repository;
@@ -61,12 +59,6 @@ class AttendanceProApp extends StatelessWidget {
         child: Builder(
           builder: (context) {
             final appCubit = context.read<AppCubit>();
-            LocalNotificationService.registerAttendanceReminderTapHandler(() async {
-              appCubit.showHome(openDashboardOnLogin: true);
-            });
-            LocalNotificationService.registerDashboardDeepLinkHandler(() async {
-              appCubit.showHome(openDashboardOnLogin: true);
-            });
             final appRouter = AppRouter(appCubit: appCubit);
 
             return BlocBuilder<LocaleCubit, Locale>(
@@ -108,9 +100,7 @@ class AttendanceProApp extends StatelessWidget {
                       ),
                       child: DefaultTextStyle.merge(
                         style: const TextStyle(fontFamily: AppString.fontFamily),
-                        child: NotificationPermissionPrompt(
-                          child: child ?? const SizedBox.shrink(),
-                        ),
+                        child: child ?? const SizedBox.shrink(),
                       ),
                     );
                   },

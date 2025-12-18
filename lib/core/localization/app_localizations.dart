@@ -424,6 +424,8 @@ class AppLocalizations {
   String get attendanceSubmitSuccess => _value('attendanceSubmitSuccess');
   String get attendanceAlreadyMarkedMessage =>
       _value('attendanceAlreadyMarkedMessage');
+  String get attendanceAlreadySubmittedNotice =>
+      _value('attendanceAlreadySubmittedNotice');
   String get attendanceSubmitFailed => _value('attendanceSubmitFailed');
   String get attendanceAddBundleButton =>
       _value('attendanceAddBundleButton');

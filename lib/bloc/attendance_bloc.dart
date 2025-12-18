@@ -74,7 +74,6 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
       emit(AttendanceLoading());
       try {
         await repository.saveStudents(current.students);
-        await LocalNotificationService.onAttendanceMarked();
         emit(current.copyWith(lastSaved: DateTime.now()));
       } catch (e) {
         emit(AttendanceError('Failed to save attendance'));

@@ -138,8 +138,8 @@ abstract final class AppString {
       'contractWorkNameLabel': 'Contract name',
       'contractWorkSelectWorkHint': 'Select Work',
       'contractWorkCustomOption': 'Custom Work',
-      'contractWorkRateLabel': 'Salary',
-      'contractWorkRateHint': 'Enter salary',
+      'contractWorkRateLabel': 'Rate',
+      'contractWorkRateHint': 'Enter rate',
       'contractWorkPricePerBinHint': 'Price Per 1 Bin',
       'contractWorkPricePerCrateHint': 'Price Per 1 Crate',
       'contractWorkPricePerBunchesHint': 'Price Per 100 Bunches',
@@ -166,7 +166,7 @@ abstract final class AppString {
       'contractWorkUnitsLabel': 'Units',
       'contractWorkUnitsHint': 'Enter units',
       'contractWorkQuantityHint': 'Enter Quantity of {unit}',
-      'contractWorkRateRequiredMessage': 'Please enter a valid salary.',
+      'contractWorkRateRequiredMessage': 'Please enter a valid rate.',
       'contractWorkNameRequiredMessage': 'Please select or enter a work name.',
       'contractWorkTypeLockedMessage':
           'Type is locked to Bin after saving.',
@@ -362,6 +362,8 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'Attendance saved successfully',
       'attendanceAlreadyMarkedMessage':
           'Attendance already marked for today. To make changes, please use the Edit option.',
+      'attendanceAlreadySubmittedNotice':
+          'Attendance already submitted for this date.',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
       'attendanceAddBundleButton': 'Add bundle',
       'attendanceRemoveBundleTooltip': 'Remove bundle',
@@ -617,8 +619,8 @@ abstract final class AppString {
       'contractWorkNameLabel': 'कॉन्ट्रैक्ट का नाम',
       'contractWorkSelectWorkHint': 'कार्य चुनें',
       'contractWorkCustomOption': 'कस्टम कार्य',
-      'contractWorkRateLabel': 'वेतन',
-      'contractWorkRateHint': 'वेतन दर्ज करें',
+      'contractWorkRateLabel': 'दर',
+      'contractWorkRateHint': 'दर दर्ज करें',
       'contractWorkPricePerBinHint': 'प्रति 1 बिन मूल्य',
       'contractWorkPricePerCrateHint': 'प्रति 1 क्रेट मूल्य',
       'contractWorkPricePerBunchesHint': 'प्रति 100 गुच्छे मूल्य',
@@ -644,7 +646,7 @@ abstract final class AppString {
       'contractWorkUnitsLabel': 'इकाइयाँ',
       'contractWorkUnitsHint': 'इकाइयों की संख्या दर्ज करें',
       'contractWorkQuantityHint': '{unit} की संख्या दर्ज करें',
-      'contractWorkRateRequiredMessage': 'कृपया मान्य वेतन दर्ज करें।',
+      'contractWorkRateRequiredMessage': 'कृपया मान्य दर दर्ज करें।',
       'contractWorkNameRequiredMessage': 'कृपया कोई कार्य नाम चुनें या दर्ज करें।',
       'contractWorkTypeLockedMessage':
           'सहेजे गए कॉन्ट्रैक्ट कार्यों के लिए प्रकार बिन पर लॉक रहता है।',
@@ -835,6 +837,7 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
       'attendanceAlreadyMarkedMessage':
           'आज की उपस्थिति पहले ही दर्ज की जा चुकी है। बदलाव करने के लिए कृपया संपादन विकल्प का उपयोग करें।',
+      'attendanceAlreadySubmittedNotice': 'इस तारीख की उपस्थिति पहले ही जमा हो चुकी है।',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
       'attendanceAddBundleButton': 'बंडल जोड़ें',
       'attendanceRemoveBundleTooltip': 'बंडल हटाएं',
@@ -1086,8 +1089,8 @@ abstract final class AppString {
       'contractWorkNameLabel': 'ਕਾਂਟ੍ਰੈਕਟ ਨਾਮ',
       'contractWorkSelectWorkHint': 'ਕੰਮ ਚੁਣੋ',
       'contractWorkCustomOption': 'ਕਸਟਮ ਕੰਮ',
-      'contractWorkRateLabel': 'ਤਨਖਾਹ',
-      'contractWorkRateHint': 'ਤਨਖਾਹ ਦਰਜ ਕਰੋ',
+      'contractWorkRateLabel': 'ਦਰ',
+      'contractWorkRateHint': 'ਦਰ ਦਰਜ ਕਰੋ',
       'contractWorkPricePerBinHint': '1 ਬਿਨ ਪ੍ਰਤੀ ਕੀਮਤ',
       'contractWorkPricePerCrateHint': '1 ਕਰੇਟ ਪ੍ਰਤੀ ਕੀਮਤ',
       'contractWorkPricePerBunchesHint': '100 ਗੁੱਛਿਆਂ ਪ੍ਰਤੀ ਕੀਮਤ',
@@ -1114,7 +1117,7 @@ abstract final class AppString {
       'contractWorkUnitsLabel': 'ਯੂਨਿਟ',
       'contractWorkUnitsHint': 'ਯੂਨਿਟ ਦਰਜ ਕਰੋ',
       'contractWorkQuantityHint': '{unit} ਦੀ ਗਿਣਤੀ ਦਰਜ ਕਰੋ',
-      'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਤਨਖਾਹ ਦਰਜ ਕਰੋ।',
+      'contractWorkRateRequiredMessage': 'ਕਿਰਪਾ ਕਰਕੇ ਵੈਧ ਦਰ ਦਰਜ ਕਰੋ।',
       'contractWorkNameRequiredMessage':
           'ਕਿਰਪਾ ਕਰਕੇ ਕੋਈ ਕੰਮ ਦਾ ਨਾਮ ਚੁਣੋ ਜਾਂ ਦਰਜ ਕਰੋ।',
       'contractWorkTypeLockedMessage':
@@ -1306,6 +1309,8 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
       'attendanceAlreadyMarkedMessage':
           'ਅੱਜ ਦੀ ਹਾਜ਼ਰੀ ਪਹਿਲਾਂ ਹੀ ਦਰਜ ਕੀਤੀ ਜਾ ਚੁੱਕੀ ਹੈ। ਤਬਦੀਲੀਆਂ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਐਡਿਟ ਵਿਕਲਪ ਵਰਤੋਂ।',
+      'attendanceAlreadySubmittedNotice':
+          'ਇਸ ਤਾਰੀਖ ਲਈ ਹਾਜ਼ਰੀ ਪਹਿਲਾਂ ਹੀ ਜਮ੍ਹਾਂ ਕੀਤੀ ਜਾ ਚੁੱਕੀ ਹੈ।',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendanceAddBundleButton': 'ਬੰਡਲ ਸ਼ਾਮਲ ਕਰੋ',
       'attendanceRemoveBundleTooltip': 'ਬੰਡਲ ਹਟਾਓ',
@@ -1561,8 +1566,8 @@ abstract final class AppString {
       'contractWorkNameLabel': 'Nome contratto',
       'contractWorkSelectWorkHint': 'Seleziona lavoro',
       'contractWorkCustomOption': 'Lavoro personalizzato',
-      'contractWorkRateLabel': 'Salario',
-      'contractWorkRateHint': 'Inserisci il salario',
+      'contractWorkRateLabel': 'Tariffa',
+      'contractWorkRateHint': 'Inserisci la tariffa',
       'contractWorkPricePerBinHint': 'Prezzo per 1 cassone',
       'contractWorkPricePerCrateHint': 'Prezzo per 1 cassetta',
       'contractWorkPricePerBunchesHint': 'Prezzo per 100 mazzi',
@@ -1589,7 +1594,7 @@ abstract final class AppString {
       'contractWorkUnitsLabel': 'Unità',
       'contractWorkUnitsHint': 'Inserisci le unità',
       'contractWorkQuantityHint': 'Inserisci la quantità di {unit}',
-      'contractWorkRateRequiredMessage': 'Inserisci un salario valido.',
+      'contractWorkRateRequiredMessage': 'Inserisci una tariffa valida.',
       'contractWorkNameRequiredMessage':
           'Seleziona o inserisci il nome del lavoro.',
       'contractWorkTypeLockedMessage':
@@ -1787,6 +1792,8 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'Presenza salvata con successo',
       'attendanceAlreadyMarkedMessage':
           'Presenza già registrata per oggi. Per apportare modifiche, usa l\'opzione Modifica.',
+      'attendanceAlreadySubmittedNotice':
+          'Presenza già inviata per questa data.',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
       'attendanceAddBundleButton': 'Aggiungi bundle',
       'attendanceRemoveBundleTooltip': 'Rimuovi bundle',

@@ -68,11 +68,8 @@ class _NotificationPermissionPromptState
     }
 
     if (result == true) {
-      final granted = await LocalNotificationService.requestPermissions();
+      await LocalNotificationService.requestPermissions();
       await LocalNotificationService.markPermissionPromptAnswered();
-      if (granted) {
-        await LocalNotificationService.scheduleDailyAttendanceReminder();
-      }
       _promptHandled = true;
     } else if (result == false) {
       await LocalNotificationService.markPermissionPromptAnswered();
