@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/constants/app_assets.dart';
 import '../utils/responsive.dart';
+import '../utils/fcm_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,6 +12,18 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    setupFCM();
+  }
+
+  @override
+  void dispose() {
+    disposeFCM();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
