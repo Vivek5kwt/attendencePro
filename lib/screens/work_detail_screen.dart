@@ -2298,6 +2298,20 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     _showSnack(message);
   }
 
+  void _showLockedAttendanceNotice({bool force = false}) {
+    if (!mounted) {
+      return;
+    }
+    if (!force && _attendanceStatusMessage != null) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    _setAttendanceStatus(
+      l.attendanceAlreadySubmittedNotice,
+      isError: false,
+    );
+  }
+
   void _applyAlreadySubmittedLock(String message) {
     if (!mounted) {
       return;
@@ -2305,6 +2319,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     if (!_isAlreadySubmittedResponseMessage(message)) {
       return;
     }
+    _showLockedAttendanceNotice(force: true);
     final normalizedSelectedDate = _normalizeDateOnly(_selectedDate);
     final normalizedToday = _normalizeDateOnly(DateTime.now());
     setState(() {
@@ -2628,11 +2643,7 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         final message = _localizeAttendanceServerMessage(
           _extractResponseMessage(response) ?? l.attendanceSubmitSuccess,
         );
-        _setAttendanceStatus(
-          message,
-          isError: false,
-          autoHideDuration: const Duration(seconds: 3),
-        );
+        _showLockedAttendanceNotice(force: true);
         _showSnack(message);
         if (mounted) {
           setState(() {
@@ -2861,12 +2872,8 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
       final message = _localizeAttendanceServerMessage(
         _extractResponseMessage(response) ?? l.attendanceSubmitSuccess,
       );
-      _setAttendanceStatus(
-        message,
-        isError: false,
-        autoHideDuration: const Duration(seconds: 3),
-      );
       _showSnack(message);
+      _showLockedAttendanceNotice(force: true);
       if (mounted) {
         setState(() {
           if (normalizedSelectedDate == normalizedToday) {
@@ -3223,6 +3230,9 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         _isTodayAttendanceMarked = isTodayMarked;
         _updateAttendanceLockForDate(DateTime.now(), isLocked: isTodayMarked);
       });
+      if (isTodayMarked) {
+        _showLockedAttendanceNotice();
+      }
       _applyAttendanceDetailsFromSummary(summary.todayEntry);
       await _refreshMissedAttendance(showDialog: true);
     } on DashboardAuthException {
@@ -3713,10 +3723,10 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
     Widget buildAttendanceSection() {
       final bool isFormLocked = _isSelectedDateLocked;
       final bool allowContractUpdates = _resolvedWork.isContract;
-      final bool isSubmitLocked =
-          isFormLocked && !(allowContractUpdates && _contractFieldsEnabled);
+      final bool isSubmitLocked = isFormLocked;
       final bool areHourlyFieldsLocked = isFormLocked;
-      final bool contractActionsLocked = !allowContractUpdates;
+      final bool contractActionsLocked =
+          isFormLocked || !allowContractUpdates;
       return _AttendanceSection(
         dateLabel: dateLabel,
         onDateTap: _handleDateTap,
@@ -3738,9 +3748,11 @@ class _WorkDetailScreenState extends State<WorkDetailScreen> {
         showContractFields: _resolvedWork.isContract,
         showContractWorkButton: _resolvedWork.isContract &&
             contractItems.isNotEmpty &&
-            !_contractFieldsEnabled,
-        onContractWorkTap:
-            _resolvedWork.isContract ? _handleContractEntryEnable : null,
+            !_contractFieldsEnabled &&
+            !isFormLocked,
+        onContractWorkTap: _resolvedWork.isContract && !isFormLocked
+            ? _handleContractEntryEnable
+            : null,
         contractFieldsEnabled: _contractFieldsEnabled,
         isContractFieldsLoading: _isLoadingContractTypes,
         contractFieldsError: _contractTypesError,
@@ -6560,6 +6572,13 @@ class _AttendanceSection extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
+            if (isSubmitLocked) ...[
+              _AttendanceLockedBanner(
+                message: l.attendanceAlreadySubmittedNotice,
+                onTap: onAttendanceLockedTap,
+              ),
+              const SizedBox(height: 12),
+            ],
             LayoutBuilder(
               builder: (context, constraints) {
                 final maxWidth = constraints.maxWidth;
@@ -7031,6 +7050,75 @@ class _AttendanceSection extends StatelessWidget {
     );
   }
 
+}
+
+class _AttendanceLockedBanner extends StatelessWidget {
+  const _AttendanceLockedBanner({
+    required this.message,
+    this.onTap,
+  });
+
+  final String message;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1D4ED8).withOpacity(0.08),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.lock_clock_rounded,
+            color: Color(0xFF1D4ED8),
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            message,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFF1F2937),
+                  fontWeight: FontWeight.w700,
+                ) ??
+                const TextStyle(
+                  color: Color(0xFF1F2937),
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ),
+      ],
+    );
+
+    final card = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: content,
+    );
+
+    if (onTap == null) {
+      return card;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        splashColor: Colors.white.withOpacity(0.08),
+        highlightColor: Colors.white.withOpacity(0.04),
+        child: card,
+      ),
+    );
+  }
 }
 
 class _DashedBorderCard extends StatelessWidget {

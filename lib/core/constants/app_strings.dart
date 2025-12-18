@@ -362,6 +362,8 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'Attendance saved successfully',
       'attendanceAlreadyMarkedMessage':
           'Attendance already marked for today. To make changes, please use the Edit option.',
+      'attendanceAlreadySubmittedNotice':
+          'Attendance already submitted for this date.',
       'attendanceSubmitFailed': 'Unable to save attendance. Please try again.',
       'attendanceAddBundleButton': 'Add bundle',
       'attendanceRemoveBundleTooltip': 'Remove bundle',
@@ -835,6 +837,7 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'उपस्थिति सफलतापूर्वक सहेजी गई',
       'attendanceAlreadyMarkedMessage':
           'आज की उपस्थिति पहले ही दर्ज की जा चुकी है। बदलाव करने के लिए कृपया संपादन विकल्प का उपयोग करें।',
+      'attendanceAlreadySubmittedNotice': 'इस तारीख की उपस्थिति पहले ही जमा हो चुकी है।',
       'attendanceSubmitFailed': 'उपस्थिति सहेजने में असमर्थ। कृपया पुनः प्रयास करें।',
       'attendanceAddBundleButton': 'बंडल जोड़ें',
       'attendanceRemoveBundleTooltip': 'बंडल हटाएं',
@@ -1306,6 +1309,8 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'ਹਾਜ਼ਰੀ ਸਫਲਤਾਪੂਰਵਕ ਸੰਭਾਲੀ ਗਈ',
       'attendanceAlreadyMarkedMessage':
           'ਅੱਜ ਦੀ ਹਾਜ਼ਰੀ ਪਹਿਲਾਂ ਹੀ ਦਰਜ ਕੀਤੀ ਜਾ ਚੁੱਕੀ ਹੈ। ਤਬਦੀਲੀਆਂ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਐਡਿਟ ਵਿਕਲਪ ਵਰਤੋਂ।',
+      'attendanceAlreadySubmittedNotice':
+          'ਇਸ ਤਾਰੀਖ ਲਈ ਹਾਜ਼ਰੀ ਪਹਿਲਾਂ ਹੀ ਜਮ੍ਹਾਂ ਕੀਤੀ ਜਾ ਚੁੱਕੀ ਹੈ।',
       'attendanceSubmitFailed': 'ਹਾਜ਼ਰੀ ਸੰਭਾਲਣ ਵਿੱਚ ਅਸਮਰੱਥ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
       'attendanceAddBundleButton': 'ਬੰਡਲ ਸ਼ਾਮਲ ਕਰੋ',
       'attendanceRemoveBundleTooltip': 'ਬੰਡਲ ਹਟਾਓ',
@@ -1787,6 +1792,8 @@ abstract final class AppString {
       'attendanceSubmitSuccess': 'Presenza salvata con successo',
       'attendanceAlreadyMarkedMessage':
           'Presenza già registrata per oggi. Per apportare modifiche, usa l\'opzione Modifica.',
+      'attendanceAlreadySubmittedNotice':
+          'Presenza già inviata per questa data.',
       'attendanceSubmitFailed': 'Impossibile salvare la presenza. Riprova.',
       'attendanceAddBundleButton': 'Aggiungi bundle',
       'attendanceRemoveBundleTooltip': 'Rimuovi bundle',
