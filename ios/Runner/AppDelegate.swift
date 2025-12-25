@@ -1,27 +1,47 @@
-import Flutter
 import UIKit
+import Flutter
+import FirebaseCore
+import FirebaseMessaging
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(
-        name: "com.attendancepro/native_timezone",
-        binaryMessenger: controller.binaryMessenger
-      )
 
-      channel.setMethodCallHandler { call, result in
-        if call.method == "getLocalTimezone" {
-          result(TimeZone.current.identifier)
-        } else {
-          result(FlutterMethodNotImplemented)
-        }
-      }
-    }
+    // Initialize Firebase
+    FirebaseApp.configure()
+    print("🔥 FIREBASE INITIALIZED SUCCESSFULLY")
+
+    // Register Flutter plugins
+    GeneratedPluginRegistrant.register(with: self)
+
+    // Register for APNs notifications
+    application.registerForRemoteNotifications()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // 🔥 Called when APNs token is received
+  override func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+    let token = tokenParts.joined()
+    print("📨 APNs DEVICE TOKEN: \(token)")
+
+    // Pass token to Firebase Messaging
+    Messaging.messaging().apnsToken = deviceToken
+  }
+
+  // ❌ Called when APNs token fails
+  override func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    print("🚨 Failed to register for APNs: \(error)")
   }
 }

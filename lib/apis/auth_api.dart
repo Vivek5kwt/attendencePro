@@ -30,8 +30,10 @@ class AuthApi {
     String password, {
     String? countryCode,
     String? fcmToken,
-  }) async {
+  })
+  async {
     final uri = Uri.parse('$baseUrl/api/auth/login');
+    print('sdjnffjs ${fcmToken}');
     final headers = {'Content-Type': 'application/json', 'Accept': 'application/json'};
     final payload = <String, dynamic>{
       'login': login,
