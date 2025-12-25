@@ -26,7 +26,7 @@ Future<void> main() async {
 
   runApp(AttendanceProApp(repository: repo));
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    setupFCM();
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await setupFCM();
   });
 }

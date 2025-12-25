@@ -23,8 +23,7 @@ Future<void> _syncTokenWithBackend(String? token) async {
     return;
   }
 
-  // ⚠️ Intentionally skipped
-  // Token should be sent after login/signup
+  // ⚠️ Intentionally skipped — token send login/signup ke baad hota hai
   debugPrint('[FCM] Backend sync skipped (handled post-login)');
 }
 
@@ -34,8 +33,7 @@ Future<void> _handleToken(String? token) async {
   await _syncTokenWithBackend(token);
 }
 
-/// ⚠️ DO NOT USE directly on iOS before APNs token
-/// Kept for Android / future-safe usage
+/// ⚠️ iOS me APNs token ready hone tak wait karo
 Future<String?> fetchFcmToken() async {
   final messaging = FirebaseMessaging.instance;
 
@@ -45,7 +43,6 @@ Future<String?> fetchFcmToken() async {
     sound: true,
   );
 
-  // 🔥 iOS: wait until APNs token is ready
   if (Platform.isIOS) {
     String? apns;
     int retry = 0;
@@ -62,7 +59,6 @@ Future<String?> fetchFcmToken() async {
   return token?.trim();
 }
 
-
 /// ✅ SAFE FCM SETUP (iOS + Android)
 Future<void> setupFCM() async {
   final messaging = FirebaseMessaging.instance;
@@ -74,7 +70,14 @@ Future<void> setupFCM() async {
     sound: true,
   );
 
-  // 2️⃣ iOS: wait for APNs token BEFORE FCM
+  // 2️⃣ iOS → allow foreground popup
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // 3️⃣ iOS: wait for APNs token
   if (Platform.isIOS) {
     String? apnsToken;
     int retry = 0;
@@ -89,21 +92,39 @@ Future<void> setupFCM() async {
 
     if (apnsToken == null) {
       debugPrint('[FCM] ❌ APNs token not ready. Skipping FCM init.');
-      return; // ⛔ Prevent crash
+      return;
     }
 
     debugPrint('[FCM] ✅ APNs token ready');
   }
 
-  // 3️⃣ SAFE: get FCM token
+  // 4️⃣ Get FCM token
   final token = await messaging.getToken();
   await _handleToken(token);
 
-  // 4️⃣ Listen for token refresh
+  // 5️⃣ Listen for token refresh
   _tokenRefreshSubscription ??=
       messaging.onTokenRefresh.listen((token) {
         unawaited(_handleToken(token));
       });
+
+  // 6️⃣ FOREGROUND notification listener
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    debugPrint('📩 Foreground push received');
+    debugPrint('TITLE: ${message.notification?.title}');
+    debugPrint('BODY : ${message.notification?.body}');
+  });
+
+  // 7️⃣ When user taps notification
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    debugPrint('📲 Notification tapped — app opened');
+  });
+
+  // 8️⃣ Check if app opened from terminated
+  final initialMsg = await messaging.getInitialMessage();
+  if (initialMsg != null) {
+    debugPrint('🚀 App launched via notification');
+  }
 }
 
 /// Dispose safely
