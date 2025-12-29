@@ -266,7 +266,6 @@ class LocalNotificationService {
 
     if (!_initialized) {
       await initialize();
-      return _notificationsPermissionGranted ?? false;
     }
 
     return _ensurePermissionsRequested(markPromptAnswered: markPromptAnswered);
