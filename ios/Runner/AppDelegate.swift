@@ -2,6 +2,7 @@ import UIKit
 import Flutter
 import FirebaseCore
 import FirebaseMessaging
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -20,6 +21,10 @@ import FirebaseMessaging
 
     // Register for APNs notifications
     application.registerForRemoteNotifications()
+
+    if #available(iOS 10.0, *) {
+      UNUserNotificationCenter.current().delegate = self
+    }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
