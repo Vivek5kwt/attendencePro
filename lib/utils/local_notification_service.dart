@@ -141,6 +141,30 @@ class LocalNotificationService {
   static Future<void> _requestPermissions() async {
     final status = await Permission.notification.request();
     _notificationsPermissionGranted = _isPermissionStatusGranted(status);
+
+    final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    final macosPlugin = _plugin.resolvePlatformSpecificImplementation<
+        MacOSFlutterLocalNotificationsPlugin>();
+
+    bool? platformGranted;
+    if (iosPlugin != null) {
+      platformGranted = await iosPlugin.requestPermissions(
+        alert: true,
+        badge: false,
+        sound: true,
+      );
+    } else if (macosPlugin != null) {
+      platformGranted = await macosPlugin.requestPermissions(
+        alert: true,
+        badge: false,
+        sound: true,
+      );
+    }
+
+    if (platformGranted != null) {
+      _notificationsPermissionGranted = platformGranted;
+    }
   }
 
   static Future<_NotificationPermissionStatus> _currentPermissionStatus() async {
