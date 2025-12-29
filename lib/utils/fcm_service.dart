@@ -23,16 +23,34 @@ Future<void> initLocalNotifications() async {
   const AndroidInitializationSettings androidSettings =
   AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  const InitializationSettings settings =
-  InitializationSettings(android: androidSettings);
+  const DarwinInitializationSettings iosSettings =
+  DarwinInitializationSettings();
+
+  const InitializationSettings settings = InitializationSettings(
+    android: androidSettings,
+    iOS: iosSettings,
+  );
 
   await flutterLocalNotificationsPlugin.initialize(settings);
 
+  // Android channel
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
       AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(_androidChannel);
+
+  // (Optional) Request local notification permission on iOS
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      IOSFlutterLocalNotificationsPlugin>()
+      ?.requestPermissions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
 }
+
 
 void _logToken(String? token) {
   final cleaned = token?.trim();

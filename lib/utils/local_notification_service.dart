@@ -27,7 +27,7 @@ class LocalNotificationService {
   LocalNotificationService._();
 
   static final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
   static bool _timeZoneInitialized = false;
   static bool? _notificationsPermissionGranted;
@@ -37,7 +37,7 @@ class LocalNotificationService {
       'notifications_permission_prompt_answered';
 
   static const AndroidNotificationChannel _downloadChannel =
-      AndroidNotificationChannel(
+  AndroidNotificationChannel(
     'downloads_channel',
     'Downloads',
     description: 'Notifications about saved reports',
@@ -45,7 +45,7 @@ class LocalNotificationService {
   );
 
   static const AndroidNotificationChannel _generalChannel =
-      AndroidNotificationChannel(
+  AndroidNotificationChannel(
     'general_channel',
     'General',
     description: 'General purpose notifications',
@@ -53,7 +53,7 @@ class LocalNotificationService {
   );
 
   static const AndroidNotificationChannel _attendanceReminderChannel =
-      AndroidNotificationChannel(
+  AndroidNotificationChannel(
     'attendance_reminder_channel',
     'Attendance Reminders',
     description: 'Daily reminders to mark attendance',
@@ -64,7 +64,7 @@ class LocalNotificationService {
   static const String _lastAttendanceMarkedKey = 'last_attendance_marked_epoch';
   static const String _attendanceReminderTimeKey = 'attendance_reminder_time';
   static const _ReminderTime _attendanceReminderDefaultTime =
-      _ReminderTime(hour: 20, minute: 0);
+  _ReminderTime(hour: 20, minute: 0);
   static const int _attendanceReminderWindowStartHour = 20;
   static const int _attendanceReminderWindowEndHour = 22;
   static const String _attendanceReminderTitle = 'Attendance Reminder';
@@ -108,7 +108,7 @@ class LocalNotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: _handleNotificationResponse,
       onDidReceiveBackgroundNotificationResponse:
-          LocalNotificationService._handleBackgroundNotificationResponse,
+      LocalNotificationService._handleBackgroundNotificationResponse,
     );
 
     final launchDetails = await _plugin.getNotificationAppLaunchDetails();
@@ -119,7 +119,7 @@ class LocalNotificationService {
 
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        AndroidFlutterLocalNotificationsPlugin>();
     await androidImplementation?.createNotificationChannel(_downloadChannel);
     await androidImplementation
         ?.createNotificationChannel(_attendanceReminderChannel);
@@ -304,7 +304,7 @@ class LocalNotificationService {
     if (!permissionGranted) {
       debugPrint(
         '[LocalNotificationService] Notification permission not granted. '
-        'Skipping test notification.',
+            'Skipping test notification.',
       );
       return;
     }
@@ -357,7 +357,7 @@ class LocalNotificationService {
     if (!permissionGranted) {
       debugPrint(
         '[LocalNotificationService] Notification permission not granted. '
-        'Skipping download notification for $fileName.',
+            'Skipping download notification for $fileName.',
       );
       return;
     }
@@ -404,8 +404,8 @@ class LocalNotificationService {
   }
 
   static Future<void> _handleNotificationResponse(
-    NotificationResponse response,
-  ) async {
+      NotificationResponse response,
+      ) async {
     if (kIsWeb) {
       return;
     }
@@ -447,12 +447,13 @@ class LocalNotificationService {
 
   @pragma('vm:entry-point')
   static Future<void> _handleBackgroundNotificationResponse(
-    NotificationResponse response,
-  ) async {
+      NotificationResponse response,
+      ) async {
     WidgetsFlutterBinding.ensureInitialized();
     await _handleNotificationResponse(response);
   }
 
+  /// Backend now manages daily reminders – local scheduling disabled
   static Future<void> scheduleDailyAttendanceReminder() async {
     if (kIsWeb) {
       return;
@@ -465,7 +466,7 @@ class LocalNotificationService {
     await _plugin.cancel(_attendanceReminderNotificationId);
     debugPrint(
       '[LocalNotificationService] Attendance reminders are now managed by the '
-      'backend. Local scheduling has been disabled.',
+          'backend. Local scheduling has been disabled.',
     );
   }
 
@@ -485,6 +486,7 @@ class LocalNotificationService {
     if (kIsWeb) {
       return;
     }
+    // Intentionally left empty as backend handles scheduling now
   }
 
   static Future<TimeOfDay> currentAttendanceReminderTime() async {
@@ -537,7 +539,7 @@ class LocalNotificationService {
   static Future<AndroidScheduleMode> _preferredAndroidScheduleMode() async {
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidImplementation == null) {
       return AndroidScheduleMode.exactAllowWhileIdle;
@@ -576,9 +578,9 @@ class LocalNotificationService {
   static _ReminderTime _clampReminderTime(_ReminderTime time) {
     final reminderDuration = Duration(hours: time.hour, minutes: time.minute);
     final start =
-        Duration(hours: _attendanceReminderWindowStartHour, minutes: 0);
+    Duration(hours: _attendanceReminderWindowStartHour, minutes: 0);
     final latestAllowed =
-        Duration(hours: _attendanceReminderWindowEndHour, minutes: 0);
+    Duration(hours: _attendanceReminderWindowEndHour, minutes: 0);
 
     if (reminderDuration < start) {
       return _attendanceReminderDefaultTime;
@@ -626,10 +628,10 @@ class LocalNotificationService {
   }
 
   static tz.TZDateTime _nextReminderTime(
-    tz.TZDateTime from, {
-    required int hour,
-    required int minute,
-  }) {
+      tz.TZDateTime from, {
+        required int hour,
+        required int minute,
+      }) {
     final scheduled = tz.TZDateTime(
       tz.local,
       from.year,
@@ -644,6 +646,8 @@ class LocalNotificationService {
     return scheduled;
   }
 
+  /// NOTE: This is currently unused because backend manages reminders,
+  /// but it is kept here in case you want to re-enable local scheduling later.
   static Future<void> _scheduleAttendanceReminder({
     required tz.TZDateTime date,
     required NotificationDetails details,
@@ -656,15 +660,10 @@ class LocalNotificationService {
       copy.body,
       date,
       details,
-      // Ensure the reminder still fires even if the device enters doze mode
-      // while the app is terminated.
-      androidAllowWhileIdle: true,
       androidScheduleMode: scheduleMode,
       payload: _encodePayload(<String, String>{
         _payloadTypeKey: _payloadTypeAttendanceReminder,
       }),
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.wallClockTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -700,12 +699,12 @@ class LocalNotificationService {
   }
 
   static _AttendanceReminderCopy _buildAttendanceReminderCopy(
-    String? languageCode,
-  ) {
+      String? languageCode,
+      ) {
     final supportedValues = AppString.localizedValues;
     final fallbackValues = supportedValues['en'] ?? const <String, String>{};
     final normalizedLanguage =
-        supportedValues.containsKey(languageCode) ? languageCode : 'en';
+    supportedValues.containsKey(languageCode) ? languageCode : 'en';
     final localizedValues =
         supportedValues[normalizedLanguage] ?? fallbackValues;
 
@@ -747,8 +746,8 @@ class LocalNotificationService {
   }
 
   static void registerAttendanceReminderTapHandler(
-    Future<void> Function() handler,
-  ) {
+      Future<void> Function() handler,
+      ) {
     _attendanceReminderTapHandler = handler;
     _flushPendingAttendanceReminderTaps();
   }
@@ -766,14 +765,14 @@ class LocalNotificationService {
   }
 
   static _DashboardNotificationCopy _buildDashboardNotificationCopy(
-    String? languageCode, {
-    String? overrideTitle,
-    String? overrideBody,
-  }) {
+      String? languageCode, {
+        String? overrideTitle,
+        String? overrideBody,
+      }) {
     final supportedValues = AppString.localizedValues;
     final fallbackValues = supportedValues['en'] ?? const <String, String>{};
     final normalizedLanguage =
-        supportedValues.containsKey(languageCode) ? languageCode : 'en';
+    supportedValues.containsKey(languageCode) ? languageCode : 'en';
     final localizedValues =
         supportedValues[normalizedLanguage] ?? fallbackValues;
 
@@ -817,8 +816,8 @@ class LocalNotificationService {
   }
 
   static void registerDashboardDeepLinkHandler(
-    Future<void> Function() handler,
-  ) {
+      Future<void> Function() handler,
+      ) {
     _dashboardDeepLinkHandler = handler;
     _flushPendingDashboardTaps();
   }
@@ -858,4 +857,3 @@ class _DashboardNotificationCopy {
   final String title;
   final String body;
 }
-
