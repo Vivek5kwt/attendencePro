@@ -3,45 +3,62 @@ import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 StreamSubscription<String>? _tokenRefreshSubscription;
 
-/// Log FCM token safely
+late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+const AndroidNotificationChannel _androidChannel = AndroidNotificationChannel(
+  'high_importance_channel',
+  'High Importance Notifications',
+  description: 'This channel is used for important notifications.',
+  importance: Importance.max,
+  playSound: true,
+);
+
+Future<void> initLocalNotifications() async {
+  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  const AndroidInitializationSettings androidSettings =
+  AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings settings =
+  InitializationSettings(android: androidSettings);
+
+  await flutterLocalNotificationsPlugin.initialize(settings);
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(_androidChannel);
+}
+
 void _logToken(String? token) {
-  final cleanedToken = token?.trim();
-  if (cleanedToken == null || cleanedToken.isEmpty) {
+  final cleaned = token?.trim();
+  if (cleaned == null || cleaned.isEmpty) {
     debugPrint('[FCM] Token unavailable');
     return;
   }
-  debugPrint('[FCM] Token: $cleanedToken');
+  debugPrint('[FCM] Token: $cleaned');
 }
 
-/// Sync token with backend (intentionally deferred)
 Future<void> _syncTokenWithBackend(String? token) async {
-  final cleanedToken = token?.trim();
-  if (cleanedToken == null || cleanedToken.isEmpty) {
-    return;
-  }
+  final cleaned = token?.trim();
+  if (cleaned == null || cleaned.isEmpty) return;
 
-  // ⚠️ Intentionally skipped — token send login/signup ke baad hota hai
   debugPrint('[FCM] Backend sync skipped (handled post-login)');
 }
 
-/// Handle token lifecycle
 Future<void> _handleToken(String? token) async {
   _logToken(token);
   await _syncTokenWithBackend(token);
 }
 
-/// ⚠️ iOS me APNs token ready hone tak wait karo
 Future<String?> fetchFcmToken() async {
   final messaging = FirebaseMessaging.instance;
 
-  await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  await messaging.requestPermission(alert: true, badge: true, sound: true);
 
   if (Platform.isIOS) {
     String? apns;
@@ -59,25 +76,18 @@ Future<String?> fetchFcmToken() async {
   return token?.trim();
 }
 
-/// ✅ SAFE FCM SETUP (iOS + Android)
+/// ---- MAIN FCM SETUP ----
 Future<void> setupFCM() async {
   final messaging = FirebaseMessaging.instance;
 
-  // 1️⃣ Request notification permission
-  await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  await messaging.requestPermission(alert: true, badge: true, sound: true);
 
-  // 2️⃣ iOS → allow foreground popup
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
     sound: true,
   );
 
-  // 3️⃣ iOS: wait for APNs token
   if (Platform.isIOS) {
     String? apnsToken;
     int retry = 0;
@@ -97,37 +107,52 @@ Future<void> setupFCM() async {
 
     debugPrint('[FCM] ✅ APNs token ready');
   }
+  await initLocalNotifications();
 
-  // 4️⃣ Get FCM token
   final token = await messaging.getToken();
   await _handleToken(token);
-
-  // 5️⃣ Listen for token refresh
   _tokenRefreshSubscription ??=
-      messaging.onTokenRefresh.listen((token) {
-        unawaited(_handleToken(token));
+      messaging.onTokenRefresh.listen((token) async {
+        await _handleToken(token);
       });
 
-  // 6️⃣ FOREGROUND notification listener
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     debugPrint('📩 Foreground push received');
     debugPrint('TITLE: ${message.notification?.title}');
     debugPrint('BODY : ${message.notification?.body}');
+
+    if (Platform.isAndroid) {
+      final notification = message.notification;
+      if (notification != null) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              _androidChannel.id,
+              _androidChannel.name,
+              channelDescription: _androidChannel.description,
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
+            ),
+          ),
+        );
+      }
+    }
   });
 
-  // 7️⃣ When user taps notification
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     debugPrint('📲 Notification tapped — app opened');
   });
 
-  // 8️⃣ Check if app opened from terminated
   final initialMsg = await messaging.getInitialMessage();
   if (initialMsg != null) {
     debugPrint('🚀 App launched via notification');
   }
 }
 
-/// Dispose safely
 Future<void> disposeFCM() async {
   await _tokenRefreshSubscription?.cancel();
   _tokenRefreshSubscription = null;
