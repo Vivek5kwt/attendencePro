@@ -217,7 +217,8 @@ class LocalNotificationService {
     if (androidImplementation == null) {
       return false;
     }
-    return await androidImplementation.areNotificationsEnabled();
+    final enabled = await androidImplementation.areNotificationsEnabled();
+    return enabled ?? false;
   }
 
   static Future<bool> _ensurePermissionsRequested({
