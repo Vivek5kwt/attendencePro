@@ -431,15 +431,17 @@ class LocalNotificationService {
           summaryText: fileName,
         ),
       ),
-      iOS: const DarwinNotificationDetails(
+      iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: false,
         presentSound: true,
+        subtitle: fileName,
       ),
-      macOS: const DarwinNotificationDetails(
+      macOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: false,
         presentSound: true,
+        subtitle: fileName,
       ),
     );
 
