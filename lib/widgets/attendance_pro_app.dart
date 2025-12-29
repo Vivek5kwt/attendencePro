@@ -16,6 +16,7 @@ import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
 import '../utils/responsive.dart';
+import 'notification_permission_prompt.dart';
 
 class AttendanceProApp extends StatelessWidget {
   final AttendanceRepository repository;
@@ -100,7 +101,9 @@ class AttendanceProApp extends StatelessWidget {
                       ),
                       child: DefaultTextStyle.merge(
                         style: const TextStyle(fontFamily: AppString.fontFamily),
-                        child: child ?? const SizedBox.shrink(),
+                        child: NotificationPermissionPrompt(
+                          child: child ?? const SizedBox.shrink(),
+                        ),
                       ),
                     );
                   },
