@@ -451,6 +451,60 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
     AppSnackBar.show(context, m, backgroundColor: color);
   }
 
+  Future<void> _handleDownloadNotificationResult(
+    NotificationPermissionResult result, {
+    required String fileName,
+    required String filePath,
+  }) async {
+    if (!mounted || result == NotificationPermissionResult.granted) {
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    final allow = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l.notificationsPermissionPromptTitle),
+          content: Text(l.notificationsPermissionPromptBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l.notificationsPermissionNotNowButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l.notificationsPermissionAllowButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || allow != true) {
+      return;
+    }
+
+    if (result == NotificationPermissionResult.permanentlyDenied) {
+      await LocalNotificationService.openNotificationSettings();
+      return;
+    }
+
+    final retryResult = await LocalNotificationService.showDownloadNotification(
+      fileName: fileName,
+      filePath: filePath,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (retryResult == NotificationPermissionResult.permanentlyDenied) {
+      await LocalNotificationService.openNotificationSettings();
+    }
+  }
+
   Future<void> _downloadAttendanceHistoryReport() async {
     if (_isGeneratingReport) return;
 
@@ -653,7 +707,13 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
             ? reportFile.uri.pathSegments.last
             : reportFile.path;
 
-        await LocalNotificationService.showDownloadNotification(
+        final notificationResult =
+            await LocalNotificationService.showDownloadNotification(
+          fileName: fileName,
+          filePath: reportFile.path,
+        );
+        await _handleDownloadNotificationResult(
+          notificationResult,
           fileName: fileName,
           filePath: reportFile.path,
         );
@@ -706,7 +766,13 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           ? reportFile.uri.pathSegments.last
           : reportFile.path;
 
-      await LocalNotificationService.showDownloadNotification(
+      final notificationResult =
+          await LocalNotificationService.showDownloadNotification(
+        fileName: fileName,
+        filePath: reportFile.path,
+      );
+      await _handleDownloadNotificationResult(
+        notificationResult,
         fileName: fileName,
         filePath: reportFile.path,
       );

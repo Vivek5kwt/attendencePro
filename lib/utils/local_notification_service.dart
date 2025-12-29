@@ -23,6 +23,12 @@ enum _NotificationPermissionStatus {
   notDetermined,
 }
 
+enum NotificationPermissionResult {
+  granted,
+  denied,
+  permanentlyDenied,
+}
+
 class LocalNotificationService {
   LocalNotificationService._();
 
@@ -368,21 +374,25 @@ class LocalNotificationService {
     );
   }
 
-  static Future<void> showDownloadNotification({
+  static Future<NotificationPermissionResult> showDownloadNotification({
     required String fileName,
     required String filePath,
   }) async {
     if (kIsWeb) {
-      return;
+      return NotificationPermissionResult.denied;
     }
 
     final permissionGranted = await ensurePermissionsRequested();
     if (!permissionGranted) {
+      final status = await _currentPermissionStatus();
+      final result = status == _NotificationPermissionStatus.permanentlyDenied
+          ? NotificationPermissionResult.permanentlyDenied
+          : NotificationPermissionResult.denied;
       debugPrint(
         '[LocalNotificationService] Notification permission not granted. '
             'Skipping download notification for $fileName.',
       );
-      return;
+      return result;
     }
 
     final friendlyTitle = 'Download ready';
@@ -424,6 +434,14 @@ class LocalNotificationService {
         _payloadFilePathKey: filePath,
       }),
     );
+    return NotificationPermissionResult.granted;
+  }
+
+  static Future<void> openNotificationSettings() async {
+    if (kIsWeb) {
+      return;
+    }
+    await openAppSettings();
   }
 
   static Future<void> _handleNotificationResponse(

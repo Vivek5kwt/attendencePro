@@ -810,7 +810,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         final fileName = reportFile.uri.pathSegments.isNotEmpty
             ? reportFile.uri.pathSegments.last
             : reportFile.path;
-        await LocalNotificationService.showDownloadNotification(
+        final notificationResult =
+            await LocalNotificationService.showDownloadNotification(
+          fileName: fileName,
+          filePath: reportFile.path,
+        );
+        await _handleDownloadNotificationResult(
+          notificationResult,
           fileName: fileName,
           filePath: reportFile.path,
         );
@@ -857,7 +863,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         final fileName = reportFile.uri.pathSegments.isNotEmpty
             ? reportFile.uri.pathSegments.last
             : reportFile.path;
-        await LocalNotificationService.showDownloadNotification(
+        final notificationResult =
+            await LocalNotificationService.showDownloadNotification(
+          fileName: fileName,
+          filePath: reportFile.path,
+        );
+        await _handleDownloadNotificationResult(
+          notificationResult,
           fileName: fileName,
           filePath: reportFile.path,
         );
@@ -1504,6 +1516,60 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       return;
     }
     AppSnackBar.show(context, trimmed, backgroundColor: const Color(0xFFB91C1C));
+  }
+
+  Future<void> _handleDownloadNotificationResult(
+    NotificationPermissionResult result, {
+    required String fileName,
+    required String filePath,
+  }) async {
+    if (!mounted || result == NotificationPermissionResult.granted) {
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    final allow = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l.notificationsPermissionPromptTitle),
+          content: Text(l.notificationsPermissionPromptBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l.notificationsPermissionNotNowButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l.notificationsPermissionAllowButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || allow != true) {
+      return;
+    }
+
+    if (result == NotificationPermissionResult.permanentlyDenied) {
+      await LocalNotificationService.openNotificationSettings();
+      return;
+    }
+
+    final retryResult = await LocalNotificationService.showDownloadNotification(
+      fileName: fileName,
+      filePath: filePath,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (retryResult == NotificationPermissionResult.permanentlyDenied) {
+      await LocalNotificationService.openNotificationSettings();
+    }
   }
 
   void _showSuccessSnackBar(String message) {
