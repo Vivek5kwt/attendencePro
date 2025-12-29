@@ -181,6 +181,12 @@ class LocalNotificationService {
       return _NotificationPermissionStatus.granted;
     }
 
+    final androidEnabled = await _areAndroidNotificationsEnabled();
+    if (androidEnabled) {
+      _notificationsPermissionGranted = true;
+      return _NotificationPermissionStatus.granted;
+    }
+
     if (status == PermissionStatus.permanentlyDenied ||
         status == PermissionStatus.restricted) {
       _notificationsPermissionGranted = false;
@@ -199,6 +205,19 @@ class LocalNotificationService {
     return status.isGranted ||
         status == PermissionStatus.limited ||
         status == PermissionStatus.provisional;
+  }
+
+  static Future<bool> _areAndroidNotificationsEnabled() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return false;
+    }
+    final androidImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImplementation == null) {
+      return false;
+    }
+    return await androidImplementation.areNotificationsEnabled();
   }
 
   static Future<bool> _ensurePermissionsRequested({
