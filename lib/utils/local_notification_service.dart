@@ -482,13 +482,27 @@ class LocalNotificationService {
       return;
     }
 
+    debugPrint(
+      '[LocalNotificationService] Notification tapped. '
+      'actionId=${response.actionId} payload=${response.payload}',
+    );
     final payload = response.payload?.trim();
     if (payload == null || payload.isEmpty) {
+      debugPrint(
+        '[LocalNotificationService] Empty payload. '
+        'Attempting to open last downloaded report or dashboard.',
+      );
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        debugPrint(
+          '[LocalNotificationService] Opening fallback report: $fallbackPath',
+        );
         await _openDownloadedReport(fallbackPath);
         await _clearPendingDownloadedReportPath();
       } else {
+        debugPrint(
+          '[LocalNotificationService] No report found. Opening dashboard.',
+        );
         await _handleDashboardDeepLink();
       }
       return;
@@ -497,6 +511,10 @@ class LocalNotificationService {
     final parsedPayload = _decodePayload(payload);
 
     if (parsedPayload == null) {
+      debugPrint(
+        '[LocalNotificationService] Payload is not JSON. '
+        'Attempting to open as file path: $payload',
+      );
       await _openDownloadedReport(payload);
       await _clearPendingDownloadedReportPath();
       await _handleDashboardDeepLink();
@@ -507,6 +525,9 @@ class LocalNotificationService {
     if (type == _payloadTypeDownload) {
       final filePath = parsedPayload[_payloadFilePathKey];
       if (filePath is String && filePath.trim().isNotEmpty) {
+        debugPrint(
+          '[LocalNotificationService] Opening downloaded report: $filePath',
+        );
         await _openDownloadedReport(filePath);
         await _clearPendingDownloadedReportPath();
         return;
@@ -514,6 +535,10 @@ class LocalNotificationService {
 
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        debugPrint(
+          '[LocalNotificationService] Payload missing file path. '
+          'Opening fallback report: $fallbackPath',
+        );
         await _openDownloadedReport(fallbackPath);
         await _clearPendingDownloadedReportPath();
       }
@@ -521,15 +546,27 @@ class LocalNotificationService {
     }
 
     if (type == _payloadTypeAttendanceReminder) {
+      debugPrint(
+        '[LocalNotificationService] Attendance reminder tapped. '
+        'Opening attendance flow and dashboard.',
+      );
       await _handleAttendanceReminderDeepLink();
       await _handleDashboardDeepLink();
       return;
     }
 
     if (type == _payloadTypeDashboardDeepLink) {
+      debugPrint(
+        '[LocalNotificationService] Dashboard notification tapped. '
+        'Opening dashboard.',
+      );
       await _handleDashboardDeepLink();
       return;
     }
+
+    debugPrint(
+      '[LocalNotificationService] Unknown notification payload type: $type',
+    );
   }
 
   @pragma('vm:entry-point')
@@ -541,10 +578,18 @@ class LocalNotificationService {
       return;
     }
 
+    debugPrint(
+      '[LocalNotificationService] Notification tapped in background. '
+      'actionId=${response.actionId} payload=${response.payload}',
+    );
     final payload = response.payload?.trim();
     if (payload == null || payload.isEmpty) {
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        debugPrint(
+          '[LocalNotificationService] Storing fallback report path: '
+          '$fallbackPath',
+        );
         await _storePendingDownloadedReportPath(fallbackPath);
       }
       return;
@@ -552,6 +597,9 @@ class LocalNotificationService {
 
     final parsedPayload = _decodePayload(payload);
     if (parsedPayload == null) {
+      debugPrint(
+        '[LocalNotificationService] Storing raw payload as file path: $payload',
+      );
       await _storePendingDownloadedReportPath(payload);
       return;
     }
@@ -560,12 +608,20 @@ class LocalNotificationService {
     if (type == _payloadTypeDownload) {
       final filePath = parsedPayload[_payloadFilePathKey];
       if (filePath is String && filePath.trim().isNotEmpty) {
+        debugPrint(
+          '[LocalNotificationService] Storing report path from payload: '
+          '$filePath',
+        );
         await _storePendingDownloadedReportPath(filePath);
         return;
       }
 
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        debugPrint(
+          '[LocalNotificationService] Payload missing file path. '
+          'Storing fallback report path: $fallbackPath',
+        );
         await _storePendingDownloadedReportPath(fallbackPath);
       }
     }
