@@ -41,6 +41,8 @@ class LocalNotificationService {
       'notifications_permission_requested';
   static const String _permissionPromptAnsweredKey =
       'notifications_permission_prompt_answered';
+  static const String _lastDownloadedReportPathKey =
+      'last_downloaded_report_path';
 
   static const AndroidNotificationChannel _downloadChannel =
   AndroidNotificationChannel(
@@ -417,6 +419,8 @@ class LocalNotificationService {
       return result;
     }
 
+    await _storeLastDownloadedReportPath(filePath);
+
     final friendlyTitle = 'Download ready';
     final friendlyBody = '$fileName downloaded successfully.';
 
@@ -477,7 +481,12 @@ class LocalNotificationService {
 
     final payload = response.payload?.trim();
     if (payload == null || payload.isEmpty) {
-      await _handleDashboardDeepLink();
+      final fallbackPath = await _loadLastDownloadedReportPath();
+      if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        await _openDownloadedReport(fallbackPath);
+      } else {
+        await _handleDashboardDeepLink();
+      }
       return;
     }
 
@@ -494,6 +503,12 @@ class LocalNotificationService {
       final filePath = parsedPayload[_payloadFilePathKey];
       if (filePath is String && filePath.trim().isNotEmpty) {
         await _openDownloadedReport(filePath);
+        return;
+      }
+
+      final fallbackPath = await _loadLastDownloadedReportPath();
+      if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        await _openDownloadedReport(fallbackPath);
       }
       return;
     }
@@ -756,6 +771,19 @@ class LocalNotificationService {
       debugPrint('Failed to open downloaded report from notification: $error');
       debugPrint('$stackTrace');
     }
+  }
+
+  static Future<void> _storeLastDownloadedReportPath(String filePath) async {
+    if (filePath.trim().isEmpty) {
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastDownloadedReportPathKey, filePath);
+  }
+
+  static Future<String?> _loadLastDownloadedReportPath() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_lastDownloadedReportPathKey);
   }
 
   static Future<_AttendanceReminderCopy> _resolveAttendanceReminderCopy() async {
