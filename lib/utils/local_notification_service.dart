@@ -497,8 +497,12 @@ class LocalNotificationService {
         debugPrint(
           '[LocalNotificationService] Opening fallback report: $fallbackPath',
         );
-        await _openDownloadedReport(fallbackPath);
-        await _clearPendingDownloadedReportPath();
+        final opened = await _openDownloadedReport(fallbackPath);
+        if (opened) {
+          await _clearPendingDownloadedReportPath();
+        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+          await _storePendingDownloadedReportPath(fallbackPath);
+        }
       } else {
         debugPrint(
           '[LocalNotificationService] No report found. Opening dashboard.',
@@ -515,8 +519,12 @@ class LocalNotificationService {
         '[LocalNotificationService] Payload is not JSON. '
         'Attempting to open as file path: $payload',
       );
-      await _openDownloadedReport(payload);
-      await _clearPendingDownloadedReportPath();
+      final opened = await _openDownloadedReport(payload);
+      if (opened) {
+        await _clearPendingDownloadedReportPath();
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        await _storePendingDownloadedReportPath(payload);
+      }
       await _handleDashboardDeepLink();
       return;
     }
@@ -528,8 +536,12 @@ class LocalNotificationService {
         debugPrint(
           '[LocalNotificationService] Opening downloaded report: $filePath',
         );
-        await _openDownloadedReport(filePath);
-        await _clearPendingDownloadedReportPath();
+        final opened = await _openDownloadedReport(filePath);
+        if (opened) {
+          await _clearPendingDownloadedReportPath();
+        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+          await _storePendingDownloadedReportPath(filePath);
+        }
         return;
       }
 
@@ -539,8 +551,12 @@ class LocalNotificationService {
           '[LocalNotificationService] Payload missing file path. '
           'Opening fallback report: $fallbackPath',
         );
-        await _openDownloadedReport(fallbackPath);
-        await _clearPendingDownloadedReportPath();
+        final opened = await _openDownloadedReport(fallbackPath);
+        if (opened) {
+          await _clearPendingDownloadedReportPath();
+        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+          await _storePendingDownloadedReportPath(fallbackPath);
+        }
       }
       return;
     }
@@ -858,7 +874,7 @@ class LocalNotificationService {
     return null;
   }
 
-  static Future<void> _openDownloadedReport(String filePath) async {
+  static Future<bool> _openDownloadedReport(String filePath) async {
     try {
       final result = await OpenFilex.open(filePath, type: 'application/pdf');
       if (result.type != ResultType.done) {
@@ -866,10 +882,13 @@ class LocalNotificationService {
           'Failed to open downloaded report from notification: '
           '${result.message} (${result.type})',
         );
+        return false;
       }
+      return true;
     } catch (error, stackTrace) {
       debugPrint('Failed to open downloaded report from notification: $error');
       debugPrint('$stackTrace');
+      return false;
     }
   }
 
@@ -909,8 +928,22 @@ class LocalNotificationService {
     if (pendingPath == null || pendingPath.trim().isEmpty) {
       return;
     }
-    await _clearPendingDownloadedReportPath();
-    await _openDownloadedReport(pendingPath);
+    final opened = await _openDownloadedReport(pendingPath);
+    if (opened) {
+      await _clearPendingDownloadedReportPath();
+    }
+  }
+
+  static Future<void> openPendingDownloadedReportIfNeeded() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    if (!_initialized) {
+      await initialize();
+    }
+
+    await _openPendingDownloadedReportIfNeeded();
   }
 
   static Future<_AttendanceReminderCopy> _resolveAttendanceReminderCopy() async {
