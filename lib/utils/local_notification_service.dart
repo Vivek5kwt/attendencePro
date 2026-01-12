@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:attendancepro/core/constants/app_strings.dart';
 import 'package:attendancepro/utils/native_timezone.dart';
@@ -122,6 +123,11 @@ class LocalNotificationService {
     );
 
     final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    debugPrint(
+      '[LocalNotificationService] Launch details: '
+      'didLaunch=${launchDetails?.didNotificationLaunchApp} '
+      'response=${launchDetails?.notificationResponse?.payload}',
+    );
     final response = launchDetails?.notificationResponse;
     if (response != null) {
       await _handleNotificationResponse(response);
@@ -489,6 +495,10 @@ class LocalNotificationService {
     final payload = response.payload?.trim();
     if (payload == null || payload.isEmpty) {
       debugPrint(
+        '[LocalNotificationService] Notification payload empty; '
+        'checking fallback report path.',
+      );
+      debugPrint(
         '[LocalNotificationService] Empty payload. '
         'Attempting to open last downloaded report or dashboard.',
       );
@@ -600,6 +610,9 @@ class LocalNotificationService {
     );
     final payload = response.payload?.trim();
     if (payload == null || payload.isEmpty) {
+      debugPrint(
+        '[LocalNotificationService] Background notification has empty payload.',
+      );
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
         debugPrint(
@@ -876,7 +889,16 @@ class LocalNotificationService {
 
   static Future<bool> _openDownloadedReport(String filePath) async {
     try {
+      final exists = await File(filePath).exists();
+      debugPrint(
+        '[LocalNotificationService] OpenFilex request: '
+        'path=$filePath exists=$exists',
+      );
       final result = await OpenFilex.open(filePath, type: 'application/pdf');
+      debugPrint(
+        '[LocalNotificationService] OpenFilex result: '
+        'type=${result.type} message=${result.message}',
+      );
       if (result.type != ResultType.done) {
         debugPrint(
           'Failed to open downloaded report from notification: '
@@ -898,6 +920,10 @@ class LocalNotificationService {
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastDownloadedReportPathKey, filePath);
+    debugPrint(
+      '[LocalNotificationService] Stored last downloaded report path: '
+      '$filePath',
+    );
   }
 
   static Future<String?> _loadLastDownloadedReportPath() async {
@@ -911,6 +937,9 @@ class LocalNotificationService {
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_pendingDownloadedReportPathKey, filePath);
+    debugPrint(
+      '[LocalNotificationService] Stored pending report path: $filePath',
+    );
   }
 
   static Future<String?> _loadPendingDownloadedReportPath() async {
@@ -921,13 +950,20 @@ class LocalNotificationService {
   static Future<void> _clearPendingDownloadedReportPath() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_pendingDownloadedReportPathKey);
+    debugPrint('[LocalNotificationService] Cleared pending report path.');
   }
 
   static Future<void> _openPendingDownloadedReportIfNeeded() async {
     final pendingPath = await _loadPendingDownloadedReportPath();
     if (pendingPath == null || pendingPath.trim().isEmpty) {
+      debugPrint(
+        '[LocalNotificationService] No pending report path to open.',
+      );
       return;
     }
+    debugPrint(
+      '[LocalNotificationService] Opening pending report path: $pendingPath',
+    );
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final opened = await _openDownloadedReport(pendingPath);
     if (opened) {
