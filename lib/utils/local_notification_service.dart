@@ -148,16 +148,6 @@ class LocalNotificationService {
     final status = await Permission.notification.request();
     var permissionGranted = _isPermissionStatusGranted(status);
 
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final androidImplementation = _plugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
-      final androidGranted = await androidImplementation?.requestPermission();
-      if (androidGranted != null) {
-        permissionGranted = permissionGranted || androidGranted;
-      }
-    }
-
     final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
         IOSFlutterLocalNotificationsPlugin>();
     final macosPlugin = _plugin.resolvePlatformSpecificImplementation<
