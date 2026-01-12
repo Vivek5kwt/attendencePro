@@ -500,7 +500,7 @@ class LocalNotificationService {
         final opened = await _openDownloadedReport(fallbackPath);
         if (opened) {
           await _clearPendingDownloadedReportPath();
-        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        } else {
           await _storePendingDownloadedReportPath(fallbackPath);
         }
       } else {
@@ -522,7 +522,7 @@ class LocalNotificationService {
       final opened = await _openDownloadedReport(payload);
       if (opened) {
         await _clearPendingDownloadedReportPath();
-      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      } else {
         await _storePendingDownloadedReportPath(payload);
       }
       await _handleDashboardDeepLink();
@@ -539,7 +539,7 @@ class LocalNotificationService {
         final opened = await _openDownloadedReport(filePath);
         if (opened) {
           await _clearPendingDownloadedReportPath();
-        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        } else {
           await _storePendingDownloadedReportPath(filePath);
         }
         return;
@@ -554,7 +554,7 @@ class LocalNotificationService {
         final opened = await _openDownloadedReport(fallbackPath);
         if (opened) {
           await _clearPendingDownloadedReportPath();
-        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        } else {
           await _storePendingDownloadedReportPath(fallbackPath);
         }
       }
@@ -928,6 +928,7 @@ class LocalNotificationService {
     if (pendingPath == null || pendingPath.trim().isEmpty) {
       return;
     }
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     final opened = await _openDownloadedReport(pendingPath);
     if (opened) {
       await _clearPendingDownloadedReportPath();
