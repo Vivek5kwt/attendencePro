@@ -15,20 +15,49 @@ import '../repositories/reports_repository.dart';
 import '../bloc/locale_cubit.dart';
 import '../core/localization/app_localizations.dart';
 import '../bloc/work_bloc.dart';
+import '../utils/local_notification_service.dart';
 import '../utils/responsive.dart';
 import 'notification_permission_prompt.dart';
 
-class AttendanceProApp extends StatelessWidget {
+class AttendanceProApp extends StatefulWidget {
   final AttendanceRepository repository;
 
   const AttendanceProApp({Key? key, required this.repository})
-    : super(key: key);
+      : super(key: key);
+
+  @override
+  State<AttendanceProApp> createState() => _AttendanceProAppState();
+}
+
+class _AttendanceProAppState extends State<AttendanceProApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      LocalNotificationService.openPendingDownloadedReportIfNeeded();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<AttendanceRepository>.value(value: repository),
+        RepositoryProvider<AttendanceRepository>.value(
+          value: widget.repository,
+        ),
         RepositoryProvider<AuthRepository>(create: (_) => AuthRepository()),
         RepositoryProvider<WorkRepository>(create: (_) => WorkRepository()),
         RepositoryProvider<ContractTypeRepository>(
@@ -41,7 +70,9 @@ class AttendanceProApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider<AttendanceBloc>(
-            create: (context) => AttendanceBloc(repository: repository),
+            create: (context) => AttendanceBloc(
+              repository: widget.repository,
+            ),
           ),
           BlocProvider<AppCubit>(create: (context) => AppCubit()),
           BlocProvider<AuthCubit>(
