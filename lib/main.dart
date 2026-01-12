@@ -26,6 +26,7 @@ Future<void> main() async {
   final repo = InMemoryAttendanceRepository();
   runApp(AttendanceProApp(repository: repo));
   WidgetsBinding.instance.addPostFrameCallback((_) async {
+    await LocalNotificationService.openPendingDownloadedReportIfNeeded();
     await setupFCM();
   });
 }
