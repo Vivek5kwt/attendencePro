@@ -43,6 +43,8 @@ class LocalNotificationService {
       'notifications_permission_prompt_answered';
   static const String _lastDownloadedReportPathKey =
       'last_downloaded_report_path';
+  static const String _pendingDownloadedReportPathKey =
+      'pending_downloaded_report_path';
 
   static const AndroidNotificationChannel _downloadChannel =
   AndroidNotificationChannel(
@@ -124,6 +126,7 @@ class LocalNotificationService {
     if (response != null) {
       await _handleNotificationResponse(response);
     }
+    await _openPendingDownloadedReportIfNeeded();
 
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
@@ -484,6 +487,7 @@ class LocalNotificationService {
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
         await _openDownloadedReport(fallbackPath);
+        await _clearPendingDownloadedReportPath();
       } else {
         await _handleDashboardDeepLink();
       }
@@ -494,6 +498,7 @@ class LocalNotificationService {
 
     if (parsedPayload == null) {
       await _openDownloadedReport(payload);
+      await _clearPendingDownloadedReportPath();
       await _handleDashboardDeepLink();
       return;
     }
@@ -503,12 +508,14 @@ class LocalNotificationService {
       final filePath = parsedPayload[_payloadFilePathKey];
       if (filePath is String && filePath.trim().isNotEmpty) {
         await _openDownloadedReport(filePath);
+        await _clearPendingDownloadedReportPath();
         return;
       }
 
       final fallbackPath = await _loadLastDownloadedReportPath();
       if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
         await _openDownloadedReport(fallbackPath);
+        await _clearPendingDownloadedReportPath();
       }
       return;
     }
@@ -530,7 +537,38 @@ class LocalNotificationService {
       NotificationResponse response,
       ) async {
     WidgetsFlutterBinding.ensureInitialized();
-    await _handleNotificationResponse(response);
+    if (kIsWeb) {
+      return;
+    }
+
+    final payload = response.payload?.trim();
+    if (payload == null || payload.isEmpty) {
+      final fallbackPath = await _loadLastDownloadedReportPath();
+      if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        await _storePendingDownloadedReportPath(fallbackPath);
+      }
+      return;
+    }
+
+    final parsedPayload = _decodePayload(payload);
+    if (parsedPayload == null) {
+      await _storePendingDownloadedReportPath(payload);
+      return;
+    }
+
+    final type = parsedPayload[_payloadTypeKey];
+    if (type == _payloadTypeDownload) {
+      final filePath = parsedPayload[_payloadFilePathKey];
+      if (filePath is String && filePath.trim().isNotEmpty) {
+        await _storePendingDownloadedReportPath(filePath);
+        return;
+      }
+
+      final fallbackPath = await _loadLastDownloadedReportPath();
+      if (fallbackPath != null && fallbackPath.trim().isNotEmpty) {
+        await _storePendingDownloadedReportPath(fallbackPath);
+      }
+    }
   }
 
   /// Backend now manages daily reminders – local scheduling disabled
@@ -766,7 +804,13 @@ class LocalNotificationService {
 
   static Future<void> _openDownloadedReport(String filePath) async {
     try {
-      await OpenFilex.open(filePath, type: 'application/pdf');
+      final result = await OpenFilex.open(filePath, type: 'application/pdf');
+      if (result.type != ResultType.done) {
+        debugPrint(
+          'Failed to open downloaded report from notification: '
+          '${result.message} (${result.type})',
+        );
+      }
     } catch (error, stackTrace) {
       debugPrint('Failed to open downloaded report from notification: $error');
       debugPrint('$stackTrace');
@@ -784,6 +828,33 @@ class LocalNotificationService {
   static Future<String?> _loadLastDownloadedReportPath() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_lastDownloadedReportPathKey);
+  }
+
+  static Future<void> _storePendingDownloadedReportPath(String filePath) async {
+    if (filePath.trim().isEmpty) {
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_pendingDownloadedReportPathKey, filePath);
+  }
+
+  static Future<String?> _loadPendingDownloadedReportPath() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_pendingDownloadedReportPathKey);
+  }
+
+  static Future<void> _clearPendingDownloadedReportPath() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pendingDownloadedReportPathKey);
+  }
+
+  static Future<void> _openPendingDownloadedReportIfNeeded() async {
+    final pendingPath = await _loadPendingDownloadedReportPath();
+    if (pendingPath == null || pendingPath.trim().isEmpty) {
+      return;
+    }
+    await _clearPendingDownloadedReportPath();
+    await _openDownloadedReport(pendingPath);
   }
 
   static Future<_AttendanceReminderCopy> _resolveAttendanceReminderCopy() async {
