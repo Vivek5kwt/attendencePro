@@ -5,6 +5,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'local_notification_service.dart';
+
 StreamSubscription<String>? _tokenRefreshSubscription;
 
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -169,13 +171,15 @@ Future<void> setupFCM() async {
     );
   });
 
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
     debugPrint('📲 Notification tapped — app opened');
+    await LocalNotificationService.handleDashboardNotificationTap();
   });
 
   final initialMsg = await messaging.getInitialMessage();
   if (initialMsg != null) {
     debugPrint('🚀 App launched via notification');
+    await LocalNotificationService.handleDashboardNotificationTap();
   }
 }
 

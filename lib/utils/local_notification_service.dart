@@ -1050,6 +1050,14 @@ class LocalNotificationService {
     await handler();
   }
 
+  static Future<void> handleDashboardNotificationTap() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    await _handleDashboardDeepLink();
+  }
+
   static void _flushPendingDashboardTaps() {
     final handler = _dashboardDeepLinkHandler;
     if (handler == null || _pendingDashboardTapCount == 0) {

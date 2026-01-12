@@ -80,6 +80,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _shouldOpenDashboard = widget.openDashboardOnLogin;
+    LocalNotificationService.registerDashboardDeepLinkHandler(
+      _handleDashboardNotificationTap,
+    );
   }
 
   @override
@@ -163,6 +166,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleDashboardTap() async {
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _handleDashboardNotificationTap() async {
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() {
+      _shouldOpenDashboard = true;
+      _hasOpenedDashboard = false;
+      _hasTriggeredAutoActivation = false;
+    });
+    final state = context.read<WorkBloc>().state;
+    _maybeNavigateToDashboard(state);
   }
 
   Future<void> _openAttendanceHistory() async {
@@ -2127,4 +2142,3 @@ class _AddNewWorkCard extends StatelessWidget {
     );
   }
 }
-
