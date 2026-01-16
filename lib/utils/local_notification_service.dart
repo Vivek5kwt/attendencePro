@@ -886,6 +886,12 @@ class LocalNotificationService {
         '[LocalNotificationService] OpenFilex request: '
         'path=$filePath exists=$exists',
       );
+      if (Platform.isIOS || Platform.isMacOS) {
+        final shared = await _shareDownloadedReport(filePath);
+        if (shared) {
+          return true;
+        }
+      }
       final result = await OpenFilex.open(filePath, type: 'application/pdf');
       debugPrint(
         '[LocalNotificationService] OpenFilex result: '
@@ -933,6 +939,25 @@ class LocalNotificationService {
       debugPrint('$stackTrace');
       return false;
     }
+  }
+
+  static Future<void> presentDownloadedReport({
+    required String filePath,
+  }) async {
+    if (kIsWeb) {
+      return;
+    }
+    if (!(Platform.isIOS || Platform.isMacOS)) {
+      return;
+    }
+    final trimmed = filePath.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    if (!_initialized) {
+      await initialize();
+    }
+    await _openDownloadedReport(trimmed);
   }
 
   static Future<void> _storeLastDownloadedReportPath(String filePath) async {

@@ -717,6 +717,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           fileName: fileName,
           filePath: reportFile.path,
         );
+        await LocalNotificationService.presentDownloadedReport(
+          filePath: reportFile.path,
+        );
 
         return;
       }
@@ -774,6 +777,9 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
       await _handleDownloadNotificationResult(
         notificationResult,
         fileName: fileName,
+        filePath: reportFile.path,
+      );
+      await LocalNotificationService.presentDownloadedReport(
         filePath: reportFile.path,
       );
     } on UnsupportedError catch (e) {
