@@ -820,6 +820,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           fileName: fileName,
           filePath: reportFile.path,
         );
+        await LocalNotificationService.presentDownloadedReport(
+          filePath: reportFile.path,
+        );
       } else {
         final grouped = _groupEntriesByDay(targetEntries);
         final days = grouped.entries
@@ -871,6 +874,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         await _handleDownloadNotificationResult(
           notificationResult,
           fileName: fileName,
+          filePath: reportFile.path,
+        );
+        await LocalNotificationService.presentDownloadedReport(
           filePath: reportFile.path,
         );
       }
