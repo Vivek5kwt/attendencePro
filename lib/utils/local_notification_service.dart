@@ -425,6 +425,9 @@ class LocalNotificationService {
         '[LocalNotificationService] Notification permission not granted. '
             'Skipping download notification for $fileName.',
       );
+      if (Platform.isIOS || Platform.isMacOS) {
+        await _handleDownloadedReportPath(filePath);
+      }
       return result;
     }
 
