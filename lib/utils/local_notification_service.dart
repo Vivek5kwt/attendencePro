@@ -530,6 +530,10 @@ class LocalNotificationService {
     }
 
     final type = parsedPayload[_payloadTypeKey];
+    debugPrint(
+      '[LocalNotificationService] Parsed payload type: $type '
+      'payload=$parsedPayload',
+    );
     if (type == _payloadTypeDownload) {
       final filePath = parsedPayload[_payloadFilePathKey];
       if (filePath is String && filePath.trim().isNotEmpty) {
@@ -614,6 +618,10 @@ class LocalNotificationService {
     }
 
     final type = parsedPayload[_payloadTypeKey];
+    debugPrint(
+      '[LocalNotificationService] Background payload type: $type '
+      'payload=$parsedPayload',
+    );
     if (type == _payloadTypeDownload) {
       final filePath = parsedPayload[_payloadFilePathKey];
       if (filePath is String && filePath.trim().isNotEmpty) {
@@ -1089,9 +1097,16 @@ class LocalNotificationService {
   static Future<void> _handleDashboardDeepLink() async {
     final handler = _dashboardDeepLinkHandler;
     if (handler == null) {
+      debugPrint(
+        '[LocalNotificationService] Dashboard deep link handler not registered. '
+        'Queuing tap for later.',
+      );
       _pendingDashboardTapCount++;
       return;
     }
+    debugPrint(
+      '[LocalNotificationService] Handling dashboard deep link tap now.',
+    );
     await handler();
   }
 
@@ -1100,6 +1115,9 @@ class LocalNotificationService {
       return;
     }
 
+    debugPrint(
+      '[LocalNotificationService] handleDashboardNotificationTap invoked.',
+    );
     await _handleDashboardDeepLink();
   }
 
