@@ -698,11 +698,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
           summary: summary,
         );
 
-        _showSnack(
-          l.reportDownloadSuccessMessage(reportFile.path),
-          color: const Color(0xFF15803D),
-        );
-
         final fileName = reportFile.uri.pathSegments.isNotEmpty
             ? reportFile.uri.pathSegments.last
             : reportFile.path;
@@ -758,11 +753,6 @@ class _ReportsSummaryScreenState extends State<ReportsSummaryScreen> {
         currencySymbol: history.currencySymbol,
         days: days,
         summary: summary,
-      );
-
-      _showSnack(
-        l.reportDownloadSuccessMessage(reportFile.path),
-        color: const Color(0xFF15803D),
       );
 
       final fileName = reportFile.uri.pathSegments.isNotEmpty

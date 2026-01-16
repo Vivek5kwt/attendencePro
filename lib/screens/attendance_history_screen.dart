@@ -804,9 +804,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         if (!mounted) {
           return;
         }
-        _showSuccessSnackBar(
-          l.reportDownloadSuccessMessage(reportFile.path),
-        );
         final fileName = reportFile.uri.pathSegments.isNotEmpty
             ? reportFile.uri.pathSegments.last
             : reportFile.path;
@@ -860,9 +857,6 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         if (!mounted) {
           return;
         }
-        _showSuccessSnackBar(
-          l.reportDownloadSuccessMessage(reportFile.path),
-        );
         final fileName = reportFile.uri.pathSegments.isNotEmpty
             ? reportFile.uri.pathSegments.last
             : reportFile.path;
