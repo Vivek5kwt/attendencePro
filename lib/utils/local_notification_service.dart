@@ -941,10 +941,19 @@ class LocalNotificationService {
       );
       return;
     }
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    if ((Platform.isIOS || Platform.isMacOS) &&
+        lifecycleState != null &&
+        lifecycleState != AppLifecycleState.resumed) {
+      debugPrint(
+        '[LocalNotificationService] App not resumed yet; deferring report open.',
+      );
+      return;
+    }
     debugPrint(
       '[LocalNotificationService] Opening pending report path: $pendingPath',
     );
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future<void>.delayed(const Duration(milliseconds: 600));
     final opened = await _openDownloadedReport(pendingPath);
     if (opened) {
       await _clearPendingDownloadedReportPath();
