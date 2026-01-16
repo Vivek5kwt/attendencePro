@@ -11,6 +11,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -895,11 +896,40 @@ class LocalNotificationService {
           'Failed to open downloaded report from notification: '
           '${result.message} (${result.type})',
         );
+        final shared = await _shareDownloadedReport(filePath);
+        if (shared) {
+          return true;
+        }
         return false;
       }
       return true;
     } catch (error, stackTrace) {
       debugPrint('Failed to open downloaded report from notification: $error');
+      debugPrint('$stackTrace');
+      final shared = await _shareDownloadedReport(filePath);
+      if (shared) {
+        return true;
+      }
+      return false;
+    }
+  }
+
+  static Future<bool> _shareDownloadedReport(String filePath) async {
+    if (!(Platform.isIOS || Platform.isMacOS)) {
+      return false;
+    }
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        return false;
+      }
+      await Share.shareXFiles(
+        <XFile>[XFile(filePath)],
+        text: 'Attendance report',
+      );
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('Failed to share downloaded report: $error');
       debugPrint('$stackTrace');
       return false;
     }
